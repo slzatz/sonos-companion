@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>SoCo - Sonos Web Controller</title>
+
+        <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/main4.css') }}" rel="stylesheet">
+    </head>
+    <body class="container">
+	    <p id="track-all"></p>
+        <div class="row">
+            <div class="span7" id="card">
+                <!--image goes here-->
+            </div>
+            <div class="span5">
+                <h1 id="track-title"></h1>
+                <h2 id="track-artist"></h2>
+                <h2 id="track-album"></h2>
+				<p id="track-lyrics" class="lyrics"></p>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+        <script type="text/javascript">
+            var currTrack = '';
+            var playing = true;
+            var n = 0
+
+            function checkChange() {
+                $.getJSON('http://127.0.0.1:5000/info-light').done(function(data) {
+                    $('#track-title').text(data['title']);
+
+                    if (currTrack != data['title'])
+                    {
+                        loadData();
+                        n = 0;
+                    }
+                    
+                    else {$.getJSON('http://127.0.0.1:5000/images').done(function(data) {
+
+                    $('.image-wrap').fadeTo("slow",0.1)
+                    
+					console.log(n)
+					console.log(data[n]['image']['width']);
+					console.log(data[n]['image']['height']);
+					console.log(data[n]['link']);
+                    
+                    $('.image-wrap').fadeTo(400,0.1)
+                    
+                    setTimeout(fade_out, 400);
+                    
+                    function fade_out() {
+                    
+                     $('#card').html('<span class="image-wrap" style="background: url(' + data[n]['link'] + ')no-repeat center;" /><img id="hello" style="opacity:.5" id="track-image" src="' + data[n]['link'] + '"></span>')
+                     
+                    /*$('#card').html('<span class="image-wrap" style="opacity:.1;position:relative;display:inline-block; background:url(' + data[n]['link'] + ') no-repeat center center ; width: 500px; height: '+ data[n]['image']['height'] +'px ;" /><img id="hello" style="opacity:.5" id="track-image" src="' + data[n]['link'] + '"></span>')*/
+				
+                    $('.image-wrap').fadeTo(600,1.0);}
+                
+
+                n+=1;
+
+                if (n==9) {n=0;}
+
+                });
+                
+                 }
+
+                });
+            }
+
+            function loadData() {
+                $.getJSON('http://127.0.0.1:5000/info').done(function(data) {
+                    $('#track-title').text(data['title']);
+                    $('#track-artist').text(data['artist']);
+                    $('#track-album').text(data['album']);
+					$('#track-all').text(data['title']+' '+data['artist']+' '+data['album']+' '+data['date']);
+					$('#track-lyrics').text(data['lyrics']);
+                    $('#card').empty();
+                    $('#card').html('<span class="image-wrap" style="opacity:1.0; position:relative; display:inline-block; background:url(' + data['album_art'] + ') no-repeat center center;" /></span>');
+                    
+                    /*<img style="opacity:.5" id="track-image" src="' + data['album_art'] + '">
+                    apparently there is no need for this img tag*/
+
+                    currTrack = data['title'];
+                });
+            }
+
+            $(document).ready(function() {   //run only once when the page is initially loaded then everything is ajax
+                loadData();
+                
+                console.log("document.ready was triggered");  
+
+
+                setInterval("checkChange()", 10000);
+
+                $('#next').click(function() {
+                    $.ajax('http://127.0.0.1:5000/next');
+                    loadData();
+                });
+
+                $('#previous').click(function() {
+                    $.ajax('http://127.0.0.1:5000/previous');
+                    loadData();
+                });
+
+                $('#pause').click(function() {
+                    if (playing == true)
+                    {
+                        $.ajax('http://127.0.0.1:5000/pause');
+                        playing = false;
+
+                        $('#pause').html('<i class="icon-play"></i> Play');
+                    }
+                    else {
+                        $.ajax('http://127.0.0.1:5000/play');
+                        playing = true;
+
+                        $('#pause').html('<i class="icon-pause"></i> Pause');
+                    }
+                });
+            });
+        </script>
+   </body>
+</html>

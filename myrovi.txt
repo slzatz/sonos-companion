@@ -1,0 +1,3 @@
+Application: sonos_raspi
+Key: 58p3w5vhmjvups5xfka4yq23
+Shared Secret: sNndd6jC4V

@@ -1,0 +1,37 @@
+body {
+    padding-top: 10px;
+}
+
+.row {
+    margin-top: 40px;
+}
+
+.lyrics
+{
+	white-space: pre-line;
+	font-style:italic;
+}
+
+
+/* From http://webdesignerwall.com/demo/css3-image-styles/ */
+.image-wrap.card {
+	-webkit-box-shadow: inset 0 0 1px rgba(0,0,0,.8), inset 0 2px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.4);
+	-moz-box-shadow: inset 0 0 1px rgba(0,0,0,.8), inset 0 2px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.4);
+	box-shadow: inset 0 0 1px rgba(0,0,0,.8), inset 0 2px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.4);
+	-webkit-border-radius: 20px;
+	-moz-border-radius: 20px;
+	border-radius: 20px;
+    
+}
+
+
+h1 {color:#FF0000;font-size:3em;}
+
+/* the stuff below is not doing anything */
+#track-image {
+
+  -webkit-transition: opacity 5s ease-in-out;
+  -moz-transition: opacity 5s ease-in-out;
+  -o-transition: opacity 5s ease-in-out;
+  transition: opacity 5s ease-in-out;
+}

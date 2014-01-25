@@ -1,0 +1,85 @@
+ "items": [
+  {
+   "link": "http://cdn8.openculture.com/wp-content/uploads/2013/10/sample-wars-neil-young.jpg",
+   "image": {
+    "height": 720,
+    "width": 1280,
+   }
+  },
+  {
+   "kind": "customsearch#result",
+   "title": "Neil Young Comes Clean - NYTimes.",
+   "htmlTitle": "<b>Neil Young</b> Comes Clean - NYTimes.",
+   "link": "http://graphics8.nytimes.com/images/2012/09/23/magazine/23young1/23young1-articleLarge.jpg",
+   "displayLink": "www.nytimes.com",
+   "snippet": "Neil Young Comes Clean",
+   "htmlSnippet": "<b>Neil Young</b> Comes Clean",
+   "mime": "image/jpeg",
+   "image": {
+    "contextLink": "http://www.nytimes.com/2012/09/23/magazine/neil-young-comes-clean.html?pagewanted=all",
+    "height": 636,
+    "width": 600,
+    "byteSize": 86901,
+    "thumbnailLink": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQsCeldaOhYsMctVP1LOOITrZjeeCCWIYD0n_2Sc_k2aqZijQcQHoWxRjLW",
+    "thumbnailHeight": 137,
+    "thumbnailWidth": 129
+   }
+  },
+  {
+   "kind": "customsearch#result",
+   "title": "Neil Young Song Lyrics | MetroLyrics",
+   "htmlTitle": "<b>Neil Young</b> Song Lyrics | MetroLyrics",
+   "link": "http://userserve-ak.last.fm/serve/500/18393365/Neil+Young+n9434172_36483923_4234.jpg",
+   "displayLink": "www.metrolyrics.com",
+   "snippet": "Neil Young pictures Neil Young",
+   "htmlSnippet": "<b>Neil Young</b> pictures <b>Neil Young</b>",
+   "mime": "image/jpeg",
+   "image": {
+    "contextLink": "http://www.metrolyrics.com/neil-young-lyrics.html",
+    "height": 337,
+    "width": 500,
+    "byteSize": 46503,
+    "thumbnailLink": "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQ4f3IWFeh46xghzxOtdtNUEWp68svY9CWfL8fjVCrtddJvZBauw_QzpUs",
+    "thumbnailHeight": 88,
+    "thumbnailWidth": 130
+   }
+  },
+  {
+   "kind": "customsearch#result",
+   "title": "To Do: Neil Young at Snap Galleries | The Tory Blog",
+   "htmlTitle": "To Do: <b>Neil Young</b> at Snap Galleries | The Tory Blog",
+   "link": "http://blog.toryburch.com/wp-content/uploads/ToDo_Neil_Young_960.jpg",
+   "displayLink": "www.toryburch.com",
+   "snippet": "To Do: Neil Young at Snap",
+   "htmlSnippet": "To Do: <b>Neil Young</b> at Snap",
+   "mime": "image/jpeg",
+   "image": {
+    "contextLink": "http://www.toryburch.com/blog-post/blog-post.html?bpid=68927",
+    "height": 643,
+    "width": 960,
+    "byteSize": 92958,
+    "thumbnailLink": "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcRx3Cf6Oi2mr3nmMN2MPIoTBKE2MDpH9AN-81n8bdQ-mnXev8DIlFOyE6o",
+    "thumbnailHeight": 99,
+    "thumbnailWidth": 148
+   }
+  },
+  {
+   "kind": "customsearch#result",
+   "title": "Neil Young Biography - Facts, Birthday, Life Story - Biography.",
+   "htmlTitle": "<b>Neil Young</b> Biography - Facts, Birthday, Life Story - Biography.",
+   "link": "http://www.biography.com/imported/images/Biography/Images/Profiles/Y/Neil-Young-9539612-1-402.jpg",
+   "displayLink": "www.biography.com",
+   "snippet": "NAME: Neil Young; OCCUPATION:",
+   "htmlSnippet": "NAME: <b>Neil Young</b>; OCCUPATION:",
+   "mime": "image/jpeg",
+   "image": {
+    "contextLink": "http://www.biography.com/people/neil-young-9539612",
+    "height": 402,
+    "width": 402,
+    "byteSize": 152359,
+    "thumbnailLink": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQrN0GZ1O9h5gcF0tqTf3AiJ9KgjfRJsIu0qsFWyA_OX_3v0eE5HzMakg",
+    "thumbnailHeight": 124,
+    "thumbnailWidth": 124
+   }
+  }
+ ]
