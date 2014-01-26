@@ -56,12 +56,29 @@ u'tracks':
   {u'track': 
   [
 
-{u'streamable': {u'#text': u'1',
- u'fulltrack': u'0'}, u'@attr': {u'rank': u'1'}, u'name': u'Love Throw A Line', u'artist': {u'url': u'http://www.last.fm/music/Patty+Griffin', u'mbid': u'6fddcfc3-20b6-48d0-87ba-8211
-eca3420c', u'name': u'Patty Griffin'}, u'url': u'http://www.last.fm/music/+noredirect/Patty+Griffin/_/Love+Throw+A+Line', u'mbid': u'37cc1cee-9fc4-4b8f-842d-d513d1231e63', u'duration
-': u'218'}, {u'streamable': {u'#text': u'1', u'fulltrack': u'0'}, u'@attr': {u'rank': u'2'}, u'name': u'Cold As It Gets', u'artist': {u'url': u'http://www.last.fm/music/Patty+Griffin
-', u'mbid': u'6fddcfc3-20b6-48d0-87ba-8211eca3420c', u'name': u'Patty Griffin'}, u'url': u'http://www.last.fm/music/Patty+Griffin/_/Cold+As+It+Gets', u'mbid': u'07fc6220-9917-4945-a5
-e4-76ec80cec28c', u'duration': u'159'}, {u'streamable': {u'#text': u'1', u'fulltrack': u'0'}, u'@attr': {u'rank': u'3'}, u'name': u'Kite Song', u'artist': {u'url': u'http://www.last.
+{
+u'streamable': {u'#text': u'1',u'fulltrack': u'0'}, 
+u'@attr': {u'rank': u'1'}, 
+u'name': u'Love Throw A Line', 
+u'artist': {u'url': u'http://www.last.fm/music/Patty+Griffin', u'mbid': u'6fddcfc3-20b6-48d0-87ba-8211eca3420c', u'name': u'Patty Griffin'}, 
+u'url': u'http://www.last.fm/music/+noredirect/Patty+Griffin/_/Love+Throw+A+Line', 
+u'mbid': u'37cc1cee-9fc4-4b8f-842d-d513d1231e63', 
+u'duration': u'218'}, 
+
+
+{u'streamable': {u'#text': u'1', u'fulltrack': u'0'}, 
+u'@attr': {u'rank': u'2'}, 
+u'name': u'Cold As It Gets', 
+u'artist': {u'url': u'http://www.last.fm/music/Patty+Griffin', 
+u'mbid': u'6fddcfc3-20b6-48d0-87ba-8211eca3420c', u'name': u'Patty Griffin'}, 
+u'url': u'http://www.last.fm/music/Patty+Griffin/_/Cold+As+It+Gets', 
+u'mbid': u'07fc6220-9917-4945-a5e4-76ec80cec28c', 
+u'duration': u'159'}, 
+
+
+
+{u'streamable': {u'#text': u'1', u'fulltrack': u'0'}, 
+u'@attr': {u'rank': u'3'}, u'name': u'Kite Song', u'artist': {u'url': u'http://www.last.
 fm/music/Patty+Griffin', u'mbid': u'6fddcfc3-20b6-48d0-87ba-8211eca3420c', u'name': u'Patty Griffin'}, u'url': u'http://www.last.fm/music/Patty+Griffin/_/Kite+Song', u'mbid': u'7f191
 11f-4ecd-4e6c-840f-2dc9ae6e1da4', u'duration': u'190'}, {u'streamable': {u'#text': u'1', u'fulltrack': u'0'}, u'@attr': {u'rank': u'4'}, u'name': u'Standing', u'artist': {u'url': u'h
 ttp://www.last.fm/music/Patty+Griffin', u'mbid': u'6fddcfc3-20b6-48d0-87ba-8211eca3420c', u'name': u'Patty Griffin'}, u'url': u'http://www.last.fm/music/Patty+Griffin/_/Standing', u'

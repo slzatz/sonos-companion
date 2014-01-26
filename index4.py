@@ -38,6 +38,10 @@ except IOError:
       
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
+#last.fm
+base_url = "http://ws.audioscrobbler.com/2.0/"
+api_key = "1c55c0a239072889fa7c11df73ecd566"
+
 #@+node:slzatz.20140105160722.1553: ** get_images
 def get_images(artist):
     '''
@@ -53,16 +57,17 @@ def get_images(artist):
         http = httplib2.Http()
         service = discovery.build('customsearch', 'v1',  developerKey='AIzaSyCe7pbOm0sxYXwMWoMJMmWvqBcvaTftRC0', http=http)
         z = service.cse().list(q=artist, searchType='image', imgSize='large', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
-     
-        q = []
+
+        #print 'z=',z    
+        image_list = []
 
         for x in z['items']:
             y = {}
             y['image'] = {k:x['image'][k] for k in ['height','width']}
             y['link'] = x['link']
-            q.append(y)
+            image_list.append(y)
       
-        artists[artist] = q
+        artists[artist] = image_list
 
         print "**************Google Custom Search Engine Request for "+artist+"**************"
           
@@ -74,6 +79,19 @@ def get_images(artist):
 
     return artists[artist]
     
+#@+node:slzatz.20140126104203.1211: ** get_artist_info (last.fm)
+def get_artist_info(artist, autocorrect=0):
+    
+    payload = {'method':'artist.getinfo', 'artist':artist, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key}
+    
+    try:
+        r = requests.get(base_url, params=payload)
+        bio = r.json()['artist']['bio']['summary']
+        text = lxml.html.fromstring(bio).text_content()
+        return text
+        
+    except:
+        return ''
 #@+node:slzatz.20140118074141.1566: ** get_url
 def get_url(artist, title):
     payload = {'func': 'getSong', 'artist': artist, 'song': title, 'fmt': 'realjson'}
@@ -185,6 +203,7 @@ def info():
     
     # get album date from musicbrainz db
     track['date'] = get_release_date(track['artist'], track['album'])
+    track['artist_info'] = get_artist_info(track['artist'])
     
     return json.dumps(track)
 

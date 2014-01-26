@@ -2,7 +2,6 @@
 import requests
 import argparse
 import json
-#import lxml.html
 
 parser = argparse.ArgumentParser()
 parser.add_argument("artist")
@@ -25,15 +24,24 @@ def get_album_info(artist, album):
     r = requests.get(base_url, params=payload)
     return r
 
+def get_artist_info(artist, autocorrect=0):
+    payload = {'method':'artist.getinfo', 'artist':artist, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key}
+    r = requests.get(base_url, params=payload)
+    return r
+
+
 
 if __name__ == '__main__':
     artist = args.artist
     album = args.album
     z = get_album_info(artist,album)
+    zz = get_artist_info(artist,autocorrect=1)
 
-    print z.json()['album']['releasedate']
+    #print z.json()['album']['releasedate']
     #print z.json()['album']['wiki']['summary']
-    print z.json()
+    #print z.json()
+
+    print zz.json()['artist']['bio']['summary']
  
 
 
