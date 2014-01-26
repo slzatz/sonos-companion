@@ -28,6 +28,7 @@ import musicbrainzngs
 app = Flask(__name__)
 app.config.from_pyfile('settings.py')
 sonos = SoCo(app.config['SPEAKER_IP'])
+HOST = app.config['HOST']
 
 # artists.json is the file that caches previous image searches
 try:
@@ -224,5 +225,5 @@ def index():
 #@-others
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host=HOST, debug=True)
 #@-leo
