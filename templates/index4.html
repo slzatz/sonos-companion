@@ -32,7 +32,8 @@
             var n = 0
 
             function checkChange() {
-                $.getJSON('http://127.0.0.1:5000/info-light').done(function(data) {
+                /*$.getJSON('http://127.0.0.1:5000/info-light').done(function(data) {*/
+                $.getJSON('/info-light').done(function(data) {
                     $('#track-title').text(data['title']);
 
                     if (currTrack != data['title'])
@@ -41,7 +42,7 @@
                         n = 0;
                     }
                     
-                    else {$.getJSON('http://127.0.0.1:5000/images').done(function(data) {
+                    else {$.getJSON('/images').done(function(data) {
 
                     $('.image-wrap').fadeTo("slow",0.1)
                     
@@ -75,7 +76,8 @@
             }
 
             function loadData() {
-                $.getJSON('http://127.0.0.1:5000/info').done(function(data) {
+                /*$.getJSON('http://127.0.0.1:5000/info').done(function(data) {*/
+                $.getJSON('/info').done(function(data) {
                     $('#track-title').text(data['title']);
                     $('#track-artist').text(data['artist']);
                     $('#track-album').text(data['album']);
