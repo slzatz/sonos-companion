@@ -145,8 +145,6 @@ def get_lyrics(url):
     return "".join(lyrics).strip()
 #@+node:slzatz.20140119112538.1357: ** get_release_date
 def get_release_date(artist, album):
-   
-   #if 'date' in ddd[n] and ddd[n]['title'].lower() == album.lower():
 
     try:
         result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20)  #for some reason 5 was pulling up some funky dates
@@ -155,8 +153,9 @@ def get_release_date(artist, album):
     
     release_list = result['release-list']
              
-    # not sure you need the if 'date' - not sure the date is ever missing in the release list
-    dates = [d['date'][0:4] for d in release_list if 'date' in d and d['title'].lower()==album.lower()]
+
+    #dates = [d['date'][0:4] for d in release_list if 'date' in d and d['title']==album and d['artist-credit-phrase'] == artist] # below appears better
+    dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
     
     if not dates:
         return "No date found"
