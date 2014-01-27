@@ -8,7 +8,6 @@
         <link href="{{ url_for('static', filename='css/main4.css') }}" rel="stylesheet">
     </head>
     <body class="container">
-	    <!--<p id="track-all"></p>-->
         <p id="track-artist_info"></p>
         <div class="row">
             <div class="span7" id="card">
@@ -32,7 +31,6 @@
             var n = 0
 
             function checkChange() {
-                /*$.getJSON('http://127.0.0.1:5000/info-light').done(function(data) {*/
                 $.getJSON('/info-light').done(function(data) {
                     $('#track-title').text(data['title']);
 
@@ -57,9 +55,7 @@
                     
                     function fade_out() {
                     
-                     $('#card').html('<span class="image-wrap" style="background: url(' + data[n]['link'] + ')no-repeat center;" /><img id="hello" style="opacity:.5" id="track-image" src="' + data[n]['link'] + '"></span>')
-                     
-                    /*$('#card').html('<span class="image-wrap" style="opacity:.1;position:relative;display:inline-block; background:url(' + data[n]['link'] + ') no-repeat center center ; width: 500px; height: '+ data[n]['image']['height'] +'px ;" /><img id="hello" style="opacity:.5" id="track-image" src="' + data[n]['link'] + '"></span>')*/
+                    $('#card').html('<span class="image-wrap" style="background: url(' + data[n]['link'] + ')no-repeat center;" /></span>')
 				
                     $('.image-wrap').fadeTo(600,1.0);}
                 
@@ -76,20 +72,17 @@
             }
 
             function loadData() {
-                /*$.getJSON('http://127.0.0.1:5000/info').done(function(data) {*/
                 $.getJSON('/info').done(function(data) {
                     $('#track-title').text(data['title']);
                     $('#track-artist').text(data['artist']);
                     $('#track-album').text(data['album']);
-					/*$('#track-all').text(data['title']+' '+data['artist']+' '+data['album']+' '+data['date']);*/
                     $('#track-date').text(data['date']);
                     $('#track-artist_info').text(data['artist_info']);
 					$('#track-lyrics').text(data['lyrics']);
                     $('#card').empty();
-                    $('#card').html('<span class="image-wrap" style="opacity:1.0; position:relative; display:inline-block; background:url(' + data['album_art'] + ') no-repeat center center;" /></span>');
+                    $('#card').html('<span class="image-wrap" style="background:url(' + data['album_art'] + ') no-repeat center;" /></span>');
                     
-                    /*<img style="opacity:.5" id="track-image" src="' + data['album_art'] + '">
-                    apparently there is no need for this img tag*/
+                    $('.image-wrap').fadeTo(600,1.0)
 
                     currTrack = data['title'];
                 });
