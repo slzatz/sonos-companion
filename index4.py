@@ -144,25 +144,44 @@ def get_lyrics(url):
             lyrics.append(node.tail)
     return "".join(lyrics).strip()
 #@+node:slzatz.20140119112538.1357: ** get_release_date
-def get_release_date(artist, album):
+def get_release_date(artist, album, title):
 
     try:
-        result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20)  #for some reason 5 was pulling up some funky dates
+        result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)  
     except:
-        return "No date Exception"
+        return "No date cxception (search_releases)"
     
     release_list = result['release-list']
              
-
-    #dates = [d['date'][0:4] for d in release_list if 'date' in d and d['title']==album and d['artist-credit-phrase'] == artist] # below appears better
     dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
     
-    if not dates:
-        return "No date found"
+    if dates:
+        dates.sort()
+        return dates[0]  
         
-    dates.sort()
+    # above may not work if it's a collection album with a made up name; the below tries to address that 
+    try:
+        result = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=20, offset=None, strict=False)
+    except:
+        return "No date exception (search_recordings)"
     
-    return dates[0]    
+    recording_list = result['recording-list']
+    
+    dates = []
+    for d in recording_list:
+            dd = [x['date'][0:4]+': '+x['title'] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]     
+            dates.extend(dd)
+            
+            #[item for sublist in l for item in sublist] - this should work but not sure it makes sense to modify above which works
+            
+    if dates:
+        dates.sort()
+        return dates[0]   
+    else:
+        return "No date" 
+    
+
+
 #@+node:slzatz.20140120090653.1358: ** Sonos controls (not in use)
 #@+node:slzatz.20140105160722.1554: *3* play
 @app.route("/play")
@@ -205,7 +224,7 @@ def info():
     track['lyrics'] = lyrics
     
     # get album date from musicbrainz db
-    track['date'] = get_release_date(track['artist'], track['album'])
+    track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     track['artist_info'] = get_artist_info(track['artist'])
     
     return json.dumps(track)
