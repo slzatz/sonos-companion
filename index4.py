@@ -157,13 +157,15 @@ def get_release_date(artist, album, title):
     except:
         return "No date cxception (search_releases)"
     
-    release_list = result['release-list']
-             
-    dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
+    #release_list = result['release-list'] # can be missing
     
-    if dates:
-        dates.sort()
-        return dates[0]  
+    if 'release-list' in result:
+            release_list = result['release-list'] # can be missing
+            dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
+    
+            if dates:
+                dates.sort()
+                return dates[0]  
         
     # above may not work if it's a collection album with a made up name; the below tries to address that 
     try:
