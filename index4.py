@@ -3,7 +3,7 @@
 #@@language python
 #@@tabwidth -4
 #@+others
-#@+node:slzatz.20140105160722.1552: ** index declarations
+#@+node:slzatz.20140105160722.1552: ** imports etc
 # needed by the google custom search engine module apiclient
 import httplib2
 
@@ -22,13 +22,16 @@ import pickle
 
 import lxml.html
 
-#using the musicbrainz db to find the release date - not always accurate
+#using the musicbrainz db to find the release date and album (if a compilation)
 import musicbrainzngs
 
 app = Flask(__name__)
+
 app.config.from_pyfile('settings.py')
-sonos = SoCo(app.config['SPEAKER_IP'])
 HOST = app.config['HOST']
+INDEX_HTML = app.config['INDEX_HTML']
+
+sonos = SoCo(app.config['SPEAKER_IP'])
 
 # artists.json is the file that caches previous image searches
 try:
@@ -43,7 +46,7 @@ musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
 
-#@+node:slzatz.20140105160722.1553: ** get_images
+#@+node:slzatz.20140105160722.1553: ** get_images (Google Custom Search Engine)
 def get_images(artist):
     '''
     10 is the max you can bring back on any individual search
@@ -89,6 +92,10 @@ def get_artist_info(artist, autocorrect=0):
         r = requests.get(base_url, params=payload)
         bio = r.json()['artist']['bio']['summary']
         text = lxml.html.fromstring(bio).text_content()
+        idx = text.find("Read more")
+        if idx != -1:
+            text = text[:idx]
+        
         return text
         
     except:
@@ -107,8 +114,7 @@ def get_url(artist, title):
         
         url = q['url'] if 'url' in q else None
         
-        if url and url.find("action=edit") != -1: ################################
-        #if url.find("action=edit") != -1:
+        if url and url.find("action=edit") != -1: 
             url = None 
     
     return url
@@ -239,12 +245,12 @@ def images():
 @app.route("/")
 def index():
     track = sonos.get_current_track_info()
-    #print "track=",track
-    #return render_template('index4.html', track=track)
-    return render_template('index4.html')
+    return render_template(INDEX_HTML)
 
-#@-others
-
+#@+node:slzatz.20140131181451.1211: ** main
 if __name__ == '__main__':
     app.run(host=HOST, debug=True)
+#@-others
+
+
 #@-leo
