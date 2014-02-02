@@ -116,7 +116,37 @@ def get_url(artist, title):
         
         if url and url.find("action=edit") != -1: 
             url = None 
+            
+    if url is not None:
+        return url
+            
+    try:
+        z = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=5, offset=None, strict=False)
+    except:
+        url = None
+        
+    for d in z['recording-list']:
+
+         if int(d['ext:score'])==100:
+             new_artist = d['artist-credit-phrase']
+             new_title = d['title']
     
+    payload = {'func': 'getSong', 'artist': new_artist, 'song': new_title, 'fmt': 'realjson'}
+    
+    try:
+         r = requests.get("http://lyrics.wikia.com/api.php", params=payload)
+    except:
+        return None
+                
+    q = r.json()
+        
+    url = q['url'] if 'url' in q else None
+        
+    if url and url.find("action=edit") != -1: 
+        url = None 
+    else:
+        print "got song lyrics by using musicbrainz db to figure out correct artist and title"
+        
     return url
     
 #@+node:slzatz.20140118074141.1565: ** get_lyrics
@@ -177,10 +207,11 @@ def get_release_date(artist, album, title):
     
     dates = []
     for d in recording_list:
-            dd = [x['date'][0:4]+': '+x['title'] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]     
-            dates.extend(dd)
+            if 'release-list' in d:
+                dd = [x['date'][0:4]+': '+x['title'] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]     
+                dates.extend(dd)
             
-            #[item for sublist in l for item in sublist] - this should work but not sure it makes sense to modify above which works
+               #[item for sublist in l for item in sublist] - this should work but not sure it makes sense to modify above which works
             
     if dates:
         dates.sort()
