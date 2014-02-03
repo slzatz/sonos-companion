@@ -10,7 +10,14 @@ body {
 {
 	white-space: pre-line;
 	font-style:italic;
+    overflow: hidden;
+    background-color: purple;
 }
+.lyrics:hover
+{
+    overflow: auto;
+}
+
 
 
 /* From http://webdesignerwall.com/demo/css3-image-styles/ */
