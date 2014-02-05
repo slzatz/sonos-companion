@@ -88,7 +88,8 @@ html, body, .Container
 
 .RightContent
 {
-    overflow: hidden;
+    overflow: auto;
+    height: 400px;
     -webkit-overflow-scrolling:touch;
     padding-left: 40px;
     padding-bottom: 100px;
@@ -98,7 +99,6 @@ html, body, .Container
 {
     overflow: auto;
 }
-
 
 .LeftContent
 {
@@ -116,5 +116,8 @@ html, body, .Container
 .icon-pause{background-position:-288px -72px;}
 .icon-stop{background-position:-312px -72px;}
 
-button
-{width: 100px;}
+button {
+    width: 100px;
+}
+
+
