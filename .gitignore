@@ -1,3 +1,6 @@
 .DS_Store
 *.pyc
 settings.py
+artists.json
+musicbrainzngs/
+
