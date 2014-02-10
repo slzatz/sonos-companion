@@ -1,0 +1,34 @@
+track= {
+u'album': 'Whatever A Moon has Always Meant', 
+u'artist': 'Dar Williams', 
+u'title': 'The Ocean', 
+u'uri': 'x-sonos-http:amz%3atr%3a711a0f6c-f434-4fec-825c-b012f1de853f.mp3?sid=
+26&flags=32', 
+u'playlist_position': '361', 
+u'duration': '0:05:18', 
+u'position': '0:03:49', 
+u'album_art': u'http://192.168.1.103:1400/getaa?s=1&u=x-sonos-http%3aamz%253atr%253a711a0f6c-f434-4fec-825c-b012f1de853f.mp3%3fsid%3d26%26flags%3d32'}
+
+
+
+No handlers could be found for logger "soco.core"
+track= {
+u'album': u'', 
+u'artist': u'', 
+u'title': '', 
+u'uri': 'pndrradio-http://audio-sv5-t2-1.pandora.com/access/5600174951701936288?version=4&lid=86206018&token=YzusSEI0lNRMzsHMIwVB5E0t90xldAejVk77iZcEymPajb6untQnqdwOdke42PgEXE91nOHhzt7U5bjac2vjlmYU8slBE5fHYfDHiJ1Zx%2Bj3%2BfnaRxICXq6XwtcYr3WernHApCBz3T%2BmpQIcffAJHVV9pWYf8sYMu5rdEjuZk2XZdP5tQv7fv0CQ7Wa44twR8h08oa9mliJ1OSI9VyHZeH1S2AgL11H8I1RRdcimx3vBZhm5aEM6z7%2BxdQQ5Z2zBdoN7kf4QSRuzgIsZjgOcQDz5Lxv0TswsvwwGGzhuAtkc3TSEi3vZaXSbPn0ljLoPgxRQJJwE9avJXfn8C7SdenID4%2FmpyZApoYigHyTv3DcOpftyDf1OhA%3D%3D&a=http%3a%2f%2fcont-sv5-3.pandora.com%2fimages%2fpublic%2famz%2f4%2f2%2f7%2f6%2f828767106724_500W_500H.jpg&m=56443debf74441b1c345b46ccd77c619ef7ed52b5319ecc8a0370f74e704eb7c881d6eacfe20c000587b1a18c7619bc46b4ff9fb3dc7b077&f=1&r=0&g=-4.21&x=0049ed04', 
+
+u'playlist_position': '1', 
+u'duration': '0:00:00', u'position': '0:00:00', 
+u'album_art': u''}
+
+
+track= {u'album': u'', u'artist': u'', u'title': '', u'uri': 'pndrradio-http://audio-sv5-t2-1.pandora.com/access/5600174951701936288?version=4&lid=86206018&token=YzusSEI0lNRMzsHMIwVB5E0t90xldAejVk77iZcEymPajb6untQnqdwOdke42PgEXE91nOHhzt7U5bjac2vjlmYU8slBE5fHYfDHiJ1Zx%2Bj3%2BfnaRxICXq6XwtcYr3WernHApCBz3T%2BmpQIcffAJHVV9pWYf8sYMu5rdEjuZk2XZdP5tQv7fv0CQ7Wa44twR8h08oa9mliJ1OSI9VyHZeH1S2AgL11H8I1RRdcimx3vBZhm5aEM6z7%2BxdQQ5Z2zBdoN7kf4QSRuzgIsZjgOcQDz5Lxv0TswsvwwGGzhuAtkc3TSEi3vZaXSbPn0ljLoPgxRQJJwE9avJXfn8C7SdenID4%2FmpyZApoYigHyTv3DcOpftyDf1OhA
+%3D%3D&a=http%3a%2f%2fcont-sv5-3.pandora.com%2fimages%2fpublic%2famz%2f4%2f2%2f7%2f6%2f828767106724_500W_500H.jpg&m=56443debf74441b1c345b46ccd77c619ef7ed52b5319ecc8a0370f74e704eb7c881d6eacfe20c000587b1a18c7619bc46b4ff9fb3dc7b077&f=1&r=0&g=-4.21&x=0049ed04', u'playlist_position': '1', u'duration': '0:00:00', u'position': '0:00:00', u'album_art': u''}
+
+
+track= {u'album': 'Z', u'artist': 'My Morning Jacket', u'title': 'Knot Come Loose', 
+u'uri': 'pndrradiohttp://audio-sv5-t2-1.pandora.com/access/5600174951701936288?version=4&lid=86206018&token=YzusSEI0lNRMzsHMIwVB5E0t90xldAejVk77iZcEymPajb6untQnqdwOdke42PgEXE91nOHhzt7U5bjac2vjlmYU8slBE5fHYfDHiJ1Zx%2Bj3%2BfnaRxICXq6XwtcYr3WernHApCBz3T%2BmpQIcffAJHVV9pWYf8sYMu5rdEjuZk2XZdP5tQv7fv0CQ7Wa44twR8h08oa9mliJ1OSI9VyHZeH1S2AgL11H8I1RRdcimx3vBZhm5aEM6z7%2BxdQQ5Z2zBdoN7kf4QSRuzgIsZjgOcQDz5Lxv0TswsvwwGGzhuAtkc3TSEi3vZaXSbPn0ljLoPgxRQJJwE9avJXfn8C7SdenID4%2FmpyZApoYigHyTv3DcOpftyDf1OhA%3D%3D&a=http%3a%2f%2fcont-sv5-3.pandora.com%2fimages%2fpublic%2famz%2f4%2f2%2f7%2f6%2f828767106724_500W_500H.jpg&m=56443debf74441b1c345b46ccd77c619ef7ed52b5319ecc8a0370f74e704eb7c881d6eacfe20c000587b1a18c7619bc46b4ff9fb3dc7b077&f=1&r=0&g=-4.21&x=0049ed04', 
+
+
+u'playlist_position': '1', u'duration': '0:04:02', u'position': '0:00:02',
