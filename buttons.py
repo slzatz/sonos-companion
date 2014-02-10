@@ -1,5 +1,6 @@
 #!/usr/bin/env python
- 
+
+#note needs to be run as sudo python buttons.py to access GPIO 
 from time import sleep
 import os
 import RPi.GPIO as GPIO
@@ -10,7 +11,7 @@ PANDORA = 23
 
 GPIO.setmode(GPIO.BCM)
 
-for n in [WNYC, OTHER]:
+for n in [WNYC, PANDORA]:
 
     GPIO.setup(n, GPIO.IN)
 
@@ -22,7 +23,7 @@ while True:
         print "switched to wnyc"
     if GPIO.input(PANDORA)==False:
         # that is Patty Griffin Radio; seems like meta can be blank and it still works
-        sonos_.play_uri('pndrradio:52876609482614338', meta='')
+        sonos.play_uri('pndrradio:52876609482614338', meta='')
 
     sleep(0.1)
 
