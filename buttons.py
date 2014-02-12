@@ -24,7 +24,7 @@ while True:
     if GPIO.input(PANDORA)==False:
         # that is Patty Griffin Radio; seems like meta can be blank and it still works
         sonos.play_uri('pndrradio:52876609482614338', meta='')
-
+        print "switched to patty griffin"
     sleep(0.1)
 
 
