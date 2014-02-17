@@ -3,4 +3,19 @@
 settings.py
 artists.json
 musicbrainzngs/
+ cse_result.json
+ lastfm.py
+ lastfm_json_format for artist_info.txt
+ lastfm_json_format for get_album.txt
+ lyrics.py
+ lyrics2.py
+ lyricwiki.py
+ mb_release_search.py
+ musicbrainz response.txt
+ musicbrainz-search-release-groups-was-not-useful.txt
+ musicbrainz-search-releases-release-list.txt
+ musicbrainz.py
+ musicbrainz2.py
+ sonos.leo
+ test_cse.py
 
