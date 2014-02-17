@@ -6,25 +6,31 @@ import os
 import RPi.GPIO as GPIO
 from soco import SoCo
 
+WSHU = 18
 WNYC = 24
 PANDORA = 23 
 
 GPIO.setmode(GPIO.BCM)
 
-for n in [WNYC, PANDORA]:
+for n in [WSHU, WNYC, PANDORA]:
 
     GPIO.setup(n, GPIO.IN)
 
 sonos = SoCo('192.168.1.103')
  
 while True:
+
     if GPIO.input(WNYC)==False:
         sonos.play_uri('aac://204.93.192.135:80/wnycfm-tunein.aac')
         print "switched to wnyc"
     if GPIO.input(PANDORA)==False:
-        # that is Patty Griffin Radio; seems like meta can be blank and it still works
-        sonos.play_uri('pndrradio:52877953807377986', meta='')
+        # meta can be empty string and it still works
+        sonos.play_uri('pndrradio:52877953807377986')#, meta='')
         print "switched to quickmix"
+    if GPIO.input(WSHU)==False:
+        sonos.play_uri('x-rincon-mp3radio://wshu.streamguys.org/wshu-news')
+        print "switched to wshu"
+
     sleep(0.1)
 
 
