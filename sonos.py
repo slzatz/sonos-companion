@@ -123,7 +123,7 @@ def get_url(artist, title):
     try:
         z = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=5, offset=None, strict=False)
     except:
-        url = None
+        return None
         
     for d in z['recording-list']:
 
