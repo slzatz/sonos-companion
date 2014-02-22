@@ -203,7 +203,11 @@ def get_release_date(artist, album, title):
     except:
         return "No date exception (search_recordings)"
     
-    recording_list = result['recording-list']
+    #recording_list = result['recording-list']
+    recording_list = result.get('recording-list')
+    
+    if recording_list is None:
+        return "No date (no recording_list)"
     
     dates = []
     for d in recording_list:
