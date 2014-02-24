@@ -2,7 +2,7 @@
 
 #note needs to be run as sudo python buttons.py to access GPIO 
 from time import sleep
-import os
+import sys
 import RPi.GPIO as GPIO
 from soco import SoCo
 
@@ -33,7 +33,7 @@ while True:
         play_uri('aac://204.93.192.135:80/wnycfm-tunein.aac', 'wnyc')
             
     if GPIO.input(PANDORA)==False:
-        play_uri('pndrradio:52877953807377986', 'quickmix')#, meta='')
+        play_uri('pndrradio:52877953807377986', 'quickmix') #, meta='')
             
     if GPIO.input(WSHU)==False:
         play_uri('x-rincon-mp3radio://wshu.streamguys.org/wshu-news', 'wshu')
