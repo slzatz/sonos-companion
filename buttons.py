@@ -17,19 +17,26 @@ for n in [WSHU, WNYC, PANDORA]:
     GPIO.setup(n, GPIO.IN)
 
 sonos = SoCo('192.168.1.103')
+
+def play_uri(uri, name):
+    try:
+        sonos.play_uri(uri)
+    except:
+        print sys.exc_info()[0]
+    else:
+        print "switched to "+name
+        
  
 while True:
 
     if GPIO.input(WNYC)==False:
-        sonos.play_uri('aac://204.93.192.135:80/wnycfm-tunein.aac')
-        print "switched to wnyc"
+        play_uri('aac://204.93.192.135:80/wnycfm-tunein.aac', 'wnyc')
+            
     if GPIO.input(PANDORA)==False:
-        # meta can be empty string and it still works
-        sonos.play_uri('pndrradio:52877953807377986')#, meta='')
-        print "switched to quickmix"
+        play_uri('pndrradio:52877953807377986', 'quickmix')#, meta='')
+            
     if GPIO.input(WSHU)==False:
-        sonos.play_uri('x-rincon-mp3radio://wshu.streamguys.org/wshu-news')
-        print "switched to wshu"
+        play_uri('x-rincon-mp3radio://wshu.streamguys.org/wshu-news', 'wshu')
 
     sleep(0.1)
 
