@@ -3,12 +3,13 @@
 #note needs to be run as sudo python buttons.py to access GPIO 
 from time import sleep
 import sys
+import traceback
 import RPi.GPIO as GPIO
 from soco import SoCo
 
-WSHU = 18
+WSHU = 23 #18
 WNYC = 24
-PANDORA = 23 
+PANDORA = 18 #23 
 
 GPIO.setmode(GPIO.BCM)
 
@@ -22,10 +23,12 @@ def play_uri(uri, name):
     try:
         sonos.play_uri(uri)
     except:
-        print sys.exc_info()[0]
+        print traceback.format_exc()
+        print name
     else:
         print "switched to "+name
-        
+
+n=0        
  
 while True:
 
@@ -40,6 +43,10 @@ while True:
 
     sleep(0.1)
 
+    n+=1
+    if n == 100:
+        print '.'
+        n = 0
 
 z = '''{'R.E.M. Radio': '637630342339192386', 'Nick Drake Radio': '409866109213435458', 'Dar Williams Radio': '1823409579416053314', 'My Morning Jacket Radio': '1776327778550113858', 'Patty
  Griffin Radio': '52876609482614338', 'Lucinda Williams Radio': '360878777387148866', 'Neil Young Radio': '52876154216080962', 'Wilco Radio': '1025897885568558658', 'The Decemberists
