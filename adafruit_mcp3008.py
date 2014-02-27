@@ -92,7 +92,7 @@ while True:
 
                 print 'Volume = {volume}%' .format(volume = set_volume)
                 set_vol_cmd = 'sudo amixer cset numid=1 -- {volume}% > /dev/null' .format(volume = set_volume)
-                sonos.volume(set_volume)
+                sonos.volume = set_volume
                 #os.system(set_vol_cmd)  # set volume
 
                 if DEBUG:
