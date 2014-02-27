@@ -3,6 +3,10 @@ import time
 import os
 import RPi.GPIO as GPIO
 
+from soco import SoCo
+
+sonos = SoCo('192.168.1.103')
+
 GPIO.setmode(GPIO.BCM)
 DEBUG = 1
 
@@ -43,9 +47,9 @@ def readadc(adcnum, clockpin, mosipin, misopin, cspin):
 
 # change these as desired - they're the pins connected from the
 # SPI port on the ADC to the Cobbler
-SPICLK = 18
-SPIMISO = 23
-SPIMOSI = 24
+SPICLK = 22 #18
+SPIMISO = 17 #23
+SPIMOSI = 4 #24
 SPICS = 25
 
 # set up the SPI interface pins
@@ -88,7 +92,8 @@ while True:
 
                 print 'Volume = {volume}%' .format(volume = set_volume)
                 set_vol_cmd = 'sudo amixer cset numid=1 -- {volume}% > /dev/null' .format(volume = set_volume)
-                os.system(set_vol_cmd)  # set volume
+                sonos.volume(set_volume)
+                #os.system(set_vol_cmd)  # set volume
 
                 if DEBUG:
                         print "set_volume", set_volume
