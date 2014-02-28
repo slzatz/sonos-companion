@@ -115,7 +115,7 @@ while True:
     if ( pot_adjust > tolerance ):
        trim_pot_changed = True
 
-    if DEBUG:
+    if 0:
        print "trim_pot_changed", trim_pot_changed
 
     if ( trim_pot_changed ):
@@ -129,7 +129,7 @@ while True:
         sonos.volume = set_volume
                 
 
-        if DEBUG:
+        if 0:
             print "set_volume", set_volume
             print "tri_pot_changed", set_volume
 
