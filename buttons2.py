@@ -24,12 +24,12 @@ GPIO.setup(PANDORA, GPIO.IN)
 GPIO.setup(WSHU, GPIO.IN)
 GPIO.setup(WNYC, GPIO.IN)
 
-#sonos = SoCo('192.168.1.103')
 sonos_devices = SonosDiscovery()
 speakers = [SoCo(ip) for ip in sonos_devices.get_speaker_ips()]
 for s in speakers:
     print '{}: {}'.format(s.player_name,s.speaker_ip)
 
+sonos = speakers[0]
 
 def play_uri(uri, name):
     try:
