@@ -5,6 +5,7 @@ from time import sleep
 import traceback
 import RPi.GPIO as GPIO
 from soco import SoCo
+from soco import SonosDiscovery
 
 DEBUG = 1
 
@@ -23,7 +24,12 @@ GPIO.setup(PANDORA, GPIO.IN)
 GPIO.setup(WSHU, GPIO.IN)
 GPIO.setup(WNYC, GPIO.IN)
 
-sonos = SoCo('192.168.1.103')
+#sonos = SoCo('192.168.1.103')
+sonos_devices = SonosDiscovery()
+speakers = [SoCo(ip) for ip in sonos_devices.get_speaker_ips()]
+for s in speakers:
+    print '{}: {}'.format(s.player_name,s.speaker_ip)
+
 
 def play_uri(uri, name):
     try:
@@ -125,7 +131,14 @@ def main():
             set_volume = int(set_volume)            # cast volume as integer
 
             #print 'Volume = {}%'.format(set_volume)
-            sonos.volume = set_volume
+            if set_volume > 75:
+                set_volume = 75
+                print "volume over 75 was reset to 75"
+            
+            for s in speakers:
+                s.volume = set_volume
+            
+            #sonos.volume = set_volume
                     
             last_read = trim_pot
 
