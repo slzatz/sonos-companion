@@ -12,12 +12,21 @@ import serial
 ser = serial.Serial("/dev/ttyACM0", 9600, timeout=0)
 #ser.stopbits = 2
 #a = ''
-
+sonos_devices = SonosDiscovery()
 speakers = [SoCo(ip) for ip in sonos_devices.get_speaker_ips()]
 for s in speakers:
     print '{}: {}'.format(s.player_name,s.speaker_ip)
 
+#print dir(speakers[0])
+
 sonos = speakers[0]
+#sonos.partymode() #not sure this works - it didn't work
+uid = sonos.get_speaker_info()['uid']
+print uid
+
+speakers[1].unjoin()
+speakers[1].join(uid)
+#speakers[2].join(uid)
 
 def play_uri(uri, name):
     try:
@@ -51,7 +60,7 @@ while True:
         #a = ''
         button = int(button)
         if 0 < button < 13:
-        n = button-1
+            n = button-1
             play_uri(z[n][1], z[n][0])        
-    time.sleep(.1)
+    sleep(.1)
     
