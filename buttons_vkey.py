@@ -17,20 +17,41 @@ speakers = [SoCo(ip) for ip in sonos_devices.get_speaker_ips()]
 for s in speakers:
     print '{}: {}'.format(s.player_name,s.speaker_ip)
 
+#{item: word.count(item) for item in set(word)}
+d = {SoCo(ip).player_name: SoCo(ip).speaker_ip for ip in sonos_devices.get_speaker_ips()}
+e = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
+
+print d
+
 #print dir(speakers[0])
 
-sonos = speakers[0]
 #sonos.partymode() #not sure this works - it didn't work
-uid = sonos.get_speaker_info()['uid']
+info = speakers[0].get_speaker_info() #'zone_name'
+zone_name = info['zone_name']
+master_ip = d[zone_name]
+
+for s in speakers:
+    if s.speaker_ip == master_ip:
+        master = s
+        break
+
+print 'master = {}: {}'.format(master.player_name,master.speaker_ip)
+
+master2 = e[zone_name]
+
+print 'master2 = {}: {}'.format(master2.player_name,master2.speaker_ip)
+
+
+uid = master.get_speaker_info()['uid']
 print uid
 
-speakers[1].unjoin()
-speakers[1].join(uid)
+#speakers[1].unjoin()
+#speakers[1].join(uid)
 #speakers[2].join(uid)
 
 def play_uri(uri, name):
     try:
-        sonos.play_uri(uri)
+        master.play_uri(uri)
     except:
         print traceback.format_exc()
         print "had problem switching to "+name
