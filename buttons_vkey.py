@@ -3,47 +3,37 @@
 #should be used with vkey_sketch2.ino
 
 from time import sleep
-import traceback
+#import traceback
 from soco import SoCo
 from soco import SonosDiscovery
 import serial
 
 #ser = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
 ser = serial.Serial("/dev/ttyACM0", 9600, timeout=0)
-#ser.stopbits = 2
-#a = ''
+
 sonos_devices = SonosDiscovery()
 speakers = [SoCo(ip) for ip in sonos_devices.get_speaker_ips()]
 for s in speakers:
     print '{}: {}'.format(s.player_name,s.speaker_ip)
 
-#{item: word.count(item) for item in set(word)}
-d = {SoCo(ip).player_name: SoCo(ip).speaker_ip for ip in sonos_devices.get_speaker_ips()}
+#d = {SoCo(ip).player_name: SoCo(ip).speaker_ip for ip in sonos_devices.get_speaker_ips()}
 e = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
 
-print d
+print e
 
 #print dir(speakers[0])
 
 #sonos.partymode() #not sure this works - it didn't work
-info = speakers[0].get_speaker_info() #'zone_name'
+#info = speakers[0].get_speaker_info() #'zone_name'
+info = e.values()[0].get_speaker_info() #'zone_name'
 zone_name = info['zone_name']
-master_ip = d[zone_name]
-
-for s in speakers:
-    if s.speaker_ip == master_ip:
-        master = s
-        break
+#master_ip = d[zone_name]
+master = e[zone_name]
 
 print 'master = {}: {}'.format(master.player_name,master.speaker_ip)
 
-master2 = e[zone_name]
-
-print 'master2 = {}: {}'.format(master2.player_name,master2.speaker_ip)
-
-
-uid = master.get_speaker_info()['uid']
-print uid
+master_uid = master.get_speaker_info()['uid']
+print 'master_uid=',master_uid
 
 #speakers[1].unjoin()
 #speakers[1].join(uid)
@@ -78,7 +68,6 @@ while True:
     if button:
         print "button pushed"
         print button
-        #a = ''
         button = int(button)
         if 0 < button < 13:
             n = button-1
