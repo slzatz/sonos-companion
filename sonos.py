@@ -1,5 +1,5 @@
 #@+leo-ver=5-thin
-#@+node:slzatz.20140105160722.1551: * @file C:/home/slzatz/webapp/sonos.py
+#@+node:slzatz.20140105160722.1551: * @file C:/home/slzatz/sonos-companion/sonos.py
 #@@language python
 #@@tabwidth -4
 #@+others
@@ -16,6 +16,7 @@ import json
 from flask import Flask, render_template, url_for
 
 from soco import SoCo
+from soco import SonosDiscovery
 
 import settings
 import pickle
@@ -31,7 +32,21 @@ app.config.from_pyfile('settings.py')
 HOST = app.config['HOST']
 INDEX_HTML = app.config['INDEX_HTML']
 
-sonos = SoCo(app.config['SPEAKER_IP'])
+# use master speaker code that is used in buttons_vkey.py
+sonos_devices = SonosDiscovery()
+speakers = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
+
+for name,speaker in speakers.items():
+    print '{}: {}'.format(name, speaker.speaker_ip)
+
+info = speakers.values()[0].get_speaker_info()
+zone_name = info['zone_name']
+master = speakers[zone_name]
+
+print 'master speaker = {}: {}'.format(master.player_name,master.speaker_ip)
+
+#sonos = SoCo(app.config['SPEAKER_IP'])
+sonos = master
 
 # artists.json is the file that caches previous image searches
 try:
