@@ -9,28 +9,22 @@ from soco import SonosDiscovery
 import serial
 
 #ser = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
-ser = serial.Serial("/dev/ttyACM0", 9600, timeout=0)
+ser = serial.Serial("/dev/ttyACM0", 9600, timeout=0.5)
 
 sonos_devices = SonosDiscovery()
-speakers = [SoCo(ip) for ip in sonos_devices.get_speaker_ips()]
-for s in speakers:
-    print '{}: {}'.format(s.player_name,s.speaker_ip)
 
-#d = {SoCo(ip).player_name: SoCo(ip).speaker_ip for ip in sonos_devices.get_speaker_ips()}
-e = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
+speakers = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
 
-print e
-
-#print dir(speakers[0])
+for name,speaker in speakers.items():
+    print '{}: {}'.format(name, speaker.speaker_ip)
 
 #sonos.partymode() #not sure this works - it didn't work
-#info = speakers[0].get_speaker_info() #'zone_name'
-info = e.values()[0].get_speaker_info() #'zone_name'
-zone_name = info['zone_name']
-#master_ip = d[zone_name]
-master = e[zone_name]
 
-print 'master = {}: {}'.format(master.player_name,master.speaker_ip)
+info = speakers.values()[0].get_speaker_info()
+zone_name = info['zone_name']
+master = speakers[zone_name]
+
+print 'master speaker = {}: {}'.format(master.player_name,master.speaker_ip)
 
 master_uid = master.get_speaker_info()['uid']
 print 'master_uid=',master_uid
@@ -64,11 +58,14 @@ z = [
 ('Vienna Teng Radio', 'pndrradio:138764603804051010')]
 
 while True:
-    button = ser.read(2)
+    button = ser.readline()
     if button:
         print "button pushed"
         print button
-        button = int(button)
+        try:
+            button = int(button.strip())
+        except:
+            n = 0
         if 0 < button < 13:
             n = button-1
             play_uri(z[n][1], z[n][0])        
