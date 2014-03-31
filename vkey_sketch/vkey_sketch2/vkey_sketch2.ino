@@ -63,6 +63,16 @@ void loop()
     // Only print when value has changed
     //Serial.print("Got key: ");
     Serial.println(k);
+    
+    int value;
+  
+  // Read the input voltage
+
+     uint8_t analog_pin;
+     analog_pin = A1;
+     value = analogRead(analog_pin);
+     Serial.println(value);
+        
   }
 
   // The responsiveness of the keypad depends on how frequently it is checked. 
