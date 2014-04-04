@@ -1,5 +1,7 @@
+int analog_pin0 = A0;
 int analog_pin = A1;
 int last_key = 0;
+int last_volume = 0;
 
 void setup()
 {
@@ -12,14 +14,24 @@ void loop()
 {
   
   int k;
+  int b;
   
   if(checkKeys2(k)) // C++ this is implicit referencing
   {
     // Only send info when value has changed
     //Serial.print("Key pressed ="); for debugging
+    Serial.print('b');
     Serial.println(k);  //implicit dereferencing of variable passed by reference
   }
+  
+  //int reading = analogRead(analog_pin0);
+  
+  if(checkVolume(b))
+  {
+    Serial.print('v');
+    Serial.println(b);
     // 50 milliseconds seems to be a reasonable poll interval.
+  }
     delay(50);
 }
 
@@ -70,3 +82,15 @@ int voltageToKey(int v)
   
   return j;
 }
+
+bool checkVolume(int &b)
+{
+   b = analogRead(analog_pin0);
+   if(b != last_volume)
+   {
+     last_volume = b; 
+     return true;
+   }
+   
+   return false;
+}  
