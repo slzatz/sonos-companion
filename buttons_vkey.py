@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-#should be used with vkey_sketch2.ino
+#should be used with vkey_sketch3.ino
 
 from time import sleep
-#import traceback
 from soco import SoCo
 from soco import SonosDiscovery
 import serial
@@ -19,9 +18,7 @@ sonos_devices = SonosDiscovery()
 speakers = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
 
 for name,speaker in speakers.items():
-    print '{}: {}'.format(name, speaker.speaker_ip)
-
-#sonos.partymode() #not sure this works - it didn't work
+    print "{}: {}".format(name, speaker.speaker_ip)
 
 info = speakers.values()[0].get_speaker_info()
 zone_name = info['zone_name']
@@ -30,21 +27,20 @@ master = speakers[zone_name]
 print 'master speaker = {}: {}'.format(master.player_name,master.speaker_ip)
 
 master_uid = master.get_speaker_info()['uid']
-print 'master_uid=',master_uid
-
-#speakers[1].unjoin()
-#speakers[1].join(uid)
-#speakers[2].join(uid)
+print "master_uid={}".format(master_uid)
 
 def play_uri(uri, name):
     try:
         master.play_uri(uri)
+        # for some reason and I don't think I'd seen this before but thisis ungrouping the master from the rest of the speakers
+        for speaker in speakers.values():
+            if speaker != master:
+                speaker.join(master_uid)
     except:
         print traceback.format_exc()
-        print "had problem switching to "+name
+        print "had a problem switching to {}!".format(name)
     else:
-        print "switched to "+name
-
+        print "switched to {}".format(name)
 
 z = [
 ('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
@@ -60,55 +56,43 @@ z = [
 ('Counting Crows Radio', 'pndrradio:1727297518525703746'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010')]
 
-last_read = 0       # this keeps track of the last potentiometer value
-tolerance = 5       # to keep from being jittery we'll only change volume when the pot has moved more than 5 'counts'
-n = 0               # counter in while loop
+tolerance = 0       # prevent volume from being too sensitive - right now being taken care of on the arduino
 
-while True:
-    arduino_serial = ser.readline()
-    print "arduino_serial=",arduino_serial
-    if arduino_serial and arduino_serial[0] == 'b':
-        button = arduino_serial[1:]
-        if button:
-            print "button pushed"
-            print button
-            try:
-                button = int(button.strip())
-            except:
-                n = 0
-            if 0 < button < 13:
-                n = button-1
-                play_uri(z[n][1], z[n][0]) 
-                
-    elif arduino_serial and arduino_serial[0] == 'v':
-        #print arduino_serial
-        volume = float(arduino_serial[1:])
+def main():
+    n = 0               # counter in while loop
+    last_read = 0       # this keeps track of the last potentiometer value
 
-        if abs(volume - last_read) > tolerance:
- 
-            set_volume = volume / 10.24           # convert 10bit adc0 (0-1024) trim pot read into 0-100 volume level
-            set_volume = round(set_volume)          # round out decimal value
-            set_volume = int(set_volume)               # cast volume as integer
+    while True:
+        arduino_serial = ser.readline()
+        #print "arduino_serial=",arduino_serial
+        if arduino_serial:
+            if arduino_serial[0] == 'b':
+                button = int(arduino_serial[1:])
+                print "button pushed = {}".format(button)
+                if 0 < button < 13:
+                    n = button-1
+                    play_uri(z[n][1], z[n][0]) 
+                        
+            elif arduino_serial[0] == 'v':
+                volume = int(arduino_serial[1:])
+                if abs(volume - last_read) > tolerance:
+         
+                    set_volume = int(round(volume / 10.24))         # convert (0-1024) trimpot read into 0-100 volume level
 
-            if set_volume > 75:
-                set_volume = 75
-                print "volume over 75 was reset to 75"
-            
-            for s in speakers.values():
-                s.volume = set_volume
-                
-            print 'Volume = {}%'.format(set_volume)
+                    if set_volume > 75:
+                        set_volume = 75
+                        print "volume set to over 75 was reset to 75"
                     
-            last_read = volume
+                    for s in speakers.values():
+                        s.volume = set_volume
+                        
+                    print "volume = {}%".format(set_volume)
+                            
+                    last_read = volume
+       
+        sleep(.1)
 
-        n+=1
-        if n == 1000:
-            if DEBUG:
-                print 'station: {}'.format(station)
-                print 'volume: {}'.format(volume)
-            n = 0
-
-    else:
-        print "Neither button nor volume"    
-    sleep(.1)
-    
+try:
+    main()
+except KeyboardInterrupt:
+    print "Keyboard Interrupt"

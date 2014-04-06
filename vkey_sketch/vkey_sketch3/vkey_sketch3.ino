@@ -1,18 +1,18 @@
 int analog_pin0 = A0;
-int analog_pin = A1;
+int analog_pin1 = A1;
 int last_key = 0;
 int last_volume = 0;
 
 void setup()
 {
-  pinMode(analog_pin, INPUT);
+  pinMode(analog_pin1, INPUT);
+  pinMode(analog_pin0, INPUT);
   Serial.begin(9600);
   //Serial.println("Welcome to VKey example");
 }
 
 void loop() 
 {
-  
   int k;
   int b;
   
@@ -37,11 +37,10 @@ void loop()
 
 bool checkKeys2 (int &kk) //this may be done this way only in C++ - I think the C version is checkKeys2 (int *k) and then *k = voltageToKey(value)
 {
-
   int value;
   
   // Read the input voltage
-  value = analogRead(analog_pin);
+  value = analogRead(analog_pin1);
 
   // convert voltage to a key number
   kk = voltageToKey(value);
@@ -85,8 +84,10 @@ int voltageToKey(int v)
 
 bool checkVolume(int &b)
 {
-   b = analogRead(analog_pin0);
-   if(b != last_volume)
+  const int tolerance = 10; 
+  b = analogRead(analog_pin0);
+   if( abs(b - last_volume) > tolerance )
+   //if(b != last_volume)
    {
      last_volume = b; 
      return true;
