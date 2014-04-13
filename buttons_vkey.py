@@ -37,12 +37,12 @@ def play_uri(uri, name):
             if speaker != master:
                 speaker.join(master_uid)
     except:
-        print traceback.format_exc()
+        #print traceback.format_exc()
         print "had a problem switching to {}!".format(name)
     else:
         print "switched to {}".format(name)
 
-z = [
+stations = [
 ('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
 ('WSHU', 'x-rincon-mp3radio://wshu.streamguys.org/wshu-news'),
 ('QuickMix', 'pndrradio:52877953807377986'),
@@ -55,6 +55,9 @@ z = [
 ('Kris Delmhorst Radio', 'pndrradio:610111769614181954'),
 ('Counting Crows Radio', 'pndrradio:1727297518525703746'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010')]
+
+for i,s in enumerate(stations):
+    print "{:d} - {}".format(i+1,s[0])
 
 tolerance = 0       # prevent volume from being too sensitive - right now being taken care of on the arduino
 
@@ -71,7 +74,7 @@ def main():
                 print "button pushed = {}".format(button)
                 if 0 < button < 13:
                     n = button-1
-                    play_uri(z[n][1], z[n][0]) 
+                    play_uri(stations[n][1], stations[n][0]) 
                         
             elif arduino_serial[0] == 'v':
                 volume = int(arduino_serial[1:])
