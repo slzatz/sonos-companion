@@ -9,7 +9,7 @@ import serial
 
 #####ser = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
 #ser = serial.Serial("/dev/ttyACM0", 9600, timeout=0.5)
-ser = serial.Serial("COM19", 9600, timeout=0.5)
+#ser = serial.Serial("COM19", 9600, timeout=0.5)
 
 DEBUG = 1
 
@@ -17,25 +17,33 @@ sonos_devices = SonosDiscovery()
 
 speakers = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
 
+# As far as I can tell player_name == get_speaker_info()['zone_name]    
 for name,speaker in speakers.items():
-    print "{}: {}".format(name, speaker.speaker_ip)
+    a = speaker.get_current_track_info()['artist']
+    #print "player_name: {}; ip: {}; zone name: {}; artist: {}".format(name, speaker.speaker_ip, speaker.get_speaker_info()['zone_name'], a)
+    print "player_name: {}; ip: {}; artist: {}".format(name, speaker.speaker_ip, a)
+    
+    # using the presence of an artist to decide that is the master speaker - seems to work
+    if a:
+        master = speaker  
 
-info = speakers.values()[0].get_speaker_info()
-zone_name = info['zone_name']
-master = speakers[zone_name]
 
-print 'master speaker = {}: {}'.format(master.player_name,master.speaker_ip)
+print "\nmaster speaker = {}: {}".format(master.player_name,master.speaker_ip)
 
 master_uid = master.get_speaker_info()['uid']
-print "master_uid={}".format(master_uid)
+print "master_uid = {}\n".format(master_uid)
+
+for speaker in speakers.values():
+    if speaker != master:
+        speaker.join(master_uid)
 
 def play_uri(uri, name):
     try:
         master.play_uri(uri)
-        # for some reason and I don't think I'd seen this before but thisis ungrouping the master from the rest of the speakers
-        for speaker in speakers.values():
-            if speaker != master:
-                speaker.join(master_uid)
+        # for some reason and I don't think I'd seen this before but thi sis ungrouping the master from the rest of the speakers
+        #for speaker in speakers.values():
+        #    if speaker != master:
+        #        speaker.join(master_uid)
     except:
         #print traceback.format_exc()
         print "had a problem switching to {}!".format(name)

@@ -36,17 +36,23 @@ INDEX_HTML = app.config['INDEX_HTML']
 sonos_devices = SonosDiscovery()
 speakers = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
 
+# As far as I can tell player_name == get_speaker_info()['zone_name]    
 for name,speaker in speakers.items():
-    print '{}: {}'.format(name, speaker.speaker_ip)
+    a = speaker.get_current_track_info()['artist']
+    print "player_name: {}; ip: {}; artist: {}".format(name, speaker.speaker_ip, a)
+    
+    # using the presence of an artist to decide that is the master speaker - seems to work
+    if a:
+        sonos = speaker
+        break
+else:
+    sonos = speakers.values()[0]
 
-info = speakers.values()[0].get_speaker_info()
-zone_name = info['zone_name']
-master = speakers[zone_name]
+print 'sonos master speaker = {}: {}'.format(sonos.player_name,sonos.speaker_ip)
 
-print 'master speaker = {}: {}'.format(master.player_name,master.speaker_ip)
-
-#sonos = SoCo(app.config['SPEAKER_IP'])
-sonos = master
+#for speaker in speakers.values():
+#    if speaker != master:
+#        speaker.join(master_uid)
 
 # artists.json is the file that caches previous image searches
 try:
@@ -71,13 +77,17 @@ def get_images(artist):
     start=1 or 11
     using link, height, width
     '''
+    
+    #if there is no artist (for example when Sonos isn't playing anything) then show images of sunsets  ;-)
+    if not artist:
+        artist = 'sunsets'
 
     if artist not in artists: 
         http = httplib2.Http()
         service = discovery.build('customsearch', 'v1',  developerKey='AIzaSyCe7pbOm0sxYXwMWoMJMmWvqBcvaTftRC0', http=http)
         z = service.cse().list(q=artist, searchType='image', imgSize='large', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
 
-        #print 'z=',z    
+        print 'artist=',artist    #################################################
         image_list = []
 
         for x in z['items']:
