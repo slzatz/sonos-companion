@@ -49,9 +49,10 @@ else:
     sonos = speakers.values()[0]
 
 print 'sonos master speaker = {}: {}'.format(sonos.player_name,sonos.speaker_ip)
+master_uid = sonos.get_speaker_info()['uid']
 
 #for speaker in speakers.values():
-#    if speaker != master:
+#    if speaker != sonos:
 #        speaker.join(master_uid)
 
 # artists.json is the file that caches previous image searches
@@ -67,6 +68,23 @@ musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
 
+#@+node:slzatz.20140421213753.2449: ** stations
+stations = [
+('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
+('WSHU', 'x-rincon-mp3radio://wshu.streamguys.org/wshu-news'),
+('QuickMix', 'pndrradio:52877953807377986'),
+('R.E.M. Radio', 'pndrradio:637630342339192386'), 
+('Nick Drake Radio', 'pndrradio:409866109213435458'),
+('Dar Williams Radio', 'pndrradio:1823409579416053314'),
+('Patty Griffin Radio', 'pndrradio:52876609482614338'),
+('Lucinda Williams Radio', 'pndrradio:360878777387148866'),
+('Neil Young Radio', 'pndrradio:52876154216080962'),
+('Kris Delmhorst Radio', 'pndrradio:610111769614181954'),
+('Counting Crows Radio', 'pndrradio:1727297518525703746'), 
+('Vienna Teng Radio', 'pndrradio:138764603804051010')]
+
+for i,s in enumerate(stations):
+    print "{:d} - {}".format(i+1,s[0])
 #@+node:slzatz.20140105160722.1553: ** get_images (Google Custom Search Engine)
 def get_images(artist):
     '''
@@ -250,6 +268,14 @@ def get_release_date(artist, album, title):
     
 
 
+#@+node:slzatz.20140421213753.2448: ** play_uri
+def play_uri(uri, name):
+    try:
+        sonos.play_uri(uri)
+    except:
+        print "had a problem switching to {}!".format(name)
+    else:
+        print "switched to {}".format(name)
 #@+node:slzatz.20140120090653.1358: ** Sonos controls (not in use)
 #@+node:slzatz.20140105160722.1554: *3* play
 @app.route("/play")
@@ -309,6 +335,36 @@ def index():
     track = sonos.get_current_track_info()
     return render_template(INDEX_HTML)
 
+#@+node:slzatz.20140419192833.2446: ** buttons
+@app.route('/b/<int:button>')
+def show_button(button):
+    print "button: {}".format(button)
+    
+    #note that using 12 right now to gracefully disconnect cc3000 from WiFi
+    if 0 < button < 13:
+        n = button-1
+        play_uri(stations[n][1], stations[n][0]) 
+    
+    return "button: {}".format(button)
+    
+
+#@+node:slzatz.20140420093643.2447: ** volume
+@app.route('/v/<int:volume>')
+def show_volume(volume):
+    print "volume: {}".format(volume)
+    
+    set_volume = int(round(volume / 10.24))         # convert (0-1024) trimpot read into 0-100 volume level
+
+    if set_volume > 75:
+        set_volume = 75
+        print "volume set to over 75 was reset to 75"
+                    
+    for s in speakers.values():
+        s.volume = set_volume
+    
+    return "volume: {}".format(volume)
+    
+    
 #@+node:slzatz.20140131181451.1211: ** main
 if __name__ == '__main__':
     app.run(host=HOST, debug=True)
