@@ -42,7 +42,7 @@ Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ
                                          SPI_CLOCK_DIVIDER); // you can change this clock speed
 
 #define WLAN_SSID       "47SBD(2.4GHz)" //"47sbd2"//"47SBD(2.4GHz)"           // cannot be longer than 32 characters!
-#define WLAN_PASS       "xxxxxxxxxx"
+#define WLAN_PASS       "xxxxxxxxxxxxxxxxxxxxxx"
 // Security can be WLAN_SEC_UNSEC, WLAN_SEC_WEP, WLAN_SEC_WPA or WLAN_SEC_WPA2
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 
@@ -118,7 +118,7 @@ void setup(void)
   }
   
   uint32_t ip;
-  ip = cc3000.IP2U32(192,168,1,149);
+  ip = cc3000.IP2U32(192,168,1,107); //******************************************************************* need to change to right ip
   
   /*ip = 0;
   // Try looking up the website's IP address
@@ -209,7 +209,7 @@ void loop(void)
     
   // I think the issue is that cc3000 is being disconnected in the setup loop - what I need is button 12 to disconnect the cc3000 so it exits cleanly
   uint32_t ip;
-  ip = cc3000.IP2U32(192,168,1,149);
+  ip = cc3000.IP2U32(192,168,1,107); //*************************************************************needs to be the right ip
   
   Adafruit_CC3000_Client xyz = cc3000.connectTCP(ip, 5000);
   
@@ -258,7 +258,7 @@ void loop(void)
     Serial.println(v);
     
     uint32_t ip;
-    ip = cc3000.IP2U32(192,168,1,149);
+    ip = cc3000.IP2U32(192,168,1,107);  //*************************************************************needs to be the right ip
   
   Adafruit_CC3000_Client xyz = cc3000.connectTCP(ip, 5000);
     
