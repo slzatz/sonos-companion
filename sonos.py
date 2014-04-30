@@ -365,6 +365,16 @@ def show_volume(volume):
     return "volume: {}".format(volume)
     
     
+#@+node:slzatz.20140429195658.2451: ** debugmemory
+@app.route('/m/<int:memory>')
+def show_memory(memory):
+    print "memory: {}".format(memory)
+    
+    return "memory: {}".format(memory)
+    
+    
+    
+    
 #@+node:slzatz.20140131181451.1211: ** main
 if __name__ == '__main__':
     app.run(host=HOST, debug=True)
