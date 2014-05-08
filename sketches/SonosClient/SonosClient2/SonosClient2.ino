@@ -18,8 +18,8 @@
 #define ADAFRUIT_CC3000_CS    10
 // Use hardware SPI for the remaining pins
 // On an UNO, SCK = 13, MISO = 12, and MOSI = 11
-Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT,
-                                         SPI_CLOCK_DIVIDER); // you can change this clock speed
+
+Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT, SPI_CLOCK_DIVIDER); // clock speed can be changed
 
 //define WLAN_SSID, WLAN_PASS and WLAN_SECURITY in a separate file
 
@@ -43,7 +43,7 @@ void setup(void)
   //vkey end
   
   Serial.begin(115200);
-  Serial.println(F("Hello, Steve!\n")); 
+  //Serial.println(F("Hello, Steve!\n")); 
 
   Serial.print("Free RAM: "); Serial.println(getFreeRam(), DEC);
   
@@ -51,14 +51,14 @@ void setup(void)
   Serial.println(F("\nInitializing..."));
   if (!cc3000.begin())
   {
-    Serial.println(F("Couldn't begin()! Check your wiring?"));
-    while(1);
+    Serial.println(F("Couldn't execute cc3000.begin()!"));
+    while(1); // just loops continually because nothing else to do
   }
   
   Serial.print(F("\nAttempting to connect to ")); Serial.println(WLAN_SSID);
   if (!cc3000.connectToAP(WLAN_SSID, WLAN_PASS, WLAN_SECURITY)) {
-    Serial.println(F("Failed!"));
-    while(1);
+    Serial.println(F("Failed to connect!"));
+    while(1); // just loops continually because nothing else to do
   }
    
   Serial.println(F("Connected!"));
@@ -121,9 +121,9 @@ void loop(void)
   int v;
   int fm;
   
-  char vol = 'v';
-  char but = 'b';
-  char mem = 'm';
+  const char vol = 'v';
+  const char but = 'b';
+  const char mem = 'm';
   
   if(checkKeys2(k)) // C++ this is implicit referencing
   {
@@ -287,15 +287,12 @@ bool transmit (Adafruit_CC3000_Client z, char t, int num) {
   Serial.println(F("\r\nIn transmit"));   
   if (z.connected()) {
     Serial.println(F("z is connected"));  
-    z.fastrprint(F("GET "));
-    //z.fastrprint(F("/b/5"));
+    z.fastrprint(F("GET ")); // size_t Adafruit_CC3000_Client::fastrprint(const char *str)
     z.fastrprint(F("/"));
-    z.print(t);  // size_t Adafruit_CC3000_Client::fastrprint(const char *str)
+    z.print(t);  //////////////////////////////////////
     z.fastrprint(F("/"));
-    z.print(num);
+    z.print(num);//////////////////////////////////////
     z.fastrprint(F(" HTTP/1.1\r\n"));
-    //z.fastrprint(F("Host: ")); z.fastrprint(WEBSITE); z.fastrprint(F("\r\n"));
-    //z.fastrprint(F("\r\n"));
     z.println();
     return true;
   } 
@@ -359,7 +356,6 @@ bool checkVolume(int &b)
   const int tolerance = 10; 
   b = analogRead(analog_pin0);
    if( abs(b - last_volume) > tolerance )
-   //if(b != last_volume)
    {
      last_volume = b; 
      return true;
