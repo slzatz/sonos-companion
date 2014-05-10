@@ -31,6 +31,7 @@ app = Flask(__name__)
 app.config.from_pyfile('settings.py')
 HOST = app.config['HOST']
 INDEX_HTML = app.config['INDEX_HTML']
+DEBUG = app.config['DEBUG']
 
 # use master speaker code that is used in buttons_vkey.py
 sonos_devices = SonosDiscovery()
@@ -43,16 +44,16 @@ for name,speaker in speakers.items():
     
     # using the presence of an artist to decide that is the master speaker - seems to work
     if a:
-        sonos = speaker
+        master = speaker
         break
 else:
-    sonos = speakers.values()[0]
+    master = speakers.values()[0]
 
-print 'sonos master speaker = {}: {}'.format(sonos.player_name,sonos.speaker_ip)
-master_uid = sonos.get_speaker_info()['uid']
+print 'sonos master speaker = {}: {}'.format(master.player_name, master.speaker_ip)
+master_uid = master.get_speaker_info()['uid']
 
 #for speaker in speakers.values():
-#    if speaker != sonos:
+#    if speaker != master:
 #        speaker.join(master_uid)
 
 # artists.json is the file that caches previous image searches
@@ -83,8 +84,9 @@ stations = [
 ('Counting Crows Radio', 'pndrradio:1727297518525703746'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010')]
 
-for i,s in enumerate(stations):
-    print "{:d} - {}".format(i+1,s[0])
+#for i,s in enumerate(stations):
+    #print "{:d} - {}".format(i+1,s[0])
+
 #@+node:slzatz.20140105160722.1553: ** get_images (Google Custom Search Engine)
 def get_images(artist):
     '''
@@ -271,7 +273,7 @@ def get_release_date(artist, album, title):
 #@+node:slzatz.20140421213753.2448: ** play_uri
 def play_uri(uri, name):
     try:
-        sonos.play_uri(uri)
+        master.play_uri(uri)
     except:
         print "had a problem switching to {}!".format(name)
     else:
@@ -280,37 +282,37 @@ def play_uri(uri, name):
 #@+node:slzatz.20140105160722.1554: *3* play
 @app.route("/play")
 def play():
-    sonos.play()
+    master.play()
     return 'Ok'
 
 #@+node:slzatz.20140105160722.1555: *3* pause
 @app.route("/pause")
 def pause():
-    sonos.pause()
+    master.pause()
     return 'Ok'
 
 #@+node:slzatz.20140105160722.1556: *3* next
 @app.route("/next")
 def next():
-    sonos.next()
+    master.next()
     return 'Ok'
 
 #@+node:slzatz.20140105160722.1557: *3* previous
 @app.route("/previous")
 def previous():
-    sonos.previous()
+    master.previous()
     return 'Ok'
 
 #@+node:slzatz.20140105160722.1558: ** info_light
 @app.route("/info-light")
 def info_light():
-    track = sonos.get_current_track_info()
+    track = master.get_current_track_info()
     return json.dumps(track)
 
 #@+node:slzatz.20140105160722.1559: ** info
 @app.route("/info")
 def info():
-    track = sonos.get_current_track_info()
+    track = master.get_current_track_info()
     
     # get lyrics from lyricwiki
     url = get_url(track['artist'], track['title'])
@@ -326,13 +328,13 @@ def info():
 #@+node:slzatz.20140105160722.1560: ** images
 @app.route("/images")
 def images():
-    track = sonos.get_current_track_info()
+    track = master.get_current_track_info()
     return json.dumps(get_images(track['artist']))
 
 #@+node:slzatz.20140105160722.1561: ** index
 @app.route("/")
 def index():
-    track = sonos.get_current_track_info()
+    track = master.get_current_track_info()
     return render_template(INDEX_HTML)
 
 #@+node:slzatz.20140419192833.2446: ** buttons
@@ -375,9 +377,25 @@ def show_memory(memory):
     
     
     
+#@+node:slzatz.20140510101301.2452: ** list_stations
+@app.route('/stations')
+def list_stations():
+    z = ""
+    for i,s in enumerate(stations):
+        print "{:d} - {}".format(i+1,s[0])
+        z+= "{:d} - {}<br>".format(i+1,s[0])
+        
+    return z
+    
+    
+        
+    
+    
+    
+    
 #@+node:slzatz.20140131181451.1211: ** main
 if __name__ == '__main__':
-    app.run(host=HOST, debug=True)
+    app.run(host=HOST, debug=DEBUG)
 #@-others
 
 
