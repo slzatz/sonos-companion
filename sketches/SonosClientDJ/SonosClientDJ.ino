@@ -28,18 +28,41 @@ Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ
                                    // you're accessing is quick to respond, you can reduce this value.
 
 
-//vkey start
-int analog_pin0 = A0;
-int analog_pin1 = A1;
+int last_a0 = 0;
+int last_a1 = 0;
+int last_a2 = 0;
+
+const int tolerance = 3; 
+
 int last_key = 0;
 int last_volume = 0;
-//vkey end
+int analog_pin0 = A0;
+int analog_pin1 = A1;
 
 void setup(void)
 {
-  //vkey pins
-  pinMode(analog_pin1, INPUT);
-  pinMode(analog_pin0, INPUT);
+  //Button initialization
+pinMode(2, INPUT);
+//pinMode(3, INPUT);
+pinMode(4, INPUT);
+//pinMode(5, INPUT);
+pinMode(6, INPUT);
+
+//? setting buttons high so press takes voltage down
+digitalWrite(2, HIGH);
+digitalWrite(3, HIGH);
+digitalWrite(4, HIGH);
+digitalWrite(5, HIGH);
+digitalWrite(6, HIGH);
+
+//LED initialization
+pinMode(A4, OUTPUT);
+pinMode(A5, OUTPUT);
+
+//Potentiometer initialization - probably unnecessary if this is default
+pinMode(A0, INPUT);
+pinMode(A1, INPUT);
+pinMode(A2, INPUT);
   
   Serial.begin(115200);
 
@@ -295,13 +318,93 @@ bool transmit (Adafruit_CC3000_Client z, char t, int num) {
 
 bool checkKeys2 (int &kk) //this may be done this way only in C++ - I think the C version is checkKeys2 (int *k) and then *k = voltageToKey(value)
 {
-  int value;
+
+//////////
+//Button Input
+
+kk = 0;
+
+// Read button D2:
+boolean d2Pressed = digitalRead(2);
+if (d2Pressed == 0){
+Serial.print("Button 2 = ");
+Serial.println(d2Pressed); 
+
+// Turn off left LED
+digitalWrite(A4, LOW);
+
+// Turn off right LED
+digitalWrite(A5, LOW);
+
+kk = 1;
+
+}
+/*D3 is used by CC3000
+// Read button D3:
+boolean d3Pressed = digitalRead(3);
+if (d3Pressed == 0){
+Serial.print("Button 3 = ");
+Serial.println(d3Pressed); 
+
+// Turn off left LED
+digitalWrite(A4, LOW);
+
+// Turn on right LED
+digitalWrite(A5, HIGH);
+
+}*/
+
+// Read button D4:
+boolean d4Pressed = digitalRead(4);
+if (d4Pressed == 0){
+Serial.print("Button 4 = ");
+Serial.println(d4Pressed); 
+
+// Turn on left LED
+digitalWrite(A4, HIGH);
+
+// Turn off right LED
+digitalWrite(A5, LOW);
+
+kk = 2;
+
+}
+
+/* D5 is used by CC3000
+// Read button D5:
+boolean d5Pressed = digitalRead(5);
+if (d5Pressed == 0){
+Serial.print("Button 5 = ");
+Serial.println(d5Pressed); 
+
+// Turn on left LED
+digitalWrite(A4, HIGH);
+
+// Turn on right LED
+digitalWrite(A5, HIGH);
+
+}*/
+
+// Read button D6:
+boolean d6Pressed = digitalRead(6);
+if (d6Pressed == 0){
+Serial.print("Button 6 = ");
+Serial.println(d6Pressed); 
+
+kk = 3;
+
+}
+
+
+
+//////////////////
+  //int value;
   
   // Read the input voltage
-  value = analogRead(analog_pin1);
+  //value = analogRead(analog_pin1);
 
   // convert voltage to a key number
-  kk = voltageToKey(value);
+  //kk = voltageToKey(value);
   
   // Check to see if current key number is different than last seen 
   //if((kk != last_key) && (kk!=0))
@@ -343,8 +446,40 @@ int voltageToKey(int v)
 
 bool checkVolume(int &b)
 {
-  const int tolerance = 10; 
-  b = analogRead(analog_pin0);
+  
+int a0 = analogRead(A0); 
+
+/*if( abs(a0 - last_a0) > tolerance )
+   {
+     last_a0 = a0; 
+     Serial.print("Volume A0 = ");
+     Serial.println(a0);
+   }
+*/
+/*
+// Read A1 potentiometer:
+
+int a1 = analogRead(A1);
+if( abs(a1 - last_a1) > tolerance )
+  {
+    last_a1 = a1;
+    Serial.print("Volume A1 ="); 
+    Serial.println(a1); 
+  }
+  
+int a2 = analogRead(A2);
+if( abs(a2 - last_a2) > tolerance )
+  {
+    last_a2 = a2;
+    Serial.print("Volume A2 ="); 
+    Serial.println(a2); 
+  }
+ 
+*/ 
+  
+  //const int tolerance = 10; 
+  //b = analogRead(analog_pin0);
+  b = a0;
    if( abs(b - last_volume) > tolerance )
    {
      last_volume = b; 
