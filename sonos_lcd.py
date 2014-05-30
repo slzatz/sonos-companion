@@ -81,7 +81,7 @@ lcd.message("Sonos-companion")
 #sleep(1)
 
 # Cycle through backlight colors
-col = [lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF]
+col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
 #for c in col:
 #    lcd.backlight(c)
 #    sleep(.5)
@@ -342,7 +342,7 @@ def info():
     track['artist_info'] = get_artist_info(track['artist'])
     
     lcd.clear()
-    lcd.backlight(col(random.randrange(0,6)))
+    lcd.backlight(col[random.randrange(0,6)])
     lcd.message(track['title']+'\n'+track['artist'])
     
     return json.dumps(track)
