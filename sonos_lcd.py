@@ -25,6 +25,7 @@ import lxml.html
 
 from time import sleep
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
+import random
 
 #using the musicbrainz db to find the release date and album (if a compilation)
 import musicbrainzngs
@@ -76,15 +77,14 @@ lcd = Adafruit_CharLCDPlate()
 
 # Clear display and show greeting, pause 1 sec
 lcd.clear()
-lcd.message("Adafruit RGB LCD\nPlate w/Keypad!")
-sleep(1)
+lcd.message("Sonos-companion")
+#sleep(1)
 
 # Cycle through backlight colors
-col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL,
-       lcd.BLUE, lcd.VIOLET, lcd.ON   , lcd.OFF)
-for c in col:
-    lcd.backlight(c)
-    sleep(.5)
+col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
+#for c in col:
+#    lcd.backlight(c)
+#    sleep(.5)
 
 
 #@+node:slzatz.20140421213753.2449: ** stations
