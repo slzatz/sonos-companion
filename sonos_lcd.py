@@ -26,7 +26,6 @@ import lxml.html
 from time import sleep
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 
-
 #using the musicbrainz db to find the release date and album (if a compilation)
 import musicbrainzngs
 
@@ -72,6 +71,21 @@ musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 #last.fm
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
+
+lcd = Adafruit_CharLCDPlate()
+
+# Clear display and show greeting, pause 1 sec
+lcd.clear()
+lcd.message("Adafruit RGB LCD\nPlate w/Keypad!")
+sleep(1)
+
+# Cycle through backlight colors
+col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL,
+       lcd.BLUE, lcd.VIOLET, lcd.ON   , lcd.OFF)
+for c in col:
+    lcd.backlight(c)
+    sleep(.5)
+
 
 #@+node:slzatz.20140421213753.2449: ** stations
 stations = [
@@ -326,6 +340,10 @@ def info():
     # get album date from musicbrainz db
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     track['artist_info'] = get_artist_info(track['artist'])
+    
+    lcd.clear()
+    lcd.backlight(col(random.randrange(0,6)))
+    lcd.message(track['title']+'\n'+track['artist'])
     
     return json.dumps(track)
 
