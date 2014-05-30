@@ -81,7 +81,7 @@ lcd.message("Sonos-companion")
 #sleep(1)
 
 # Cycle through backlight colors
-col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
+col = [lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF]
 #for c in col:
 #    lcd.backlight(c)
 #    sleep(.5)
