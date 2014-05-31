@@ -40,7 +40,13 @@ lcd.message("Sonos-companion")
 # backlight colors
 col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
 
-
+# Poll buttons, display message & set backlight accordingly
+btn = ((lcd.LEFT  , 'Previous'              , lcd.RED),
+       (lcd.UP    , 'Increase\nVolume'     , lcd.BLUE),
+       (lcd.DOWN  , 'Decrease\nVolume'    , lcd.GREEN),
+       (lcd.RIGHT , 'Next',               lcd.VIOLET),
+       (lcd.SELECT, 'Pause\nPlay'           , lcd.YELLOW))
+prev = -1
 #@+node:slzatz.20140421213753.2449: ** stations
 stations = [
 ('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
@@ -149,6 +155,15 @@ if __name__ == '__main__':
             lcd.message(title + '\n' + track['artist'])
             
             prev_title = title
+            
+        for b in btn:
+            if lcd.buttonPressed(b[0]):
+                if b is not prev:
+                    lcd.clear()
+                    lcd.message(b[1])
+                    lcd.backlight(b[2])
+                    prev = b
+                break
         
         sleep(0.5)
 #@-others
