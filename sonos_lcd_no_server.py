@@ -156,7 +156,7 @@ btn = ((lcd.LEFT  , 'Previous'              , lcd.RED, previous),
        (lcd.DOWN  , 'Decrease\nVolume'    , lcd.GREEN, dec_volume),
        (lcd.RIGHT , 'Next',               lcd.VIOLET, next),
        (lcd.SELECT, 'Pause\nPlay'           , lcd.YELLOW, pause))
-prev = -1
+
 
 
 if __name__ == '__main__':
@@ -179,14 +179,12 @@ if __name__ == '__main__':
             
         for b in btn:
             if lcd.buttonPressed(b[0]):
-                if b is not prev:
-                    lcd.clear()
-                    lcd.message(b[1])
-                    lcd.backlight(b[2])
+                lcd.clear()
+                lcd.message(b[1])
+                lcd.backlight(b[2])
                     
-                    b[3]()
+                b[3]()
                     
-                    prev = b
                 break
         
         sleep(0.5)
