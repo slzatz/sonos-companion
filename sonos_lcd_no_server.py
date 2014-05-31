@@ -72,21 +72,21 @@ def play_uri(uri, name):
 #@+node:slzatz.20140105160722.1554: *3* play
 def play():
     
-    z = get_current_transport_info()
+    z = master.get_current_transport_info()
     print z
     
-    master.play()
+    #master.play()
     
 
 
 #@+node:slzatz.20140105160722.1555: *3* pause
 def pause():
     
-    z = get_current_transport_info()
+    z = master.get_current_transport_info()
     
     print z
     
-    master.pause()
+    #master.pause()
 
 
 #@+node:slzatz.20140105160722.1556: *3* next
