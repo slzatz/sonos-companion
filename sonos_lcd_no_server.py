@@ -182,12 +182,12 @@ def select():
     
     if mode:
         mode = 0
+        sleep(2)
     else:
         play_uri(stations[station_index][1], stations[station_index][0])
         mode = 1
+        sleep(2)
         
-
-    
 #@+node:slzatz.20140510101301.2452: ** list_stations
 def list_stations():
     z = ""
