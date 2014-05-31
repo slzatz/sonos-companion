@@ -158,6 +158,9 @@ def show_button(button):
 #@+node:slzatz.20140531105648.1726: ** station list
 #@+node:slzatz.20140531105648.1727: *3* scroll_up
 def scroll_up():
+    
+    global station_index
+    
     station_index+=1
     station_index = station_index if station_index < 12 else 0
     
@@ -168,6 +171,8 @@ def scroll_up():
 #@+node:slzatz.20140531105648.1728: *3* scroll_down
 def scroll_down():
        
+    global station_index
+    
     station_index-=1
     station_index = station_index if station_index > -1 else 0
     
