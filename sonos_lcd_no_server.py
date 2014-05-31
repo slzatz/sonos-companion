@@ -177,7 +177,9 @@ def scroll_down():
     
 #@+node:slzatz.20140531105648.1729: *3* select
 def select():
-    #
+    
+    global mode
+    
     if mode:
         mode = 0
     else:
