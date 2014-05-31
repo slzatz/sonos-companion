@@ -102,9 +102,9 @@ def show_button(button):
     
 
 #@+node:slzatz.20140420093643.2447: ** inc_volume
-def inc_volume(volume):
+def inc_volume():
     
-    volume = s.volume
+    volume = master.volume
     
     new_volume = volume + 10
     
@@ -115,13 +115,13 @@ def inc_volume(volume):
     for s in speakers.values():
         s.volume = new_volume
     
-    return "volume: {}".format(volume)
+
     
     
 #@+node:slzatz.20140531105648.1725: ** dec_volume
-def dec_volume(volume):
+def dec_volume():
     
-    volume = s.volume
+    volume = master.volume
     
     new_volume = volume - 10
     
