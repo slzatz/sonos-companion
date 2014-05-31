@@ -123,6 +123,10 @@ def inc_volume():
                     
     for s in speakers.values():
         s.volume = new_volume
+        
+    lcd.clear()
+    lcd.message("Volume: {}".format(new_volume))
+    lcd.backlight(lcd.YELLOW)
     
 
     
@@ -142,6 +146,9 @@ def dec_volume():
         s.volume = new_volume
     
 
+    lcd.clear()
+    lcd.message("Volume: {}".format(new_volume))
+    lcd.backlight(lcd.YELLOW)
     
     
 #@+node:slzatz.20140510101301.2452: ** list_stations
