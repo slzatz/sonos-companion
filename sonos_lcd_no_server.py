@@ -69,25 +69,21 @@ def play_uri(uri, name):
         print "switched to {}".format(name)
 #@+node:slzatz.20140120090653.1358: ** Sonos controls
 #@+node:slzatz.20140105160722.1554: *3* play
-@app.route("/play")
 def play():
     master.play()
     return 'Ok'
 
 #@+node:slzatz.20140105160722.1555: *3* pause
-@app.route("/pause")
 def pause():
     master.pause()
     return 'Ok'
 
 #@+node:slzatz.20140105160722.1556: *3* next
-@app.route("/next")
 def next():
     master.next()
     return 'Ok'
 
 #@+node:slzatz.20140105160722.1557: *3* previous
-@app.route("/previous")
 def previous():
     master.previous()
     return 'Ok'
