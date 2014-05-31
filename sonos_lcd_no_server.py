@@ -195,6 +195,10 @@ if __name__ == '__main__':
             
         for b in btn:
             if lcd.buttonPressed(b[0]):
+                if b[0] == lcd.UP and lcd.buttonPressed(lcd.DOWN):
+                    lcd.clear()
+                    lcd.message("Switched Mode")
+                    lcd.backlight(lcd.YELLOW)
                 lcd.clear()
                 lcd.message(b[1])
                 lcd.backlight(b[2])
