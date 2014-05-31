@@ -41,12 +41,7 @@ lcd.message("Sonos-companion")
 col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
 
 # Poll buttons, display message & set backlight accordingly
-btn = ((lcd.LEFT  , 'Previous'              , lcd.RED),
-       (lcd.UP    , 'Increase\nVolume'     , lcd.BLUE),
-       (lcd.DOWN  , 'Decrease\nVolume'    , lcd.GREEN),
-       (lcd.RIGHT , 'Next',               lcd.VIOLET),
-       (lcd.SELECT, 'Pause\nPlay'           , lcd.YELLOW))
-prev = -1
+
 #@+node:slzatz.20140421213753.2449: ** stations
 stations = [
 ('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
@@ -87,7 +82,7 @@ def pause():
 #@+node:slzatz.20140105160722.1556: *3* next
 def next():
     master.next()
-    return 'Ok'
+    return 'Ok' 
 
 #@+node:slzatz.20140105160722.1557: *3* previous
 def previous():
@@ -106,20 +101,38 @@ def show_button(button):
     return "button: {}".format(button)
     
 
-#@+node:slzatz.20140420093643.2447: ** volume
-def show_volume(volume):
-    print "volume: {}".format(volume)
+#@+node:slzatz.20140420093643.2447: ** inc_volume
+def inc_volume(volume):
     
-    set_volume = int(round(volume / 10.24))         # convert (0-1024) trimpot read into 0-100 volume level
-
-    if set_volume > 75:
-        set_volume = 75
+    volume = s.volume
+    
+    new_volume = volume + 10
+    
+    if new_volume > 75:
+        new_volume = 75
         print "volume set to over 75 was reset to 75"
                     
     for s in speakers.values():
-        s.volume = set_volume
+        s.volume = new_volume
     
     return "volume: {}".format(volume)
+    
+    
+#@+node:slzatz.20140531105648.1725: ** dec_volume
+def dec_volume(volume):
+    
+    volume = s.volume
+    
+    new_volume = volume - 10
+    
+    if new_volume > 75:
+        new_volume = 75
+        print "volume set to over 75 was reset to 75"
+                    
+    for s in speakers.values():
+        s.volume = new_volume
+    
+
     
     
 #@+node:slzatz.20140510101301.2452: ** list_stations
@@ -138,6 +151,14 @@ def list_stations():
     
     
 #@+node:slzatz.20140131181451.1211: ** main
+btn = ((lcd.LEFT  , 'Previous'              , lcd.RED, previous),
+       (lcd.UP    , 'Increase\nVolume'     , lcd.BLUE, inc_volume),
+       (lcd.DOWN  , 'Decrease\nVolume'    , lcd.GREEN, dec_volume),
+       (lcd.RIGHT , 'Next',               lcd.VIOLET, next),
+       (lcd.SELECT, 'Pause\nPlay'           , lcd.YELLOW, pause))
+prev = -1
+
+
 if __name__ == '__main__':
     
     prev_title = ""
@@ -162,6 +183,9 @@ if __name__ == '__main__':
                     lcd.clear()
                     lcd.message(b[1])
                     lcd.backlight(b[2])
+                    
+                    b[3]()
+                    
                     prev = b
                 break
         
