@@ -69,35 +69,34 @@ def play_uri(uri, name):
     else:
         print "switched to {}".format(name)
 #@+node:slzatz.20140120090653.1358: ** Sonos controls
-#@+node:slzatz.20140105160722.1554: *3* play
-def play():
+#@+node:slzatz.20140105160722.1554: *3* play_pause
+def play_pause():
     
     z = master.get_current_transport_info()
-    print z
-    
-    #master.play()
-    
+    if z['current_transport_state'] == 'PLAYING':   #'PAUSED_PLAYBACK'
+        master.pause()
+    else:
+        master.play()
 
-
-#@+node:slzatz.20140105160722.1555: *3* pause
-def pause():
     
-    z = master.get_current_transport_info()
-    
-    print z
-    
-    #master.pause()
 
 
 #@+node:slzatz.20140105160722.1556: *3* next
 def next():
     master.next()
-    return 'Ok' 
+
 
 #@+node:slzatz.20140105160722.1557: *3* previous
 def previous():
-    master.previous()
-    return 'Ok'
+    
+    try:
+         master.previous()
+    except:
+        lcd.clear()
+        lcd.message("Previous\nNot Available")
+        lcd.backlight(lcd.RED)
+    
+
 
 #@+node:slzatz.20140419192833.2446: ** buttons
 def show_button(button):
@@ -165,7 +164,7 @@ btn = ((lcd.LEFT  , 'Previous'              , lcd.RED, previous),
        (lcd.UP    , 'Increase\nVolume'     , lcd.BLUE, inc_volume),
        (lcd.DOWN  , 'Decrease\nVolume'    , lcd.GREEN, dec_volume),
        (lcd.RIGHT , 'Next',               lcd.VIOLET, next),
-       (lcd.SELECT, 'Pause\nPlay'           , lcd.YELLOW, pause))
+       (lcd.SELECT, 'Pause\nPlay'           , lcd.YELLOW, play_pause))
 
 
 
