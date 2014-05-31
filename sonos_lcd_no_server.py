@@ -89,28 +89,40 @@ def next():
 #@+node:slzatz.20140105160722.1557: *3* previous
 def previous():
     
-    try:
-         master.previous()
-    except:
-        lcd.clear()
-        lcd.message("Previous\nNot Available")
-        lcd.backlight(lcd.RED)
+    #try:
+    #     master.previous()
+    #except:
+    #    lcd.clear()
+    #    lcd.message("Previous\nNot Available")
+    #   lcd.backlight(lcd.RED)
+    mode = 0
+    lcd.clear()
+    lcd.backlight(lcd.YELLOW)
+    lcd.message(stations[station_index][0])
     
 
 
-#@+node:slzatz.20140419192833.2446: ** buttons
-def show_button(button):
-    print "button: {}".format(button)
+#@+node:slzatz.20140531105648.1725: *3* dec_volume
+def dec_volume():
     
-    #note that using 12 right now to gracefully disconnect cc3000 from WiFi
-    if 0 < button < 13:
-        n = button-1
-        play_uri(stations[n][1], stations[n][0]) 
+    volume = master.volume
     
-    return "button: {}".format(button)
+    new_volume = volume - 10
+    
+    if new_volume > 75:
+        new_volume = 75
+        print "volume set to over 75 was reset to 75"
+                    
+    for s in speakers.values():
+        s.volume = new_volume
     
 
-#@+node:slzatz.20140420093643.2447: ** inc_volume
+    lcd.clear()
+    lcd.message("Volume: {}".format(new_volume))
+    lcd.backlight(lcd.YELLOW)
+    
+    
+#@+node:slzatz.20140420093643.2447: *3* inc_volume
 def inc_volume():
     
     volume = master.volume
@@ -131,25 +143,48 @@ def inc_volume():
 
     
     
-#@+node:slzatz.20140531105648.1725: ** dec_volume
-def dec_volume():
+#@+node:slzatz.20140419192833.2446: ** buttons
+def show_button(button):
+    print "button: {}".format(button)
     
-    volume = master.volume
+    #note that using 12 right now to gracefully disconnect cc3000 from WiFi
+    if 0 < button < 13:
+        n = button-1
+        play_uri(stations[n][1], stations[n][0]) 
     
-    new_volume = volume - 10
-    
-    if new_volume > 75:
-        new_volume = 75
-        print "volume set to over 75 was reset to 75"
-                    
-    for s in speakers.values():
-        s.volume = new_volume
+    return "button: {}".format(button)
     
 
-    lcd.clear()
-    lcd.message("Volume: {}".format(new_volume))
-    lcd.backlight(lcd.YELLOW)
+#@+node:slzatz.20140531105648.1726: ** station list
+#@+node:slzatz.20140531105648.1727: *3* scroll_up
+def scroll_up():
+    station_index+=1
+    station_index = station_index if station_index < 12 else 0
     
+    lcd.clear()
+    lcd.backlight(lcd.YELLOW)
+    lcd.message(stations[station_index][0])
+
+#@+node:slzatz.20140531105648.1728: *3* scroll_down
+def scroll_down():
+       
+    station_index-=1
+    station_index = station_index if station_index > -1 else 0
+    
+    lcd.clear()
+    lcd.backlight(lcd.YELLOW)
+    lcd.message(stations[station_index][0])
+    
+#@+node:slzatz.20140531105648.1729: *3* select
+def select():
+    #
+    if mode:
+        mode = 0
+    else:
+        play_uri(stations[station_index][1], stations[station_index][0])
+        mode = 1
+        
+
     
 #@+node:slzatz.20140510101301.2452: ** list_stations
 def list_stations():
@@ -167,13 +202,14 @@ def list_stations():
     
     
 #@+node:slzatz.20140131181451.1211: ** main
-btn = ((lcd.LEFT  , 'Previous'              , lcd.RED, previous),
-       (lcd.UP    , 'Increase\nVolume'     , lcd.BLUE, inc_volume),
-       (lcd.DOWN  , 'Decrease\nVolume'    , lcd.GREEN, dec_volume),
+btn = ((lcd.LEFT  , 'Play/Pause'              , lcd.RED, play_pause), #previous
+       (lcd.UP    , 'Increase\nVolume'     , lcd.BLUE, inc_volume, scroll_up),
+       (lcd.DOWN  , 'Decrease\nVolume'    , lcd.GREEN, dec_volume ,scroll_down),
        (lcd.RIGHT , 'Next',               lcd.VIOLET, next),
-       (lcd.SELECT, 'Pause\nPlay'           , lcd.YELLOW, play_pause))
+       (lcd.SELECT, 'Change Mode'   , lcd.YELLOW, select, select))
 
-
+mode = 1
+station_index = 0
 
 if __name__ == '__main__':
     
@@ -193,19 +229,25 @@ if __name__ == '__main__':
             
             prev_title = title
             
-        for b in btn:
-            if lcd.buttonPressed(b[0]):
-                if b[0] == lcd.UP and lcd.buttonPressed(lcd.DOWN):
+        
+        if mode:
+            for b in btn:
+                if lcd.buttonPressed(b[0]):
                     lcd.clear()
-                    lcd.message("Switched Mode")
-                    lcd.backlight(lcd.YELLOW)
-                lcd.clear()
-                lcd.message(b[1])
-                lcd.backlight(b[2])
+                    lcd.message(b[1])
+                    lcd.backlight(b[2])
+                        
+                    b[3]()
+                        
+                    break
+        else:
+            for b in btn:
+                if lcd.buttonPressed(b[0]):
                     
-                b[3]()
-                    
-                break
+                    b[4]()
+                        
+                    break
+            
         
         sleep(0.5)
 #@-others
