@@ -15,8 +15,11 @@ import json
 
 from flask import Flask, render_template, url_for
 
-from soco import SoCo
-from soco import SonosDiscovery
+#######from soco import SoCo
+######from soco import SonosDiscovery
+import soco
+
+from time import sleep
 
 import settings
 import pickle
@@ -33,28 +36,24 @@ HOST = app.config['HOST']
 INDEX_HTML = app.config['INDEX_HTML']
 DEBUG = app.config['DEBUG']
 
-# use master speaker code that is used in buttons_vkey.py
-sonos_devices = SonosDiscovery()
-speakers = {SoCo(ip).player_name: SoCo(ip) for ip in sonos_devices.get_speaker_ips()}
+speakers = list(soco.discover())
 
-# As far as I can tell player_name == get_speaker_info()['zone_name]    
-for name,speaker in speakers.items():
-    a = speaker.get_current_track_info()['artist']
-    print "player_name: {}; ip: {}; artist: {}".format(name, speaker.speaker_ip, a)
-    
-    # using the presence of an artist to decide that is the master speaker - seems to work
-    if a:
-        master = speaker
+for s in speakers:
+    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+           
+for s in speakers:
+    if s.is_coordinator:
+        master = s
         break
-else:
-    master = speakers.values()[0]
+        
+print "sonos master speaker = {}: {}\n".format(master.player_name, master.ip_address)
 
-print 'sonos master speaker = {}: {}'.format(master.player_name, master.speaker_ip)
-master_uid = master.get_speaker_info()['uid']
-
-#for speaker in speakers.values():
-#    if speaker != master:
-#        speaker.join(master_uid)
+for s in speakers:
+    if s != master:
+        s.join(master)
+        # note that it appears for some caching reason that the speaker will appear to have previous coordinator/master
+        # but it actually will be linked to the correct master
+        print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
 
 # artists.json is the file that caches previous image searches
 try:
