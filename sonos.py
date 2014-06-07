@@ -45,15 +45,15 @@ for s in speakers:
     if s.is_coordinator:
         master = s
         break
-        
-print "sonos master speaker = {}: {}\n".format(master.player_name, master.ip_address)
+
+##speakers[0]._zgs_cache = None ### experiment to see if this cache was the problem - setting to None didn't help
 
 for s in speakers:
     if s != master:
         s.join(master)
         # note that it appears for some caching reason that the speaker will appear to have previous coordinator/master
         # but it actually will be linked to the correct master
-        print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
 
 # artists.json is the file that caches previous image searches
 try:
@@ -86,6 +86,23 @@ stations = [
 #for i,s in enumerate(stations):
     #print "{:d} - {}".format(i+1,s[0])
 
+#@+node:slzatz.20140126104203.1211: ** get_artist_info (last.fm)
+def get_artist_info(artist, autocorrect=0):
+    
+    payload = {'method':'artist.getinfo', 'artist':artist, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key}
+    
+    try:
+        r = requests.get(base_url, params=payload)
+        bio = r.json()['artist']['bio']['summary']
+        text = lxml.html.fromstring(bio).text_content()
+        idx = text.find("Read more")
+        if idx != -1:
+            text = text[:idx]
+        
+        return text
+        
+    except:
+        return ''
 #@+node:slzatz.20140105160722.1553: ** get_images (Google Custom Search Engine)
 def get_images(artist):
     '''
@@ -127,23 +144,6 @@ def get_images(artist):
 
     return artists[artist]
     
-#@+node:slzatz.20140126104203.1211: ** get_artist_info (last.fm)
-def get_artist_info(artist, autocorrect=0):
-    
-    payload = {'method':'artist.getinfo', 'artist':artist, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key}
-    
-    try:
-        r = requests.get(base_url, params=payload)
-        bio = r.json()['artist']['bio']['summary']
-        text = lxml.html.fromstring(bio).text_content()
-        idx = text.find("Read more")
-        if idx != -1:
-            text = text[:idx]
-        
-        return text
-        
-    except:
-        return ''
 #@+node:slzatz.20140118074141.1566: ** get_url
 def get_url(artist, title):
     payload = {'func': 'getSong', 'artist': artist, 'song': title, 'fmt': 'realjson'}
