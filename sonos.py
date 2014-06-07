@@ -15,11 +15,7 @@ import json
 
 from flask import Flask, render_template, url_for
 
-#######from soco import SoCo
-######from soco import SonosDiscovery
 import soco
-
-from time import sleep
 
 import settings
 import pickle
@@ -45,6 +41,8 @@ for s in speakers:
     if s.is_coordinator:
         master = s
         break
+else:
+    master = speakers[0]
 
 ##speakers[0]._zgs_cache = None ### experiment to see if this cache was the problem - setting to None didn't help
 
