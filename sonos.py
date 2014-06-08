@@ -16,6 +16,7 @@ import json
 from flask import Flask, render_template, url_for
 
 import soco
+from soco.services import zone_group_state_shared_cache
 
 import settings
 import pickle
@@ -44,13 +45,18 @@ for s in speakers:
 else:
     master = speakers[0]
 
-##speakers[0]._zgs_cache = None ### experiment to see if this cache was the problem - setting to None didn't help
-
 for s in speakers:
     if s != master:
         s.join(master)
         # note that it appears for some caching reason that the speaker will appear to have previous coordinator/master
         # but it actually will be linked to the correct master
+    #print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+    
+zone_group_state_shared_cache.clear() #########appear to need both of these lines to update the cache #####################
+speakers = list(soco.discover()) ############################
+
+print "\n"
+for s in speakers:
     print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
 
 # artists.json is the file that caches previous image searches
