@@ -5,6 +5,7 @@
 #@+others
 #@+node:slzatz.20140603064654.2794: ** imports etc
 import soco
+from soco.services import zone_group_state_shared_cache
 
 from time import sleep
 
@@ -22,14 +23,13 @@ for s in speakers:
         break
 else:
     master = speakers[0]
-
-##speakers[0]._zgs_cache = None ### experiment to see if this cache was the problem - setting to None didn't help
-
+    
 for s in speakers:
     if s != master:
         s.join(master)
-        # note that it appears for some caching reason that the speaker will appear to have previous coordinator/master
-        # but it actually will be linked to the correct master
+    
+print "\n"
+for s in speakers:
     print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
 
 lcd = Adafruit_CharLCDPlate()
