@@ -364,7 +364,7 @@ def show_volume(volume):
         set_volume = 75
         print "volume set to over 75 was reset to 75"
                     
-    for s in speakers.values():
+    for s in speakers:
         s.volume = set_volume
     
     return "volume: {}".format(volume)
