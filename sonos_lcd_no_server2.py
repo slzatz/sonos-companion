@@ -207,11 +207,11 @@ def list_stations():
     
     
 #@-others
-btn = ((lcd.LEFT  , 'Play/Pause'              , lcd.RED, play_pause), #previous
-       (lcd.UP    , 'Increase\nVolume'     , lcd.BLUE, inc_volume, scroll_up),
-       (lcd.DOWN  , 'Decrease\nVolume'    , lcd.GREEN, dec_volume ,scroll_down),
-       (lcd.RIGHT , 'Next',               lcd.VIOLET, next),
-       (lcd.SELECT, 'Change Mode'   , lcd.YELLOW, select, select))
+btn =((lcd.LEFT,    'Play/Pause',              lcd.RED,     play_pause), #previous
+       ( lcd.UP,          'Increase\nVolume',  lcd.BLUE,    inc_volume, scroll_up),
+       ( lcd.DOWN,    'Decrease\nVolume', lcd.GREEN,  dec_volume ,scroll_down),
+       ( lcd.RIGHT,     'Next',                     lcd.VIOLET,  next),
+       ( lcd.SELECT,   'Change Mode',        lcd.YELLOW, select, select))
 
 mode = 1
 station_index = 0
@@ -231,10 +231,32 @@ if __name__ == '__main__':
                         
                     b[3]()
                     
-                    sleep(0.5)
+                    sleep(0.2)
                         
                     break
+                    
+            state = master.get_current_transport_info()['current_transport_state']
+            if state != 'PLAYING':
+                lcd.clear()
+                lcd.backlight(lcd.YELLOW)
+                lcd.message(state)
+                sleep(0.2)
+                continue
+                
+            track = master.get_current_track_info()
+            
+            title = track['title']
+            
+            if prev_title != title:
+            
+                lcd.clear()
+                lcd.backlight(col[random.randrange(0,6)])
+                lcd.message(title + '\n' + track['artist'])
+                
+                prev_title = title
+                
         else:
+            
             for b in btn:
                 if lcd.buttonPressed(b[0]):
                     
@@ -243,28 +265,8 @@ if __name__ == '__main__':
                     sleep(0.5)
                         
                     break
-                    
-        state = master.get_current_transport_info()['current_transport_state']
-        if state != 'PLAYING':
-            lcd.clear()
-            lcd.backlight(lcd.YELLOW)
-            lcd.message(state)
+        
             sleep(0.2)
-            continue
-            
-        track = master.get_current_track_info()
-        
-        title = track['title']
-        
-        if prev_title != title:
-        
-            lcd.clear()
-            lcd.backlight(col[random.randrange(0,6)])
-            lcd.message(title + '\n' + track['artist'])
-            
-            prev_title = title
-        
-        sleep(0.2)
 
 
 #@-leo
