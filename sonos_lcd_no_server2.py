@@ -222,7 +222,7 @@ if __name__ == '__main__':
     
     while 1:
         
-        state = get_current_transport_info()['current_transport_state']
+        state = master.get_current_transport_info()['current_transport_state']
         if state != 'PLAYING':
             lcd.clear()
             lcd.backlight(lcd.YELLOW)
