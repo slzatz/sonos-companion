@@ -221,6 +221,8 @@ if __name__ == '__main__':
     prev_title = ""
     
     while 1:
+        
+        print "buttons()=",buttons()
      
         if mode:
             for b in btn:
