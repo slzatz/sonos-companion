@@ -222,7 +222,7 @@ if __name__ == '__main__':
     
     while 1:
         
-        print "buttons()=",buttons()
+        print "buttons()=",lcd.buttons()
      
         if mode:
             for b in btn:
