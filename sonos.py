@@ -328,6 +328,14 @@ def info():
     
     return json.dumps(track)
 
+#@+node:slzatz.20140615215114.2461: ** spark
+@app.route("/spark")
+def spark():
+    track = master.get_current_track_info()
+    track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+    
+    return "artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date'])
+    
 #@+node:slzatz.20140105160722.1560: ** images
 @app.route("/images")
 def images():
