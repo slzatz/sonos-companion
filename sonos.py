@@ -334,7 +334,7 @@ def spark():
     track = master.get_current_track_info()
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     
-    return "artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date'])
+    return "artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date'])[0:4]
     
 #@+node:slzatz.20140105160722.1560: ** images
 @app.route("/images")
