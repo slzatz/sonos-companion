@@ -233,7 +233,7 @@ def get_release_date(artist, album, title):
     try:
         result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)  
     except:
-        return "No date cxception (search_releases)"
+        return "No date exception (search_releases)"
     
     #release_list = result['release-list'] # can be missing
     
@@ -260,7 +260,8 @@ def get_release_date(artist, album, title):
     dates = []
     for d in recording_list:
             if 'release-list' in d:
-                dd = [x['date'][0:4]+': '+x['title'] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]     
+                #dd = [x['date'][0:4]+': '+x['title'] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
+                dd = [x['date'][0:4] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]     
                 dates.extend(dd)
             
                #[item for sublist in l for item in sublist] - this should work but not sure it makes sense to modify above which works
@@ -269,7 +270,7 @@ def get_release_date(artist, album, title):
         dates.sort()
         return dates[0]   
     else:
-        return "No date" 
+        return "?" 
     
 
 
@@ -336,7 +337,7 @@ def spark():
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     
     #resp = make_response("artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date']), 200)
-    resp = make_response("artist: {artist}\n\ralbum: {album}\n\rsong: {title}\n\rrelease date: {date}\n\r".format(**track), 200)
+    resp = make_response("Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track), 200)
     resp.headers['Content-Type'] = "text/json"
     resp.headers['Server'] = "sonos"
     return resp
