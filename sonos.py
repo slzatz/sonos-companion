@@ -336,7 +336,7 @@ def spark():
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     
     #resp = make_response("artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date']), 200)
-    resp = make_response("artist: {artist}\nalbum: {album}\nsong: {title}\nrelease date: {date}".format(**track), 200)
+    resp = make_response("artist: {artist}\n\ralbum: {album}\n\rsong: {title}\n\rrelease date: {date}\n\r".format(**track), 200)
     resp.headers['Content-Type'] = "text/json"
     resp.headers['Server'] = "sonos"
     return resp
