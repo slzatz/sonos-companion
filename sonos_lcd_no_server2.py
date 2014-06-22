@@ -207,6 +207,20 @@ def list_stations():
     
     
 #@-others
+
+#2 = forward
+#4 = volume lower
+#8 = volume higher
+#16 = pause
+#1 = change mode
+#0 = no button
+
+btns = {1: ( lcd.SELECT,   'Change Mode',        lcd.YELLOW,  select, select),
+       2: ( lcd.RIGHT,    'Next',                lcd.VIOLET,  next),
+       4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume ,scroll_down),
+       8: ( lcd.UP,       'Increase\nVolume',   lcd.BLUE,     inc_volume, scroll_up),
+      16: ( lcd.LEFT,    'Play/Pause',           lcd.RED,     play_pause, cancel)}
+
 btn =((lcd.LEFT,    'Play/Pause',              lcd.RED,     play_pause), #previous
        ( lcd.UP,          'Increase\nVolume',  lcd.BLUE,    inc_volume, scroll_up),
        ( lcd.DOWN,    'Decrease\nVolume', lcd.GREEN,  dec_volume ,scroll_down),
@@ -221,22 +235,20 @@ if __name__ == '__main__':
     prev_title = ""
     
     while 1:
+
+        b = btns.get(lcd.buttons())
+
+        if  not b:
+            sleep(0.2)
+            continue
         
-        #print "buttons()=",lcd.buttons() # will eventually change to using buttons and get rid of for and if statements
-     
         if mode:
-            for b in btn:
-                if lcd.buttonPressed(b[0]):
-                    lcd.clear()
-                    lcd.message(b[1])
-                    lcd.backlight(b[2])
-                        
-                    b[3]()
-                    
-                    sleep(0.2)
-                        
-                    break
-                    
+            lcd.clear()
+            lcd.message(b[1])
+            lcd.backlight(b[2])
+            b[3]()
+            sleep(0.2)
+
             state = master.get_current_transport_info()['current_transport_state']
             if state != 'PLAYING':
                 lcd.clear()
@@ -257,18 +269,63 @@ if __name__ == '__main__':
                 
                 prev_title = title
                 
-        else:
-            
-            for b in btn:
-                if lcd.buttonPressed(b[0]):
-                    
-                    b[4]()
-                    
-                    sleep(0.5)
-                        
-                    break
-        
             sleep(0.2)
+
+        else:
+
+            b[4]()
+            sleep(0.4)
+        
+    
+    # while 1:
+        
+        # #print "buttons()=",lcd.buttons() # will eventually change to using buttons and get rid of for and if statements
+     
+        # if mode:
+            # for b in btn:
+                # if lcd.buttonPressed(b[0]):
+                    # lcd.clear()
+                    # lcd.message(b[1])
+                    # lcd.backlight(b[2])
+                        
+                    # b[3]()
+                    
+                    # sleep(0.2)
+                        
+                    # break
+                    
+            # state = master.get_current_transport_info()['current_transport_state']
+            # if state != 'PLAYING':
+                # lcd.clear()
+                # lcd.backlight(lcd.YELLOW)
+                # lcd.message(state)
+                # sleep(0.2)
+                # continue
+                
+            # track = master.get_current_track_info()
+            
+            # title = track['title']
+            
+            # if prev_title != title:
+            
+                # lcd.clear()
+                # lcd.backlight(col[random.randrange(0,6)])
+                # lcd.message(title + '\n' + track['artist'])
+                
+                # prev_title = title
+                
+        # else:
+            
+            # for b in btn:
+                # if lcd.buttonPressed(b[0]):
+                    
+                    # b[4]()
+                    
+                    # sleep(0.5)
+                        
+                    # break
+        
+            #sleep(0.2)
 
 
 #@-leo

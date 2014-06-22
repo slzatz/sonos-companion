@@ -13,7 +13,7 @@ from apiclient import discovery
 import requests
 import json
 
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, request, make_response
 
 import soco
 from soco.services import zone_group_state_shared_cache
@@ -331,10 +331,16 @@ def info():
 #@+node:slzatz.20140615215114.2461: ** spark
 @app.route("/spark")
 def spark():
+    print "headers=",request.headers
     track = master.get_current_track_info()
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     
-    return "artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date'])[0:4]
+    #resp = make_response("artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date']), 200)
+    resp = make_response("artist: {artist}\nalbum: {album}\nsong: {title}\nrelease date: {date}".format(**track), 200)
+    resp.headers['Content-Type'] = "text/json"
+    resp.headers['Server'] = "sonos"
+    return resp
+    #return "artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date'])[0:4]
     
 #@+node:slzatz.20140105160722.1560: ** images
 @app.route("/images")
