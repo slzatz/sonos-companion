@@ -80,6 +80,12 @@ def play_pause():
     
 
 
+#@+node:slzatz.20140622201640.2450: ** cancel
+def cancel():
+    mode = not mode
+    
+
+    
 #@+node:slzatz.20140603064654.2797: ** next
 def next():
     master.next()
@@ -219,7 +225,7 @@ btns = {1: ( lcd.SELECT,   'Change Mode',        lcd.YELLOW,  select, select),
        2: ( lcd.RIGHT,    'Next',                lcd.VIOLET,  next),
        4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume ,scroll_down),
        8: ( lcd.UP,       'Increase\nVolume',   lcd.BLUE,     inc_volume, scroll_up),
-      16: ( lcd.LEFT,    'Play/Pause',           lcd.RED,     play_pause, cancel)}
+      16: ( lcd.LEFT,    'Play/Pause',           lcd.RED,     play_pause, cancel)} 
 
 btn =((lcd.LEFT,    'Play/Pause',              lcd.RED,     play_pause), #previous
        ( lcd.UP,          'Increase\nVolume',  lcd.BLUE,    inc_volume, scroll_up),
