@@ -27,9 +27,13 @@ import lxml.html
 import musicbrainzngs
 
 app = Flask(__name__)
+# settings.py
+#HOST = '0.0.0.0'
+#INDEX_HTML = 'index5.html'
+#DEBUG = True
 
 app.config.from_pyfile('settings.py')
-HOST = app.config['HOST']
+HOST = app.config['HOST'] 
 INDEX_HTML = app.config['INDEX_HTML']
 DEBUG = app.config['DEBUG']
 
@@ -340,6 +344,9 @@ def spark():
     resp = make_response("Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track), 200)
     resp.headers['Content-Type'] = "text/json"
     resp.headers['Server'] = "sonos"
+    
+    print resp
+    
     return resp
     #return "artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date'])[0:4]
     
