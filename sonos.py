@@ -82,6 +82,8 @@ api_key = "1c55c0a239072889fa7c11df73ecd566"
 
 wrapper = textwrap.TextWrapper(width=21, replace_whitespace=False)
 
+prev_track = ""
+
 
 
 #@+node:slzatz.20140421213753.2449: ** stations
