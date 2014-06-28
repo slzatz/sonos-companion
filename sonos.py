@@ -13,6 +13,8 @@ from apiclient import discovery
 import requests
 import json
 
+import textwrap
+
 from flask import Flask, render_template, url_for, request, make_response
 
 import soco
@@ -75,6 +77,10 @@ musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 #last.fm
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
+
+wrapper = textwrap.TextWrapper(width=21, replace_whitespace=False)
+
+
 
 #@+node:slzatz.20140421213753.2449: ** stations
 stations = [
@@ -347,7 +353,11 @@ def spark():
     
     s = "Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track)
 
-    resp = make_response(s.ljust(168))
+    #wrapper.fill(a)
+    #resp = make_response(s.ljust(168))
+    
+    resp = make_response(wrapper.fill(s).ljust(168))
+    
     #resp = make_response("Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track), 200)
     resp.headers['Content-Type'] = "text/json"
     resp.headers['Server'] = "sonos"
