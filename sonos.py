@@ -354,6 +354,9 @@ def spark():
     
     track = {x:track[x] for x in track if x in DISPLAY} #date should not be in track at this point
     
+    print "track=",track
+    print "prev_track=",prev_track
+    
     if track==prev_track:
         return "same track"
     else:
