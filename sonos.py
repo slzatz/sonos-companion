@@ -14,6 +14,8 @@ import requests
 import json
 
 import textwrap
+from collections import OrderedDict
+DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
 
 from flask import Flask, render_template, url_for, request, make_response
 
@@ -352,9 +354,8 @@ def spark():
     #resp = make_response("artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date']), 200)
     
     s = ''
-    d = {'artist':'Artist', 'album':'Album', 'title':'Song', 'date':'Release date'}
     for x in d:
-        s+=wrapper.fill(d[x]+": "+track.get(x,''))+"\n\r"
+        s+=wrapper.fill(DISPLAY[x]+": "+track.get(x,''))+"\n\r"
     
     #s = "Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track)
 
