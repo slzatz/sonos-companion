@@ -361,6 +361,7 @@ def spark():
         resp = make_response('',204) #204 = no content
         del resp.headers['content-type']
         resp.headers['Server'] = "sonos"
+        print dir(resp)
         print resp
         return resp
     else:
