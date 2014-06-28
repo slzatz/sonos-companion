@@ -346,6 +346,9 @@ def info():
 #@+node:slzatz.20140615215114.2461: ** spark
 @app.route("/spark")
 def spark():
+    
+    global prev_track
+    
     print "client headers=\n", request.headers
     track = master.get_current_track_info()
     
