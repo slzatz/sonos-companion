@@ -358,9 +358,9 @@ def spark():
     print "prev_track=",prev_track
     
     if track==prev_track:
-        return "same track"
+        return
     else:
-        prev_track = track
+        prev_track = dict(track)  #need this dict is mutable
     
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     
