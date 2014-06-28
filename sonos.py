@@ -354,11 +354,15 @@ def spark():
     
     track = {x:track[x] for x in track if x in DISPLAY} #date should not be in track at this point
     
-    print "track=",track
-    print "prev_track=",prev_track
+    #print "track=",track
+    #print "prev_track=",prev_track
     
     if track==prev_track:
-        return
+        resp = make_response('',204) #204 = no content
+        del response.headers['content-type']
+        resp.headers['Server'] = "sonos"
+        print resp
+        return resp
     else:
         prev_track = dict(track)  #need this dict is mutable
     
