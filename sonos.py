@@ -359,9 +359,9 @@ def spark():
     
     if track==prev_track:
         resp = make_response('',204) #204 = no content
-        #del resp.headers['content-type']
+        del resp.headers['content-type']
         resp.headers['Server'] = "sonos"
-        print "resp.headers=\n",resp.headers
+        #print "resp.headers=\n",resp.headers
         print resp
         return resp
     else:
