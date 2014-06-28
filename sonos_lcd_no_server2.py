@@ -273,6 +273,7 @@ if __name__ == '__main__':
             lcd.message(b[1])
             lcd.backlight(b[2])
             b[3]()
+            prev_title = ""
             sleep(0.2)
 
             # state = master.get_current_transport_info()['current_transport_state']
