@@ -346,6 +346,14 @@ def info():
 def spark():
     print "client headers=\n", request.headers
     track = master.get_current_track_info()
+    
+    track = {x:track[x] for x in track if x in DISPLAY} #date should not be in track at this point
+    
+    if track==prev_track:
+        return "same track"
+    else:
+        prev_track = track
+    
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     
     # OLED is 128x64 pixels seems to be about 8 x 21 charactiers = 168 chars
