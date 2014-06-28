@@ -245,16 +245,7 @@ if __name__ == '__main__':
         b = btns.get(lcd.buttons())
 
         if  not b:
-            sleep(0.2)
-            continue
-        
-        if mode:
-            lcd.clear()
-            lcd.message(b[1])
-            lcd.backlight(b[2])
-            b[3]()
-            sleep(0.2)
-
+                        
             state = master.get_current_transport_info()['current_transport_state']
             if state != 'PLAYING':
                 lcd.clear()
@@ -262,7 +253,7 @@ if __name__ == '__main__':
                 lcd.message(state)
                 sleep(0.2)
                 continue
-                
+            
             track = master.get_current_track_info()
             
             title = track['title']
@@ -274,8 +265,37 @@ if __name__ == '__main__':
                 lcd.message(title + '\n' + track['artist'])
                 
                 prev_title = title
-                
             sleep(0.2)
+            continue
+        
+        if mode:
+            lcd.clear()
+            lcd.message(b[1])
+            lcd.backlight(b[2])
+            b[3]()
+            sleep(0.2)
+
+            # state = master.get_current_transport_info()['current_transport_state']
+            # if state != 'PLAYING':
+                # lcd.clear()
+                # lcd.backlight(lcd.YELLOW)
+                # lcd.message(state)
+                # sleep(0.2)
+                # continue
+                
+            # track = master.get_current_track_info()
+            
+            # title = track['title']
+            
+            # if prev_title != title:
+            
+                # lcd.clear()
+                # lcd.backlight(col[random.randrange(0,6)])
+                # lcd.message(title + '\n' + track['artist'])
+                
+                # prev_title = title
+                
+            # sleep(0.2)
 
         else:
 

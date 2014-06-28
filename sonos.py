@@ -345,7 +345,9 @@ def spark():
     resp.headers['Content-Type'] = "text/json"
     resp.headers['Server'] = "sonos"
     
-    print resp
+    #for some reason the print below appears to help prevent the server from hicupping.
+    #I think the real answer is to introduce some delay(20) between client.print on the spark
+    print resp 
     
     return resp
     #return "artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date'])[0:4]
