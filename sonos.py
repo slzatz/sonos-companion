@@ -351,10 +351,12 @@ def spark():
     
     #resp = make_response("artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date']), 200)
     
-    for x in ['artist','album','title','date']:
-        track[x] = wrapper.fill(track[x])
+    s = ''
+    d = {'artist':'Artist', 'album':'Album', 'title':'Song', 'date':'Release date'}
+    for x in d:
+        s+=wrapper.fill(d[x]+": "+track.get(x,''))+"\n\r"
     
-    s = "Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track)
+    #s = "Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track)
 
     #wrapper.fill(a)
     resp = make_response(s.ljust(168))
