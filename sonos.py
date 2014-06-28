@@ -354,7 +354,7 @@ def spark():
     #resp = make_response("artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date']), 200)
     
     s = ''
-    for x in d:
+    for x in DISPLAY:
         s+=wrapper.fill(DISPLAY[x]+": "+track.get(x,''))+"\n\r"
     
     #s = "Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track)
