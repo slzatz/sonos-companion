@@ -340,10 +340,15 @@ def spark():
     track = master.get_current_track_info()
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
     
-    print "track=\n", track
+    # OLED is 128x64 pixels seems to be about 8 x 21 charactiers = 168 chars
+    #print "track=\n", track
     
     #resp = make_response("artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date']), 200)
-    resp = make_response("Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track), 200)
+    
+    s = "Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track)
+
+    resp = make_response(s.ljust(168))
+    #resp = make_response("Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track), 200)
     resp.headers['Content-Type'] = "text/json"
     resp.headers['Server'] = "sonos"
     
