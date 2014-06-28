@@ -336,9 +336,11 @@ def info():
 #@+node:slzatz.20140615215114.2461: ** spark
 @app.route("/spark")
 def spark():
-    print "headers=",request.headers
+    print "client headers=\n", request.headers
     track = master.get_current_track_info()
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+    
+    print "track=\n", track
     
     #resp = make_response("artist: {}\nalbum: {}\nsong: {}\nrelease date: {}".format(track['artist'], track['album'], track['title'], track['date']), 200)
     resp = make_response("Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track), 200)
