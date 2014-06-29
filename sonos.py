@@ -358,12 +358,12 @@ def spark():
     #print "prev_track=",prev_track
     
     if track==prev_track:
-        resp = make_response('', 204, {}) #204 = no content
-        #del resp.headers['content-type']
-        resp.headers['Server'] = "sonos"
-        print "resp.headers=\n",resp.headers
-        print resp
-        return resp
+        response = make_response('', 204) #204 = no content
+        del response.headers['content-type']
+        response.headers['Server'] = "sonos"
+        print "resp.headers=\n",response.headers
+        print response
+        return response
     else:
         prev_track = dict(track)  #need this dict is mutable
     
