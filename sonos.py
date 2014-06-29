@@ -80,7 +80,7 @@ musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
 
-wrapper = textwrap.TextWrapper(width=21, replace_whitespace=False)
+wrapper = textwrap.TextWrapper(width=20, replace_whitespace=False)
 
 prev_track = ""
 
@@ -381,7 +381,8 @@ def spark():
     #s = "Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track)
 
     #wrapper.fill(a)
-    resp = make_response(s.ljust(168))
+    #resp = make_response(s.ljust(168)) # this turned out to be from not clearing the buffer
+    resp = make_response(s)
     
     #resp = make_response("Artist: {artist}\n\rAlbum: {album}\n\rSong: {title}\n\rRelease date: {date}\n\r".format(**track), 200)
     resp.headers['Content-Type'] = "text/json"
