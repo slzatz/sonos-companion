@@ -82,6 +82,9 @@ def play_pause():
 
 #@+node:slzatz.20140622201640.2450: ** cancel
 def cancel():
+    
+    global mode
+    
     mode = not mode
     
 
@@ -91,7 +94,7 @@ def next():
     master.next()
 
 
-#@+node:slzatz.20140603064654.2798: ** previous
+#@+node:slzatz.20140603064654.2798: ** previous (not in use)
 def previous():
     
     #try:
@@ -221,11 +224,11 @@ def list_stations():
 #1 = change mode
 #0 = no button
 
-btns = {1: ( lcd.SELECT,   'Change Mode',        lcd.YELLOW,  select, select),
-       2: ( lcd.RIGHT,    'Next',                lcd.VIOLET,  next),
+btns = {1: ( lcd.SELECT,   'Change Mode',      lcd.YELLOW,  select, select),
+       2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
        4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume ,scroll_down),
-       8: ( lcd.UP,       'Increase\nVolume',   lcd.BLUE,     inc_volume, scroll_up),
-      16: ( lcd.LEFT,    'Play/Pause',           lcd.RED,     play_pause, cancel)} 
+       8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume, scroll_up),
+      16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause, cancel)} 
 
 btn =((lcd.LEFT,    'Play/Pause',              lcd.RED,     play_pause), #previous
        ( lcd.UP,          'Increase\nVolume',  lcd.BLUE,    inc_volume, scroll_up),
