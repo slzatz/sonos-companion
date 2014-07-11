@@ -34,14 +34,11 @@ for s in speakers:
 
 lcd = Adafruit_CharLCDPlate()
 
-# Clear display and show greeting, pause 1 sec
 lcd.clear()
 lcd.message("Sonos-companion")
 
 # backlight colors
 col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
-
-# Poll buttons, display message & set backlight accordingly
 
 stations = [
 ('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
@@ -57,10 +54,63 @@ stations = [
 ('Counting Crows Radio', 'pndrradio:1727297518525703746'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010')]
 
-#@+node:slzatz.20140603064654.2795: ** play_uri
-#for i,s in enumerate(stations):
-    #print "{:d} - {}".format(i+1,s[0])
+#2 = forward: lcd.RIGHT
+#4 = volume lower: lcd.DOWN
+#8 = volume higher: lcd.UP
+#16 = pause: lcd.LEFT
+#1 = change mode: lcd.SELECT
+#0 = no button
 
+btns = {
+           1: ( lcd.SELECT,   'Change Mode',           lcd.YELLOW,  select,         select),
+           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
+           4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
+           8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
+          16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
+         } 
+         
+#         btns = {
+#           0: {1:no_button, 0:pass},
+#           1: {1:select, 0:select},
+#           2: {1:next, 0:pass},
+#           4: {1:dec_volume, 0:scroll_down},
+#           8: {1:inc_volume, 0:scroll_up},
+#          16: {1:play_pause, 0:cancel}
+#         } 
+
+#btns.get(lcd.buttons())[mode]()
+ 
+mode = 1
+station_index = 0
+
+#@+node:slzatz.20140709142803.2452: ** display_song_info (future use)
+def display_song_info():
+
+    state = master.get_current_transport_info()['current_transport_state']
+    if state != 'PLAYING':
+        lcd.clear()
+        lcd.backlight(lcd.YELLOW)
+        lcd.message(state)
+        sleep(0.2)
+        return
+    
+    track = master.get_current_track_info()
+    
+    title = track['title']
+    
+    if prev_title != title:
+    
+        lcd.clear()
+        lcd.backlight(col[random.randrange(0,6)])
+        lcd.message(title + '\n' + track['artist'])
+        
+        prev_title = title
+        
+    else:                              ############################### 7/9
+        lcd.scrollDisplayLeft()   ################################ 7/9
+        
+    sleep(0.2)
+#@+node:slzatz.20140603064654.2795: ** play_uri
 def play_uri(uri, name):
     try:
         master.play_uri(uri)
@@ -68,6 +118,7 @@ def play_uri(uri, name):
         print "had a problem switching to {}!".format(name)
     else:
         print "switched to {}".format(name)
+
 #@+node:slzatz.20140603064654.2796: ** play_pause
 def play_pause():
     
@@ -77,22 +128,18 @@ def play_pause():
     else:
         master.play()
 
-    
-
-
 #@+node:slzatz.20140622201640.2450: ** cancel
 def cancel():
     
     global mode
     
-    mode = not mode
+    mode = 1
+    
     
 
-    
 #@+node:slzatz.20140603064654.2797: ** next
 def next():
     master.next()
-
 
 #@+node:slzatz.20140603064654.2798: ** previous (not in use)
 def previous():
@@ -108,8 +155,6 @@ def previous():
     lcd.backlight(lcd.YELLOW)
     lcd.message(stations[station_index][0])
     
-
-
 #@+node:slzatz.20140603064654.2799: ** dec_volume
 def dec_volume():
     
@@ -129,7 +174,6 @@ def dec_volume():
     lcd.message("Volume: {}".format(new_volume))
     lcd.backlight(lcd.YELLOW)
     
-    
 #@+node:slzatz.20140603064654.2800: ** inc_volume
 def inc_volume():
     
@@ -148,21 +192,6 @@ def inc_volume():
     lcd.message("Volume: {}".format(new_volume))
     lcd.backlight(lcd.YELLOW)
     
-
-    
-    
-#@+node:slzatz.20140603064654.2801: ** show_button
-def show_button(button):
-    print "button: {}".format(button)
-    
-    #note that using 12 right now to gracefully disconnect cc3000 from WiFi
-    if 0 < button < 13:
-        n = button-1
-        play_uri(stations[n][1], stations[n][0]) 
-    
-    return "button: {}".format(button)
-    
-
 #@+node:slzatz.20140603064654.2802: ** scroll_up
 def scroll_up():
     
@@ -194,13 +223,13 @@ def select():
     
     if mode:
         mode = 0
-        sleep(2)
+        sleep(.5)
     else:
         play_uri(stations[station_index][1], stations[station_index][0])
         mode = 1
-        sleep(2)
+        sleep(.5)
         
-#@+node:slzatz.20140603064654.2805: ** list_stations
+#@+node:slzatz.20140603064654.2805: ** list_stations (not in use)
 def list_stations():
     z = ""
     for i,s in enumerate(stations):
@@ -209,36 +238,7 @@ def list_stations():
         
     return z
     
-    
-        
-    
-    
-    
-    
-#@-others
-
-#2 = forward
-#4 = volume lower
-#8 = volume higher
-#16 = pause
-#1 = change mode
-#0 = no button
-
-btns = {1: ( lcd.SELECT,   'Change Mode',      lcd.YELLOW,  select, select),
-       2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
-       4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume ,scroll_down),
-       8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume, scroll_up),
-      16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause, cancel)} 
-
-btn =((lcd.LEFT,    'Play/Pause',              lcd.RED,     play_pause), #previous
-       ( lcd.UP,          'Increase\nVolume',  lcd.BLUE,    inc_volume, scroll_up),
-       ( lcd.DOWN,    'Decrease\nVolume', lcd.GREEN,  dec_volume ,scroll_down),
-       ( lcd.RIGHT,     'Next',                     lcd.VIOLET,  next),
-       ( lcd.SELECT,   'Change Mode',        lcd.YELLOW, select, select))
-
-mode = 1
-station_index = 0
-
+#@+node:slzatz.20140709142803.2451: ** if __name__ == '__main__':
 if __name__ == '__main__':
     
     prev_title = ""
@@ -247,7 +247,7 @@ if __name__ == '__main__':
 
         b = btns.get(lcd.buttons())
 
-        if  not b:
+        if  mode and not b:
                         
             state = master.get_current_transport_info()['current_transport_state']
             if state != 'PLAYING':
@@ -268,8 +268,13 @@ if __name__ == '__main__':
                 lcd.message(title + '\n' + track['artist'])
                 
                 prev_title = title
+                
+            else:                              ############################### 7/9
+                lcd.scrollDisplayLeft() ################################ 7/9
+                
             sleep(0.2)
             continue
+        #end if mode and not b:
         
         if mode:
             lcd.clear()
@@ -278,84 +283,12 @@ if __name__ == '__main__':
             b[3]()
             prev_title = ""
             sleep(0.2)
-
-            # state = master.get_current_transport_info()['current_transport_state']
-            # if state != 'PLAYING':
-                # lcd.clear()
-                # lcd.backlight(lcd.YELLOW)
-                # lcd.message(state)
-                # sleep(0.2)
-                # continue
-                
-            # track = master.get_current_track_info()
             
-            # title = track['title']
-            
-            # if prev_title != title:
-            
-                # lcd.clear()
-                # lcd.backlight(col[random.randrange(0,6)])
-                # lcd.message(title + '\n' + track['artist'])
-                
-                # prev_title = title
-                
-            # sleep(0.2)
-
         else:
 
             b[4]()
-            sleep(0.4)
-        
-    
-    # while 1:
-        
-        # #print "buttons()=",lcd.buttons() # will eventually change to using buttons and get rid of for and if statements
-     
-        # if mode:
-            # for b in btn:
-                # if lcd.buttonPressed(b[0]):
-                    # lcd.clear()
-                    # lcd.message(b[1])
-                    # lcd.backlight(b[2])
-                        
-                    # b[3]()
-                    
-                    # sleep(0.2)
-                        
-                    # break
-                    
-            # state = master.get_current_transport_info()['current_transport_state']
-            # if state != 'PLAYING':
-                # lcd.clear()
-                # lcd.backlight(lcd.YELLOW)
-                # lcd.message(state)
-                # sleep(0.2)
-                # continue
-                
-            # track = master.get_current_track_info()
-            
-            # title = track['title']
-            
-            # if prev_title != title:
-            
-                # lcd.clear()
-                # lcd.backlight(col[random.randrange(0,6)])
-                # lcd.message(title + '\n' + track['artist'])
-                
-                # prev_title = title
-                
-        # else:
-            
-            # for b in btn:
-                # if lcd.buttonPressed(b[0]):
-                    
-                    # b[4]()
-                    
-                    # sleep(0.5)
-                        
-                    # break
-        
-            #sleep(0.2)
+            sleep(0.2)
 
+#@-others
 
 #@-leo
