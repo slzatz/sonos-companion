@@ -265,7 +265,7 @@ if __name__ == '__main__':
             continue
         #end if mode and not b:
         
-        if mode:
+        if mode: 
             lcd.clear()
             lcd.message(b[1])
             lcd.backlight(b[2])
@@ -273,7 +273,7 @@ if __name__ == '__main__':
             prev_title = ""
             sleep(0.2)
             
-        else:
+        if b and not mode:
 
             b[4]()
             sleep(0.2)
