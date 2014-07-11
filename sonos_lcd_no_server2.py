@@ -54,21 +54,6 @@ stations = [
 ('Counting Crows Radio', 'pndrradio:1727297518525703746'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010')]
 
-#2 = forward: lcd.RIGHT
-#4 = volume lower: lcd.DOWN
-#8 = volume higher: lcd.UP
-#16 = pause: lcd.LEFT
-#1 = change mode: lcd.SELECT
-#0 = no button
-
-btns = {
-           1: ( lcd.SELECT,   'Change Mode',           lcd.YELLOW,  select,         select),
-           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
-           4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
-           8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
-          16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
-         } 
-
 mode = 1
 station_index = 0
 
