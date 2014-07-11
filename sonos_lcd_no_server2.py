@@ -68,18 +68,7 @@ btns = {
            8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
           16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
          } 
-         
-#         btns = {
-#           0: {1:no_button, 0:pass},
-#           1: {1:select, 0:select},
-#           2: {1:next, 0:pass},
-#           4: {1:dec_volume, 0:scroll_down},
-#           8: {1:inc_volume, 0:scroll_up},
-#          16: {1:play_pause, 0:cancel}
-#         } 
 
-#btns.get(lcd.buttons())[mode]()
- 
 mode = 1
 station_index = 0
 
@@ -238,6 +227,21 @@ def list_stations():
         
     return z
     
+#@+node:slzatz.20140710210012.2452: ** btns
+#2 = forward: lcd.RIGHT
+#4 = volume lower: lcd.DOWN
+#8 = volume higher: lcd.UP
+#16 = pause: lcd.LEFT
+#1 = change mode: lcd.SELECT
+#0 = no button
+
+btns = {
+           1: ( lcd.SELECT,   'Change Mode',           lcd.YELLOW,  select,         select),
+           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
+           4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
+           8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
+          16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
+         } 
 #@+node:slzatz.20140709142803.2451: ** if __name__ == '__main__':
 if __name__ == '__main__':
     
