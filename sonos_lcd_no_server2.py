@@ -272,8 +272,9 @@ if __name__ == '__main__':
             b[3]()
             prev_title = ""
             sleep(0.2)
+            continue
             
-        if b and not mode:
+        if b: #if mode would have been caught by above
 
             b[4]()
             sleep(0.2)
