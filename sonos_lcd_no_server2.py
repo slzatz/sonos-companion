@@ -261,15 +261,20 @@ if __name__ == '__main__':
                 length = len(title) if len(title) > len(track['artist']) else len(track['artist'])
                 delta = length - 16
                 
-            else:     
-                if n <= delta:                     
+                sleep(1)
+                
+            else: 
+                if delta < 0: 
+                    pass      
+                elif n <= delta:                     
                     lcd.scrollDisplayLeft()
                     n+=1
                 else:
                     lcd.clear()
                     lcd.message(title + '\n' + track['artist'])
                     n = 0
-                
+                    sleep(1)
+                    
             sleep(0.2)
             continue
         #end if mode and not b:
