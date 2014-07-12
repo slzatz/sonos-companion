@@ -257,9 +257,17 @@ if __name__ == '__main__':
                 lcd.message(title + '\n' + track['artist'])
                 
                 prev_title = title
+                n=0
+                length = len(title) if len(title) > len(track['artist']) else len(track['artist'])
+                delta = length - 16
                 
-            else:                              ############################### 7/9
-                lcd.scrollDisplayLeft() ################################ 7/9
+            else:     
+                if n <= delta:                     
+                    lcd.scrollDisplayLeft()
+                    n+=1
+                else:
+                    lcd.message(title + '\n' + track['artist'])
+                    n = 0
                 
             sleep(0.2)
             continue
