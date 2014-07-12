@@ -266,6 +266,7 @@ if __name__ == '__main__':
                     lcd.scrollDisplayLeft()
                     n+=1
                 else:
+                    lcd.clear()
                     lcd.message(title + '\n' + track['artist'])
                     n = 0
                 
