@@ -12,6 +12,8 @@ from time import sleep
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 import random
 
+from lcdScroll import Scroller
+
 speakers = list(soco.discover())
 
 for s in speakers:
@@ -235,7 +237,7 @@ if __name__ == '__main__':
     while 1:
 
         b = btns.get(lcd.buttons())
-
+    
         if  mode and not b:
                         
             state = master.get_current_transport_info()['current_transport_state']
@@ -254,26 +256,22 @@ if __name__ == '__main__':
             
                 lcd.clear()
                 lcd.backlight(col[random.randrange(0,6)])
-                lcd.message(title + '\n' + track['artist'])
+                
+                message = title + '\n' + track['artist']
+                lcd.message(message)
                 
                 prev_title = title
-                n=0
-                length = len(title) if len(title) > len(track['artist']) else len(track['artist'])
-                delta = length - 16
                 
-                sleep(1)
+                scroller = Scroller(lines = message)
+                
+                sleep(.8)
                 
             else: 
-                if delta < 0: 
-                    pass      
-                elif n <= delta:                     
-                    lcd.scrollDisplayLeft()
-                    n+=1
-                else:
-                    lcd.clear()
-                    lcd.message(title + '\n' + track['artist'])
-                    n = 0
-                    sleep(1)
+                
+                message = scroller.scroller()
+                lcd.clear()
+                lcd.message(message)
+                sleep
                     
             sleep(0.2)
             continue
@@ -285,13 +283,80 @@ if __name__ == '__main__':
             lcd.backlight(b[2])
             b[3]()
             prev_title = ""
+            
             sleep(0.2)
             continue
             
         if b: #if mode would have been caught by above
-
+    
             b[4]()
             sleep(0.2)
+       
+    ###################################################
+    # below works - different approach to scrolling
+    
+    # prev_title = ""
+    
+    # while 1:
+
+        # b = btns.get(lcd.buttons())
+
+        # if  mode and not b:
+                        
+            # state = master.get_current_transport_info()['current_transport_state']
+            # if state != 'PLAYING':
+                # lcd.clear()
+                # lcd.backlight(lcd.YELLOW)
+                # lcd.message(state)
+                # sleep(0.2)
+                # continue
+            
+            # track = master.get_current_track_info()
+            
+            # title = track['title']
+            
+            # if prev_title != title:
+            
+                # lcd.clear()
+                # lcd.backlight(col[random.randrange(0,6)])
+                # lcd.message(title + '\n' + track['artist'])
+                
+                # prev_title = title
+                # n=0
+                # length = len(title) if len(title) > len(track['artist']) else len(track['artist'])
+                # delta = length - 16
+                
+                # sleep(1)
+                
+            # else: 
+                # if delta <= 0: #if delta0 <= 0 m0shift = m0
+                    # pass      
+                # elif n <= delta:                     
+                    # lcd.scrollDisplayLeft() #m0shift = m0[n0:] m1shift = m1[n1:]
+                    # n+=1
+                # else:
+                    # lcd.clear()
+                    # lcd.message(title + '\n' + track['artist'])
+                    # n = 0
+                    # sleep(1)
+                    
+            # sleep(0.2)
+            # continue
+        # #end if mode and not b:
+        
+        # if mode: 
+            # lcd.clear()
+            # lcd.message(b[1])
+            # lcd.backlight(b[2])
+            # b[3]()
+            # prev_title = ""
+            # sleep(0.2)
+            # continue
+            
+        # if b: #if mode would have been caught by above
+
+            # b[4]()
+            # sleep(0.2)
 
 #@-others
 
