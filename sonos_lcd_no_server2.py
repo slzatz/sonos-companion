@@ -9,10 +9,11 @@ from soco.services import zone_group_state_shared_cache
 
 from time import sleep
 import datetime
-
-from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 import random
 
+from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
+
+import requests
 from lcdscroll import Scroller
 
 speakers = list(soco.discover())
