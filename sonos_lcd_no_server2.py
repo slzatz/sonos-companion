@@ -12,7 +12,7 @@ from time import sleep
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 import random
 
-from lcdScroll import Scroller
+from lcdscroll import Scroller
 
 speakers = list(soco.discover())
 
