@@ -56,36 +56,32 @@ stations = [
 ('Counting Crows Radio', 'pndrradio:1727297518525703746'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010')]
 
+#globals
 mode = 1
 station_index = 0
 
 #@+node:slzatz.20140709142803.2452: ** display_song_info (future use)
 def display_song_info():
 
-    state = master.get_current_transport_info()['current_transport_state']
-    if state != 'PLAYING':
-        lcd.clear()
-        lcd.backlight(lcd.YELLOW)
-        lcd.message(state)
-        sleep(0.2)
-        return
-    
     track = master.get_current_track_info()
     
     title = track['title']
-    
-    if prev_title != title:
+    if g.prev_title != title:
     
         lcd.clear()
         lcd.backlight(col[random.randrange(0,6)])
-        lcd.message(title + '\n' + track['artist'])
+        lcd.message([title, track['artist']])
         
+        scroller = Scroller(lines = [title, track['artist']])
         prev_title = title
         
-    else:                              ############################### 7/9
-        lcd.scrollDisplayLeft()   ################################ 7/9
+        sleep(.8) # have it linger when song changes before it starts scrolling
         
-    sleep(0.2)
+    else: 
+        
+        message = scroller.scroll()
+        lcd.clear()
+        lcd.message(message)
 #@+node:slzatz.20140603064654.2795: ** play_uri
 def play_uri(uri, name):
     try:
@@ -98,11 +94,15 @@ def play_uri(uri, name):
 #@+node:slzatz.20140603064654.2796: ** play_pause
 def play_pause():
     
-    z = master.get_current_transport_info()
-    if z['current_transport_state'] == 'PLAYING':   #'PAUSED_PLAYBACK'
+    state = master.get_current_transport_info()['current_transport_state']
+    if state == 'PLAYING':   #'PAUSED_PLAYBACK'
         master.pause()
     else:
         master.play()
+        
+    lcd.clear()
+    lcd.backlight(lcd.YELLOW)
+    lcd.message(state)
 
 #@+node:slzatz.20140622201640.2450: ** cancel
 def cancel():
@@ -214,6 +214,31 @@ def list_stations():
         
     return z
     
+#@+node:slzatz.20140712195238.2453: ** display_weather
+def display_weather():
+    
+    hour = datetime.datetime.now().hour
+    if hour != g.prev_hour:
+        
+        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
+        m1 = r.json()['current_observation']['temperature_string']
+        m2 = r.json()['current_observation']['wind_string']
+        
+        lcd.clear()
+        lcd.backlight(lcd.RED)
+        lcd.message([m1,m2])
+ 
+        scroller = Scroller(lines = [m1, m2])
+        
+        g.prev_hour = hour
+    
+    else:
+         
+        message = scroller.scroll()
+        lcd.clear()
+        lcd.backlight(lcd.RED)
+        lcd.message(message)
+         
 #@+node:slzatz.20140710210012.2452: ** btns
 #2 = forward: lcd.RIGHT
 #4 = volume lower: lcd.DOWN
@@ -232,7 +257,8 @@ btns = {
 #@+node:slzatz.20140709142803.2451: ** if __name__ == '__main__':
 if __name__ == '__main__':
     
-    prev_title = ""
+    prev_title = '0'
+    hour = -1
     
     while 1:
 
@@ -241,37 +267,64 @@ if __name__ == '__main__':
         if  mode and not b:
                         
             state = master.get_current_transport_info()['current_transport_state']
+            
             if state != 'PLAYING':
-                lcd.clear()
-                lcd.backlight(lcd.YELLOW)
-                lcd.message(state)
-                sleep(0.2)
-                continue
-            
-            track = master.get_current_track_info()
-            
-            title = track['title']
-            
-            if prev_title != title:
-            
-                lcd.clear()
-                lcd.backlight(col[random.randrange(0,6)])
+                #lcd.clear()
+                #lcd.backlight(lcd.YELLOW)
+                #lcd.message(state)
                 
-                message = title + '\n' + track['artist']
-                lcd.message(message)
+                #begin display_weather() ########################################
+                hour = datetime.datetime.now().hour
+                if hour != g.prev_hour:
+                    
+                    r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
+                    m1 = r.json()['current_observation']['temperature_string']
+                    m2 = r.json()['current_observation']['wind_string']
+                    
+                    lcd.clear()
+                    lcd.backlight(lcd.RED)
+                    lcd.message([m1,m2])
+             
+                    weather_scroller = Scroller(lines = [m1, m2])
+                    
+                    g.prev_hour = hour
                 
-                prev_title = title
+                else:
+                     
+                    message = weather_scroller.scroll()
+                    lcd.clear()
+                    lcd.backlight(lcd.RED)
+                    lcd.message(message)
                 
-                scroller = Scroller(lines = message)
+               #end display_weather()
                 
-                sleep(.8)
+            else:
+               #begin display_song_info() ###########################################
+                track = master.get_current_track_info()
                 
-            else: 
+                title = track['title']
                 
-                message = scroller.scroller()
-                lcd.clear()
-                lcd.message(message)
-                sleep
+                if prev_title != title:
+                
+                    lcd.clear()
+                    lcd.backlight(col[random.randrange(0,6)])
+                    
+                    message = title + '\n' + track['artist']
+                    lcd.message(message)
+                    
+                    prev_title = title
+                    
+                    track_scroller = Scroller(lines = message)
+                    
+                    sleep(.8)
+                    
+                else: 
+                    
+                    message = track_scroller.scroller()
+                    lcd.clear()
+                    lcd.message(message)
+                
+                #end display_song_info() ##########################################
                     
             sleep(0.2)
             continue
