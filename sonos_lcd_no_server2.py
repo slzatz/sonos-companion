@@ -259,7 +259,7 @@ btns = {
 if __name__ == '__main__':
     
     prev_title = '0'
-    hour = -1
+    prev_hour = -1
     
     while 1:
 
@@ -276,7 +276,7 @@ if __name__ == '__main__':
                 
                 #begin display_weather() ########################################
                 hour = datetime.datetime.now().hour
-                if hour != g.prev_hour:
+                if hour != prev_hour:
                     
                     r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
                     m1 = r.json()['current_observation']['temperature_string']
@@ -288,7 +288,7 @@ if __name__ == '__main__':
              
                     weather_scroller = Scroller(lines = [m1, m2])
                     
-                    g.prev_hour = hour
+                    prev_hour = hour
                 
                 else:
                      
