@@ -320,7 +320,7 @@ if __name__ == '__main__':
                     
                 else: 
                     
-                    message = track_scroller.scroller()
+                    message = track_scroller.scroll()
                     lcd.clear()
                     lcd.message(message)
                 
