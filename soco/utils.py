@@ -2,12 +2,15 @@
 
 """ Provides general utility functions to be used across modules """
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals, absolute_import, print_function
 
 import re
 import threading
+import functools
+import warnings
 from time import time
 from .compat import StringType, UnicodeType, dumps
+from .xml import XML
 
 
 def really_unicode(in_string):
@@ -61,6 +64,20 @@ def prettify(unicode_text):
     import xml.dom.minidom
     reparsed = xml.dom.minidom.parseString(unicode_text.encode('utf-8'))
     return reparsed.toprettyxml(indent="  ", newl="\n")
+
+
+def show_xml(xml):
+    """Pretty print an ElementTree XML object
+
+    Args:
+        xml (ElementTree): The :py:class:`xml.etree.ElementTree` to pretty
+            print
+
+    NOTE: This function is a convenience function used during development, it
+    is not used anywhere in the main code base
+    """
+    string = XML.tostring(xml)
+    print(prettify(string))
 
 
 class TimedCache(object):
@@ -159,3 +176,59 @@ class TimedCache(object):
         """Empty the whole cache"""
         with self._cache_lock:
             self._cache.clear()
+
+
+class deprecated(object):
+    """ A decorator to mark deprecated objects.
+
+    Causes a warning to be issued when the object is used, and marks the object
+    as deprecated in the Sphinx docs.
+
+    args:
+        since (str): The version in which the object is deprecated
+        alternative (str, optional): The name of an alternative object to use
+
+    Example:
+
+        ::
+
+            @deprecated(since="0.7", alternative="new_function")
+            def old_function(args):
+                pass
+
+
+    """
+    # pylint really doesn't like decorators!
+    # pylint: disable=invalid-name, too-few-public-methods
+    # pylint: disable=no-member, missing-docstring
+    def __init__(self, since, alternative=None, will_be_removed_in=None):
+        self.since_version = since
+        self.alternative = alternative
+        self.will_be_removed_in = will_be_removed_in
+
+    def __call__(self, deprecated_fn):
+
+        @functools.wraps(deprecated_fn)
+        def decorated(*args, **kwargs):
+
+            message = "Call to deprecated function {0}.".format(
+                deprecated_fn.__name__)
+            if self.will_be_removed_in is not None:
+                message += " Will be removed in version {0}.".format(
+                    self.will_be_removed_in)
+            if self.alternative is not None:
+                message += " Use {0} instead.".format(self.alternative)
+            warnings.warn(message, stacklevel=2)
+
+            return deprecated_fn(*args, **kwargs)
+
+        docs = "\n\n  .. deprecated:: {0}\n".format(self.since_version)
+        if self.will_be_removed_in is not None:
+            docs += "\n     Will be removed in version {0}.".format(
+                self.will_be_removed_in)
+        if self.alternative is not None:
+            docs += "\n     Use {0} instead.".format(self.alternative)
+        if decorated.__doc__ is None:
+            decorated.__doc__ = ''
+        decorated.__doc__ += docs
+        return decorated
