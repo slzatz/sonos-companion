@@ -18,10 +18,10 @@ from lcdscroll import Scroller
 
 speakers = list(soco.discover())
 
-print speakers ################
+#print speakers ################
 
-#for s in speakers:
-    #print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+for s in speakers:
+    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
            
 for s in speakers:
     if s.is_coordinator:
