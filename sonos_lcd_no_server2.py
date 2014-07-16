@@ -18,11 +18,10 @@ from lcdscroll import Scroller
 
 speakers = list(soco.discover())
 
-sleep(.1)
-#print speakers ################
+print speakers ################
 
 for s in speakers:
-    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+    if s: print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
            
 for s in speakers:
     if s.is_coordinator:
@@ -300,8 +299,8 @@ if __name__ == '__main__':
                     #m2 = r.json()['current_observation']['wind_string']
                     
                     r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-                    m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'],': ',r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-                    m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'],': ',r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+                    m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+                    m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
 
                     
                     lcd.clear()
