@@ -279,9 +279,27 @@ if __name__ == '__main__':
                 hour = datetime.datetime.now().hour
                 if hour != prev_hour:
                     
-                    r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
-                    m1 = r.json()['current_observation']['temperature_string']
-                    m2 = r.json()['current_observation']['wind_string']
+                    #r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+                    #>>> for x in r.json()['forecast']['txt_forecast']['forecastday']:
+                    #print x['title'],': ',x['fcttext'],'\n'
+
+                    # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
+                    # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
+                    # Wednesday :  Mostly cloudy with rain ending in the afternoon. High 81F. Winds NW at 5 to 10 mph. Chance of rain 80%. Rainfall around a quarter of an inch.
+                    # Wednesday Night :  Mostly cloudy skies early, then partly cloudy after midnight. Low 66F. Winds light and variable.
+                    # Thursday :  Partly cloudy. High 82F. Winds NW at 5 to 10 mph.
+                    # Thursday Night :  Mainly clear. Low around 65F. Winds NW at 5 to 10 mph.
+                    # Friday :  Intervals of clouds and sunshine. High 82F. Winds NNE at 5 to 10 mph.
+                    # Friday Night :  Partly cloudy. Low 68F. Winds S at 5 to 10 mph.
+                    
+                    #r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
+                    #m1 = r.json()['current_observation']['temperature_string']
+                    #m2 = r.json()['current_observation']['wind_string']
+                    
+                    r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+                    m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'],': ',r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+                    m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'],': ',r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+
                     
                     lcd.clear()
                     lcd.backlight(lcd.RED)
