@@ -19,7 +19,7 @@ from lcdscroll import Scroller
 speakers = list(soco.discover())
 
 for s in speakers:
-    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
            
 for s in speakers:
     if s.is_coordinator:
@@ -34,7 +34,7 @@ for s in speakers:
     
 print "\n"
 for s in speakers:
-    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
 
 lcd = Adafruit_CharLCDPlate()
 
