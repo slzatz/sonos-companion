@@ -18,6 +18,7 @@ from lcdscroll import Scroller
 
 speakers = list(soco.discover())
 
+time.sleep(.1)
 #print speakers ################
 
 for s in speakers:
