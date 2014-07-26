@@ -23,25 +23,31 @@ speakers = list(soco.discover())
 
 print speakers ################
 
+# appears that the property coordinator of s.group is not getting set properly and so can't use s.group.coordinator[.player_name]
+
 for s in speakers:
     if s:
-        print s
-        print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)#s.group.coordinator.player_name)
+        #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
+        print s.player_name
            
 for s in speakers:
     if s.is_coordinator:
         master = s
+        print "\nNOTE: found coordinator and master =",master.player_name
         break
 else:
     master = speakers[0]
-    
+    print "\nALERT: id not find coordinator so took speaker[0] =",master.player_name
+
 for s in speakers:
     if s != master:
         s.join(master)
     
 print "\n"
-for s in speakers:
-    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
+#for s in speakers:
+#    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
+
+print "program running ..."
 
 lcd = Adafruit_CharLCDPlate()
 
