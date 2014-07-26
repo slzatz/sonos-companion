@@ -5,7 +5,8 @@
 #@+others
 #@+node:slzatz.20140603064654.2794: ** imports etc
 import soco
-from soco.services import zone_group_state_shared_cache
+#from soco.services import zone_group_state_shared_cache
+from soco import config
 
 from time import sleep
 import datetime
@@ -16,12 +17,16 @@ from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 import requests
 from lcdscroll import Scroller
 
+config.CACHE_ENABLED = False
+
 speakers = list(soco.discover())
 
 print speakers ################
 
 for s in speakers:
-    if s: print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+    if s:
+        print s
+        print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)#s.group.coordinator.player_name)
            
 for s in speakers:
     if s.is_coordinator:
@@ -36,7 +41,7 @@ for s in speakers:
     
 print "\n"
 for s in speakers:
-    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
 
 lcd = Adafruit_CharLCDPlate()
 
