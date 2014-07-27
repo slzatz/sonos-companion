@@ -58,7 +58,8 @@ lcd.message("Sonos-companion")
 col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
 
 stations = [
-('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
+#('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
+('WNYC', 'x-sonosapi-stream:s21606?sid=254&flags=32'),
 ('WSHU', 'x-rincon-mp3radio://wshu.streamguys.org/wshu-news'),
 ('QuickMix', 'pndrradio:52877953807377986'),
 ('R.E.M. Radio', 'pndrradio:637630342339192386'), 
