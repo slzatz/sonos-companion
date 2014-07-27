@@ -218,10 +218,11 @@ def select():
         mode = 0
         sleep(.5)
     else:
-        if station_index[0] != 'WNYC':
+        if stations[station_index][0] != 'WNYC':
             play_uri(stations[station_index][1], stations[station_index][0])
-            #media_uri = x-sonosapi-stream:s21606?sid=254&flags=3
+
         else:
+            #media_uri = x-sonosapi-stream:s21606?sid=254&flags=3
             z  = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>WNYC-FM</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>'
             
             play_uri(stations[station_index][1], z)
