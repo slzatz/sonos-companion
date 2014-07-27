@@ -59,8 +59,8 @@ lcd.message("Sonos-companion")
 col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
 
 stations = [
-#('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
-('WNYC', 'x-sonosapi-stream:s21606?sid=254&flags=32'),
+('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
+#('WNYC', 'x-sonosapi-stream:s21606?sid=254&flags=32'),
 ('WSHU', 'x-rincon-mp3radio://wshu.streamguys.org/wshu-news'),
 ('QuickMix', 'pndrradio:52877953807377986'),
 ('R.E.M. Radio', 'pndrradio:637630342339192386'), 
@@ -227,7 +227,8 @@ def select():
             #media_uri = x-sonosapi-stream:s21606?sid=254&flags=3
             meta  = cgi.escape('<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>WNYC-FM</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>')
             
-            uri = cgi.escape(stations[station_index][1])
+            #uri = cgi.escape(stations[station_index][1])
+            uri = stations[station_index][1]
             play_uri(uri, meta)
             
         mode = 1
