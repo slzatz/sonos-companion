@@ -297,6 +297,9 @@ if __name__ == '__main__':
     prev_title = '0'
     prev_hour = -1
     
+    track_scroller = Scroller()
+    weather_scroller = Scroller()
+    
     while 1:
 
         b = btns.get(lcd.buttons())
@@ -323,7 +326,7 @@ if __name__ == '__main__':
                     lcd.backlight(lcd.RED)
                     lcd.message([m1,m2])
              
-                    weather_scroller = Scroller(lines = [m1, m2])
+                    weather_scroller.setLines([m1, m2])
                     
                     prev_hour = hour
                 
@@ -360,7 +363,7 @@ if __name__ == '__main__':
                     
                     prev_title = title
                     
-                    track_scroller = Scroller(lines = message)
+                    track_scroller.setLines(message)
                     
                     sleep(.8)
                     
