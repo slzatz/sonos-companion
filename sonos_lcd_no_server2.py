@@ -59,25 +59,28 @@ lcd.message("Sonos-companion")
 col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
 
 stations = [
-('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
-#('WNYC', 'x-sonosapi-stream:s21606?sid=254&flags=32'),
-('WSHU', 'x-rincon-mp3radio://wshu.streamguys.org/wshu-news'),
-('QuickMix', 'pndrradio:52877953807377986'),
-('R.E.M. Radio', 'pndrradio:637630342339192386'), 
-('Nick Drake Radio', 'pndrradio:409866109213435458'),
-('Dar Williams Radio', 'pndrradio:1823409579416053314'),
-('Patty Griffin Radio', 'pndrradio:52876609482614338'),
-('Lucinda Williams Radio', 'pndrradio:360878777387148866'),
-('Neil Young Radio', 'pndrradio:52876154216080962'),
-('Kris Delmhorst Radio', 'pndrradio:610111769614181954'),
-('Counting Crows Radio', 'pndrradio:1727297518525703746'), 
-('Vienna Teng Radio', 'pndrradio:138764603804051010')]
+#('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
+('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), # this is from favorites
+#('WSHU-FM', 'x-rincon-mp3radio://wshu.streamguys.org/wshu-news'),
+('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'), # this is from favorites
+('QuickMix', 'pndrradio:52877953807377986', 'SA_RINCON3_slzatz@gmail.com'),
+('R.E.M. Radio', 'pndrradio:637630342339192386', 'SA_RINCON3_slzatz@gmail.com'), 
+('Nick Drake Radio', 'pndrradio:409866109213435458', 'SA_RINCON3_slzatz@gmail.com'),
+('Dar Williams Radio', 'pndrradio:1823409579416053314', 'SA_RINCON3_slzatz@gmail.com'),
+('Patty Griffin Radio', 'pndrradio:52876609482614338', 'SA_RINCON3_slzatz@gmail.com'),
+('Lucinda Williams Radio', 'pndrradio:360878777387148866', 'SA_RINCON3_slzatz@gmail.com'),
+('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
+('Kris Delmhorst Radio', 'pndrradio:610111769614181954', 'SA_RINCON3_slzatz@gmail.com'),
+('Counting Crows Radio', 'pndrradio:1727297518525703746', 'SA_RINCON3_slzatz@gmail.com'), 
+('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
 
 #globals
 mode = 1
 station_index = 0
 
-WNYC_meta = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>WNYC-FM</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>'
+meta_format = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
+upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:cl
+ass><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{description}</desc></item></DIDL-Lite>'''
 
 #@+node:slzatz.20140709142803.2452: ** display_song_info (future use)
 def display_song_info():
@@ -220,16 +223,11 @@ def select():
         mode = 0
         sleep(.5)
     else:
-        if stations[station_index][0] != 'WNYC':
-            play_uri(stations[station_index][1], stations[station_index][0])
-
-        else:
-            #media_uri = x-sonosapi-stream:s21606?sid=254&flags=3
-            meta  = cgi.escape('<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>WNYC-FM</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>')
-            
-            #uri = cgi.escape(stations[station_index][1])
-            uri = stations[station_index][1]
-            play_uri(uri, meta)
+        station = stations[station_index]
+        uri = cgi.escape(station[1]) # get rid of ampersand in favorite radio stations
+        meta = meta_format.format(title=station[0], description=station[2])
+  
+        play_uri(uri, meta)
             
         mode = 1
         sleep(.5)
