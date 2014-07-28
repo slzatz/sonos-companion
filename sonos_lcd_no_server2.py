@@ -226,6 +226,10 @@ def select():
         station = stations[station_index]
         uri = cgi.escape(station[1]) # get rid of ampersand in favorite radio stations
         meta = meta_format.format(title=station[0], description=station[2])
+        
+        print "uri=",uri
+        print "meta=",meta
+        print "\n"
   
         play_uri(uri, meta, station[0]) # station[0] is the title of the station
             
