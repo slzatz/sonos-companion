@@ -11,7 +11,7 @@ from soco import config
 from time import sleep
 import datetime
 import random
-import cgi
+import xml.etree.ElementTree as ET
 
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 
@@ -225,12 +225,13 @@ def select():
         sleep(.5)
     else:
         station = stations[station_index]
-        uri = cgi.escape(station[1]) # get rid of ampersand in favorite radio stations
+        uri = station[1]
         
-        if station_index <2:
-            meta = meta_format_radio.format(title=station[0], service=station[2])
-        else:
+        if uri.startswith("pndrradio"):
             meta = meta_format_pandora.format(title=station[0], service=station[2])
+        else:
+            uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+            meta = meta_format_radio.format(title=station[0], service=station[2])
         
         print "uri=",uri
         print "meta=",meta
@@ -250,7 +251,7 @@ def list_stations():
         
     return z
     
-#@+node:slzatz.20140712195238.2453: ** display_weather
+#@+node:slzatz.20140712195238.2453: ** display_weather (not in use)
 def display_weather():
     
     hour = datetime.datetime.now().hour
@@ -305,30 +306,13 @@ if __name__ == '__main__':
             state = master.get_current_transport_info()['current_transport_state']
             
             if state != 'PLAYING':
-                #lcd.clear()
-                #lcd.backlight(lcd.YELLOW)
-                #lcd.message(state)
                 
                 #begin display_weather() ########################################
                 hour = datetime.datetime.now().hour
                 if hour != prev_hour:
-                    
-                    #r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-                    #>>> for x in r.json()['forecast']['txt_forecast']['forecastday']:
-                    #print x['title'],': ',x['fcttext'],'\n'
 
                     # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
                     # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
-                    # Wednesday :  Mostly cloudy with rain ending in the afternoon. High 81F. Winds NW at 5 to 10 mph. Chance of rain 80%. Rainfall around a quarter of an inch.
-                    # Wednesday Night :  Mostly cloudy skies early, then partly cloudy after midnight. Low 66F. Winds light and variable.
-                    # Thursday :  Partly cloudy. High 82F. Winds NW at 5 to 10 mph.
-                    # Thursday Night :  Mainly clear. Low around 65F. Winds NW at 5 to 10 mph.
-                    # Friday :  Intervals of clouds and sunshine. High 82F. Winds NNE at 5 to 10 mph.
-                    # Friday Night :  Partly cloudy. Low 68F. Winds S at 5 to 10 mph.
-                    
-                    #r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
-                    #m1 = r.json()['current_observation']['temperature_string']
-                    #m2 = r.json()['current_observation']['wind_string']
                     
                     r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
                     m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
@@ -350,7 +334,7 @@ if __name__ == '__main__':
                     lcd.backlight(lcd.RED)
                     lcd.message(message)
                 
-               #end display_weather()
+               #end display_weather() ###################################################
                 
             else:
                #begin display_song_info() ###########################################
@@ -359,11 +343,19 @@ if __name__ == '__main__':
                 title = track['title']
                 
                 if prev_title != title:
-                
+                    
+                    media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+                    #media_uri = media_info['CurrentURI']
+                    meta = media_info['CurrentURIMetaData']
+                    root = ET.fromstring(meta)
+                    service = root[0][0].text
+                    
+                    #message = title + '\n' + track['artist']
+                    
+                    message = '{}\n{} ({})'.format(title, track['artist'], service)
+        
                     lcd.clear()
                     lcd.backlight(col[random.randrange(0,6)])
-                    
-                    message = title + '\n' + track['artist']
                     lcd.message(message)
                     
                     prev_title = title
@@ -399,71 +391,6 @@ if __name__ == '__main__':
             b[4]()
             sleep(0.2)
        
-    ###################################################
-    # below works - different approach to scrolling
-    
-    # prev_title = ""
-    
-    # while 1:
-
-        # b = btns.get(lcd.buttons())
-
-        # if  mode and not b:
-                        
-            # state = master.get_current_transport_info()['current_transport_state']
-            # if state != 'PLAYING':
-                # lcd.clear()
-                # lcd.backlight(lcd.YELLOW)
-                # lcd.message(state)
-                # sleep(0.2)
-                # continue
-            
-            # track = master.get_current_track_info()
-            
-            # title = track['title']
-            
-            # if prev_title != title:
-            
-                # lcd.clear()
-                # lcd.backlight(col[random.randrange(0,6)])
-                # lcd.message(title + '\n' + track['artist'])
-                
-                # prev_title = title
-                # n=0
-                # length = len(title) if len(title) > len(track['artist']) else len(track['artist'])
-                # delta = length - 16
-                
-                # sleep(1)
-                
-            # else: 
-                # if delta <= 0: #if delta0 <= 0 m0shift = m0
-                    # pass      
-                # elif n <= delta:                     
-                    # lcd.scrollDisplayLeft() #m0shift = m0[n0:] m1shift = m1[n1:]
-                    # n+=1
-                # else:
-                    # lcd.clear()
-                    # lcd.message(title + '\n' + track['artist'])
-                    # n = 0
-                    # sleep(1)
-                    
-            # sleep(0.2)
-            # continue
-        # #end if mode and not b:
-        
-        # if mode: 
-            # lcd.clear()
-            # lcd.message(b[1])
-            # lcd.backlight(b[2])
-            # b[3]()
-            # prev_title = ""
-            # sleep(0.2)
-            # continue
-            
-        # if b: #if mode would have been caught by above
-
-            # b[4]()
-            # sleep(0.2)
 
 #@-others
 
