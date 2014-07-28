@@ -105,13 +105,13 @@ def display_song_info():
         lcd.clear()
         lcd.message(message)
 #@+node:slzatz.20140603064654.2795: ** play_uri
-def play_uri(uri, name):
+def play_uri(uri, meta, title):
     try:
-        master.play_uri(uri)
+        master.play_uri(uri, meta)
     except:
-        print "had a problem switching to {}!".format(name)
+        print "had a problem switching to {}!".format(title)
     else:
-        print "switched to {}".format(name)
+        print "switched to {}".format(title)
 
 #@+node:slzatz.20140603064654.2796: ** play_pause
 def play_pause():
@@ -227,7 +227,7 @@ def select():
         uri = cgi.escape(station[1]) # get rid of ampersand in favorite radio stations
         meta = meta_format.format(title=station[0], description=station[2])
   
-        play_uri(uri, meta)
+        play_uri(uri, meta, station[0]) # station[0] is the title of the station
             
         mode = 1
         sleep(.5)
