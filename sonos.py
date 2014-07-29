@@ -44,14 +44,17 @@ DEBUG = app.config['DEBUG']
 speakers = list(soco.discover())
 
 for s in speakers:
-    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+    #print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name) # problem with coordinator
+    print "speaker: {}".format(s.player_name)
            
 for s in speakers:
     if s.is_coordinator:
         master = s
+        print "master found and is {}".format(master.player_name)
         break
 else:
     master = speakers[0]
+    print "couldn't find master so just used first speaker: {}".format(master.player_name)
 
 for s in speakers:
     if s != master:
@@ -61,11 +64,11 @@ for s in speakers:
     #print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
     
 zone_group_state_shared_cache.clear() #########appear to need both of these lines to update the cache #####################
-speakers = list(soco.discover()) ############################
+#speakers = list(soco.discover()) ############################
 
 print "\n"
-for s in speakers:
-    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
+#for s in speakers:
+#    print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator.player_name)
 
 # artists.json is the file that caches previous image searches
 try:
