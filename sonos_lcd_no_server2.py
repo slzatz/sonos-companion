@@ -350,8 +350,11 @@ if __name__ == '__main__':
                     media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
                     #media_uri = media_info['CurrentURI']
                     meta = media_info['CurrentURIMetaData']
-                    root = ET.fromstring(meta)
-                    service = root[0][0].text
+                    if meta:
+                        root = ET.fromstring(meta)
+                        service = root[0][0].text
+                    else:
+                        service = "No service"
                     
                     #message = title + '\n' + track['artist']
                     
