@@ -12,11 +12,12 @@ from apiclient import discovery
 
 import requests
 import json
+#import xml.etree.ElementTree as ET  <-- will need this when we want to print service
 
 import textwrap
 from collections import OrderedDict
 DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
-
+# need to add ('service', 'Service) to ordered dict
 from flask import Flask, render_template, url_for, request, make_response
 
 import soco
@@ -371,6 +372,16 @@ def spark():
         prev_track = dict(track)  #need this dict is mutable
     
     track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+    
+    # should add service but haven't done it yet - code below
+    #media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+    #media_uri = media_info['CurrentURI'] <-- this isn't needed
+    #meta = media_info['CurrentURIMetaData']
+    #if meta:
+        #root = ET.fromstring(meta)
+        #service = root[0][0].text
+    #else:
+        #service = "No service"
     
     # OLED is 128x64 pixels seems to be about 8 x 21 charactiers = 168 chars
     #print "track=\n", track
