@@ -2,15 +2,44 @@ import soco
 #from soco.services import zone_group_state_shared_cache
 from soco import config
 
+import os
+import pygame
+import txtlib
 from time import sleep
 import datetime
 import random
 import xml.etree.ElementTree as ET
 
-from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
+#from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import #Adafruit_CharLCDPlate
 
 import requests
-from lcdscroll import Scroller
+#from lcdscroll import Scroller
+
+import textwrap
+from collections import OrderedDict
+DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
+# need to add ('service', 'Service) to ordered dict
+
+#last.fm
+base_url = "http://ws.audioscrobbler.com/2.0/"
+api_key = "1c55c0a239072889fa7c11df73ecd566"
+
+wrapper = textwrap.TextWrapper(width=40, replace_whitespace=False)
+
+prev_track = ""
+
+
+os.putenv('SDL_VIDEODRIVER', 'fbcon')
+os.putenv('SDL_FBDEV', '/dev/fb1')
+
+pygame.init()
+pygame.mouse.set_visible(0)
+
+screen = pygame.display.set_mode((320, 240))
+screen.fill((0,0,0))
+
+text = txtlib.Text((320, 240), 'freesans')
+text.text = "Sonos-Companion TFT Edition"
 
 config.CACHE_ENABLED = False
 
@@ -258,6 +287,7 @@ def display_weather():
         lcd.message(message)
          
 
+
 #2 = forward: lcd.RIGHT
 #4 = volume lower: lcd.DOWN
 #8 = volume higher: lcd.UP
@@ -303,9 +333,11 @@ if __name__ == '__main__':
                     m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
 
                     
-                    lcd.clear()
-                    lcd.backlight(lcd.RED)
-                    lcd.message([m1,m2])
+                    #lcd.clear()
+                    #lcd.backlight(lcd.RED)
+                    #lcd.message([m1,m2])
+                   
+                   
              
                     weather_scroller.setLines([m1, m2])
                     
@@ -323,6 +355,7 @@ if __name__ == '__main__':
             else:
                #begin display_song_info() ###########################################
                 track = master.get_current_track_info()
+                track = {x:track[x] for x in track if x in DISPLAY} #date should not be in track at this point
                 
                 title = track['title']
                 
@@ -347,7 +380,13 @@ if __name__ == '__main__':
                     
                     prev_title = title
                     
-                    track_scroller.setLines(message)
+                    track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+                    
+                    s = ''
+                    for x in DISPLAY:
+                        s+=wrapper.fill(DISPLAY[x]+": "+track.get(x,''))+"\n\r"
+                    
+                    #track_scroller.setLines(message)
                     
                     sleep(.8)
                     
