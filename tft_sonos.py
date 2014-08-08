@@ -28,9 +28,12 @@ wrapper = textwrap.TextWrapper(width=40, replace_whitespace=False)
 
 prev_track = ""
 
-
-os.putenv('SDL_VIDEODRIVER', 'fbcon')
-os.putenv('SDL_FBDEV', '/dev/fb1')
+if platform.system() == 'Windows':
+    os.environ['SDL_VIDEODRIVER'] = 'windib'
+else:
+    # from https://github.com/adafruit/adafruit-pi-cam/blob/master/cam.py
+    os.putenv('SDL_VIDEODRIVER', 'fbcon')
+    os.putenv('SDL_FBDEV', '/dev/fb1')
 
 pygame.init()
 pygame.mouse.set_visible(0)

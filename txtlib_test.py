@@ -2,17 +2,21 @@
 #-*- coding:utf-8 -*-
 
 import os
+import platform
 import pygame
 import txtlib
 from time import sleep
 
-os.putenv('SDL_VIDEODRIVER', 'fbcon')
-os.putenv('SDL_FBDEV', '/dev/fb1')
+if platform.system() == 'Windows':
+    os.environ['SDL_VIDEODRIVER'] = 'windib'
+else:
+    os.putenv('SDL_VIDEODRIVER', 'fbcon')
+    os.putenv('SDL_FBDEV', '/dev/fb1')
 
 pygame.init()
 pygame.mouse.set_visible(0)
 
-screen = pygame.display.set_mode((320, 240))
+screen = pygame.display.set_mode((320, 240)) #, pygame.FULLSCREEN) 320 240
 screen.fill((0,0,0))
 
 text = txtlib.Text((320, 240), 'freesans')
