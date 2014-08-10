@@ -149,7 +149,7 @@ def display_song_info():
     pass
         
 def get_release_date(artist, album, title):
-    print "artist = {}; album = {}, title = {}".format(artist, album, title)
+    print "artist = {}; album = {}, title = {} [in get_release_date]".format(artist, album, title)
     try:
         result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
     except:
@@ -459,8 +459,9 @@ if __name__ == '__main__':
             else:
                 #print "state = PLAYING"
                 #begin display_song_info() ###########################################
+                #DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
                 track = master.get_current_track_info()
-                track = {x:track[x] for x in track if x in DISPLAY} #date should not be in track at this point
+                #track['date'] = get_release_date(track['artist'], track['album'], track['title']) # not best here since fires every time
                 
                 title = track['title']
                 
@@ -476,104 +477,93 @@ if __name__ == '__main__':
                         service = root[0][0].text
                     else:
                         service = "No service"
-                    
-                    #message = title + '\n' + track['artist']
-                    
-                    #message = '{}\n{} ({})'.format(title, track['artist'], service)
-        
-                    #text = txtlib.Text((320, 240), 'freesans')
-                    #text.text = message
-                    #text.update()
-                    #screen.blit(text.area, (0,0))
-                    #pygame.display.flip()
-                    #lcd.clear()
-                    #lcd.backlight(col[random.randrange(0,6)])
-                    #lcd.message(message)
-                    
+                                      
                     prev_title = title
                     
-                    track['date'] = get_release_date(track['artist'], track['album'], track['title'])
-                    
-                    s = ''
-                    for x in DISPLAY:
-                        s+=wrapper.fill(DISPLAY[x]+": "+track.get(x,''))+"\n"
-                    
-                    print s
-                    
-                    #for n in range(9):
                     zz = get_images(track['artist'])
-                    #url = zz[n]['link']
-                    artist_images = artists.get(track['artist'])[0]
-                    #url = artists.get(track['artist'])[0]['link']
-                    url = artist_images['link']
-                    dim = artist_images['image']
-                    print dim['width'], dim['height']
+                    url = zz[0]['link']
                     response = requests.get(url)
-                    #img = Image.open(StringIO(response.content))
-                    #print "pygame.image.get_extended()=",pygame.image.get_extended()
-                    img = wand.image.Image(file=StringIO(response.content))
-                    #img.transform("320x240!")
+                    
+                    try:
+                        img = wand.image.Image(file=StringIO(response.content))
+                    except:
+                        img = wand.image.Image(filename = "test.bmp")
+
                     img.transform(resize = '320x240^')
                     img = img.convert('bmp')
-                    
-                    #f = StringIO()
-                    #img.save(file = f)
                     img.save(filename = "test1.bmp")
-                    #print "img.format = ",img.format
-                    #img = pygame.image.load(f, "bla.bmp")
-                    #img = pygame.image.load("test.bmp")
                     img = pygame.image.load("test1.bmp")
-                    os.remove("test1.bmp")
-                    screen.blit(img,(0,0))
+                    
+                    #####################################################################################################
+        
+                    sprite = pygame.sprite.Sprite()
+                    sprite.image = img
+                    sprite.rect = img.get_rect()
 
-                    text = txtlib.Text((200, 75), 'freesans')
-                    text.text = s
-                    text.update()
-                    #screen.blit(text.area, (0,0)) ###############33
-                    screen.blit(text.area,(0,0))
+                    font = pygame.font.SysFont('Sans', 20)
+                        
+                    track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better here since not done every time
+                        
+                    text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
+                    text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
+                    text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
+                    text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
+                      
+                    sprite.image.blit(text1, (0,0)) #sprite.rect)
+                    sprite.image.blit(text2, (0,25)) #sprite.rect)
+                    sprite.image.blit(text3, (0,50)) #sprite.rect)
+                    sprite.image.blit(text4, (0,75)) #sprite.rect)
+
+                    group = pygame.sprite.Group()
+                    group.add(sprite)
+                    group.draw(screen)
+
                     pygame.display.flip()
+                        
+                    os.remove("test1.bmp")
+                    
+                    i = 0
                     
                     sleep(.05)
                     
                 else:
                 
                     if time.time() - z > 10:
+                        
+                        i = i+1 if i < 9 else 0
                         zz = get_images(track['artist'])
-                        url = zz[1]['link']
+                        url = zz[i]['link']
                         #url = artists.get(track['artist'])[1]['link']
                         response = requests.get(url)
-                        #img = Image.open(StringIO(response.content))
-                        img = wand.image.Image(file=StringIO(response.content))
-                        #img.transform("320x240!")
+                        try:
+                            img = wand.image.Image(file=StringIO(response.content))
+                        except:
+                            img = wand.image.Image(filename = "test.bmp")
+
                         img.transform(resize = '320x240^')
                         img = img.convert('bmp')
-                        #img.convert('BMP')
                         img.save(filename = "test1.bmp")
                         img = pygame.image.load("test1.bmp").convert()
-                        ##############
+ 
                         sprite = pygame.sprite.Sprite()
                         sprite.image = img
                         sprite.rect = img.get_rect()
 
                         font = pygame.font.SysFont('Sans', 20)
                         
-                        #DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
+
                         
-                        track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+                        track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
                         
                         text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
                         text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
                         text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
                         text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
                       
-
                         sprite.image.blit(text1, (0,0)) #sprite.rect)
                         sprite.image.blit(text2, (0,25)) #sprite.rect)
                         sprite.image.blit(text3, (0,50)) #sprite.rect)
                         sprite.image.blit(text4, (0,75)) #sprite.rect)
-                        
-                            
-                        #sprite.image.blit(text2, (0,25))
 
                         group = pygame.sprite.Group()
                         group.add(sprite)
@@ -581,14 +571,8 @@ if __name__ == '__main__':
 
                         pygame.display.flip()
                         
-                        
-                        
-                        #######################
                         os.remove("test1.bmp")
-                        
-                        #screen.blit(img,(0,0))
-                        #pygame.display.flip()
-                        #z = time.time()
+                        z = time.time()
                         
                 #end display_song_info() ##########################################
                     
