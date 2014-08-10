@@ -1,22 +1,48 @@
 import soco
-#from soco.services import zone_group_state_shared_cache
 from soco import config
 
+import platform
 import os
+
 import pygame
 import txtlib
+
+import time
+
 from time import sleep
 import datetime
 import random
 import xml.etree.ElementTree as ET
-
-#from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import #Adafruit_CharLCDPlate
-
 import requests
-#from lcdscroll import Scroller
-
 import textwrap
+import json
 from collections import OrderedDict
+
+#from PIL import Image
+from StringIO import StringIO
+
+import wand.image
+
+# google custom search api
+from apiclient import discovery
+
+# needed by the google custom search engine module apiclient
+import httplib2
+
+#using the musicbrainz db to find the release date and album (if a compilation)
+import musicbrainzngs
+
+musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
+
+try:
+  with open('artists.json', 'r') as f:
+      artists = json.load(f)
+except IOError:
+      artists = {}
+
+#response = requests.get(url)
+#img = Image.open(StringIO(response.content))
+
 DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
 # need to add ('service', 'Service) to ordered dict
 
@@ -24,7 +50,7 @@ DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'),
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
 
-wrapper = textwrap.TextWrapper(width=40, replace_whitespace=False)
+wrapper = textwrap.TextWrapper(width=50, replace_whitespace=False) # may be able to be a little longer than 40
 
 prev_track = ""
 
@@ -43,6 +69,10 @@ screen.fill((0,0,0))
 
 text = txtlib.Text((320, 240), 'freesans')
 text.text = "Sonos-Companion TFT Edition"
+text.update()
+screen.blit(text.area, (0,0))
+pygame.display.flip()
+sleep(5)
 
 config.CACHE_ENABLED = False
 
@@ -72,17 +102,22 @@ for s in speakers:
     
 print "\n"
 #for s in speakers:
-#    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
+#if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
 
 print "program running ..."
 
-lcd = Adafruit_CharLCDPlate()
-
-lcd.clear()
-lcd.message("Sonos-companion")
-
 # backlight colors
-col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
+#col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
+
+#colors
+colors = {
+'red': (0,0,0),
+'yellow': (0,0,0),
+'green': (0,0,0),
+'teal': (0,0,0),
+'blue': (0,0,0),
+'violet': (0,0,0),
+}
 
 stations = [
 #('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
@@ -111,25 +146,54 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 
 def display_song_info():
 
-    track = master.get_current_track_info()
+    pass
+        
+def get_release_date(artist, album, title):
+    print "artist = {}; album = {}, title = {}".format(artist, album, title)
+    try:
+        result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
+    except:
+        return "No date exception (search_releases)"
     
-    title = track['title']
-    if g.prev_title != title:
+    #release_list = result['release-list'] # can be missing
     
-        lcd.clear()
-        lcd.backlight(col[random.randrange(0,6)])
-        lcd.message([title, track['artist']])
+    if 'release-list' in result:
+            release_list = result['release-list'] # can be missing
+            dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
+    
+            if dates:
+                dates.sort()
+                return dates[0]  
         
-        scroller = Scroller(lines = [title, track['artist']])
-        prev_title = title
-        
-        sleep(.8) # have it linger when song changes before it starts scrolling
-        
-    else: 
-        
-        message = scroller.scroll()
-        lcd.clear()
-        lcd.message(message)
+    # above may not work if it's a collection album with a made up name; the below tries to address that 
+    try:
+        result = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=20, offset=None, strict=False)
+    except:
+        return "No date exception (search_recordings)"
+    
+    #recording_list = result['recording-list']
+    recording_list = result.get('recording-list')
+    
+    if recording_list is None:
+        return "No date (no recording_list)"
+    
+    dates = []
+    for d in recording_list:
+            if 'release-list' in d:
+                #dd = [x['date'][0:4]+': '+x['title'] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
+                dd = [x['date'][0:4] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]     
+                dates.extend(dd)
+            
+               #[item for sublist in l for item in sublist] - this should work but not sure it makes sense to modify above which works
+            
+    if dates:
+        dates.sort()
+        return dates[0]   
+    else:
+        return "?" 
+    
+
+
 def play_uri(uri, meta, title):
     try:
         master.play_uri(uri, meta)
@@ -146,9 +210,9 @@ def play_pause():
     else:
         master.play()
         
-    lcd.clear()
-    lcd.backlight(lcd.YELLOW)
-    lcd.message(state)
+    #lcd.clear()
+    #lcd.backlight(lcd.YELLOW)
+    #lcd.message(state)
 
 def cancel():
     
@@ -163,16 +227,10 @@ def next():
 
 def previous():
     
-    #try:
-    #     master.previous()
-    #except:
-    #    lcd.clear()
-    #    lcd.message("Previous\nNot Available")
-    #   lcd.backlight(lcd.RED)
     mode = 0
-    lcd.clear()
-    lcd.backlight(lcd.YELLOW)
-    lcd.message(stations[station_index][0])
+    #lcd.clear()
+    #lcd.backlight(lcd.YELLOW)
+    #lcd.message(stations[station_index][0])
     
 def dec_volume():
     
@@ -188,9 +246,9 @@ def dec_volume():
         s.volume = new_volume
     
 
-    lcd.clear()
-    lcd.message("Volume: {}".format(new_volume))
-    lcd.backlight(lcd.YELLOW)
+    #lcd.clear()
+    #lcd.message("Volume: {}".format(new_volume))
+    #lcd.backlight(lcd.YELLOW)
     
 def inc_volume():
     
@@ -205,9 +263,9 @@ def inc_volume():
     for s in speakers:
         s.volume = new_volume
         
-    lcd.clear()
-    lcd.message("Volume: {}".format(new_volume))
-    lcd.backlight(lcd.YELLOW)
+    #lcd.clear()
+    #lcd.message("Volume: {}".format(new_volume))
+    #lcd.backlight(lcd.YELLOW)
     
 def scroll_up():
     
@@ -216,9 +274,9 @@ def scroll_up():
     station_index+=1
     station_index = station_index if station_index < 12 else 0
     
-    lcd.clear()
-    lcd.backlight(lcd.YELLOW)
-    lcd.message(stations[station_index][0])
+    #lcd.clear()
+    #lcd.backlight(lcd.YELLOW)
+    #lcd.message(stations[station_index][0])
 
 def scroll_down():
        
@@ -227,9 +285,9 @@ def scroll_down():
     station_index-=1
     station_index = station_index if station_index > -1 else 0
     
-    lcd.clear()
-    lcd.backlight(lcd.YELLOW)
-    lcd.message(stations[station_index][0])
+    #lcd.clear()
+    #lcd.backlight(lcd.YELLOW)
+    #lcd.message(stations[station_index][0])
     
 def select():
     
@@ -265,6 +323,47 @@ def list_stations():
         
     return z
     
+    
+def get_images(artist):
+    '''
+    10 is the max you can bring back on any individual search
+    I think you  separate the orterms by a space
+    orTerms='picture photo image'
+    imgSize = 'large'
+    start=1 or 11
+    using link, height, width
+    '''
+    
+    #if there is no artist (for example when Sonos isn't playing anything) then show images of sunsets  ;-)
+    if not artist:
+        artist = 'sunsets'
+
+    if artist not in artists: 
+        http = httplib2.Http()
+        service = discovery.build('customsearch', 'v1',  developerKey='AIzaSyCe7pbOm0sxYXwMWoMJMmWvqBcvaTftRC0', http=http)
+        z = service.cse().list(q=artist, searchType='image', imgSize='large', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
+
+        print 'artist=',artist    #################################################
+        image_list = []
+
+        for x in z['items']:
+            y = {}
+            y['image'] = {k:x['image'][k] for k in ['height','width']}
+            y['link'] = x['link']
+            image_list.append(y)
+      
+        artists[artist] = image_list
+
+        print "**************Google Custom Search Engine Request for "+artist+"**************"
+          
+        try:
+            with open('artists.json', 'w') as f:
+                json.dump(artists, f)
+        except IOError:
+            print "Could not write 'artists' json file"
+
+    return artists[artist]
+    
 def display_weather():
     
     hour = datetime.datetime.now().hour
@@ -284,10 +383,11 @@ def display_weather():
     
     else:
          
-        message = scroller.scroll()
-        lcd.clear()
-        lcd.backlight(lcd.RED)
-        lcd.message(message)
+        pass
+        #message = scroller.scroll()
+        #lcd.clear()
+        #lcd.backlight(lcd.RED)
+        #lcd.message(message)
          
 
 
@@ -298,25 +398,28 @@ def display_weather():
 #1 = change mode: lcd.SELECT
 #0 = no button
 
-btns = {
-           1: ( lcd.SELECT,   'Change Mode',           lcd.YELLOW,  select,         select),
-           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
-           4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
-           8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
-          16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
-         } 
+#btns = {
+#           1: ( 'select', 'Change Mode',           lcd.YELLOW,  select,         select),
+#           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
+#           4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
+#           8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
+#          16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
+#         } 
 
 if __name__ == '__main__':
     
-    prev_title = '0'
+    prev_title = '' # was '0' for some reason
     prev_hour = -1
     
-    track_scroller = Scroller()
-    weather_scroller = Scroller()
+#    track_scroller = Scroller()
+#    weather_scroller = Scroller()
     
     while 1:
 
-        b = btns.get(lcd.buttons())
+        #b = btns.get(lcd.buttons())
+        b = None
+        
+        pygame.event.get() # necessary to keep pygame window from going to sleep
     
         if  mode and not b:
                         
@@ -339,30 +442,31 @@ if __name__ == '__main__':
                     #lcd.clear()
                     #lcd.backlight(lcd.RED)
                     #lcd.message([m1,m2])
+                    
+                    text = txtlib.Text((320, 240), 'freesans')
+                    text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
+                    text.update()
+                    screen.blit(text.area, (0, 0))
+                    pygame.display.flip() # Update the full display Surface to the screen
                    
-                   
-             
-                    weather_scroller.setLines([m1, m2])
+                    #weather_scroller.setLines([m1, m2])
                     
                     prev_hour = hour
-                
-                else:
-                     
-                    message = weather_scroller.scroll()
-                    lcd.clear()
-                    lcd.backlight(lcd.RED)
-                    lcd.message(message)
+                    prev_title = ''
                 
                #end display_weather() ###################################################
                 
             else:
-               #begin display_song_info() ###########################################
+                #print "state = PLAYING"
+                #begin display_song_info() ###########################################
                 track = master.get_current_track_info()
                 track = {x:track[x] for x in track if x in DISPLAY} #date should not be in track at this point
                 
                 title = track['title']
                 
                 if prev_title != title:
+                
+                    z = time.time()
                     
                     media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
                     #media_uri = media_info['CurrentURI']
@@ -375,11 +479,16 @@ if __name__ == '__main__':
                     
                     #message = title + '\n' + track['artist']
                     
-                    message = '{}\n{} ({})'.format(title, track['artist'], service)
+                    #message = '{}\n{} ({})'.format(title, track['artist'], service)
         
-                    lcd.clear()
-                    lcd.backlight(col[random.randrange(0,6)])
-                    lcd.message(message)
+                    #text = txtlib.Text((320, 240), 'freesans')
+                    #text.text = message
+                    #text.update()
+                    #screen.blit(text.area, (0,0))
+                    #pygame.display.flip()
+                    #lcd.clear()
+                    #lcd.backlight(col[random.randrange(0,6)])
+                    #lcd.message(message)
                     
                     prev_title = title
                     
@@ -387,18 +496,100 @@ if __name__ == '__main__':
                     
                     s = ''
                     for x in DISPLAY:
-                        s+=wrapper.fill(DISPLAY[x]+": "+track.get(x,''))+"\n\r"
+                        s+=wrapper.fill(DISPLAY[x]+": "+track.get(x,''))+"\n"
                     
-                    #track_scroller.setLines(message)
+                    print s
                     
-                    sleep(.8)
+                    #for n in range(9):
+                    zz = get_images(track['artist'])
+                    #url = zz[n]['link']
+                    artist_images = artists.get(track['artist'])[0]
+                    #url = artists.get(track['artist'])[0]['link']
+                    url = artist_images['link']
+                    dim = artist_images['image']
+                    print dim['width'], dim['height']
+                    response = requests.get(url)
+                    #img = Image.open(StringIO(response.content))
+                    #print "pygame.image.get_extended()=",pygame.image.get_extended()
+                    img = wand.image.Image(file=StringIO(response.content))
+                    #img.transform("320x240!")
+                    img.transform(resize = '320x240^')
+                    img = img.convert('bmp')
                     
-                else: 
+                    #f = StringIO()
+                    #img.save(file = f)
+                    img.save(filename = "test1.bmp")
+                    #print "img.format = ",img.format
+                    #img = pygame.image.load(f, "bla.bmp")
+                    #img = pygame.image.load("test.bmp")
+                    img = pygame.image.load("test1.bmp")
+                    os.remove("test1.bmp")
+                    screen.blit(img,(0,0))
+
+                    text = txtlib.Text((200, 75), 'freesans')
+                    text.text = s
+                    text.update()
+                    #screen.blit(text.area, (0,0)) ###############33
+                    screen.blit(text.area,(0,0))
+                    pygame.display.flip()
                     
-                    message = track_scroller.scroll()
-                    lcd.clear()
-                    lcd.message(message)
+                    sleep(.05)
+                    
+                else:
                 
+                    if time.time() - z > 10:
+                        zz = get_images(track['artist'])
+                        url = zz[1]['link']
+                        #url = artists.get(track['artist'])[1]['link']
+                        response = requests.get(url)
+                        #img = Image.open(StringIO(response.content))
+                        img = wand.image.Image(file=StringIO(response.content))
+                        #img.transform("320x240!")
+                        img.transform(resize = '320x240^')
+                        img = img.convert('bmp')
+                        #img.convert('BMP')
+                        img.save(filename = "test1.bmp")
+                        img = pygame.image.load("test1.bmp").convert()
+                        ##############
+                        sprite = pygame.sprite.Sprite()
+                        sprite.image = img
+                        sprite.rect = img.get_rect()
+
+                        font = pygame.font.SysFont('Sans', 20)
+                        
+                        #DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
+                        
+                        track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+                        
+                        text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
+                        text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
+                        text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
+                        text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
+                      
+
+                        sprite.image.blit(text1, (0,0)) #sprite.rect)
+                        sprite.image.blit(text2, (0,25)) #sprite.rect)
+                        sprite.image.blit(text3, (0,50)) #sprite.rect)
+                        sprite.image.blit(text4, (0,75)) #sprite.rect)
+                        
+                            
+                        #sprite.image.blit(text2, (0,25))
+
+                        group = pygame.sprite.Group()
+                        group.add(sprite)
+                        group.draw(screen)
+
+                        pygame.display.flip()
+                        
+                        
+                        
+                        #######################
+                        os.remove("test1.bmp")
+                        
+                        #screen.blit(img,(0,0))
+                        #pygame.display.flip()
+                        #z = time.time()
+                        
                 #end display_song_info() ##########################################
                     
             sleep(0.2)
@@ -406,13 +597,14 @@ if __name__ == '__main__':
         #end if mode and not b:
         
         if mode: 
-            lcd.clear()
-            lcd.message(b[1])
-            lcd.backlight(b[2])
-            b[3]()
-            prev_title = ""
-            
-            sleep(0.2)
+#            lcd.clear()
+#            lcd.message(b[1])
+#            lcd.backlight(b[2])
+#            b[3]()
+#            prev_title = ''
+#            
+#            sleep(0.2)
+            pass
             continue
             
         if b: #if mode would have been caught by above
