@@ -5,7 +5,7 @@ import platform
 import os
 
 import pygame
-import txtlib
+import txtlib # may still use this for weather, lyrics, bio
 
 import time
 
@@ -40,13 +40,11 @@ try:
 except IOError:
       artists = {}
 
-#response = requests.get(url)
-#img = Image.open(StringIO(response.content))
 
 DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
 # need to add ('service', 'Service) to ordered dict
 
-#last.fm
+#last.fm - right now not using this at all - suspect it is providing bios
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
 
@@ -67,12 +65,23 @@ pygame.mouse.set_visible(0)
 screen = pygame.display.set_mode((320, 240))
 screen.fill((0,0,0))
 
+#img = wand.image.Image(filename = "test.bmp") #########
+#img.transform(resize = '320x240^')#############
+#img.save(filename = "test.bmp")
+img = pygame.image.load("test.bmp").convert() ################
+
 text = txtlib.Text((320, 240), 'freesans')
 text.text = "Sonos-Companion TFT Edition"
 text.update()
 screen.blit(text.area, (0,0))
 pygame.display.flip()
 sleep(5)
+
+font = pygame.font.SysFont('Sans', 20)
+text = font.render("Welcome to Sonos-Companion", True, (255, 0, 0))
+img.blit(text, (0,25)) 
+screen.blit(img, (0,0))
+pygame.display.flip()
 
 config.CACHE_ENABLED = False
 
@@ -411,9 +420,6 @@ if __name__ == '__main__':
     prev_title = '' # was '0' for some reason
     prev_hour = -1
     
-#    track_scroller = Scroller()
-#    weather_scroller = Scroller()
-    
     while 1:
 
         #b = btns.get(lcd.buttons())
@@ -486,21 +492,30 @@ if __name__ == '__main__':
                     
                     try:
                         img = wand.image.Image(file=StringIO(response.content))
-                    except:
+                    except Exception as detail:
                         img = wand.image.Image(filename = "test.bmp")
+                        print "img = wand.image.Image(file=StringIO(response.content)) generated the following exception:", detail
 
                     img.transform(resize = '320x240^')
                     img = img.convert('bmp')
-                    img.save(filename = "test1.bmp")
-                    img = pygame.image.load("test1.bmp")
                     
-                    #####################################################################################################
-        
-                    sprite = pygame.sprite.Sprite()
-                    sprite.image = img
-                    sprite.rect = img.get_rect()
+                    #f = StringIO() ###################### couldn't get these three lines to work hence why I am saving to disk
+                    #img.save(file = f) ####################
+                    #img = pygame.image.load(f, "z.bmp")
+                    
+                    img.save(filename = "test1.bmp") #couldn't get it to save to StringIO object obviating need to save to disk
+                    img = pygame.image.load("test1.bmp").convert()
+                    img.set_alpha(100) ########################################## when you do this on first one the sonos-companion bleeds through
+                    
+                    #sprite = pygame.sprite.Sprite() #############
+                    #sprite.image = img              #############
+                    #sprite.rect = img.get_rect()    #############
+                    
+                    screen.blit(img, (0,0))
+                    screen.blit(text, (0,25)) 
 
-                    font = pygame.font.SysFont('Sans', 20)
+                    font = pygame.font.SysFont('Sans', 16)
+                    font.set_bold(True)
                         
                     track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better here since not done every time
                         
@@ -508,15 +523,22 @@ if __name__ == '__main__':
                     text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
                     text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
                     text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
+                    
+                    screen.fill((0,0,0)) ################################################## added this to alpha
+                    screen.blit(img, (0,0))                   
+                    screen.blit(text1, (0,0)) #sprite.rect)
+                    screen.blit(text2, (0,25)) #sprite.rect)
+                    screen.blit(text3, (0,50)) #sprite.rect)
+                    screen.blit(text4, (0,75)) #sprite.rect)
                       
-                    sprite.image.blit(text1, (0,0)) #sprite.rect)
-                    sprite.image.blit(text2, (0,25)) #sprite.rect)
-                    sprite.image.blit(text3, (0,50)) #sprite.rect)
-                    sprite.image.blit(text4, (0,75)) #sprite.rect)
+                    #sprite.image.blit(text1, (0,0)) #sprite.rect)
+                    #sprite.image.blit(text2, (0,25)) #sprite.rect)
+                    #sprite.image.blit(text3, (0,50)) #sprite.rect)
+                    #sprite.image.blit(text4, (0,75)) #sprite.rect)
 
-                    group = pygame.sprite.Group()
-                    group.add(sprite)
-                    group.draw(screen)
+                    #group = pygame.sprite.Group()
+                    #group.add(sprite)
+                    #group.draw(screen)
 
                     pygame.display.flip()
                         
@@ -534,11 +556,16 @@ if __name__ == '__main__':
                         zz = get_images(track['artist'])
                         url = zz[i]['link']
                         #url = artists.get(track['artist'])[1]['link']
-                        response = requests.get(url)
+                        try:
+                            response = requests.get(url)
+                        except Exception as detail:
+                            print "response = requests.get(url) generated exception:", detail
+                            
                         try:
                             img = wand.image.Image(file=StringIO(response.content))
-                        except:
+                        except Exception as detail:
                             img = wand.image.Image(filename = "test.bmp")
+                            print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
 
                         img.transform(resize = '320x240^')
                         img = img.convert('bmp')
@@ -550,8 +577,6 @@ if __name__ == '__main__':
                         sprite.rect = img.get_rect()
 
                         font = pygame.font.SysFont('Sans', 20)
-                        
-
                         
                         track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
                         
