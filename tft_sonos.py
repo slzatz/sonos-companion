@@ -505,14 +505,14 @@ if __name__ == '__main__':
                     
                     img.save(filename = "test1.bmp") #couldn't get it to save to StringIO object obviating need to save to disk
                     img = pygame.image.load("test1.bmp").convert()
-                    img.set_alpha(75) ########################################## when you do this on first one the sonos-companion bleeds through
+                    #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
+                    
+                    sub_img = img.subsurface((0,0,200,60)    #rect: (x1, y1, width, height)
+                    sub_img.set_alpha(50)
                     
                     #sprite = pygame.sprite.Sprite() #############
                     #sprite.image = img              #############
                     #sprite.rect = img.get_rect()    #############
-                    
-                    screen.blit(img, (0,0))
-                    screen.blit(text, (0,25)) 
 
                     font = pygame.font.SysFont('Sans', 16)
                     font.set_bold(True)
@@ -525,11 +525,12 @@ if __name__ == '__main__':
                     text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
                     
                     screen.fill((0,0,0)) ################################################## added this to alpha
-                    screen.blit(img, (0,0))                   
+                    screen.blit(img, (0,0)) 
+                    screen.blit(sub_img, (0,0))                    
                     screen.blit(text1, (0,0)) #sprite.rect)
-                    screen.blit(text2, (0,20)) #sprite.rect)
-                    screen.blit(text3, (0,40)) #sprite.rect)
-                    screen.blit(text4, (0,60)) #sprite.rect)
+                    screen.blit(text2, (0,18)) #sprite.rect)
+                    screen.blit(text3, (0,36)) #sprite.rect)
+                    screen.blit(text4, (0,54)) #sprite.rect)
                       
                     #sprite.image.blit(text1, (0,0)) #sprite.rect)
                     #sprite.image.blit(text2, (0,25)) #sprite.rect)
@@ -571,7 +572,7 @@ if __name__ == '__main__':
                         img = img.convert('bmp')
                         img.save(filename = "test1.bmp")
                         img = pygame.image.load("test1.bmp").convert()
-                        img.set_alpha(75)
+                        img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
  
                         #sprite = pygame.sprite.Sprite()
                         #sprite.image = img
@@ -590,9 +591,9 @@ if __name__ == '__main__':
                         screen.fill((0,0,0)) ################################################## added this to alpha
                         screen.blit(img, (0,0))                   
                         screen.blit(text1, (0,0)) #sprite.rect)
-                        screen.blit(text2, (0,20)) #sprite.rect)
-                        screen.blit(text3, (0,40)) #sprite.rect)
-                        screen.blit(text4, (0,60)) #sprite.rect)
+                        screen.blit(text2, (0,18)) #sprite.rect)
+                        screen.blit(text3, (0,36)) #sprite.rect)
+                        screen.blit(text4, (0,54)) #sprite.rect)
                       
                         #sprite.image.blit(text1, (0,0)) #sprite.rect)
                         #sprite.image.blit(text2, (0,25)) #sprite.rect)
