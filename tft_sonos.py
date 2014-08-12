@@ -505,7 +505,7 @@ if __name__ == '__main__':
                     
                     img.save(filename = "test1.bmp") #couldn't get it to save to StringIO object obviating need to save to disk
                     img = pygame.image.load("test1.bmp").convert()
-                    img.set_alpha(100) ########################################## when you do this on first one the sonos-companion bleeds through
+                    img.set_alpha(75) ########################################## when you do this on first one the sonos-companion bleeds through
                     
                     #sprite = pygame.sprite.Sprite() #############
                     #sprite.image = img              #############
@@ -527,9 +527,9 @@ if __name__ == '__main__':
                     screen.fill((0,0,0)) ################################################## added this to alpha
                     screen.blit(img, (0,0))                   
                     screen.blit(text1, (0,0)) #sprite.rect)
-                    screen.blit(text2, (0,25)) #sprite.rect)
-                    screen.blit(text3, (0,50)) #sprite.rect)
-                    screen.blit(text4, (0,75)) #sprite.rect)
+                    screen.blit(text2, (0,20)) #sprite.rect)
+                    screen.blit(text3, (0,40)) #sprite.rect)
+                    screen.blit(text4, (0,60)) #sprite.rect)
                       
                     #sprite.image.blit(text1, (0,0)) #sprite.rect)
                     #sprite.image.blit(text2, (0,25)) #sprite.rect)
@@ -571,12 +571,14 @@ if __name__ == '__main__':
                         img = img.convert('bmp')
                         img.save(filename = "test1.bmp")
                         img = pygame.image.load("test1.bmp").convert()
+                        img.set_alpha(75)
  
-                        sprite = pygame.sprite.Sprite()
-                        sprite.image = img
-                        sprite.rect = img.get_rect()
+                        #sprite = pygame.sprite.Sprite()
+                        #sprite.image = img
+                        #sprite.rect = img.get_rect()
 
-                        font = pygame.font.SysFont('Sans', 20)
+                        font = pygame.font.SysFont('Sans', 16)
+                        font.set_bold(True)
                         
                         track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
                         
@@ -584,15 +586,22 @@ if __name__ == '__main__':
                         text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
                         text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
                         text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
+                        
+                        screen.fill((0,0,0)) ################################################## added this to alpha
+                        screen.blit(img, (0,0))                   
+                        screen.blit(text1, (0,0)) #sprite.rect)
+                        screen.blit(text2, (0,20)) #sprite.rect)
+                        screen.blit(text3, (0,40)) #sprite.rect)
+                        screen.blit(text4, (0,60)) #sprite.rect)
                       
-                        sprite.image.blit(text1, (0,0)) #sprite.rect)
-                        sprite.image.blit(text2, (0,25)) #sprite.rect)
-                        sprite.image.blit(text3, (0,50)) #sprite.rect)
-                        sprite.image.blit(text4, (0,75)) #sprite.rect)
+                        #sprite.image.blit(text1, (0,0)) #sprite.rect)
+                        #sprite.image.blit(text2, (0,25)) #sprite.rect)
+                        #sprite.image.blit(text3, (0,50)) #sprite.rect)
+                        #sprite.image.blit(text4, (0,75)) #sprite.rect)
 
-                        group = pygame.sprite.Group()
-                        group.add(sprite)
-                        group.draw(screen)
+                        #group = pygame.sprite.Group()
+                        #group.add(sprite)
+                        #group.draw(screen)
 
                         pygame.display.flip()
                         
