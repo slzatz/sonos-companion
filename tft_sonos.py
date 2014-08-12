@@ -507,9 +507,10 @@ if __name__ == '__main__':
                     img = pygame.image.load("test1.bmp").convert()
                     #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
                     
-                    sub_img = img.subsurface((0,0,200,60)    #rect: (x1, y1, width, height)
-                    sub_img.set_alpha(50)
-                    
+                    sub_img = img.subsurface((0,0,320,80))    #rect: (x1, y1, width, height)
+                    sub_img.set_alpha(100)
+                    zzz = pygame.Surface((320,80)) 
+                    zzz.fill((0,0,0))
                     #sprite = pygame.sprite.Sprite() #############
                     #sprite.image = img              #############
                     #sprite.rect = img.get_rect()    #############
@@ -525,7 +526,8 @@ if __name__ == '__main__':
                     text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
                     
                     screen.fill((0,0,0)) ################################################## added this to alpha
-                    screen.blit(img, (0,0)) 
+                    screen.blit(img, (0,0))
+                    screen.blit(zzz, (0,0))
                     screen.blit(sub_img, (0,0))                    
                     screen.blit(text1, (0,0)) #sprite.rect)
                     screen.blit(text2, (0,18)) #sprite.rect)
