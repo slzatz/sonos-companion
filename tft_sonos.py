@@ -153,9 +153,49 @@ meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
-def display_song_info():
+def display_song_info(i):
 
-    pass
+    zz = get_images(track['artist'])
+    url = zz[i]['link']
+
+    try:
+        response = requests.get(url)
+    except Exception as detail:
+        print "response = requests.get(url) generated exception:", detail
+        
+    try:
+        img = wand.image.Image(file=StringIO(response.content))
+    except Exception as detail:
+        img = wand.image.Image(filename = "test.bmp")
+        print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
+
+    img.transform(resize = '320x240^')
+    img = img.convert('bmp')
+    img.save(filename = "test1.bmp")
+    img = pygame.image.load("test1.bmp").convert()
+    img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
+
+    font = pygame.font.SysFont('Sans', 16)
+    font.set_bold(True)
+    
+    track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
+    
+    text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
+    text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
+    text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
+    text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
+    
+    screen.fill((0,0,0)) ################################################## added this to alpha
+    screen.blit(img, (0,0))      
+    screen.blit(text1, (0,0))
+    screen.blit(text2, (0,18))
+    screen.blit(text3, (0,36))
+    screen.blit(text4, (0,54))
+
+    pygame.display.flip()
+    
+    os.remove("test1.bmp")
+    #z = time.time()
         
 def get_release_date(artist, album, title):
     print "artist = {}; album = {}, title = {} [in get_release_date]".format(artist, album, title)
@@ -201,8 +241,6 @@ def get_release_date(artist, album, title):
     else:
         return "?" 
     
-
-
 def play_uri(uri, meta, title):
     try:
         master.play_uri(uri, meta)
@@ -332,7 +370,6 @@ def list_stations():
         
     return z
     
-    
 def get_images(artist):
     '''
     10 is the max you can bring back on any individual search
@@ -397,8 +434,6 @@ def display_weather():
         #lcd.clear()
         #lcd.backlight(lcd.RED)
         #lcd.message(message)
-         
-
 
 #2 = forward: lcd.RIGHT
 #4 = volume lower: lcd.DOWN
@@ -556,59 +591,51 @@ if __name__ == '__main__':
                     if time.time() - z > 10:
                         
                         i = i+1 if i < 9 else 0
-                        zz = get_images(track['artist'])
-                        url = zz[i]['link']
-                        #url = artists.get(track['artist'])[1]['link']
-                        try:
-                            response = requests.get(url)
-                        except Exception as detail:
-                            print "response = requests.get(url) generated exception:", detail
+                        
+                        display_song_info(i)
+                        
+                        if 0:
+                            zz = get_images(track['artist'])
+                            url = zz[i]['link']
+       
+                            try:
+                                response = requests.get(url)
+                            except Exception as detail:
+                                print "response = requests.get(url) generated exception:", detail
+                                
+                            try:
+                                img = wand.image.Image(file=StringIO(response.content))
+                            except Exception as detail:
+                                img = wand.image.Image(filename = "test.bmp")
+                                print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
+
+                            img.transform(resize = '320x240^')
+                            img = img.convert('bmp')
+                            img.save(filename = "test1.bmp")
+                            img = pygame.image.load("test1.bmp").convert()
+                            img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
+     
+                            font = pygame.font.SysFont('Sans', 16)
+                            font.set_bold(True)
                             
-                        try:
-                            img = wand.image.Image(file=StringIO(response.content))
-                        except Exception as detail:
-                            img = wand.image.Image(filename = "test.bmp")
-                            print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
+                            track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
+                            
+                            text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
+                            text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
+                            text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
+                            text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
+                            
+                            screen.fill((0,0,0)) ################################################## added this to alpha
+                            screen.blit(img, (0,0))                   
+                            screen.blit(text1, (0,0)) 
+                            screen.blit(text2, (0,18)) 
+                            screen.blit(text3, (0,36)) 
+                            screen.blit(text4, (0,54)) 
 
-                        img.transform(resize = '320x240^')
-                        img = img.convert('bmp')
-                        img.save(filename = "test1.bmp")
-                        img = pygame.image.load("test1.bmp").convert()
-                        img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
- 
-                        #sprite = pygame.sprite.Sprite()
-                        #sprite.image = img
-                        #sprite.rect = img.get_rect()
-
-                        font = pygame.font.SysFont('Sans', 16)
-                        font.set_bold(True)
+                            pygame.display.flip()
+                            
+                            os.remove("test1.bmp")
                         
-                        track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
-                        
-                        text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
-                        text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
-                        text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
-                        text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
-                        
-                        screen.fill((0,0,0)) ################################################## added this to alpha
-                        screen.blit(img, (0,0))                   
-                        screen.blit(text1, (0,0)) #sprite.rect)
-                        screen.blit(text2, (0,18)) #sprite.rect)
-                        screen.blit(text3, (0,36)) #sprite.rect)
-                        screen.blit(text4, (0,54)) #sprite.rect)
-                      
-                        #sprite.image.blit(text1, (0,0)) #sprite.rect)
-                        #sprite.image.blit(text2, (0,25)) #sprite.rect)
-                        #sprite.image.blit(text3, (0,50)) #sprite.rect)
-                        #sprite.image.blit(text4, (0,75)) #sprite.rect)
-
-                        #group = pygame.sprite.Group()
-                        #group.add(sprite)
-                        #group.draw(screen)
-
-                        pygame.display.flip()
-                        
-                        os.remove("test1.bmp")
                         z = time.time()
                         
                 #end display_song_info() ##########################################
