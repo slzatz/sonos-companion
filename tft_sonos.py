@@ -23,6 +23,8 @@ from StringIO import StringIO
 
 import wand.image
 
+from pitftgpio import PiTFT_GPIO
+
 # google custom search api
 from apiclient import discovery
 
@@ -33,6 +35,8 @@ import httplib2
 import musicbrainzngs
 
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
+
+pitft = PiTFT_GPIO()
 
 try:
   with open('artists.json', 'r') as f:
@@ -154,6 +158,12 @@ meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" 
 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
+
+def my_callback(pin):
+    print mode
+    print "Pressed "+str(pin)+" - callback"
+
+pitft.Button4Interrupt(callback=my_callback)
 
 def display_song_info(i):
 
@@ -641,7 +651,7 @@ if __name__ == '__main__':
                         z = time.time()
                         
                 #end display_song_info() ##########################################
-                    
+            
             sleep(0.2)
             continue
         #end if mode and not b:
