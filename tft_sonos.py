@@ -23,7 +23,9 @@ from StringIO import StringIO
 
 import wand.image
 
-from pitftgpio import PiTFT_GPIO
+if platform.machine() == 'armv6l':
+    from pitftgpio import PiTFT_GPIO
+    pitft = PiTFT_GPIO()
 
 # google custom search api
 from apiclient import discovery
@@ -36,14 +38,11 @@ import musicbrainzngs
 
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
-pitft = PiTFT_GPIO()
-
 try:
   with open('artists.json', 'r') as f:
       artists = json.load(f)
 except IOError:
       artists = {}
-
 
 DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
 # need to add ('service', 'Service) to ordered dict
@@ -163,7 +162,8 @@ def my_callback(pin):
     print mode
     print "Pressed "+str(pin)+" - callback"
 
-pitft.Button4Interrupt(callback=my_callback)
+if platform.machine() == 'armv6l':
+    pitft.Button4Interrupt(callback=my_callback)
 
 def display_song_info(i):
 
@@ -207,7 +207,62 @@ def display_song_info(i):
     pygame.display.flip()
     
     os.remove("test1.bmp")
-    #z = time.time()
+    
+def display_initial_song_info():
+
+    zz = get_images(track['artist'])
+    url = zz[0]['link']
+    
+    try:
+        response = requests.get(url)
+    except Exception as detail:
+        print "response = requests.get(url) generated exception:", detail
+        
+    try:
+        img = wand.image.Image(file=StringIO(response.content))
+    except Exception as detail:
+        img = wand.image.Image(filename = "test.bmp")
+        print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
+    
+
+    img.transform(resize = '320x240^')
+    img = img.convert('bmp')
+                    
+    #f = StringIO() ###################### couldn't get these three lines to work hence why I am saving to disk
+    #img.save(file = f) ####################
+    #img = pygame.image.load(f, "z.bmp")
+                    
+    img.save(filename = "test1.bmp") #couldn't get it to save to StringIO object obviating need to save to disk
+    img = pygame.image.load("test1.bmp").convert()
+    #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
+                    
+    sub_img = img.subsurface((0,0,320,80))    #rect: (x1, y1, width, height)
+    sub_img.set_alpha(100)
+    zzz = pygame.Surface((320,80)) 
+    zzz.fill((0,0,0))
+
+    font = pygame.font.SysFont('Sans', 16)
+    font.set_bold(True)
+                        
+    track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better here since not done every time
+        
+    text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
+    text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
+    text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
+    text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
+    
+    screen.fill((0,0,0)) ################################################## added this to alpha
+    screen.blit(img, (0,0))
+    screen.blit(zzz, (0,0))
+    screen.blit(sub_img, (0,0))                    
+    screen.blit(text1, (0,0)) #sprite.rect)
+    screen.blit(text2, (0,18)) #sprite.rect)
+    screen.blit(text3, (0,36)) #sprite.rect)
+    screen.blit(text4, (0,54)) #sprite.rect)
+
+    pygame.display.flip()
+        
+    os.remove("test1.bmp")
         
 def get_release_date(artist, album, title):
     print "artist = {}; album = {}, title = {} [in get_release_date]".format(artist, album, title)
@@ -278,8 +333,6 @@ def cancel():
     global mode
     
     mode = 1
-    
-    
 
 def next():
     master.next()
@@ -422,6 +475,84 @@ def get_images(artist):
 
     return artists[artist]
     
+def get_url(artist, title):
+    payload = {'func': 'getSong', 'artist': artist, 'song': title, 'fmt': 'realjson'}
+    
+    try:
+         r = requests.get("http://lyrics.wikia.com/api.php", params=payload)
+    except:
+        url = None
+         
+    else:        
+        q = r.json()
+        
+        url = q['url'] if 'url' in q else None
+        
+        if url and url.find("action=edit") != -1: 
+            url = None 
+            
+    if url is not None:
+        return url
+            
+    try:
+        z = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=5, offset=None, strict=False)
+    except:
+        return None
+        
+    for d in z['recording-list']:
+
+         if int(d['ext:score'])==100:
+             new_artist = d['artist-credit-phrase']
+             new_title = d['title']
+    
+    payload = {'func': 'getSong', 'artist': new_artist, 'song': new_title, 'fmt': 'realjson'}
+    
+    try:
+         r = requests.get("http://lyrics.wikia.com/api.php", params=payload)
+    except:
+        return None
+                
+    q = r.json()
+        
+    url = q['url'] if 'url' in q else None
+        
+    if url and url.find("action=edit") != -1: 
+        url = None 
+    else:
+        print "got song lyrics by using musicbrainz db to figure out correct artist and title"
+        
+    return url
+    
+def get_lyrics(url):
+
+    if not url:
+        return "Can't find lyrics - url couldn't be found or had 'edit'  "
+    
+    try:
+        doc = lxml.html.parse(url)
+    except IOError:
+        return "Can't find lyrics - couldn't parse url - may be a cover"
+
+    try:
+        lyricbox = doc.getroot().cssselect(".lyricbox")[0]        
+    except IndexError:
+        return "Can't find lyrics - couldn't find lyrics in page"
+
+    # look for a sign that it's instrumental
+    if len(doc.getroot().cssselect(".lyricbox a[title=\"Instrumental\"]")):
+        return "No lyrics - appears to be instrumental"
+
+    # prepare output
+    lyrics = []
+    if lyricbox.text is not None:
+        lyrics.append(lyricbox.text)
+    for node in lyricbox:
+        if str(node.tag).lower() == "br":
+            lyrics.append("\n")
+        if node.tail is not None:
+            lyrics.append(node.tail)
+    return "".join(lyrics).strip()
+    
 def display_weather():
     
     hour = datetime.datetime.now().hour
@@ -466,15 +597,13 @@ if __name__ == '__main__':
     
     prev_title = '' # was '0' for some reason
     prev_hour = -1
-    
+    tt = z = time.time()
+       
     while 1:
-
-        #b = btns.get(lcd.buttons())
-        b = None
         
         pygame.event.get() # necessary to keep pygame window from going to sleep
     
-        if  mode and not b:
+        if  mode:
                         
             state = master.get_current_transport_info()['current_transport_state']
             
@@ -490,19 +619,12 @@ if __name__ == '__main__':
                     r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
                     m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
                     m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
-
-                    
-                    #lcd.clear()
-                    #lcd.backlight(lcd.RED)
-                    #lcd.message([m1,m2])
-                    
+                 
                     text = txtlib.Text((320, 240), 'freesans')
                     text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
                     text.update()
                     screen.blit(text.area, (0, 0))
                     pygame.display.flip() # Update the full display Surface to the screen
-                   
-                    #weather_scroller.setLines([m1, m2])
                     
                     prev_hour = hour
                     prev_title = ''
@@ -510,93 +632,34 @@ if __name__ == '__main__':
                #end display_weather() ###################################################
                 
             else:
-                #print "state = PLAYING"
-                #begin display_song_info() ###########################################
-                #DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
-                track = master.get_current_track_info()
-                #track['date'] = get_release_date(track['artist'], track['album'], track['title']) # not best here since fires every time
-                
-                title = track['title']
-                
-                if prev_title != title:
-                
-                    z = time.time()
-                    
-                    media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-                    #media_uri = media_info['CurrentURI']
-                    meta = media_info['CurrentURIMetaData']
-                    if meta:
-                        root = ET.fromstring(meta)
-                        service = root[0][0].text
-                    else:
-                        service = "No service"
-                                      
-                    prev_title = title
-                    
-                    zz = get_images(track['artist'])
-                    url = zz[0]['link']
-                    response = requests.get(url)
-                    
-                    try:
-                        img = wand.image.Image(file=StringIO(response.content))
-                    except Exception as detail:
-                        img = wand.image.Image(filename = "test.bmp")
-                        print "img = wand.image.Image(file=StringIO(response.content)) generated the following exception:", detail
+            
+                if time.time() - tt > 2:
 
-                    img.transform(resize = '320x240^')
-                    img = img.convert('bmp')
+                    track = master.get_current_track_info()
+                    title = track['title']
+                    tt = time.time()
                     
-                    #f = StringIO() ###################### couldn't get these three lines to work hence why I am saving to disk
-                    #img.save(file = f) ####################
-                    #img = pygame.image.load(f, "z.bmp")
+                    print str(tt), "checked to see if track had changed"
                     
-                    img.save(filename = "test1.bmp") #couldn't get it to save to StringIO object obviating need to save to disk
-                    img = pygame.image.load("test1.bmp").convert()
-                    #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
+                    if prev_title != title:
                     
-                    sub_img = img.subsurface((0,0,320,80))    #rect: (x1, y1, width, height)
-                    sub_img.set_alpha(100)
-                    zzz = pygame.Surface((320,80)) 
-                    zzz.fill((0,0,0))
-                    #sprite = pygame.sprite.Sprite() #############
-                    #sprite.image = img              #############
-                    #sprite.rect = img.get_rect()    #############
-
-                    font = pygame.font.SysFont('Sans', 16)
-                    font.set_bold(True)
+                        z = time.time()
                         
-                    track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better here since not done every time
+                        media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+                        #media_uri = media_info['CurrentURI']
+                        meta = media_info['CurrentURIMetaData']
+                        if meta:
+                            root = ET.fromstring(meta)
+                            service = root[0][0].text
+                        else:
+                            service = "No service"
+                                          
+                        prev_title = title
+                        i = 0
                         
-                    text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
-                    text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
-                    text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
-                    text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
-                    
-                    screen.fill((0,0,0)) ################################################## added this to alpha
-                    screen.blit(img, (0,0))
-                    screen.blit(zzz, (0,0))
-                    screen.blit(sub_img, (0,0))                    
-                    screen.blit(text1, (0,0)) #sprite.rect)
-                    screen.blit(text2, (0,18)) #sprite.rect)
-                    screen.blit(text3, (0,36)) #sprite.rect)
-                    screen.blit(text4, (0,54)) #sprite.rect)
-                      
-                    #sprite.image.blit(text1, (0,0)) #sprite.rect)
-                    #sprite.image.blit(text2, (0,25)) #sprite.rect)
-                    #sprite.image.blit(text3, (0,50)) #sprite.rect)
-                    #sprite.image.blit(text4, (0,75)) #sprite.rect)
-
-                    #group = pygame.sprite.Group()
-                    #group.add(sprite)
-                    #group.draw(screen)
-
-                    pygame.display.flip()
+                        display_initial_song_info()
                         
-                    os.remove("test1.bmp")
-                    
-                    i = 0
-                    
-                    sleep(.05)
+                        sleep(.1)
                     
                 else:
                 
@@ -606,53 +669,11 @@ if __name__ == '__main__':
                         
                         display_song_info(i)
                         
-                        if 0:
-                            zz = get_images(track['artist'])
-                            url = zz[i]['link']
-       
-                            try:
-                                response = requests.get(url)
-                            except Exception as detail:
-                                print "response = requests.get(url) generated exception:", detail
-                                
-                            try:
-                                img = wand.image.Image(file=StringIO(response.content))
-                            except Exception as detail:
-                                img = wand.image.Image(filename = "test.bmp")
-                                print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
-
-                            img.transform(resize = '320x240^')
-                            img = img.convert('bmp')
-                            img.save(filename = "test1.bmp")
-                            img = pygame.image.load("test1.bmp").convert()
-                            img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
-     
-                            font = pygame.font.SysFont('Sans', 16)
-                            font.set_bold(True)
-                            
-                            track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
-                            
-                            text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
-                            text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
-                            text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
-                            text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
-                            
-                            screen.fill((0,0,0)) ################################################## added this to alpha
-                            screen.blit(img, (0,0))                   
-                            screen.blit(text1, (0,0)) 
-                            screen.blit(text2, (0,18)) 
-                            screen.blit(text3, (0,36)) 
-                            screen.blit(text4, (0,54)) 
-
-                            pygame.display.flip()
-                            
-                            os.remove("test1.bmp")
-                        
                         z = time.time()
                         
                 #end display_song_info() ##########################################
             
-            sleep(0.2)
+            sleep(0.1)
             continue
         #end if mode and not b:
         
