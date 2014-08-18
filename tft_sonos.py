@@ -190,7 +190,7 @@ def display_song_info(i):
     font = pygame.font.SysFont('Sans', 16)
     font.set_bold(True)
     
-    track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
+    #track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
     
     text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
     text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
@@ -244,7 +244,7 @@ def display_initial_song_info():
     font = pygame.font.SysFont('Sans', 16)
     font.set_bold(True)
                         
-    track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better here since not done every time
+    #track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better here since not done every time
         
     text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
     text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
@@ -265,7 +265,7 @@ def display_initial_song_info():
     os.remove("test1.bmp")
         
 def get_release_date(artist, album, title):
-    print "artist = {}; album = {}, title = {} [in get_release_date]".format(artist, album, title)
+    #print "artist = {}; album = {}, title = {} [in get_release_date]".format(artist, album, title)
     try:
         result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
     except:
@@ -555,28 +555,19 @@ def get_lyrics(url):
     
 def display_weather():
     
-    hour = datetime.datetime.now().hour
-    if hour != g.prev_hour:
-        
-        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
-        m1 = r.json()['current_observation']['temperature_string']
-        m2 = r.json()['current_observation']['wind_string']
-        
-        lcd.clear()
-        lcd.backlight(lcd.RED)
-        lcd.message([m1,m2])
- 
-        scroller = Scroller(lines = [m1, m2])
-        
-        g.prev_hour = hour
+    # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
+    # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
     
-    else:
-         
-        pass
-        #message = scroller.scroll()
-        #lcd.clear()
-        #lcd.backlight(lcd.RED)
-        #lcd.message(message)
+    r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+    m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+    m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+ 
+    text = txtlib.Text((320, 240), 'freesans')
+    text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
+    text.update()
+    screen.blit(text.area, (0, 0))
+    pygame.display.flip() # Update the full display Surface to the screen
+
 
 #2 = forward: lcd.RIGHT
 #4 = volume lower: lcd.DOWN
@@ -592,6 +583,7 @@ def display_weather():
 #           8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
 #          16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
 #         } 
+    
 
 if __name__ == '__main__':
     
@@ -609,39 +601,38 @@ if __name__ == '__main__':
             
             if state != 'PLAYING':
                 
-                #begin display_weather() ########################################
                 hour = datetime.datetime.now().hour
                 if hour != prev_hour:
 
-                    # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
-                    # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
-                    
-                    r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-                    m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-                    m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
-                 
-                    text = txtlib.Text((320, 240), 'freesans')
-                    text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
-                    text.update()
-                    screen.blit(text.area, (0, 0))
-                    pygame.display.flip() # Update the full display Surface to the screen
+                    display_weather()
                     
                     prev_hour = hour
                     prev_title = ''
-                
-               #end display_weather() ###################################################
                 
             else:
             
                 if time.time() - tt > 2:
 
-                    track = master.get_current_track_info()
-                    title = track['title']
+                    #get_current_track_info = 
+                    #track =  {u'album': 'Family Tree', 'date': '2007', u'artist': 'Nick Drake', u'title': 'Kimbie', 
+                    #u'uri': 'pndrradio-http://t3-2.p-cdn.com/access/?version=4&lid=86206018&token=uSDtgQrM...,
+                    #u'playlist_position': '4', u'duration': '0:03:26', u'position': '0:00:00', 
+                    #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/5/2/5/1/804879071525_500W_500H.jpg'}
+
+                    
+                    current_track = master.get_current_track_info()
+                    title = current_track['title']
+           
                     tt = time.time()
                     
-                    print str(tt), "checked to see if track had changed"
+                    print str(tt), "checking to see if track has changed"
                     
                     if prev_title != title:
+                    
+                        track = dict(current_track)
+                        track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+                        
+                        print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
                     
                         z = time.time()
                         
@@ -657,41 +648,22 @@ if __name__ == '__main__':
                         prev_title = title
                         i = 0
                         
+                        print "displaying initial image of ", track['artist']
                         display_initial_song_info()
                         
-                        sleep(.1)
-                    
                 else:
                 
                     if time.time() - z > 10:
                         
                         i = i+1 if i < 9 else 0
                         
+                        print "displaying a new image of ", track['artist']
                         display_song_info(i)
                         
                         z = time.time()
-                        
-                #end display_song_info() ##########################################
             
-            sleep(0.1)
-            continue
-        #end if mode and not b:
-        
-        if mode: 
-#            lcd.clear()
-#            lcd.message(b[1])
-#            lcd.backlight(b[2])
-#            b[3]()
-#            prev_title = ''
-#            
-#            sleep(0.2)
-            pass
-            continue
-            
-        if b: #if mode would have been caught by above
-    
-            b[4]()
-            sleep(0.2)
+        sleep(0.1)
+
        
 
 
