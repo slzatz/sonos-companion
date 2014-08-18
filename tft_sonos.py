@@ -17,6 +17,7 @@ import requests
 import textwrap
 import json
 from collections import OrderedDict
+from functools import partial
 
 #from PIL import Image
 from StringIO import StringIO
@@ -158,12 +159,15 @@ meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
-def my_callback(pin):
+def button_press(pin, b=0):
     print mode
-    print "Pressed "+str(pin)+" - callback"
+    print "Pressed GPIO: "+str(pin)+" = button: "+b
 
 if platform.machine() == 'armv6l':
-    pitft.Button4Interrupt(callback=my_callback)
+    pitft.Button4Interrupt(callback=partial(button_press, b = 4)) #18
+    pitft.Button3Interrupt(callback=button_press) #21
+    pitft.Button2Interrupt(callback=button_press) #22
+    pitft.Button1Interrupt(callback=button_press) #23
 
 def display_song_info(i):
 
