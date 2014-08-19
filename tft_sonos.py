@@ -161,7 +161,7 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 
 def button_press(pin, b=0):
     print mode
-    print "Pressed GPIO: "+str(pin)+" = button: "+b
+    print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
 
 if platform.machine() == 'armv6l':
     pitft.Button4Interrupt(callback=partial(button_press, b = 4)) #18
