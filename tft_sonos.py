@@ -160,9 +160,34 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 def button_press(pin, b=0):
-    print mode
+    print "mode = ",mode
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
-
+    if b == 4:
+        inc_volume()
+        print "increase volume"
+        zzz = pygame.Surface((320,20)) 
+        zzz.fill((0,0,0))
+        text = font.render("Increase Volume", True, (255, 0, 0))
+        screen.blit(zzz, (0,220))                 
+        screen.blit(text, (0,220))
+    elif b==3:
+        dec_volume()
+        print "decrease volume"
+        zzz = pygame.Surface((320,20)) 
+        zzz.fill((0,0,0))
+        text = font.render("Decrease Volume", True, (255, 0, 0))
+        screen.blit(zzz, (0,220))                 
+        screen.blit(text1, (0,220))
+    elif b==2:
+        play_pause()
+        print "play_pause"
+        zzz = pygame.Surface((320,20)) 
+        zzz.fill((0,0,0))
+        text = font.render("Play-Pause", True, (255, 0, 0))
+        screen.blit(zzz, (0,220))                 
+        screen.blit(text1, (0,220)) 
+    else:
+        print "must have tried to change mode"
 if platform.machine() == 'armv6l':
     pitft.Button4Interrupt(callback=partial(button_press, b=4)) #18
     pitft.Button3Interrupt(callback=partial(button_press, b=3)) #21
