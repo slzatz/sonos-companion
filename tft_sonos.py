@@ -164,10 +164,10 @@ def button_press(pin, b=0):
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
 
 if platform.machine() == 'armv6l':
-    pitft.Button4Interrupt(callback=partial(button_press, b = 4)) #18
-    pitft.Button3Interrupt(callback=button_press) #21
-    pitft.Button2Interrupt(callback=button_press) #22
-    pitft.Button1Interrupt(callback=button_press) #23
+    pitft.Button4Interrupt(callback=partial(button_press, b=4)) #18
+    pitft.Button3Interrupt(callback=partial(button_press, b=3)) #21
+    pitft.Button2Interrupt(callback=partial(button_press, b=2)) #22
+    pitft.Button1Interrupt(callback=partial(button_press, b=1)) #23
 
 def display_song_info(i):
 
