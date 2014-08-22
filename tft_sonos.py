@@ -162,32 +162,30 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 def button_press(pin, b=0):
     print "mode = ",mode
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
+
+    font = pygame.font.SysFont('Sans', 16)
+    zzz = pygame.Surface((320,20)) 
+    zzz.fill((0,0,0))
+
     if b == 4:
         inc_volume()
         print "increase volume"
-        zzz = pygame.Surface((320,20)) 
-        zzz.fill((0,0,0))
         text = font.render("Increase Volume", True, (255, 0, 0))
-        screen.blit(zzz, (0,220))                 
-        screen.blit(text, (0,220))
     elif b==3:
         dec_volume()
         print "decrease volume"
-        zzz = pygame.Surface((320,20)) 
-        zzz.fill((0,0,0))
         text = font.render("Decrease Volume", True, (255, 0, 0))
-        screen.blit(zzz, (0,220))                 
-        screen.blit(text1, (0,220))
     elif b==2:
         play_pause()
         print "play_pause"
-        zzz = pygame.Surface((320,20)) 
-        zzz.fill((0,0,0))
         text = font.render("Play-Pause", True, (255, 0, 0))
-        screen.blit(zzz, (0,220))                 
-        screen.blit(text1, (0,220)) 
     else:
         print "must have tried to change mode"
+
+    screen.blit(zzz, (0,220))                 
+    screen.blit(text, (0,220)) 
+    pygame.display.flip()
+    
 if platform.machine() == 'armv6l':
     pitft.Button4Interrupt(callback=partial(button_press, b=4)) #18
     pitft.Button3Interrupt(callback=partial(button_press, b=3)) #21
