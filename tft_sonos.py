@@ -220,8 +220,6 @@ def display_song_info(i):
     font = pygame.font.SysFont('Sans', 16)
     font.set_bold(True)
     
-    #track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better in both places
-    
     text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
     text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
     text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
@@ -273,8 +271,6 @@ def display_initial_song_info():
 
     font = pygame.font.SysFont('Sans', 16)
     font.set_bold(True)
-                        
-    #track['date'] = get_release_date(track['artist'], track['album'], track['title']) # better here since not done every time
         
     text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
     text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
@@ -295,7 +291,7 @@ def display_initial_song_info():
     os.remove("test1.bmp")
         
 def get_release_date(artist, album, title):
-    #print "artist = {}; album = {}, title = {} [in get_release_date]".format(artist, album, title)
+    print "artist = {}; album = {}, title = {} [in get_release_date]".format(artist, album, title)
     try:
         result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
     except:
@@ -660,7 +656,9 @@ if __name__ == '__main__':
                     if prev_title != title:
                     
                         track = dict(current_track)
-                        track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+                        # there will be no date if from one of our compilations
+                        if not 'date' in track:
+                            track['date'] = get_release_date(track['artist'], track['album'], track['title'])
                         
                         print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
                     
