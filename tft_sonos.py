@@ -291,42 +291,44 @@ def display_initial_song_info():
     os.remove("test1.bmp")
         
 def get_release_date(artist, album, title):
-    print "artist = {}; album = {}, title = {} [in get_release_date]".format(artist, album, title)
-    try:
-        result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
-    except:
-        return "No date exception (search_releases)"
+
+    print "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
     
-    #release_list = result['release-list'] # can be missing
+    ## commented this out because I think in most circumstances where there is a legit album, there is an accompanying date
+    ## (like for a ripped CD, a Rhapsody song, Pandora
     
-    if 'release-list' in result:
-            release_list = result['release-list'] # can be missing
-            dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
+    # try:
+        # result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
+    # except:
+        # return "No date exception (search_releases)"
     
-            if dates:
-                dates.sort()
-                return dates[0]  
+    # #release_list = result['release-list'] # can be missing
+    
+    # if 'release-list' in result:
+            # release_list = result['release-list'] # can be missing
+            # dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
+    
+            # if dates:
+                # dates.sort()
+                # return dates[0]  
         
-    # above may not work if it's a collection album with a made up name; the below tries to address that 
+    ### Generally if there was no date provided it's because there is also a bogus album (because it's a collection
+    ### and so decided to comment out the above.  We'll see how that works over time.
     try:
         result = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=20, offset=None, strict=False)
     except:
         return "No date exception (search_recordings)"
     
-    #recording_list = result['recording-list']
     recording_list = result.get('recording-list')
     
     if recording_list is None:
-        return "No date (no recording_list)"
+        return "No date (search of musicbrainzngs did not produce a recording_list)"
     
     dates = []
     for d in recording_list:
             if 'release-list' in d:
-                #dd = [x['date'][0:4]+': '+x['title'] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
                 dd = [x['date'][0:4] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]     
                 dates.extend(dd)
-            
-               #[item for sublist in l for item in sublist] - this should work but not sure it makes sense to modify above which works
             
     if dates:
         dates.sort()
