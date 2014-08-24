@@ -695,7 +695,7 @@ if __name__ == '__main__':
                             service = root[0][0].text
                             track['service'] = service
                         
-                        track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track] ########################################
+                        track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track] 
                         print "track_strings = ",track_strings
                         print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
                     
@@ -704,19 +704,20 @@ if __name__ == '__main__':
                                           
                         prev_title = title
                         i = 0
-                        
+                        new_song = True
                         artist_image_list = get_images(track['artist'])
                         
                         print "displaying initial image of ", track['artist']
                         #display_initial_song_info()
                         display_song_info(0)
-                    else:
-                        # show new track_string
-                        if track_strings:
-                            line = track_strings.pop(0) #############################################
-                        else:
-                            track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track]) ########################################
-                            line = track_strings.pop(0)
+
+                    elif not new_song:
+                        # show the next track_string if not the image and text from a new song
+                            
+                        if not track_strings:
+                            track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track])
+                                 
+                        line = track_strings.pop(0)
 
                         font = pygame.font.SysFont('Sans', 16)
                         font.set_bold(True)
@@ -725,13 +726,15 @@ if __name__ == '__main__':
                         zzz = pygame.Surface((320,20)) 
                         zzz.fill((0,0,0))
                         
-                        screen.blit(zzz, (0,0))
-                        screen.blit(text, (0,0))
+                        screen.blit(zzz, (0,220))
+                        screen.blit(text, (0,220))
                         pygame.display.flip()
                         
                 else:
                 
                     if time.time() - z > 10:
+                        
+                        new_song = False
                         
                         i = i+1 if i < 9 else 0
                         
