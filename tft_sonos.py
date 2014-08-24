@@ -18,6 +18,8 @@ import textwrap
 import json
 from collections import OrderedDict
 from functools import partial
+import argparse
+import sys
 
 #from PIL import Image
 from StringIO import StringIO
@@ -37,6 +39,14 @@ import httplib2
 #using the musicbrainz db to find the release date and album (if a compilation)
 import musicbrainzngs
 
+parser = argparse.ArgumentParser(description='Command line options ...')
+
+# for all of the following: if the command line option is not present then the value is True and startup is normal
+parser.add_argument('-a', '--alternate', action='store_true', help="Alternate images and text") #default is opposite of action
+args = parser.parse_args()
+
+#if args.alternate ...
+
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
 try:
@@ -45,7 +55,7 @@ try:
 except IOError:
       artists = {}
 
-DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date')])
+DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date'), ('service','Service')])
 # need to add ('service', 'Service) to ordered dict
 
 #last.fm - right now not using this at all - suspect it is providing bios
@@ -197,8 +207,7 @@ if platform.machine() == 'armv6l':
 
 def display_song_info(i):
 
-    zz = get_images(track['artist'])
-    url = zz[i]['link']
+    url = artist_image_list[i]['link']
 
     try:
         response = requests.get(url)
@@ -215,7 +224,7 @@ def display_song_info(i):
     img = img.convert('bmp')
     img.save(filename = "test1.bmp")
     img = pygame.image.load("test1.bmp").convert()
-    img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
+    img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 16)
     font.set_bold(True)
@@ -235,11 +244,39 @@ def display_song_info(i):
     pygame.display.flip()
     
     os.remove("test1.bmp")
+ 
+def display_song_info2(i):
+
+    url = artist_image_list[i]['link']
+
+    try:
+        response = requests.get(url)
+    except Exception as detail:
+        print "response = requests.get(url) generated exception:", detail
+        
+    try:
+        img = wand.image.Image(file=StringIO(response.content))
+    except Exception as detail:
+        img = wand.image.Image(filename = "test.bmp")
+        print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
+
+    img.transform(resize = '320x240^')
+    img = img.convert('bmp')
+    img.save(filename = "test1.bmp")
+    img = pygame.image.load("test1.bmp").convert()
+    #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; now not fading for display_images
     
+    screen.fill((0,0,0)) 
+    screen.blit(img, (0,0))      
+
+
+    pygame.display.flip()
+    
+    os.remove("test1.bmp") 
+
 def display_initial_song_info():
 
-    zz = get_images(track['artist'])
-    url = zz[0]['link']
+    url = artist_image_list[0]['link']
     
     try:
         response = requests.get(url)
@@ -252,7 +289,6 @@ def display_initial_song_info():
         img = wand.image.Image(filename = "test.bmp")
         print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
     
-
     img.transform(resize = '320x240^')
     img = img.convert('bmp')
                     
@@ -277,14 +313,14 @@ def display_initial_song_info():
     text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
     text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
     
-    screen.fill((0,0,0)) ################################################## added this to alpha
+    screen.fill((0,0,0)) 
     screen.blit(img, (0,0))
     screen.blit(zzz, (0,0))
     screen.blit(sub_img, (0,0))                    
-    screen.blit(text1, (0,0)) #sprite.rect)
-    screen.blit(text2, (0,18)) #sprite.rect)
-    screen.blit(text3, (0,36)) #sprite.rect)
-    screen.blit(text4, (0,54)) #sprite.rect)
+    screen.blit(text1, (0,0)) 
+    screen.blit(text2, (0,18)) 
+    screen.blit(text3, (0,36)) 
+    screen.blit(text4, (0,54)) 
 
     pygame.display.flip()
         
@@ -351,10 +387,6 @@ def play_pause():
         master.pause()
     else:
         master.play()
-        
-    #lcd.clear()
-    #lcd.backlight(lcd.YELLOW)
-    #lcd.message(state)
 
 def cancel():
     
@@ -385,10 +417,6 @@ def dec_volume():
     for s in speakers:
         s.volume = new_volume
     
-
-    #lcd.clear()
-    #lcd.message("Volume: {}".format(new_volume))
-    #lcd.backlight(lcd.YELLOW)
     
 def inc_volume():
     
@@ -403,9 +431,6 @@ def inc_volume():
     for s in speakers:
         s.volume = new_volume
         
-    #lcd.clear()
-    #lcd.message("Volume: {}".format(new_volume))
-    #lcd.backlight(lcd.YELLOW)
     
 def scroll_up():
     
@@ -662,24 +687,47 @@ if __name__ == '__main__':
                         if not 'date' in track:
                             track['date'] = get_release_date(track['artist'], track['album'], track['title'])
                         
-                        print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
-                    
-                        z = time.time()
-                        
                         media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
                         #media_uri = media_info['CurrentURI']
                         meta = media_info['CurrentURIMetaData']
                         if meta:
                             root = ET.fromstring(meta)
                             service = root[0][0].text
-                        else:
-                            service = "No service"
+                            track['service'] = service
+                        
+                        track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track] ########################################
+                        print "track_strings = ",track_strings
+                        print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
+                    
+                        z = time.time()
+                        
                                           
                         prev_title = title
                         i = 0
                         
+                        artist_image_list = get_images(track['artist'])
+                        
                         print "displaying initial image of ", track['artist']
-                        display_initial_song_info()
+                        #display_initial_song_info()
+                        display_song_info(0)
+                    else:
+                        # show new track_string
+                        if track_strings:
+                            line = track_strings.pop(0) #############################################
+                        else:
+                            track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track]) ########################################
+                            line = track_strings.pop(0)
+
+                        font = pygame.font.SysFont('Sans', 16)
+                        font.set_bold(True)
+                        
+                        text = font.render(line, True, (255,0,0))
+                        zzz = pygame.Surface((320,20)) 
+                        zzz.fill((0,0,0))
+                        
+                        screen.blit(zzz, (0,0))
+                        screen.blit(text, (0,0))
+                        pygame.display.flip()
                         
                 else:
                 
@@ -688,7 +736,7 @@ if __name__ == '__main__':
                         i = i+1 if i < 9 else 0
                         
                         print "displaying a new image of ", track['artist']
-                        display_song_info(i)
+                        display_song_info2(i) #################
                         
                         z = time.time()
             
