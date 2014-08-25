@@ -362,14 +362,22 @@ def get_release_date(artist, album, title):
     
     dates = []
     for d in recording_list:
-            if 'release-list' in d:
+    #  if 'release-list' in d:
+        if int(d['ext:score']) > 90 and 'release-list' in d:
+            rel_dict = d['release-list'][0] # it's a list but seems to have one element and that's a dictionary
+            date = rel_dict.get('date', '9999')[0:4]
+            title = rel_dict.get('title','No title')
+            if rel_dict.get('artist-credit-phrase') != 'Various Artists':  #possibly could also use status:promotion
+                dates.append((date,title))
+                
                 #dd = [x['date'][0:4] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
-                dd = [(x['date'][0:4],x['title']) for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
-                dates.extend(dd)
+                #dd = [(x['date'][0:4],x['title']) for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
+
+                #dates.extend(dd)
             
     if dates:
         dates.sort()
-        return "{} - {}".format(dates[0][1], dates[0][0])   
+        return "{} - {}".format(dates[0][0], dates[0][1])   
     else:
         return "?" 
     
