@@ -363,12 +363,13 @@ def get_release_date(artist, album, title):
     dates = []
     for d in recording_list:
             if 'release-list' in d:
-                dd = [x['date'][0:4] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]     
+                #dd = [x['date'][0:4] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
+                dd = [(x['date'][0:4],x['title']) for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
                 dates.extend(dd)
             
     if dates:
         dates.sort()
-        return dates[0]   
+        return "{} - {}".format(dates[0][1], dates[0][0])   
     else:
         return "?" 
     
@@ -497,10 +498,6 @@ def get_images(artist):
     start=1 or 11
     using link, height, width
     '''
-    
-    #if there is no artist (for example when Sonos isn't playing anything) then show images of sunsets  ;-)
-    if not artist:
-        artist = 'sunsets'
 
     if artist not in artists: 
         http = httplib2.Http()
@@ -640,8 +637,9 @@ def display_weather():
 
 if __name__ == '__main__':
     
-    prev_title = '' # was '0' for some reason
+    prev_title = -1 #this is zero so if the inital song title is the empty string, it's not equal
     prev_hour = -1
+    #new_song = False
     tt = z = time.time()
        
     while 1:
@@ -684,8 +682,10 @@ if __name__ == '__main__':
                     
                         track = dict(current_track)
                         # there will be no date if from one of our compilations
-                        if not 'date' in track:
+                        if not 'date' in track and track.get('artist') and track.get('title'):
                             track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+                        else:
+                            track['date'] = ''
                         
                         media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
                         #media_uri = media_info['CurrentURI']
@@ -695,7 +695,8 @@ if __name__ == '__main__':
                             service = root[0][0].text
                             track['service'] = service
                         
-                        track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track] 
+                        #track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track] 
+                        track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
                         print "track_strings = ",track_strings
                         print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
                     
@@ -705,9 +706,11 @@ if __name__ == '__main__':
                         prev_title = title
                         i = 0
                         new_song = True
-                        artist_image_list = get_images(track['artist'])
                         
-                        print "displaying initial image of ", track['artist']
+                        #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
+                        artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
+                        
+                        print "displaying initial image of ", track.get('artist', '')
                         #display_initial_song_info()
                         display_song_info(0)
 
@@ -715,7 +718,7 @@ if __name__ == '__main__':
                         # show the next track_string if not the image and text from a new song
                             
                         if not track_strings:
-                            track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track])
+                            track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)])
                                  
                         line = track_strings.pop(0)
 
