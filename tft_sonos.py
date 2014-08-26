@@ -20,6 +20,7 @@ from collections import OrderedDict
 from functools import partial
 import argparse
 import sys
+from operator import itemgetter
 
 #from PIL import Image
 from StringIO import StringIO
@@ -367,8 +368,10 @@ def get_release_date(artist, album, title):
             rel_dict = d['release-list'][0] # it's a list but seems to have one element and that's a dictionary
             date = rel_dict.get('date', '9999')[0:4]
             title = rel_dict.get('title','No title')
-            if rel_dict.get('artist-credit-phrase') != 'Various Artists':  #possibly could also use status:promotion
-                dates.append((date,title))
+            if rel_dict.get('artist-credit-phrase') == 'Various Artists':  #possibly could also use status:promotion
+                dates.append((date,title,'z'))
+            else:
+                dates.append((date,title,'a'))
                 
                 #dd = [x['date'][0:4] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
                 #dd = [(x['date'][0:4],x['title']) for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
@@ -376,7 +379,7 @@ def get_release_date(artist, album, title):
                 #dates.extend(dd)
             
     if dates:
-        dates.sort()
+        dates.sort(key=itemgetter(0,2)) # idea is to put albums by the artist ahead of albums by various artists
         return "{} - {}".format(dates[0][0], dates[0][1])   
     else:
         return "?" 
