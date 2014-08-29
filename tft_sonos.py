@@ -675,11 +675,15 @@ if __name__ == '__main__':
             
                 if time.time() - tt > 2:
 
-                    #get_current_track_info = 
-                    #track =  {u'album': 'Family Tree', 'date': '2007', u'artist': 'Nick Drake', u'title': 'Kimbie', 
-                    #u'uri': 'pndrradio-http://t3-2.p-cdn.com/access/?version=4&lid=86206018&token=uSDtgQrM...,
-                    #u'playlist_position': '4', u'duration': '0:03:26', u'position': '0:00:00', 
-                    #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/5/2/5/1/804879071525_500W_500H.jpg'}
+                    #get_current_track_info() =  {
+                                #u'album': 'We Walked In Song', 
+                                #u'artist': 'The Innocence Mission', 
+                                #u'title': 'My Sisters Return From Ireland', 
+                                #u'uri': 'pndrradio-http://audio-sv5-t3-1.pandora.com/access/5459257820921908950?version=4&lid=86206018&token=...', 
+                                #u'playlist_position': '3', 
+                                #u'duration': '0:02:45', 
+                                #u'position': '0:02:38', 
+                                #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
 
                     
                     current_track = master.get_current_track_info()
@@ -690,7 +694,7 @@ if __name__ == '__main__':
                     print str(tt), "checking to see if track has changed"
                     
                     if prev_title != title:
-                    
+                        
                         track = dict(current_track)
                         # there will be no date if from one of our compilations
                         if not 'date' in track and track.get('artist') and track.get('title'):
@@ -733,15 +737,15 @@ if __name__ == '__main__':
                                  
                         line = track_strings.pop(0)
 
-                        font = pygame.font.SysFont('Sans', 16)
+                        font = pygame.font.SysFont('Sans', 14)
                         font.set_bold(True)
                         
                         text = font.render(line, True, (255,0,0))
                         zzz = pygame.Surface((320,20)) 
                         zzz.fill((0,0,0))
                         
-                        screen.blit(zzz, (0,220))
-                        screen.blit(text, (0,220))
+                        screen.blit(zzz, (0,224))
+                        screen.blit(text, (0,224))
                         pygame.display.flip()
                         
                 else:
