@@ -194,8 +194,15 @@ def button_press(pin, b=0):
         print "play_pause"
         text = font.render("Play-Pause", True, (255, 0, 0))
     else:
-        print "must have tried to change mode"
-
+        if mode:
+            print "must have tried to change mode"
+            url = get_url(artist, title)
+            lyrics = get_lyrics(url)
+            show_lyrics(lyrics)
+            mod = 0
+        else:
+            mode = 1
+            
     screen.blit(zzz, (0,220))                 
     screen.blit(text, (0,220)) 
     pygame.display.flip()
@@ -613,6 +620,15 @@ def get_lyrics(url):
         if node.tail is not None:
             lyrics.append(node.tail)
     return "".join(lyrics).strip()
+    
+def show_lyrics(lyrics):
+    
+    screen.fill((0,0,0))
+    text = txtlib.Text((320, 240), 'freesans', font_size=10)
+    text.text = lyrics
+    text.update()
+    screen.blit(text.area, (0,0))
+    pygame.display.flip()
     
 def display_weather():
     
