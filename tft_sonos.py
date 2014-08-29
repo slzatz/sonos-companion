@@ -21,7 +21,7 @@ from functools import partial
 import argparse
 import sys
 from operator import itemgetter
-
+import lxml.html
 #from PIL import Image
 from StringIO import StringIO
 
@@ -174,6 +174,7 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 def button_press(pin, b=0):
+    global mode
     print "mode = ",mode
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
 
@@ -199,10 +200,12 @@ def button_press(pin, b=0):
             url = get_url(artist, title)
             lyrics = get_lyrics(url)
             show_lyrics(lyrics)
-            mod = 0
+            mode = 0
         else:
             mode = 1
-            
+        
+        return
+
     screen.blit(zzz, (0,220))                 
     screen.blit(text, (0,220)) 
     pygame.display.flip()
@@ -704,7 +707,7 @@ if __name__ == '__main__':
                     
                     current_track = master.get_current_track_info()
                     title = current_track['title']
-           
+                    artist = current_track['artist'] # for lyrics           
                     tt = time.time()
                     
                     print str(tt), "checking to see if track has changed"
