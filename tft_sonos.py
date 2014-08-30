@@ -723,8 +723,9 @@ if __name__ == '__main__':
                     inc_volume()
                 elif event.key == pygame.K_j:
                     dec_volume()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    print "mousedown"
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                print "mousedown"
+                play_pause()
                     
         if  mode:
                         
