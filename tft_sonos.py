@@ -5,6 +5,7 @@ import platform
 import os
 
 import pygame
+#from pygame.locals import *
 import txtlib # may still use this for weather, lyrics, bio
 
 import time
@@ -28,8 +29,12 @@ from StringIO import StringIO
 import wand.image
 
 if platform.machine() == 'armv6l':
-    from pitftgpio import PiTFT_GPIO
-    pitft = PiTFT_GPIO()
+    #from pitftgpio import PiTFT_GPIO
+    #pitft = PiTFT_GPIO()
+    import RPi.GPIO as GPIO
+    PINS = [23,22,27,18] #pins 1 through 4
+    for pin in PINS:
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # google custom search api
 from apiclient import discovery
@@ -56,7 +61,7 @@ try:
 except IOError:
       artists = {}
 
-DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Release date'), ('service','Service')])
+DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service')])
 # need to add ('service', 'Service) to ordered dict
 
 #last.fm - right now not using this at all - suspect it is providing bios
@@ -105,8 +110,19 @@ pygame.display.flip()
 
 config.CACHE_ENABLED = False
 
-speakers = list(soco.discover())
-
+#speakers = list(soco.discover())
+n = 0
+while 1:
+    n+=1
+    print "attempt "+str(n)
+    speakers = soco.discover()
+    try:
+        speakers = list(soco.discover())
+    except TypeError:    
+        sleep(1)       
+    else:
+        break 
+    
 print speakers ################
 
 # appears that the property coordinator of s.group is not getting set properly and so can't use s.group.coordinator[.player_name]
@@ -178,22 +194,22 @@ def button_press(pin, b=0):
     print "mode = ",mode
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
 
-    font = pygame.font.SysFont('Sans', 16)
-    zzz = pygame.Surface((320,20)) 
-    zzz.fill((0,0,0))
+    #font = pygame.font.SysFont('Sans', 16)
+    #zzz = pygame.Surface((320,20)) 
+    #zzz.fill((0,0,0))
 
     if b == 4:
         inc_volume()
-        print "increase volume"
-        text = font.render("Increase Volume", True, (255, 0, 0))
+        #print "increase volume"
+        #text = font.render("Increase Volume", True, (255, 0, 0))
     elif b==3:
         dec_volume()
-        print "decrease volume"
-        text = font.render("Decrease Volume", True, (255, 0, 0))
+        #print "decrease volume"
+        #text = font.render("Decrease Volume", True, (255, 0, 0))
     elif b==2:
         play_pause()
-        print "play_pause"
-        text = font.render("Play-Pause", True, (255, 0, 0))
+        #print "play_pause"
+        #text = font.render("Play-Pause", True, (255, 0, 0))
     else:
         if mode:
             print "must have tried to change mode"
@@ -206,15 +222,19 @@ def button_press(pin, b=0):
         
         return
 
-    screen.blit(zzz, (0,220))                 
-    screen.blit(text, (0,220)) 
-    pygame.display.flip()
+    #screen.blit(zzz, (0,220))                 
+    #screen.blit(text, (0,220)) 
+    #pygame.display.flip()
     
 if platform.machine() == 'armv6l':
-    pitft.Button4Interrupt(callback=partial(button_press, b=4)) #18
-    pitft.Button3Interrupt(callback=partial(button_press, b=3)) #21
-    pitft.Button2Interrupt(callback=partial(button_press, b=2)) #22
-    pitft.Button1Interrupt(callback=partial(button_press, b=1)) #23
+    #pitft.Button4Interrupt(callback=partial(button_press, b=4)) #18
+    #pitft.Button3Interrupt(callback=partial(button_press, b=3)) #21
+    #pitft.Button2Interrupt(callback=partial(button_press, b=2)) #22
+    #pitft.Button1Interrupt(callback=partial(button_press, b=1)) #23
+    GPIO.add_event_detect(18, GPIO.FALLING, callback=partial(button_press, b=4), bouncetime=300) 
+    GPIO.add_event_detect(21, GPIO.FALLING, callback=partial(button_press, b=3), bouncetime=300) 
+    GPIO.add_event_detect(22, GPIO.FALLING, callback=partial(button_press, b=2), bouncetime=300) 
+    GPIO.add_event_detect(23, GPIO.FALLING, callback=partial(button_press, b=1), bouncetime=300)
 
 def display_song_info(i):
 
@@ -410,6 +430,8 @@ def play_pause():
     else:
         master.play()
 
+    display_action("Play-Pause")
+
 def cancel():
     
     global mode
@@ -438,7 +460,8 @@ def dec_volume():
                     
     for s in speakers:
         s.volume = new_volume
-    
+   
+    display_action("Decrease Volume")
     
 def inc_volume():
     
@@ -452,8 +475,19 @@ def inc_volume():
                     
     for s in speakers:
         s.volume = new_volume
+
+    display_action("Increase Volume")
         
+def display_action(text):
     
+    font = pygame.font.SysFont('Sans', 14)
+    zzz = pygame.Surface((320,20)) 
+    zzz.fill((0,0,0))
+    text = font.render(text, True, (255, 0, 0))
+    screen.blit(zzz, (0,220))                 
+    screen.blit(text, (0,220)) 
+    pygame.display.flip()
+
 def scroll_up():
     
     global station_index
@@ -674,8 +708,21 @@ if __name__ == '__main__':
        
     while 1:
         
-        pygame.event.get() # necessary to keep pygame window from going to sleep
-    
+       # pygame.event.get() # necessary to keep pygame window from going to sleep
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    sys.exit()
+                if event.key == pygame.K_p:
+                    play_pause()
+                elif event.key == pygame.K_k:
+                    inc_volume()
+                elif event.key == pygame.K_j:
+                    dec_volume()
+                    
         if  mode:
                         
             state = master.get_current_transport_info()['current_transport_state']
