@@ -717,12 +717,14 @@ if __name__ == '__main__':
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     sys.exit()
-                if event.key == pygame.K_p:
+                elif event.key == pygame.K_p:
                     play_pause()
                 elif event.key == pygame.K_k:
                     inc_volume()
                 elif event.key == pygame.K_j:
                     dec_volume()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    print "mousedown"
                     
         if  mode:
                         
