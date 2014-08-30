@@ -33,6 +33,7 @@ if platform.machine() == 'armv6l':
     #pitft = PiTFT_GPIO()
     import RPi.GPIO as GPIO
     PINS = [23,22,27,18] #pins 1 through 4
+    GPIO.setmode(GPIO.BCM)
     for pin in PINS:
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
@@ -232,7 +233,7 @@ if platform.machine() == 'armv6l':
     #pitft.Button2Interrupt(callback=partial(button_press, b=2)) #22
     #pitft.Button1Interrupt(callback=partial(button_press, b=1)) #23
     GPIO.add_event_detect(18, GPIO.FALLING, callback=partial(button_press, b=4), bouncetime=300) 
-    GPIO.add_event_detect(21, GPIO.FALLING, callback=partial(button_press, b=3), bouncetime=300) 
+    GPIO.add_event_detect(27, GPIO.FALLING, callback=partial(button_press, b=3), bouncetime=300) 
     GPIO.add_event_detect(22, GPIO.FALLING, callback=partial(button_press, b=2), bouncetime=300) 
     GPIO.add_event_detect(23, GPIO.FALLING, callback=partial(button_press, b=1), bouncetime=300)
 
@@ -484,8 +485,8 @@ def display_action(text):
     zzz = pygame.Surface((320,20)) 
     zzz.fill((0,0,0))
     text = font.render(text, True, (255, 0, 0))
-    screen.blit(zzz, (0,220))                 
-    screen.blit(text, (0,220)) 
+    screen.blit(zzz, (0,224))                 
+    screen.blit(text, (0,224)) 
     pygame.display.flip()
 
 def scroll_up():
