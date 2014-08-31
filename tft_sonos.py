@@ -78,6 +78,8 @@ if platform.machine() == 'armv6l':
     # from https://github.com/adafruit/adafruit-pi-cam/blob/master/cam.py
     os.putenv('SDL_VIDEODRIVER', 'fbcon')
     os.putenv('SDL_FBDEV', '/dev/fb1')
+    os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+    os.putenv('SDL_MOUSEDRV', 'TSLIB')
 elif platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 elif platform.system() == "Linux":
@@ -731,10 +733,12 @@ if __name__ == '__main__':
                 elif event.key == pygame.K_j:
                     dec_volume()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                print "mousedown"
-                print "position=",event.pos
+                #print "mousedown"
+                pos = pygame.mouse.get_pos()
+                print "mouse position=",pos
+                #epos = event.pos #this works too
+                #print "position=",epos
                 show_screen_buttons()
-                pos = event.pos
                 if pos[0] <160:
                     if pos[1] < 120:
                         if mode:
