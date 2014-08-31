@@ -7,6 +7,7 @@ import os
 import pygame
 #from pygame.locals import *
 import txtlib # may still use this for weather, lyrics, bio
+#import slider ###################################
 
 import time
 
@@ -86,7 +87,9 @@ else:
 
 
 pygame.init()
-pygame.mouse.set_visible(0)
+
+if platform.machine() == 'armv6l':
+    pygame.mouse.set_visible(False)
 
 screen = pygame.display.set_mode((320, 240))
 screen.fill((0,0,0))
@@ -100,6 +103,9 @@ text = txtlib.Text((320, 240), 'freesans')
 text.text = "Sonos-Companion TFT Edition"
 text.update()
 screen.blit(text.area, (0,0))
+
+#zatz = slider.Slider(100,100,100, (90,10), "hello") ###################################################
+#zatz.draw(screen)
 pygame.display.flip()
 sleep(5)
 
@@ -111,7 +117,6 @@ pygame.display.flip()
 
 config.CACHE_ENABLED = False
 
-#speakers = list(soco.discover())
 n = 0
 while 1:
     n+=1
@@ -195,22 +200,16 @@ def button_press(pin, b=0):
     print "mode = ",mode
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
 
-    #font = pygame.font.SysFont('Sans', 16)
-    #zzz = pygame.Surface((320,20)) 
-    #zzz.fill((0,0,0))
 
     if b == 4:
         inc_volume()
-        #print "increase volume"
-        #text = font.render("Increase Volume", True, (255, 0, 0))
+
     elif b==3:
         dec_volume()
-        #print "decrease volume"
-        #text = font.render("Decrease Volume", True, (255, 0, 0))
+
     elif b==2:
         play_pause()
-        #print "play_pause"
-        #text = font.render("Play-Pause", True, (255, 0, 0))
+
     else:
         if mode:
             print "must have tried to change mode"
@@ -222,16 +221,8 @@ def button_press(pin, b=0):
             mode = 1
         
         return
-
-    #screen.blit(zzz, (0,220))                 
-    #screen.blit(text, (0,220)) 
-    #pygame.display.flip()
     
 if platform.machine() == 'armv6l':
-    #pitft.Button4Interrupt(callback=partial(button_press, b=4)) #18
-    #pitft.Button3Interrupt(callback=partial(button_press, b=3)) #21
-    #pitft.Button2Interrupt(callback=partial(button_press, b=2)) #22
-    #pitft.Button1Interrupt(callback=partial(button_press, b=1)) #23
     GPIO.add_event_detect(18, GPIO.FALLING, callback=partial(button_press, b=4), bouncetime=300) 
     GPIO.add_event_detect(27, GPIO.FALLING, callback=partial(button_press, b=3), bouncetime=300) 
     GPIO.add_event_detect(22, GPIO.FALLING, callback=partial(button_press, b=2), bouncetime=300) 
@@ -702,9 +693,8 @@ def display_weather():
 
 if __name__ == '__main__':
     
-    prev_title = -1 #this is zero so if the inital song title is the empty string, it's not equal
+    prev_title = -1 #this is -1 so if the initial song title is the empty string, it's not equal
     prev_hour = -1
-    #new_song = False
     tt = z = time.time()
        
     while 1:
@@ -725,7 +715,8 @@ if __name__ == '__main__':
                     dec_volume()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 print "mousedown"
-                play_pause()
+                print "position=",event.pos
+                #play_pause()
                     
         if  mode:
                         
