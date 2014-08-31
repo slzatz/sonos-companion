@@ -200,14 +200,13 @@ def button_press(pin, b=0):
     print "mode = ",mode
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
 
-
     if b == 4:
         inc_volume()
 
-    elif b==3:
+    elif b == 3:
         dec_volume()
 
-    elif b==2:
+    elif b == 2:
         play_pause()
 
     else:
@@ -291,7 +290,6 @@ def display_song_info2(i):
     
     screen.fill((0,0,0)) 
     screen.blit(img, (0,0))      
-
 
     pygame.display.flip()
     
@@ -674,6 +672,24 @@ def display_weather():
     screen.blit(text.area, (0, 0))
     pygame.display.flip() # Update the full display Surface to the screen
 
+def show_screen_buttons():
+    font = pygame.font.SysFont('Sans', 20)
+    font.set_bold(True)
+    text1 = font.render("Lyrics", True, (255, 0, 0))
+    text2 = font.render("Play-Pause", True, (0, 0, 255))
+    text3 = font.render("Increase Volume", True, (0, 0, 255))
+    text4 = font.render("Decrease Volume", True, (0, 0, 255))
+    screen.fill((0,0,0))
+    #img.blit(text, (0,25)) 
+    #screen.blit(img, (0,0))
+    pygame.draw.line(screen, (0, 0, 255), (0, 120), (320, 120))
+    pygame.draw.line(screen, (0, 0, 255), (160, 0), (160, 240))
+    screen.blit(text1,(40,40))
+    screen.blit(text2,(30,160))
+    screen.blit(text3,(165,40))
+    screen.blit(text4,(160,160))
+    pygame.display.flip() 
+    sleep(3)
 
 #2 = forward: lcd.RIGHT
 #4 = volume lower: lcd.DOWN
@@ -706,6 +722,7 @@ if __name__ == '__main__':
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    GPIO.cleanup()
                     sys.exit()
                 elif event.key == pygame.K_p:
                     play_pause()
@@ -716,7 +733,28 @@ if __name__ == '__main__':
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 print "mousedown"
                 print "position=",event.pos
-                #play_pause()
+                show_screen_buttons()
+                pos = event.pos
+                if pos[0] <160:
+                    if pos[1] < 120:
+                        if mode:
+                            if artist:
+                                print "must have tried to change mode"
+                                url = get_url(artist, title)
+                                lyrics = get_lyrics(url)
+                                show_lyrics(lyrics)
+                                mode = 0
+                        else:
+                            mode = 1
+                    else: 
+                        play_pause()
+                else:
+                    if pos[1] < 120:
+                        inc_volume()
+                    else:
+                        dec_volume()
+                        
+                #show_screen_buttons()
                     
         if  mode:
                         
