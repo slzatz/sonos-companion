@@ -208,7 +208,6 @@ def button_press(pin, b=0):
 
     else:
         if mode:
-            print "must have tried to change mode"
             url = get_url(artist, title)
             lyrics = get_lyrics(url)
             show_lyrics(lyrics)
@@ -677,8 +676,6 @@ def show_screen_buttons():
     text3 = font.render("Increase Volume", True, (0, 0, 255))
     text4 = font.render("Decrease Volume", True, (0, 0, 255))
     screen.fill((0,0,0))
-    #img.blit(text, (0,25)) 
-    #screen.blit(img, (0,0))
     pygame.draw.line(screen, (0, 0, 255), (0, 120), (320, 120))
     pygame.draw.line(screen, (0, 0, 255), (160, 0), (160, 240))
     screen.blit(text1,(40,40))
@@ -686,8 +683,7 @@ def show_screen_buttons():
     screen.blit(text3,(165,40))
     screen.blit(text4,(160,160))
     pygame.display.flip() 
-    sleep(3)
-
+    
 #2 = forward: lcd.RIGHT
 #4 = volume lower: lcd.DOWN
 #8 = volume higher: lcd.UP
@@ -727,13 +723,16 @@ if __name__ == '__main__':
                     inc_volume()
                 elif event.key == pygame.K_j:
                     dec_volume()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and mode!=2:
                 #print "mousedown"
                 pos = pygame.mouse.get_pos()
                 print "mouse position=",pos
                 #epos = event.pos #this works too
                 #print "position=",epos
                 show_screen_buttons()
+                mode = 2
+                sleep(2)
+            elif event.type == pygame.POUSEBUTTONDOWN and mode==2:    
                 if pos[0] <160:
                     if pos[1] < 120:
                         if mode:
@@ -755,7 +754,7 @@ if __name__ == '__main__':
                         
                 #show_screen_buttons()
                     
-        if  mode:
+        if  mode==1:
                         
             state = master.get_current_transport_info()['current_transport_state']
             
