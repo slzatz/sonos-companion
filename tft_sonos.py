@@ -24,14 +24,11 @@ import argparse
 import sys
 from operator import itemgetter
 import lxml.html
-#from PIL import Image
 from StringIO import StringIO
 
 import wand.image
 
 if platform.machine() == 'armv6l':
-    #from pitftgpio import PiTFT_GPIO
-    #pitft = PiTFT_GPIO()
     import RPi.GPIO as GPIO
     PINS = [23,22,27,18] #pins 1 through 4
     GPIO.setmode(GPIO.BCM)
@@ -50,10 +47,10 @@ import musicbrainzngs
 parser = argparse.ArgumentParser(description='Command line options ...')
 
 # for all of the following: if the command line option is not present then the value is True and startup is normal
-parser.add_argument('-a', '--alternate', action='store_true', help="Alternate images and text") #default is opposite of action
+parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
 args = parser.parse_args()
 
-#if args.alternate ...
+#if args.display ...
 
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
@@ -64,18 +61,16 @@ except IOError:
       artists = {}
 
 DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service')])
-# need to add ('service', 'Service) to ordered dict
 
 #last.fm - right now not using this at all - suspect it is providing bios
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
 
-wrapper = textwrap.TextWrapper(width=50, replace_whitespace=False) # may be able to be a little longer than 40
+wrapper = textwrap.TextWrapper(width=42, replace_whitespace=False) # may be able to be a little longer than 40
 
 prev_track = ""
 
-if platform.machine() == 'armv6l':
-    # from https://github.com/adafruit/adafruit-pi-cam/blob/master/cam.py
+if platform.machine() == 'armv6l' and not args.display:
     os.putenv('SDL_VIDEODRIVER', 'fbcon')
     os.putenv('SDL_FBDEV', '/dev/fb1')
     os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
@@ -87,7 +82,6 @@ elif platform.system() == "Linux":
 else:
     sys.exit("Currently unsupported hardware/OS")
 
-
 pygame.init()
 
 if platform.machine() == 'armv6l':
@@ -96,6 +90,7 @@ if platform.machine() == 'armv6l':
 screen = pygame.display.set_mode((320, 240))
 screen.fill((0,0,0))
 
+# need a backup image that should be renamed backup
 #img = wand.image.Image(filename = "test.bmp") #########
 #img.transform(resize = '320x240^')#############
 #img.save(filename = "test.bmp")
@@ -131,7 +126,7 @@ while 1:
     else:
         break 
     
-print speakers ################
+print speakers 
 
 # appears that the property coordinator of s.group is not getting set properly and so can't use s.group.coordinator[.player_name]
 
