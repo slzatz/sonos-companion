@@ -705,15 +705,16 @@ if __name__ == '__main__':
     prev_title = -1 #this is -1 so if the initial song title is the empty string, it's not equal
     prev_hour = -1
     tt = z = time.time()
-       
+    new_song = True
+
     while 1:
         
        # pygame.event.get() # necessary to keep pygame window from going to sleep
 
-        for event in pygame.event.get():
+        for event in [pygame.event.poll()]: #pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     GPIO.cleanup()
                     sys.exit()
@@ -727,12 +728,18 @@ if __name__ == '__main__':
                 #print "mousedown"
                 pos = pygame.mouse.get_pos()
                 print "mouse position=",pos
+                print "Now in button mode(2)"
                 #epos = event.pos #this works too
                 #print "position=",epos
                 show_screen_buttons()
                 mode = 2
+                pygame.event.get()
                 sleep(2)
-            elif event.type == pygame.POUSEBUTTONDOWN and mode==2:    
+                #continue
+            elif event.type == pygame.MOUSEBUTTONDOWN and mode==2:    
+                pos = pygame.mouse.get_pos()
+                print "mouse position=",pos
+                print "some action was initiated"
                 if pos[0] <160:
                     if pos[1] < 120:
                         if mode:
@@ -746,12 +753,13 @@ if __name__ == '__main__':
                             mode = 1
                     else: 
                         play_pause()
+                        mode = 1
                 else:
                     if pos[1] < 120:
                         inc_volume()
                     else:
                         dec_volume()
-                        
+                    mode = 1 
                 #show_screen_buttons()
                     
         if  mode==1:
