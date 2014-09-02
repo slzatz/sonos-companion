@@ -711,9 +711,13 @@ if __name__ == '__main__':
         
        # pygame.event.get() # necessary to keep pygame window from going to sleep
 
-        for event in [pygame.event.poll()]: #pygame.event.get():
+        #for event in [pygame.event.poll()]: #pygame.event.get():
+        event = pygame.event.poll()
+        if event.type != pygame.NOEVENT:
+            
             if event.type == pygame.QUIT:
                 sys.exit()
+                
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     GPIO.cleanup()
@@ -724,44 +728,49 @@ if __name__ == '__main__':
                     inc_volume()
                 elif event.key == pygame.K_j:
                     dec_volume()
-            elif event.type == pygame.MOUSEBUTTONDOWN and mode!=2:
-                #print "mousedown"
-                pos = pygame.mouse.get_pos()
-                print "mouse position=",pos
-                print "Now in button mode(2)"
-                #epos = event.pos #this works too
-                #print "position=",epos
-                show_screen_buttons()
-                mode = 2
-                pygame.event.get()
-                sleep(2)
-                #continue
-            elif event.type == pygame.MOUSEBUTTONDOWN and mode==2:    
-                pos = pygame.mouse.get_pos()
-                print "mouse position=",pos
-                print "some action was initiated"
-                if pos[0] <160:
-                    if pos[1] < 120:
-                        if mode:
-                            if artist:
-                                print "must have tried to change mode"
-                                url = get_url(artist, title)
-                                lyrics = get_lyrics(url)
-                                show_lyrics(lyrics)
-                                mode = 0
-                        else:
-                            mode = 1
-                    else: 
-                        play_pause()
-                        mode = 1
-                else:
-                    if pos[1] < 120:
-                        inc_volume()
-                    else:
-                        dec_volume()
-                    mode = 1 
-                #show_screen_buttons()
                     
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if mode!=2:
+                    #print "mousedown"
+                    pos = pygame.mouse.get_pos()
+                    print "mouse position=",pos
+                    print "Now in button mode(2)"
+                    #epos = event.pos #this works too
+                    #print "position=",epos
+                    show_screen_buttons()
+                    mode = 2
+                    #pygame.event.clear() #placed this below
+                    #pygame.event.get() # this would also clear the queue
+                    sleep(2)
+                    #continue
+                else:   
+                    pos = pygame.mouse.get_pos()
+                    print "mouse position=",pos
+                    print "some action was initiated"
+                    if pos[0] <160:
+                        if pos[1] < 120:
+                            if mode:
+                                if artist:
+                                    print "must have tried to change mode"
+                                    url = get_url(artist, title)
+                                    lyrics = get_lyrics(url)
+                                    show_lyrics(lyrics)
+                                    mode = 0
+                            else:
+                                mode = 1
+                        else: 
+                            play_pause()
+                            mode = 1
+                    else:
+                        if pos[1] < 120:
+                            inc_volume()
+                        else:
+                            dec_volume()
+                        mode = 1 
+                        
+            pygame.event.clear()      
+        # end of processing pygame events
+             
         if  mode==1:
                         
             state = master.get_current_transport_info()['current_transport_state']
