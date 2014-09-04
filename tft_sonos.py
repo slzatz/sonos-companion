@@ -711,8 +711,10 @@ if __name__ == '__main__':
         
        # pygame.event.get() # necessary to keep pygame window from going to sleep
 
-        #for event in [pygame.event.poll()]: #pygame.event.get():
+        #for event in [pygame.event.poll()]: #pygame.event.get() - when went to poll event became MOUSEMOTION not MOUSEDOWN
         event = pygame.event.poll()
+        #print event
+        #print event.type
         if event.type != pygame.NOEVENT:
             
             if event.type == pygame.QUIT:
@@ -729,7 +731,7 @@ if __name__ == '__main__':
                 elif event.key == pygame.K_j:
                     dec_volume()
                     
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEMOTION: #BUTTONDOWN - when started using poll this became MOUSEMOTION ==4
                 if mode!=2:
                     #print "mousedown"
                     pos = pygame.mouse.get_pos()
