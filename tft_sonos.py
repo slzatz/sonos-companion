@@ -396,7 +396,7 @@ def get_release_date(artist, album, title):
             
     if dates:
         dates.sort(key=itemgetter(0,2)) # idea is to put albums by the artist ahead of albums by various artists
-        return "{} - {}".format(dates[0][0], dates[0][1])   
+        return u"{} - {}".format(dates[0][0], dates[0][1])   
     else:
         return "?" 
     
