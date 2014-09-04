@@ -118,7 +118,6 @@ n = 0
 while 1:
     n+=1
     print "attempt "+str(n)
-    speakers = soco.discover()
     try:
         speakers = list(soco.discover())
     except TypeError:    
