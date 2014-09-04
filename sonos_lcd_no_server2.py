@@ -20,7 +20,16 @@ from lcdscroll import Scroller
 
 config.CACHE_ENABLED = False
 
-speakers = list(soco.discover())
+n = 0
+while 1:
+    n+=1
+    print "attempt "+str(n)
+    try:
+        speakers = list(soco.discover())
+    except TypeError:
+        sleep(1)
+    else:
+        break
 
 print speakers ################
 
