@@ -822,8 +822,8 @@ if __name__ == '__main__':
                             track['service'] = service
                         
                         track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
-                        print "track_strings = ",track_strings
-                        print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
+                        #print "track_strings = ",track_strings
+                        #print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
                     
                         z = time.time()
                         
