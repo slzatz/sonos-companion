@@ -733,18 +733,12 @@ if __name__ == '__main__':
                 
         elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - when started using poll this became MOUSEMOTION ==4
             if mode!=2:
-                #print "mousedown"
                 pos = pygame.mouse.get_pos()
                 print "mouse position=",pos
                 print "Now in button mode(2)"
-                #epos = event.pos #this works too
-                #print "position=",epos
                 show_screen_buttons()
                 mode = 2
-                #pygame.event.clear() #placed this below
-                #pygame.event.get() # this would also clear the queue
-                sleep(2)
-                #continue
+                sleep(1)
             else:   
                 pos = pygame.mouse.get_pos()
                 print "mouse position=",pos
@@ -827,7 +821,6 @@ if __name__ == '__main__':
                             service = root[0][0].text
                             track['service'] = service
                         
-                        #track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if x in track] 
                         track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
                         print "track_strings = ",track_strings
                         print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
@@ -843,7 +836,6 @@ if __name__ == '__main__':
                         artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
                         
                         print "displaying initial image of ", track.get('artist', '')
-                        #display_initial_song_info()
                         display_song_info(0)
 
                     elif not new_song:
