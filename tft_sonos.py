@@ -714,62 +714,64 @@ if __name__ == '__main__':
         event = pygame.event.poll()
         #print event
         #print event.type
-        if event.type != pygame.NOEVENT:
+        if event.type == pygame.NOEVENT:
+            pass
             
-            if event.type == pygame.QUIT:
+        elif event.type == pygame.QUIT:
+            sys.exit()
+            
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                GPIO.cleanup()
                 sys.exit()
+            elif event.key == pygame.K_p:
+                play_pause()
+            elif event.key == pygame.K_k:
+                inc_volume()
+            elif event.key == pygame.K_j:
+                dec_volume()
                 
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    GPIO.cleanup()
-                    sys.exit()
-                elif event.key == pygame.K_p:
-                    play_pause()
-                elif event.key == pygame.K_k:
-                    inc_volume()
-                elif event.key == pygame.K_j:
-                    dec_volume()
-                    
-            elif event.type == pygame.MOUSEMOTION: #BUTTONDOWN - when started using poll this became MOUSEMOTION ==4
-                if mode!=2:
-                    #print "mousedown"
-                    pos = pygame.mouse.get_pos()
-                    print "mouse position=",pos
-                    print "Now in button mode(2)"
-                    #epos = event.pos #this works too
-                    #print "position=",epos
-                    show_screen_buttons()
-                    mode = 2
-                    #pygame.event.clear() #placed this below
-                    #pygame.event.get() # this would also clear the queue
-                    sleep(2)
-                    #continue
-                else:   
-                    pos = pygame.mouse.get_pos()
-                    print "mouse position=",pos
-                    print "some action was initiated"
-                    if pos[0] <160:
-                        if pos[1] < 120:
-                            if mode:
-                                if artist:
-                                    print "must have tried to change mode"
-                                    url = get_url(artist, title)
-                                    lyrics = get_lyrics(url)
-                                    show_lyrics(lyrics)
-                                    mode = 0
-                            else:
-                                mode = 1
-                        else: 
-                            play_pause()
-                            mode = 1
-                    else:
-                        if pos[1] < 120:
-                            inc_volume()
+        elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - when started using poll this became MOUSEMOTION ==4
+            if mode!=2:
+                #print "mousedown"
+                pos = pygame.mouse.get_pos()
+                print "mouse position=",pos
+                print "Now in button mode(2)"
+                #epos = event.pos #this works too
+                #print "position=",epos
+                show_screen_buttons()
+                mode = 2
+                #pygame.event.clear() #placed this below
+                #pygame.event.get() # this would also clear the queue
+                sleep(2)
+                #continue
+            else:   
+                pos = pygame.mouse.get_pos()
+                print "mouse position=",pos
+                print "some action was initiated"
+                if pos[0] <160:
+                    if pos[1] < 120:
+                        if mode:
+                            if artist:
+                                print "must have tried to change mode"
+                                url = get_url(artist, title)
+                                lyrics = get_lyrics(url)
+                                show_lyrics(lyrics)
+                                mode = 0
                         else:
-                            dec_volume()
-                        mode = 1 
-                        
-            pygame.event.clear()      
+                            mode = 1
+                    else: 
+                        play_pause()
+                        mode = 1
+                else:
+                    if pos[1] < 120:
+                        inc_volume()
+                    else:
+                        dec_volume()
+                    mode = 1 
+                    
+            pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
+                
         # end of processing pygame events
              
         if  mode==1:
