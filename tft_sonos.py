@@ -770,8 +770,11 @@ if __name__ == '__main__':
              
         if  mode==1:
                         
-            state = master.get_current_transport_info()['current_transport_state']
-            
+            try:
+                state = master.get_current_transport_info()['current_transport_state']
+            except requests.exceptions.ConnectionError:
+                state = 'ERROR'
+                print "Encountered error in state = master.get_current transport_info() ..."
             if state != 'PLAYING':
                 
                 hour = datetime.datetime.now().hour
