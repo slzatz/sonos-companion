@@ -18,9 +18,16 @@ from pygame.locals import USEREVENT
 import os
 import random
 import wand.image
-
+import textwrap
 from artist_images_db import *
- 
+#import txtlib
+import lxml.html
+wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False) # may be able to be a little longer than 40 
+
+#last.fm
+base_url = "http://ws.audioscrobbler.com/2.0/"
+api_key = "1c55c0a239072889fa7c11df73ecd566"
+
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 elif platform.machine() == 'armv6l':
@@ -29,12 +36,6 @@ elif platform.machine() == 'armv6l':
     os.putenv('SDL_FBDEV', '/dev/fb1')
 else:
     os.putenv('SDL_VIDEODRIVER', 'x11')
-
-try:
-  with open('artists.json', 'r') as f:
-      artists = json.load(f)
-except IOError:
-      artists = {}
 
 pygame.init()
 pygame.mouse.set_visible(0)
@@ -46,14 +47,61 @@ screen.fill((0,0,0))
 
 font = pygame.font.SysFont('Sans', 50)
 
-text = font.render("Sales Force", True, (255, 0, 0))
+text = font.render("Artists", True, (255, 0, 0))
 
 screen.blit(text, (0,0)) 
 pygame.display.flip()
 
+def get_artist_info(artist, autocorrect=0):
+    
+    payload = {'method':'artist.getinfo', 'artist':artist, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key}
+    
+    try:
+        r = requests.get(base_url, params=payload)
+        bio = r.json()['artist']['bio']['summary']
+        text = lxml.html.fromstring(bio).text_content()
+        idx = text.find("Read more")
+        if idx != -1:
+            text = text[:idx]
+        
+        return text
+        
+    except Exception as e:
+        print("Exception in get_artist_info: ", e)
+        return ''
+    
+def get_artist_image(artist,i):
+
+    image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
+    url = image.link
+    try:
+        response = requests.get(url)
+    except Exception as e:
+        print( "response = requests.get(url) generated exception:", e)
+        image.status = False
+        print("changed image status to False")
+        session.commit()
+        img = wand.image.Image(filename = "test.bmp")
+    else:
+
+        try:
+            img = wand.image.Image(file=StringIO(response.content))
+        except Exception as e:
+            img = wand.image.Image(filename = "test.bmp")
+            print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", e)
+            image.status = False
+            session.commit()
+
+    size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
+    img.transform(resize = size)
+    img = img.convert('bmp')
+    img.save(filename = "test1.bmp")
+    img = pygame.image.load("test1.bmp").convert()
+
+    return img
+
 def display_artist_image(artist,i):
 
-    #url = artists[artist][i]['link']
     image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
     url = image.link
     try:
@@ -79,44 +127,77 @@ def display_artist_image(artist,i):
     img = img.convert('bmp')
     img.save(filename = "test1.bmp")
     img = pygame.image.load("test1.bmp").convert()
-    #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; now not fading for display_images
     
     screen.fill((0,0,0)) 
     screen.blit(img, (0,0))      
+    pygame.display.flip()
 
+    sleep(5)
+
+    img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
+
+    font = pygame.font.SysFont('Sans', 20)
+    font.set_bold(True)
+    
+    text1 = font.render("Artist: "+artist, True, (255, 0, 0))
+    
+    screen.fill((0,0,0)) ################################################## added this to alpha
+    screen.blit(img, (0,0))      
+    screen.blit(text1, (0,0))
+
+    font = pygame.font.SysFont('Sans', 16)
+ 
+    text2 = get_artist_info(artist)
+    text2 = wrapper.fill(text2)
+    lines = text2.split('\n')
+    #print(text2)
+    z = 30
+    for line in lines:
+        text = font.render(line, True, (255, 0, 0))
+	screen.blit(text, (0,z))
+	z+=20
 
     pygame.display.flip()
-    
+
     os.remove("test1.bmp") 
 
+def show_artist():
+    img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
+    font = pygame.font.SysFont('Sans', 30)
+    font.set_bold(True)
+    
+    text1 = font.render("Artist: "+artist, True, (255, 0, 0))
+    
+    screen.fill((0,0,0)) ################################################## added this to alpha
+    screen.blit(img, (0,0))      
+    screen.blit(text1, (0,0))
 
-def update_display(f):
-    screen.fill((0,0,0))
-    text = font.render('$'+'{:,}'.format(int(f)), True, (255,0,0)) 
-    screen.blit(text, (20,20))
     pygame.display.flip()
+
+    os.remove("test1.bmp") 
+
 
 if __name__ == '__main__':
 
     SHOWNEWIMAGE = USEREVENT+1
-    #artist_list = artists.keys()
-    #artist_list = session.query(Artist).all()
     artist_list = session.query(Artist)
-    print (artist_list)
-    #print (len(artist_list))
-    #L = len(artist_list)
     L = artist_list.count()
     print("Number of artists = {}".format(L))
-    #sys.exit()
     
-    pygame.time.set_timer(SHOWNEWIMAGE, 10000)
+    pygame.time.set_timer(SHOWNEWIMAGE, 20000)
 
     while 1:
 
         if pygame.event.get(SHOWNEWIMAGE):
             artist = artist_list[random.randrange(0,L-1)].name
+            #img = get_artist_image(artist,random.randrange(0,9)):
+
             display_artist_image(artist,random.randrange(0,9)) 
+            
+            # screen.fill((0,0,0)) 
+            # screen.blit(img, (0,0))      
+            # pygame.display.flip()
 
         sleep(.1)
 

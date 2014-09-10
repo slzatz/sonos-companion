@@ -657,15 +657,19 @@ def display_weather():
     # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
     # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
     
-    r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-    m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-    m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
- 
-    text = txtlib.Text((320, 240), 'freesans')
-    text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
-    text.update()
-    screen.blit(text.area, (0, 0))
-    pygame.display.flip() # Update the full display Surface to the screen
+    try:
+        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+    except requests.exceptions.ConnectionError:
+        print "ConnectionError in request in display_weather"
+    else:
+        m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+        m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+     
+        text = txtlib.Text((320, 240), 'freesans')
+        text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
+        text.update()
+        screen.blit(text.area, (0, 0))
+        pygame.display.flip() # Update the full display Surface to the screen
 
 def show_screen_buttons():
     font = pygame.font.SysFont('Sans', 20)
