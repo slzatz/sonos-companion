@@ -266,17 +266,21 @@ def display_weather():
     hour = datetime.datetime.now().hour
     if hour != g.prev_hour:
         
-        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
-        m1 = r.json()['current_observation']['temperature_string']
-        m2 = r.json()['current_observation']['wind_string']
-        
-        lcd.clear()
-        lcd.backlight(lcd.RED)
-        lcd.message([m1,m2])
- 
-        scroller = Scroller(lines = [m1, m2])
-        
-        g.prev_hour = hour
+        try:
+            r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
+        except requests.exceptions.ConnectionError as e:
+            print "Exception requesting weather: ", e
+        else:
+            m1 = r.json()['current_observation']['temperature_string']
+            m2 = r.json()['current_observation']['wind_string']
+            
+            lcd.clear()
+            lcd.backlight(lcd.RED)
+            lcd.message([m1,m2])
+     
+            scroller = Scroller(lines = [m1, m2])
+            
+            g.prev_hour = hour
     
     else:
          
