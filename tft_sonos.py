@@ -790,7 +790,7 @@ if __name__ == '__main__':
                         
             try:
                 state = master.get_current_transport_info()['current_transport_state']
-            except requests.exceptions.ConnectionError as e:
+            except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
                 state = 'ERROR'
                 print "Encountered error in state = master.get_current transport_info(): ", e
             if state != 'PLAYING':
