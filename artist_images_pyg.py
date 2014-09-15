@@ -4,14 +4,10 @@ from __future__ import unicode_literals
 from future_builtins import *
 
 import requests
-import csv
-#import gmail
 from cStringIO import StringIO
-import time
 from time import sleep
 import platform
-import sys
-import time
+#import sys
 import json
 import pygame
 from pygame.locals import USEREVENT
@@ -20,9 +16,9 @@ import random
 import wand.image
 import textwrap
 from artist_images_db import *
-#import txtlib
 import lxml.html
-wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False) # may be able to be a little longer than 40 
+
+wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  
 
 #last.fm
 base_url = "http://ws.audioscrobbler.com/2.0/"
@@ -69,10 +65,11 @@ def get_artist_info(artist, autocorrect=0):
     except Exception as e:
         print("Exception in get_artist_info: ", e)
         return ''
-    
-def get_artist_image(artist,i):
 
-    image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
+#following not in use    
+def get_artist_image(artist,image):
+
+    #image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
     url = image.link
     try:
         response = requests.get(url)
@@ -100,9 +97,9 @@ def get_artist_image(artist,i):
 
     return img
 
-def display_artist_image(artist,i):
+def display_artist_image(artist, image):
 
-    image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
+    #image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
     url = image.link
     try:
         response = requests.get(url)
@@ -141,7 +138,7 @@ def display_artist_image(artist,i):
     
     text1 = font.render("Artist: "+artist, True, (255, 0, 0))
     
-    screen.fill((0,0,0)) ################################################## added this to alpha
+    screen.fill((0,0,0)) 
     screen.blit(img, (0,0))      
     screen.blit(text1, (0,0))
 
@@ -150,7 +147,7 @@ def display_artist_image(artist,i):
     text2 = get_artist_info(artist)
     text2 = wrapper.fill(text2)
     lines = text2.split('\n')
-    #print(text2)
+    
     z = 30
     for line in lines:
         text = font.render(line, True, (255, 0, 0))
@@ -162,14 +159,14 @@ def display_artist_image(artist,i):
     os.remove("test1.bmp") 
 
 def show_artist():
-    img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
+    img.set_alpha(75) #0 - 100 the lower the number the more faded 
 
     font = pygame.font.SysFont('Sans', 30)
     font.set_bold(True)
     
     text1 = font.render("Artist: "+artist, True, (255, 0, 0))
     
-    screen.fill((0,0,0)) ################################################## added this to alpha
+    screen.fill((0,0,0)) 
     screen.blit(img, (0,0))      
     screen.blit(text1, (0,0))
 
@@ -177,12 +174,11 @@ def show_artist():
 
     os.remove("test1.bmp") 
 
-
 if __name__ == '__main__':
 
     SHOWNEWIMAGE = USEREVENT+1
-    artist_list = session.query(Artist)
-    L = artist_list.count()
+    artists = session.query(Artist)
+    L = artists.count()
     print("Number of artists = {}".format(L))
     
     pygame.time.set_timer(SHOWNEWIMAGE, 20000)
@@ -190,14 +186,10 @@ if __name__ == '__main__':
     while 1:
 
         if pygame.event.get(SHOWNEWIMAGE):
-            artist = artist_list[random.randrange(0,L-1)].name
-            #img = get_artist_image(artist,random.randrange(0,9)):
-
-            display_artist_image(artist,random.randrange(0,9)) 
-            
-            # screen.fill((0,0,0)) 
-            # screen.blit(img, (0,0))      
-            # pygame.display.flip()
+            artist = artists[random.randrange(0,L-1)].name
+            N = session.query(Image).join(Artist).filter(and_(Artist.name == artist, Image.status == True)).count()
+            image = session.query(Image).join(Artist).filter(and_(Artist.name == artist, Image.status == True))[random.randrange(0,N-1)] 
+            display_artist_image(artist, image) 
 
         sleep(.1)
 

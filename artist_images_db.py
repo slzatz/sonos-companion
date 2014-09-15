@@ -8,13 +8,13 @@ sys.path = [sqla_dir] + sys.path
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, and_
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref 
 
 import json
 
-__all__ = ['Artist', 'Image', 'session']
+__all__ = ['Artist', 'Image', 'session', 'and_']
 
 Base = declarative_base()
 

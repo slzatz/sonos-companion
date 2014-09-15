@@ -60,9 +60,9 @@ try:
 except IOError:
       artists = {}
 
-DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service')])
+DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service'), ('scrobble','Scrobble')])
 
-#last.fm - right now not using this at all - suspect it is providing bios
+#last.fm - in this program using for scrobble information, can also be used for artist bios 
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = "1c55c0a239072889fa7c11df73ecd566"
 
@@ -250,14 +250,15 @@ def display_song_info(i):
     text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
     text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
     text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
+    text5 = font.render("Scrobble info: "+track.get('scrobble'), True, (255, 0, 0))
     
-    screen.fill((0,0,0)) ################################################## added this to alpha
+    screen.fill((0,0,0))
     screen.blit(img, (0,0))      
     screen.blit(text1, (0,0))
     screen.blit(text2, (0,18))
     screen.blit(text3, (0,36))
     screen.blit(text4, (0,54))
-
+    screen.blit(text5, (0, 72))
     pygame.display.flip()
     
     os.remove("test1.bmp")
@@ -342,13 +343,28 @@ def display_initial_song_info():
         
     os.remove("test1.bmp")
         
+def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
+    
+    payload = {'method':'track.getinfo', 'artist':artist, 'track':track, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key, 'username':username}
+    
+    try:
+        r = requests.get(base_url, params=payload)
+        
+        z = r.json()['track']['userplaycount']
+        zz = r.json()['track']['userloved']
+        return "playcount: "+z+" loved: "+zz
+
+    except Exception as e:
+        print("Exception in get_artist_info: ", e)
+        return ''
+
 def get_release_date(artist, album, title):
 
     print "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
     
     ## commented this out because I think in most circumstances where there is a legit album, there is an accompanying date
     ## (like for a ripped CD, a Rhapsody song, Pandora
-    
+    ## In addition, this allows you to display the first album where the song appeared 
     # try:
         # result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
     # except:
@@ -366,8 +382,9 @@ def get_release_date(artist, album, title):
         
     ### Generally if there was no date provided it's because there is also a bogus album (because it's a collection
     ### and so decided to comment out the above.  We'll see how that works over time.
+
     try:
-        result = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=20, offset=None, strict=False)
+        result = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=40, offset=None, strict=False)
     except:
         return "No date exception (search_recordings)"
     
@@ -378,11 +395,11 @@ def get_release_date(artist, album, title):
     
     dates = []
     for d in recording_list:
-    #  if 'release-list' in d:
-        if int(d['ext:score']) > 90 and 'release-list' in d:
+        if int(d['ext:score']) > 98 and 'release-list' in d:
             rel_dict = d['release-list'][0] # it's a list but seems to have one element and that's a dictionary
             date = rel_dict.get('date', '9999')[0:4]
             title = rel_dict.get('title','No title')
+
             if rel_dict.get('artist-credit-phrase') == 'Various Artists':  #possibly could also use status:promotion
                 dates.append((date,title,'z'))
             else:
@@ -659,8 +676,8 @@ def display_weather():
     
     try:
         r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-    except requests.exceptions.ConnectionError:
-        print "ConnectionError in request in display_weather"
+    except requests.exceptions.ConnectionError as e:
+        print "ConnectionError in request in display_weather: ", e
     else:
         m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
         m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
@@ -714,10 +731,7 @@ if __name__ == '__main__':
         
        # pygame.event.get() # necessary to keep pygame window from going to sleep
 
-        #for event in [pygame.event.poll()]: #pygame.event.get() - when went to poll event became MOUSEMOTION not MOUSEDOWN
         event = pygame.event.poll()
-        #print event
-        #print event.type
         if event.type == pygame.NOEVENT:
             pass
             
@@ -735,7 +749,7 @@ if __name__ == '__main__':
             elif event.key == pygame.K_j:
                 dec_volume()
                 
-        elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - when started using poll this became MOUSEMOTION ==4
+        elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
             if mode!=2:
                 pos = pygame.mouse.get_pos()
                 print "mouse position=",pos
@@ -776,9 +790,9 @@ if __name__ == '__main__':
                         
             try:
                 state = master.get_current_transport_info()['current_transport_state']
-            except requests.exceptions.ConnectionError:
+            except requests.exceptions.ConnectionError as e:
                 state = 'ERROR'
-                print "Encountered error in state = master.get_current transport_info() ..."
+                print "Encountered error in state = master.get_current transport_info(): ", e
             if state != 'PLAYING':
                 
                 hour = datetime.datetime.now().hour
@@ -814,20 +828,29 @@ if __name__ == '__main__':
                     if prev_title != title:
                         
                         track = dict(current_track)
+
                         # there will be no date if from one of our compilations
                         if not 'date' in track and track.get('artist') and track.get('title'):
                             track['date'] = get_release_date(track['artist'], track['album'], track['title'])
                         else:
                             track['date'] = ''
                         
-                        media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-                        #media_uri = media_info['CurrentURI']
-                        meta = media_info['CurrentURIMetaData']
-                        if meta:
-                            root = ET.fromstring(meta)
-                            service = root[0][0].text
-                            track['service'] = service
-                        
+                        if not 'scrobble' in track and track.get('artist') and track.get('title'):
+                            track['scrobble'] = get_scrobble_info(track['artist'], track['title'])
+                        else:
+                            track['scrobble'] = ''
+
+                        try:
+                            media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+                            #media_uri = media_info['CurrentURI']
+                            meta = media_info['CurrentURIMetaData']
+                            if meta:
+                                root = ET.fromstring(meta)
+                                service = root[0][0].text
+                                track['service'] = service
+                        except requests.exceptions.ConnectionError as e:
+                            print "Error in media_info: ",e
+
                         track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
                         #print "track_strings = ",track_strings
                         #print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
@@ -873,12 +896,9 @@ if __name__ == '__main__':
                         i = i+1 if i < 9 else 0
                         
                         print "displaying a new image of ", track['artist']
-                        display_song_info2(i) #################
+                        display_song_info2(i) 
                         
                         z = time.time()
             
         sleep(0.1)
-
-       
-
 

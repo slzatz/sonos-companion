@@ -95,25 +95,30 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 #@+node:slzatz.20140709142803.2452: ** display_song_info (future use)
 def display_song_info():
 
-    track = master.get_current_track_info()
-    
-    title = track['title']
-    if g.prev_title != title:
-    
-        lcd.clear()
-        lcd.backlight(col[random.randrange(0,6)])
-        lcd.message([title, track['artist']])
+    try:
+        track = master.get_current_track_info()
+        title = track['title']
+
+        if g.prev_title != title:
         
-        scroller = Scroller(lines = [title, track['artist']])
-        prev_title = title
+            lcd.clear()
+            lcd.backlight(col[random.randrange(0,6)])
+            lcd.message([title, track['artist']])
+            
+            scroller = Scroller(lines = [title, track['artist']])
+            prev_title = title
+            
+            sleep(.8) # have it linger when song changes before it starts scrolling
         
-        sleep(.8) # have it linger when song changes before it starts scrolling
-        
-    else: 
-        
-        message = scroller.scroll()
-        lcd.clear()
-        lcd.message(message)
+        else: 
+            
+            message = scroller.scroll()
+            lcd.clear()
+            lcd.message(message)
+
+    except requests.exceptions.ConnectionError as e:
+        print "Exception in display_song_info: ",e
+
 #@+node:slzatz.20140603064654.2795: ** play_uri
 def play_uri(uri, meta, title):
     try:
