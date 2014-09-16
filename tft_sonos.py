@@ -269,27 +269,33 @@ def display_song_info2(i):
 
     try:
         response = requests.get(url)
-    except Exception as detail:
-        print "response = requests.get(url) generated exception:", detail
-        
-    try:
-        img = wand.image.Image(file=StringIO(response.content))
-    except Exception as detail:
+    except Exception as e:
+        print "response = requests.get(url) generated exception: ", e
         img = wand.image.Image(filename = "test.bmp")
-        print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
+    else:
 
-    img.transform(resize = '320x240^')
-    img = img.convert('bmp')
-    img.save(filename = "test1.bmp")
-    img = pygame.image.load("test1.bmp").convert()
-    #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; now not fading for display_images
-    
-    screen.fill((0,0,0)) 
-    screen.blit(img, (0,0))      
+        try:
+            img = wand.image.Image(file=StringIO(response.content))
+        except Exception as e:
+            img = wand.image.Image(filename = "test.bmp")
+            print "img = wand.image.Image(file=StringIO(response.content)) generated exception: ", e
 
-    pygame.display.flip()
-    
-    os.remove("test1.bmp") 
+    try:
+        img.transform(resize = '320x240^')
+        img = img.convert('bmp')
+        img.save(filename = "test1.bmp")
+        img = pygame.image.load("test1.bmp").convert()
+        #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; now not fading for display_images
+        
+        screen.fill((0,0,0)) 
+        screen.blit(img, (0,0))      
+
+        pygame.display.flip()
+        
+        os.remove("test1.bmp") 
+
+    except Exception as e:
+        print "Problem with img: ", e
 
 def display_initial_song_info():
 
