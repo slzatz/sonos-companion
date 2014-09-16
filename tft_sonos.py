@@ -360,8 +360,11 @@ def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
 
 def get_release_date(artist, album, title):
 
-    print "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
-    
+    try:
+        print "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
+    except UnicodeEncodeError as e:
+        print "Unicode Error", e
+
     ## commented this out because I think in most circumstances where there is a legit album, there is an accompanying date
     ## (like for a ripped CD, a Rhapsody song, Pandora
     ## In addition, this allows you to display the first album where the song appeared 
