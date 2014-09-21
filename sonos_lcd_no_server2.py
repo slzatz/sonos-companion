@@ -1,13 +1,7 @@
-#@+leo-ver=5-thin
-#@+node:slzatz.20140603064654.2793: * @file C:\home\slzatz\sonos-companion\sonos_lcd_no_server2.py
-#@@language python
-#@@tabwidth -4
-#@+others
-#@+node:slzatz.20140603064654.2794: ** imports etc
 import soco
 #from soco.services import zone_group_state_shared_cache
 from soco import config
-
+import argparse
 from time import sleep
 import datetime
 import random
@@ -19,6 +13,10 @@ import requests
 from lcdscroll import Scroller
 
 config.CACHE_ENABLED = False
+
+parser = argparse.ArgumentParser(description="Command line options ...")
+parser.add_argument("player", help="This is the name of the player you want to control or all")
+args = parser.parse_args()
 
 n = 0
 while 1:
@@ -40,19 +38,30 @@ for s in speakers:
         #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
         print s.player_name
            
-for s in speakers:
-    if s.is_coordinator:
-        master = s
-        print "\nNOTE: found coordinator and master =",master.player_name
-        break
-else:
-    master = speakers[0]
-    print "\nALERT: id not find coordinator so took speaker[0] =",master.player_name
+if args.player.lower() == 'all':
+    for s in speakers:
+        if s.is_coordinator:
+            master = s
+            print "\nNOTE: found coordinator and master =",master.player_name
+            break
+    else:
+        master = speakers[0]
+        print "\nALERT: id not find coordinator so took speaker[0] =",master.player_name
 
-for s in speakers:
-    if s != master:
-        s.join(master)
-    
+    for s in speakers:
+        if s != master:
+            s.join(master)
+else:
+
+    for s in speakers:
+        if s:
+            #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
+            print s.player_name
+            if s.player_name.lower() == args.player.lower():
+                break
+    master = s
+    print "The single master speaker is: ", master.player_name
+
 print "\n"
 #for s in speakers:
 #    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
@@ -92,7 +101,6 @@ meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
-#@+node:slzatz.20140709142803.2452: ** display_song_info (future use)
 def display_song_info():
 
     try:
@@ -119,7 +127,6 @@ def display_song_info():
     except requests.exceptions.ConnectionError as e:
         print "Exception in display_song_info: ",e
 
-#@+node:slzatz.20140603064654.2795: ** play_uri
 def play_uri(uri, meta, title):
     try:
         master.play_uri(uri, meta)
@@ -128,7 +135,6 @@ def play_uri(uri, meta, title):
     else:
         print "switched to {}".format(title)
 
-#@+node:slzatz.20140603064654.2796: ** play_pause
 def play_pause():
     
     state = master.get_current_transport_info()['current_transport_state']
@@ -141,20 +147,15 @@ def play_pause():
     lcd.backlight(lcd.YELLOW)
     lcd.message(state)
 
-#@+node:slzatz.20140622201640.2450: ** cancel
 def cancel():
     
     global mode
     
     mode = 1
-    
-    
 
-#@+node:slzatz.20140603064654.2797: ** next
 def next():
     master.next()
 
-#@+node:slzatz.20140603064654.2798: ** previous (not in use)
 def previous():
     
     #try:
@@ -168,7 +169,6 @@ def previous():
     lcd.backlight(lcd.YELLOW)
     lcd.message(stations[station_index][0])
     
-#@+node:slzatz.20140603064654.2799: ** dec_volume
 def dec_volume():
     
     volume = master.volume
@@ -179,15 +179,16 @@ def dec_volume():
         new_volume = 75
         print "volume set to over 75 was reset to 75"
                     
-    for s in speakers:
-        s.volume = new_volume
-    
+    if args.player == 'all':
+        for s in speakers:
+            s.volume = new_volume
+    else:
+        master.volume = new_volume
 
     lcd.clear()
     lcd.message("Volume: {}".format(new_volume))
     lcd.backlight(lcd.YELLOW)
     
-#@+node:slzatz.20140603064654.2800: ** inc_volume
 def inc_volume():
     
     volume = master.volume
@@ -198,14 +199,16 @@ def inc_volume():
         new_volume = 75
         print "volume set to over 75 was reset to 75"
                     
-    for s in speakers:
-        s.volume = new_volume
+    if args.player == 'all':
+        for s in speakers:
+            s.volume = new_volume
+    else:
+        master.volume = new_volume
         
     lcd.clear()
     lcd.message("Volume: {}".format(new_volume))
     lcd.backlight(lcd.YELLOW)
     
-#@+node:slzatz.20140603064654.2802: ** scroll_up
 def scroll_up():
     
     global station_index
@@ -217,7 +220,6 @@ def scroll_up():
     lcd.backlight(lcd.YELLOW)
     lcd.message(stations[station_index][0])
 
-#@+node:slzatz.20140603064654.2803: ** scroll_down
 def scroll_down():
        
     global station_index
@@ -229,7 +231,6 @@ def scroll_down():
     lcd.backlight(lcd.YELLOW)
     lcd.message(stations[station_index][0])
     
-#@+node:slzatz.20140603064654.2804: ** select
 def select():
     
     global mode
@@ -256,7 +257,6 @@ def select():
         mode = 1
         sleep(.5)
         
-#@+node:slzatz.20140603064654.2805: ** list_stations (not in use)
 def list_stations():
     z = ""
     for i,s in enumerate(stations):
@@ -265,7 +265,6 @@ def list_stations():
         
     return z
     
-#@+node:slzatz.20140712195238.2453: ** display_weather (not in use)
 def display_weather():
     
     hour = datetime.datetime.now().hour
@@ -294,7 +293,6 @@ def display_weather():
         lcd.backlight(lcd.RED)
         lcd.message(message)
          
-#@+node:slzatz.20140710210012.2452: ** btns
 #2 = forward: lcd.RIGHT
 #4 = volume lower: lcd.DOWN
 #8 = volume higher: lcd.UP
@@ -303,13 +301,13 @@ def display_weather():
 #0 = no button
 
 btns = {
-           1: ( lcd.SELECT,   'Change Mode',           lcd.YELLOW,  select,         select),
+           1: ( lcd.SELECT,   'Choose Station',           lcd.YELLOW,  select,         select),
            2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
            4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
            8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
           16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
          } 
-#@+node:slzatz.20140709142803.2451: ** if __name__ == '__main__':
+
 if __name__ == '__main__':
     
     prev_title = '0'
@@ -394,7 +392,7 @@ if __name__ == '__main__':
                         message = track_scroller.scroll()
                         lcd.clear()
                         lcd.message(message)
-                    
+                        sleep(.5) 
                     #end display_song_info() ##########################################
                         
                 sleep(0.2)
@@ -419,6 +417,4 @@ if __name__ == '__main__':
         except Exception as e:
             print "Experienced exception in while loop: ",e
 
-#@-others
 
-#@-leo
