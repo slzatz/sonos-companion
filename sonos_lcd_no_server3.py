@@ -103,33 +103,23 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 def display_song_info():
+        
+    media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+    #media_uri = media_info['CurrentURI']
+    meta = media_info['CurrentURIMetaData']
+    if meta:
+        root = ET.fromstring(meta)
+        service = root[0][0].text
+    else:
+        service = "No service"
+    
+    message = '{}\n{} ({})'.format(title, track['artist'], service)
 
-    global prev_title
+    lcd.clear()
+    lcd.backlight(col[random.randrange(0,6)])
+    lcd.message(message)
     
-    track = master.get_current_track_info()
-    
-    title = track['title']
-    
-    if prev_title != title:
-        
-        media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-        #media_uri = media_info['CurrentURI']
-        meta = media_info['CurrentURIMetaData']
-        if meta:
-            root = ET.fromstring(meta)
-            service = root[0][0].text
-        else:
-            service = "No service"
-        
-        message = '{}\n{} ({})'.format(title, track['artist'], service)
-        prev_title = title
-
-        lcd.clear()
-        lcd.backlight(col[random.randrange(0,6)])
-        lcd.message(message)
-        sleep(1) #let lcd text when song changes be still for 1 second before scolling
-        
-        scroller.setLines(message)
+    scroller.setLines(message)
 
 def display_weather():
     
@@ -354,68 +344,26 @@ if __name__ == '__main__':
                 if mode:
                             
                     state = master.get_current_transport_info()['current_transport_state']
-                    
                     if state != 'PLAYING':
                         
-                        #check_weather()
-                        #begin display_weather() ########################################
                         hour = datetime.datetime.now().hour
                         if hour != prev_hour:
                             
                             display_weather()
-
-                            # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
-                            # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
-                            
-                            #r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-                            #m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-                            #m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
-
-                            
-                            #lcd.clear()
-                            #lcd.backlight(lcd.RED)
-                            #lcd.message([m1,m2])
-                     
-                            #scroller.setLines([m1, m2])
-                            
                             prev_hour = hour
                                                 
-                   #end display_weather() ###################################################
-                    
                     else:
-                       #begin display_song_info() ###########################################
-                       #check song_info()
                         track = master.get_current_track_info()
-                        
                         title = track['title']
-                        
                         if prev_title != title:
                             
-                            media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-                            #media_uri = media_info['CurrentURI']
-                            meta = media_info['CurrentURIMetaData']
-                            if meta:
-                                root = ET.fromstring(meta)
-                                service = root[0][0].text
-                            else:
-                                service = "No service"
+                            display_song_info()
                             
-                            #message = title + '\n' + track['artist']
-                            
-                            message = '{}\n{} ({})'.format(title, track['artist'], service)
-                
-                            lcd.clear()
-                            lcd.backlight(col[random.randrange(0,6)])
-                            lcd.message(message)
-                            sleep(1)
                             prev_title = title
                             
-                            scroller.setLines(message)
+                           # sleep(1)
                             
-                            
-                        #end display_song_info() ##########################################
-                            
-                    sleep(0.1)
+                sleep(0.1)
                 #end if mode and not b:
 
         except Exception as e:
