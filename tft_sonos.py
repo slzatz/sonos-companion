@@ -685,12 +685,11 @@ def display_weather():
     
     try:
         r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+        m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+        m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
     except requests.exceptions.ConnectionError as e:
         print "ConnectionError in request in display_weather: ", e
     else:
-        m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-        m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
-     
         text = txtlib.Text((320, 240), 'freesans')
         text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
         text.update()
