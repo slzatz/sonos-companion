@@ -6,6 +6,8 @@ import datetime
 import random
 import xml.etree.ElementTree as ET
 import threading
+import sys
+
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 
 import requests
@@ -38,6 +40,7 @@ for s in speakers:
         print s.player_name
            
 if args.player.lower() == 'all':
+
     for s in speakers:
         if s.is_coordinator:
             master = s
@@ -57,10 +60,12 @@ else:
             #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
             print s.player_name
             if s.player_name.lower() == args.player.lower():
+            master = s
+            print "The single master speaker is: ", master.player_name
                 break
-    master = s
-    print "The single master speaker is: ", master.player_name
-
+    else:
+        print "Could not find the specified speaker"
+        sys.exit()
 print "\n"
 #for s in speakers:
 #    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
@@ -102,30 +107,56 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 
 def display_song_info():
 
-    try:
-        track = master.get_current_track_info()
-        title = track['title']
-
-        if g.prev_title != title:
+    global prev_title
+    
+    track = master.get_current_track_info()
+    
+    title = track['title']
+    
+    if prev_title != title:
         
-            lcd.clear()
-            lcd.backlight(col[random.randrange(0,6)])
-            lcd.message([title, track['artist']])
-            
-            scroller = Scroller(lines = [title, track['artist']])
-            prev_title = title
-            
-            sleep(.8) # have it linger when song changes before it starts scrolling
+        media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+        #media_uri = media_info['CurrentURI']
+        meta = media_info['CurrentURIMetaData']
+        if meta:
+            root = ET.fromstring(meta)
+            service = root[0][0].text
+        else:
+            service = "No service"
         
-        else: 
+        message = '{}\n{} ({})'.format(title, track['artist'], service)
+        prev_title = title
+
+        lcd.clear()
+        lcd.backlight(col[random.randrange(0,6)])
+        lcd.message(message)
+        sleep(1) #let lcd text when song changes be still for 1 second before scolling
+        
+        scroller.setLines(message)
+
+def display_weather():
+    
+        global prev_hour
+        
+        hour = datetime.datetime.now().hour
+        if hour != prev_hour:
+
+            # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
+            # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
             
-            message = scroller.scroll()
+            r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+            m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+            m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+
+            
             lcd.clear()
-            lcd.message(message)
-
-    except requests.exceptions.ConnectionError as e:
-        print "Exception in display_song_info: ",e
-
+            lcd.backlight(lcd.RED)
+            lcd.message([m1,m2])
+     
+            scroller.setLines([m1, m2])
+            
+            prev_hour = hour
+         
 def play_uri(uri, meta, title):
     try:
         master.play_uri(uri, meta)
@@ -273,34 +304,6 @@ def thread_scroller():
             lcd.message(message)
         sleep(.5)
 
-def display_weather():
-    
-    hour = datetime.datetime.now().hour
-    if hour != g.prev_hour:
-        
-        try:
-            r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/conditions/q/10011.json")
-        except requests.exceptions.ConnectionError as e:
-            print "Exception requesting weather: ", e
-        else:
-            m1 = r.json()['current_observation']['temperature_string']
-            m2 = r.json()['current_observation']['wind_string']
-            
-            lcd.clear()
-            lcd.backlight(lcd.RED)
-            lcd.message([m1,m2])
-     
-            scroller = Scroller(lines = [m1, m2])
-            
-            g.prev_hour = hour
-    
-    else:
-         
-        message = scroller.scroll()
-        lcd.clear()
-        lcd.backlight(lcd.RED)
-        lcd.message(message)
-         
 #2 = forward: lcd.RIGHT
 #4 = volume lower: lcd.DOWN
 #8 = volume higher: lcd.UP
@@ -330,7 +333,7 @@ if __name__ == '__main__':
     t = threading.Thread(target=thread_scroller)
     t.start()
     
-    while 1:
+    while 0:
 
         try:
             b = btns.get(lcd.buttons())
@@ -341,6 +344,7 @@ if __name__ == '__main__':
                 
                 if state != 'PLAYING':
                     
+                    #check_weather()
                     #begin display_weather() ########################################
                     hour = datetime.datetime.now().hour
                     if hour != prev_hour:
@@ -365,6 +369,7 @@ if __name__ == '__main__':
                     
                 else:
                    #begin display_song_info() ###########################################
+                   #check song_info()
                     track = master.get_current_track_info()
                     
                     title = track['title']
@@ -419,3 +424,91 @@ if __name__ == '__main__':
             print "Experienced exception in while loop: ",e
 
 
+    while 1:
+
+        try:
+            b = btns.get(lcd.buttons())
+
+            if b:
+
+                if mode:
+                    lcd.clear()
+                    lcd.backlight(b[2])
+                    b[3]()
+                    lcd.message(b[1])
+                    prev_title = ""
+                else:
+                    b[4]()
+
+                sleep(.1)
+                continue
+
+            else:
+
+                if mode:
+                            
+                    state = master.get_current_transport_info()['current_transport_state']
+                    
+                    if state != 'PLAYING':
+                        
+                        #check_weather()
+                        #begin display_weather() ########################################
+                        hour = datetime.datetime.now().hour
+                        if hour != prev_hour:
+
+                            # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
+                            # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
+                            
+                            r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+                            m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+                            m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+
+                            
+                            lcd.clear()
+                            lcd.backlight(lcd.RED)
+                            lcd.message([m1,m2])
+                     
+                            scroller.setLines([m1, m2])
+                            
+                            prev_hour = hour
+                                                
+                   #end display_weather() ###################################################
+                    
+                    else:
+                       #begin display_song_info() ###########################################
+                       #check song_info()
+                        track = master.get_current_track_info()
+                        
+                        title = track['title']
+                        
+                        if prev_title != title:
+                            
+                            media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+                            #media_uri = media_info['CurrentURI']
+                            meta = media_info['CurrentURIMetaData']
+                            if meta:
+                                root = ET.fromstring(meta)
+                                service = root[0][0].text
+                            else:
+                                service = "No service"
+                            
+                            #message = title + '\n' + track['artist']
+                            
+                            message = '{}\n{} ({})'.format(title, track['artist'], service)
+                
+                            lcd.clear()
+                            lcd.backlight(col[random.randrange(0,6)])
+                            lcd.message(message)
+                            sleep(1)
+                            prev_title = title
+                            
+                            scroller.setLines(message)
+                            
+                            
+                        #end display_song_info() ##########################################
+                            
+                    sleep(0.1)
+                #end if mode and not b:
+
+        except Exception as e:
+            print "Experienced exception in while loop: ",e
