@@ -60,17 +60,14 @@ else:
             #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
             print s.player_name
             if s.player_name.lower() == args.player.lower():
-            master = s
-            print "The single master speaker is: ", master.player_name
+                master = s
+                print "The single master speaker is: ", master.player_name
                 break
     else:
         print "Could not find the specified speaker"
         sys.exit()
-print "\n"
-#for s in speakers:
-#    if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
 
-print "program running ..."
+print "\nprogram running ..."
 
 lcd = Adafruit_CharLCDPlate()
 
@@ -136,26 +133,26 @@ def display_song_info():
 
 def display_weather():
     
-        global prev_hour
-        
-        hour = datetime.datetime.now().hour
-        if hour != prev_hour:
+    # global prev_hour
+    # 
+    # hour = datetime.datetime.now().hour
+    # if hour != prev_hour:
 
-            # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
-            # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
+    # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
+    # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
             
-            r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-            m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-            m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+    r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+    m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+    m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
 
+    
+    lcd.clear()
+    lcd.backlight(lcd.RED)
+    lcd.message([m1,m2])
+
+    scroller.setLines([m1, m2])
             
-            lcd.clear()
-            lcd.backlight(lcd.RED)
-            lcd.message([m1,m2])
-     
-            scroller.setLines([m1, m2])
-            
-            prev_hour = hour
+   # prev_hour = hour
          
 def play_uri(uri, meta, title):
     try:
@@ -332,97 +329,6 @@ if __name__ == '__main__':
     scroller.setLines("Hello Steve")
     t = threading.Thread(target=thread_scroller)
     t.start()
-    
-    while 0:
-
-        try:
-            b = btns.get(lcd.buttons())
-    
-            if  mode and not b:
-                            
-                state = master.get_current_transport_info()['current_transport_state']
-                
-                if state != 'PLAYING':
-                    
-                    #check_weather()
-                    #begin display_weather() ########################################
-                    hour = datetime.datetime.now().hour
-                    if hour != prev_hour:
-
-                        # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
-                        # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
-                        
-                        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-                        m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-                        m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
-
-                        
-                        lcd.clear()
-                        lcd.backlight(lcd.RED)
-                        lcd.message([m1,m2])
-                 
-                        scroller.setLines([m1, m2])
-                        
-                        prev_hour = hour
-                                            
-                   #end display_weather() ###################################################
-                    
-                else:
-                   #begin display_song_info() ###########################################
-                   #check song_info()
-                    track = master.get_current_track_info()
-                    
-                    title = track['title']
-                    
-                    if prev_title != title:
-                        
-                        media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-                        #media_uri = media_info['CurrentURI']
-                        meta = media_info['CurrentURIMetaData']
-                        if meta:
-                            root = ET.fromstring(meta)
-                            service = root[0][0].text
-                        else:
-                            service = "No service"
-                        
-                        #message = title + '\n' + track['artist']
-                        
-                        message = '{}\n{} ({})'.format(title, track['artist'], service)
-            
-                        lcd.clear()
-                        lcd.backlight(col[random.randrange(0,6)])
-                        lcd.message(message)
-                        sleep(1)
-                        prev_title = title
-                        
-                        scroller.setLines(message)
-                        
-                        
-                    #end display_song_info() ##########################################
-                        
-                sleep(0.1)
-                continue
-            #end if mode and not b:
-            
-            if mode: 
-                lcd.clear()
-                #lcd.message(b[1])
-                lcd.backlight(b[2])
-                b[3]()
-                lcd.message(b[1])
-                prev_title = ""
-                
-                sleep(0.2)
-                continue
-                
-            if b: #if mode would have been caught by above
-        
-                b[4]()
-                sleep(0.2)
-
-        except Exception as e:
-            print "Experienced exception in while loop: ",e
-
 
     while 1:
 
@@ -455,20 +361,22 @@ if __name__ == '__main__':
                         #begin display_weather() ########################################
                         hour = datetime.datetime.now().hour
                         if hour != prev_hour:
+                            
+                            display_weather()
 
                             # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
                             # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
                             
-                            r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-                            m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-                            m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+                            #r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+                            #m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+                            #m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
 
                             
-                            lcd.clear()
-                            lcd.backlight(lcd.RED)
-                            lcd.message([m1,m2])
+                            #lcd.clear()
+                            #lcd.backlight(lcd.RED)
+                            #lcd.message([m1,m2])
                      
-                            scroller.setLines([m1, m2])
+                            #scroller.setLines([m1, m2])
                             
                             prev_hour = hour
                                                 
