@@ -8,13 +8,16 @@ sys.path = [sqla_dir] + sys.path
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, and_
+from sqlalchemy import create_engine #, and_
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, backref 
+from sqlalchemy.sql import select,join,and_
 
 import json
 
-__all__ = ['Artist', 'Image', 'session', 'and_']
+__all__ = ['Artist', 'Image', 'session', 'conn', 'select', 'join', 'and_']
+
+#__all__ = ['Artist', 'Image', 'select', 'join', 'conn', 'and_']
 
 Base = declarative_base()
 
@@ -42,8 +45,9 @@ class Image(Base):
 
 #engine = create_engine('sqlite:///:memory:', echo=True)
 engine = create_engine('sqlite:///artist.db', echo=True)
-Base.metadata.create_all(engine)
+Base.metadata.create_all(engine) # only creates tables if they don't exist
 
+conn = engine.connect()
 Session = sessionmaker(bind=engine)
 session = Session()
 
