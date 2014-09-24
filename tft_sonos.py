@@ -734,6 +734,7 @@ if __name__ == '__main__':
     prev_hour = -1
     tt = z = time.time()
     new_song = True
+    i = 0
 
     while 1:
         
