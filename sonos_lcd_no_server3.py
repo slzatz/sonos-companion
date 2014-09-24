@@ -93,10 +93,6 @@ stations = [
 ('Counting Crows Radio', 'pndrradio:1727297518525703746', 'SA_RINCON3_slzatz@gmail.com'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
 
-#globals
-#mode = 1
-#station_index = 0
-
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
@@ -169,6 +165,7 @@ def cancel():
     global mode
     
     mode = 1
+    scroll = True
 
 def next():
     master.next()
@@ -254,7 +251,8 @@ def select():
     
     if mode:
         mode = 0
-        sleep(.5)
+        scroll = False
+        sleep(.5) #? debounce
     else:
         station = stations[station_index]
         uri = station[1]
@@ -272,8 +270,9 @@ def select():
         play_uri(uri, meta, station[0]) # station[0] is the title of the station
             
         mode = 1
-        sleep(.5)
-        
+        sleep(.5) #? debounce
+        scroll = True
+
 def list_stations():
     z = ""
     for i,s in enumerate(stations):
@@ -285,7 +284,7 @@ def list_stations():
 def thread_scroller():
 
     while 1:
-        if mode:
+        if scroll:
             message = scroller.scroll()
             lcd.clear()
             lcd.message(message)
@@ -310,9 +309,11 @@ if __name__ == '__main__':
     
     #globals that are modified by functions and declared as global
     mode = 1
+    scroll = True
     station_index = 0
     ###############
     
+    scroll = True
     prev_title = '0'
     prev_hour = -1
     scroller = Scroller()
@@ -326,7 +327,7 @@ if __name__ == '__main__':
             b = btns.get(lcd.buttons())
 
             if b:
-
+                scroll = False
                 if mode:
                     lcd.clear()
                     lcd.backlight(b[2])
@@ -336,7 +337,8 @@ if __name__ == '__main__':
                 else:
                     b[4]()
 
-                sleep(.1)
+                sleep(0.1)
+                scroll = True
                 continue
 
             else:
@@ -356,12 +358,11 @@ if __name__ == '__main__':
                         track = master.get_current_track_info()
                         title = track['title']
                         if prev_title != title:
-                            
+                            scroll = False      
                             display_song_info()
-                            
                             prev_title = title
-                            
-                           # sleep(1)
+                            sleep(1) 
+                            scroll = True
                             
                 sleep(0.1)
                 #end if mode and not b:
