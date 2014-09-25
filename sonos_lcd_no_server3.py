@@ -165,7 +165,6 @@ def cancel():
     global mode
     
     mode = 1
-    scroll = True
 
 def forward():
     master.next()
@@ -232,33 +231,29 @@ def scroll_down():
     lcd.backlight(lcd.YELLOW)
     lcd.message(stations[station_index][0])
     
+def change_mode():
+    
+    global mode 
+    
+    mode = 0
+
 def select():
+    station = stations[station_index]
+    uri = station[1]
     
-    global mode
-    
-    if mode:
-        mode = 0
-        scroll = False
-        sleep(.5) #? debounce
+    if uri.startswith("pndrradio"):
+        meta = meta_format_pandora.format(title=station[0], service=station[2])
     else:
-        station = stations[station_index]
-        uri = station[1]
+        uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+        meta = meta_format_radio.format(title=station[0], service=station[2])
+    
+    print "uri=",uri
+    print "meta=",meta
+    print "\n"
+
+    play_uri(uri, meta, station[0]) # station[0] is the title of the station
         
-        if uri.startswith("pndrradio"):
-            meta = meta_format_pandora.format(title=station[0], service=station[2])
-        else:
-            uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
-            meta = meta_format_radio.format(title=station[0], service=station[2])
-        
-        print "uri=",uri
-        print "meta=",meta
-        print "\n"
-  
-        play_uri(uri, meta, station[0]) # station[0] is the title of the station
-            
-        mode = 1
-        sleep(.5) #? debounce
-        scroll = True
+    mode = 1
 
 def list_stations():
     z = ""
@@ -285,7 +280,7 @@ def thread_scroller():
 #0 = no button
 
 btns = {
-           1: ( lcd.SELECT,   'Choose Station',           lcd.YELLOW,  select,         select),
+           1: ( lcd.SELECT,   'Choose Station',           lcd.YELLOW, change_mode,         select),
            2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    forward, cancel),
            4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
            8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
@@ -322,11 +317,13 @@ if __name__ == '__main__':
                     lcd.message(b[1])
                     prev_title = ""
                     sleep(2)
-                    if b[1] != 'Choose Station':
+                    if mode: # may look odd but the functions called [b[3]()] can change mode
                         scroll = True
                 else:
                     b[4]()
                     sleep(1) # debounce
+                    if mode:
+                        scroll = True
 
                 continue
 
