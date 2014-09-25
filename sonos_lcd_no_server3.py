@@ -167,22 +167,9 @@ def cancel():
     mode = 1
     scroll = True
 
-def next():
+def forward():
     master.next()
 
-def previous():
-    
-    #try:
-    #     master.previous()
-    #except:
-    #    lcd.clear()
-    #    lcd.message("Previous\nNot Available")
-    #   lcd.backlight(lcd.RED)
-    mode = 0
-    lcd.clear()
-    lcd.backlight(lcd.YELLOW)
-    lcd.message(stations[station_index][0])
-    
 def dec_volume():
     
     volume = master.volume
@@ -299,7 +286,7 @@ def thread_scroller():
 
 btns = {
            1: ( lcd.SELECT,   'Choose Station',           lcd.YELLOW,  select,         select),
-           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
+           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    forward, cancel),
            4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
            8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
           16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
