@@ -334,11 +334,13 @@ if __name__ == '__main__':
                     b[3]()
                     lcd.message(b[1])
                     prev_title = ""
+                    sleep(2)
+                    if b[1] != 'Choose Station':
+                        scroll = True
                 else:
                     b[4]()
+                    sleep(1) # debounce
 
-                sleep(0.1)
-                scroll = True
                 continue
 
             else:
