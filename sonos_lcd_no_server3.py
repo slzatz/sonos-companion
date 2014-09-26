@@ -238,6 +238,9 @@ def change_mode():
     mode = 0
 
 def select():
+
+    global mode
+
     station = stations[station_index]
     uri = station[1]
     
@@ -301,6 +304,7 @@ if __name__ == '__main__':
     scroller = Scroller()
     scroller.setLines("Hello Steve")
     t = threading.Thread(target=thread_scroller)
+    t.daemon = True # quits when main thread is terminated
     t.start()
 
     while 1:
@@ -314,14 +318,14 @@ if __name__ == '__main__':
                     lcd.clear()
                     lcd.backlight(b[2])
                     b[3]()
-                    lcd.message(b[1])
+                    lcd.message('\n'+b[1]) #\n puts the text on the lcd's second line
                     prev_title = ""
                     sleep(2)
                     if mode: # may look odd but the functions called [b[3]()] can change mode
                         scroll = True
                 else:
                     b[4]()
-                    sleep(1) # debounce
+                    sleep(0.2) # debounce
                     if mode:
                         scroll = True
 
@@ -353,5 +357,8 @@ if __name__ == '__main__':
                 sleep(0.1)
                 #end if mode and not b:
 
+        except KeyboardInterrupt as e:
+            print "KeyboardInterrupt: ",e
+            sys.exit()
         except Exception as e:
             print "Experienced exception in while loop: ",e
