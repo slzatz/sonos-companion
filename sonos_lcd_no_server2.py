@@ -264,7 +264,16 @@ def list_stations():
         z+= "{:d} - {}<br>".format(i+1,s[0])
         
     return z
-    
+
+def thread_scroller():
+
+    while 1:
+        if SCROLL:
+            message = scroller.scroll()
+            lcd.clear()
+            lcd.message(message)
+        sleep(.5)
+
 def display_weather():
     
     hour = datetime.datetime.now().hour
@@ -312,7 +321,11 @@ if __name__ == '__main__':
     
     prev_title = '0'
     prev_hour = -1
-    
+    #SCROLL = True
+    #scroller = Scroller()
+    #scroller.setLines("Hello Steve")
+    #t = threading.Thread(target=threading_scroll)
+    #t.start()
     track_scroller = Scroller()
     weather_scroller = Scroller()
     
@@ -346,7 +359,7 @@ if __name__ == '__main__':
                         weather_scroller.setLines([m1, m2])
                         
                         prev_hour = hour
-                    
+                                            
                     else:
                          
                         message = weather_scroller.scroll()
