@@ -1,6 +1,3 @@
-import soco
-from soco import config
-
 import platform
 import os
 
@@ -27,6 +24,12 @@ import lxml.html
 from StringIO import StringIO
 
 import wand.image
+
+home = os.path.split(os.getcwd())[0]
+soco_dir = os.path.join(home,'SoCo','soco')
+sys.path = [soco_dir] + sys.path
+import soco
+from soco import config
 
 if platform.machine() == 'armv6l':
     import RPi.GPIO as GPIO
@@ -101,8 +104,6 @@ text.text = "Sonos-Companion TFT Edition"
 text.update()
 screen.blit(text.area, (0,0))
 
-#zatz = slider.Slider(100,100,100, (90,10), "hello") ###################################################
-#zatz.draw(screen)
 pygame.display.flip()
 sleep(5)
 
@@ -137,7 +138,7 @@ for s in speakers:
 for s in speakers:
     if s.is_coordinator:
         master = s
-        print "\nNOTE: found coordinator and master =",master.player_name
+        print "\nNOTE: found coordinator and master =", master.player_name
         break
 else:
     master = speakers[0]
@@ -361,7 +362,7 @@ def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
         return "playcount: "+z+" loved: "+zz
 
     except Exception as e:
-        print("Exception in get_artist_info: ", e)
+        print "Exception in get_artist_info: ", e
         return ''
 
 def get_release_date(artist, album, title):
@@ -414,11 +415,6 @@ def get_release_date(artist, album, title):
             else:
                 dates.append((date,title,'a'))
                 
-                #dd = [x['date'][0:4] for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
-                #dd = [(x['date'][0:4],x['title']) for x in d['release-list'] if 'date' in x and int(d['ext:score']) > 90]
-
-                #dates.extend(dd)
-            
     if dates:
         dates.sort(key=itemgetter(0,2)) # idea is to put albums by the artist ahead of albums by various artists
         return u"{} - {}".format(dates[0][0], dates[0][1])   
@@ -499,7 +495,7 @@ def display_action(text):
     screen.blit(text, (0,224)) 
     pygame.display.flip()
 
-def scroll_up():
+def scroll_up(): # not in use
     
     global station_index
     
@@ -510,7 +506,7 @@ def scroll_up():
     #lcd.backlight(lcd.YELLOW)
     #lcd.message(stations[station_index][0])
 
-def scroll_down():
+def scroll_down():# not in use
        
     global station_index
     
@@ -521,7 +517,7 @@ def scroll_down():
     #lcd.backlight(lcd.YELLOW)
     #lcd.message(stations[station_index][0])
     
-def select():
+def select():# not in use
     
     global mode
     
@@ -547,7 +543,7 @@ def select():
         mode = 1
         sleep(.5)
         
-def list_stations():
+def list_stations():# not in use
     z = ""
     for i,s in enumerate(stations):
         print "{:d} - {}".format(i+1,s[0])
@@ -759,38 +755,46 @@ if __name__ == '__main__':
                 dec_volume()
                 
         elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
-            if mode!=2:
+            #if mode!=2:
+            if mode==1:
                 pos = pygame.mouse.get_pos()
-                print "mouse position=",pos
-                print "Now in button mode(2)"
                 show_screen_buttons()
                 mode = 2
+                print "mouse position=",pos
+                print "Now in button mode(2) - show the buttons"
                 sleep(1)
+            elif mode==0:
+                mode = 1
+                print "mouse position=",pos
+                print "Now in button mode(1) - show artist images or weather"
             else:   
                 pos = pygame.mouse.get_pos()
                 print "mouse position=",pos
                 print "some action was initiated"
                 if pos[0] <160:
                     if pos[1] < 120:
-                        if mode:
-                            if artist:
-                                print "must have tried to change mode"
-                                url = get_url(artist, title)
-                                lyrics = get_lyrics(url)
-                                show_lyrics(lyrics)
-                                mode = 0
-                        else:
-                            mode = 1
+                        if artist:
+                            print "must have tried to change mode"
+                            url = get_url(artist, title)
+                            lyrics = get_lyrics(url)
+                            show_lyrics(lyrics)
+                            mode = 0
+                            print "mouse position=",pos
+                            print "Now in button mode(0) - show the lyrics"
                     else: 
                         play_pause()
                         mode = 1
+                        print "mouse position=",pos
+                        print "Now in button mode(1) - show artist images or weather"
                 else:
                     if pos[1] < 120:
                         inc_volume()
                     else:
                         dec_volume()
                     mode = 1 
-                    
+                    print "mouse position=",pos
+                    print "Now in button mode(1) - show artist images or weather"
+
             pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
                 
         # end of processing pygame events

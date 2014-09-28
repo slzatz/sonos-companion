@@ -1,5 +1,5 @@
-import soco
-from soco import config
+#import soco
+#from soco import config
 import argparse
 from time import sleep
 import datetime
@@ -13,10 +13,16 @@ from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 import requests
 from lcdscroll import Scroller
 
+home = os.path.split(os.getcwd())[0]
+soco_dir = os.path.join(home,'SoCo','soco')
+sys.path = [soco_dir] + sys.path
+import soco
+from soco import config
+
 config.CACHE_ENABLED = False
 
 parser = argparse.ArgumentParser(description="Command line options ...")
-parser.add_argument("player", help="This is the name of the player you want to control or all")
+parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
 n = 0
@@ -119,18 +125,12 @@ def display_song_info():
 
 def display_weather():
     
-    # global prev_hour
-    # 
-    # hour = datetime.datetime.now().hour
-    # if hour != prev_hour:
-
     # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
     # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
             
     r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
     m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
     m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
-
     
     lcd.clear()
     lcd.backlight(lcd.RED)
@@ -138,13 +138,12 @@ def display_weather():
 
     scroller.setLines([m1, m2])
             
-   # prev_hour = hour
-         
 def play_uri(uri, meta, title):
+
     try:
         master.play_uri(uri, meta)
     except:
-        print "had a problem switching to {}!".format(title)
+        print "Had the following problem: {} switching to {}!".format(sys.exc_info()[0], title)
     else:
         print "switched to {}".format(title)
 
@@ -161,9 +160,7 @@ def play_pause():
     lcd.message(state)
 
 def cancel():
-    
     global mode
-    
     mode = 1
 
 def forward():
@@ -210,7 +207,6 @@ def inc_volume():
     lcd.backlight(lcd.YELLOW)
     
 def scroll_up():
-    
     global station_index
     
     station_index+=1
@@ -221,7 +217,6 @@ def scroll_up():
     lcd.message(stations[station_index][0])
 
 def scroll_down():
-       
     global station_index
     
     station_index-=1
@@ -232,13 +227,10 @@ def scroll_down():
     lcd.message(stations[station_index][0])
     
 def change_mode():
-    
     global mode 
-    
     mode = 0
 
 def select():
-
     global mode
 
     station = stations[station_index]
@@ -357,8 +349,8 @@ if __name__ == '__main__':
                 sleep(0.1)
                 #end if mode and not b:
 
-        except KeyboardInterrupt as e:
-            print "KeyboardInterrupt: ",e
-            sys.exit()
-        except Exception as e:
-            print "Experienced exception in while loop: ",e
+        except KeyboardInterrupt:
+            raise
+        except:
+            print "Experienced exception during while loop: ", sys.exc_info()[0]
+
