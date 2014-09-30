@@ -24,7 +24,7 @@ wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)
 #base_url = "https://api.instagram.com/v1/users/4616106/media/recent/"
 base_url = "https://api.instagram.com/v1/users/{}/media/recent/"
 client_id = "8372f43ffb4b4bbbbd054871d6561668"
-ids = [4616106]
+ids = [4616106, 17789355, 986542, 230625139]
 
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
@@ -59,9 +59,10 @@ def get_photos(ids=None):
             r = requests.get(base_url.format(_id), params=payload)
             z = r.json()['data'] 
             for d in z: 
-                images.append(d['images']['standard_resolution']['url'])
+                if d['type']=='image': #note they have a caption and the caption has text
+                    images.append(d['images']['standard_resolution']['url'])
         except Exception as e:
-            print("Exception in get_photos: ", e)
+            print("Exception in get_photos: {} related to id: {} ".format(e, _id))
             #return ''
 
     return images
