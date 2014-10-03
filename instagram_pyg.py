@@ -15,13 +15,10 @@ import os
 import random
 import wand.image
 import textwrap
-#from artist_images_db import *
-#import lxml.html
 
 wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  
 
 #instagram
-#base_url = "https://api.instagram.com/v1/users/4616106/media/recent/"
 base_url = "https://api.instagram.com/v1/users/{}/media/recent/"
 client_id = "8372f43ffb4b4bbbbd054871d6561668"
 ids = [4616106, 17789355, 986542, 230625139]
@@ -36,7 +33,8 @@ else:
     os.putenv('SDL_VIDEODRIVER', 'x11')
 
 pygame.init()
-pygame.mouse.set_visible(0)
+#pygame.mouse.set_visible(0)
+pygame.mouse.set_cursor(*pygame.cursors.diamond)
 
 DISPLAY = (640,640)
 
@@ -53,56 +51,33 @@ pygame.display.flip()
 def get_photos(ids=None):
     
     payload = {'client_id':client_id}
-    images = [] 
+    images = []
     for _id in ids:
         try:
             r = requests.get(base_url.format(_id), params=payload)
             z = r.json()['data'] 
-            for d in z: 
-                if d['type']=='image': #note they have a caption and the caption has text
-                    images.append(d['images']['standard_resolution']['url'])
         except Exception as e:
-            print("Exception in get_photos: {} related to id: {} ".format(e, _id))
-            #return ''
+            print("Exception in get_photos - request: {} related to id: {} ".format(e, _id))
+        else:
+            for d in z: 
+                try:
+                    if d['type']=='image': #note they have a caption and the caption has text
+                        dd = {}
+                        dd['url'] = d['images']['standard_resolution']['url']
+                        dd['text'] = d['caption']['text']
+                        dd['photographer'] = d['caption']['from']['full_name']
+                except Exception as e:
+                    print("Exception in get_photos - adding indiviual photo {} related to id: {} ".format(e, _id))
+                else:
+                    images.append(dd)
 
     return images
 
-#following not in use    
-def get_artist_image(artist,image):
-
-    #image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
-    url = image.link
-    try:
-        response = requests.get(url)
-    except Exception as e:
-        print( "response = requests.get(url) generated exception:", e)
-        image.status = False
-        print("changed image status to False")
-        session.commit()
-        img = wand.image.Image(filename = "test.bmp")
-    else:
-
-        try:
-            img = wand.image.Image(file=StringIO(response.content))
-        except Exception as e:
-            img = wand.image.Image(filename = "test.bmp")
-            print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", e)
-            image.status = False
-            session.commit()
-
-    size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
-    img.transform(resize = size)
-    img = img.convert('bmp')
-    img.save(filename = "test1.bmp")
-    img = pygame.image.load("test1.bmp").convert()
-
-    return img
-
-def display_image(url):
+def display_image(image):
 
     #image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
     try:
-        response = requests.get(url)
+        response = requests.get(image['url'])
     except Exception as detail:
         print( "response = requests.get(url) generated exception:", detail)
         image.status = False
@@ -123,53 +98,37 @@ def display_image(url):
     img.save(filename = "test1.bmp")
     img = pygame.image.load("test1.bmp").convert()
     
-    screen.fill((0,0,0)) 
-    screen.blit(img, (0,0))      
-    pygame.display.flip()
+    img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
-    sleep(5)
-
-    #img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
-
-    #font = pygame.font.SysFont('Sans', 20)
-    #font.set_bold(True)
-    #
-    #text1 = font.render("Artist: "+artist, True, (255, 0, 0))
-    #
-    #screen.fill((0,0,0)) 
-    #screen.blit(img, (0,0))      
-    #screen.blit(text1, (0,0))
-
-    #font = pygame.font.SysFont('Sans', 16)
- 
-    #text2 = get_artist_info(artist)
-    #text2 = wrapper.fill(text2)
-    #lines = text2.split('\n')
-    #
-    #z = 30
-    #for line in lines:
-    #    text = font.render(line, True, (255, 0, 0))
-	#screen.blit(text, (0,z))
-	#z+=20
-
-    #pygame.display.flip()
-
-    os.remove("test1.bmp") 
-
-def show_artist():
-    img.set_alpha(75) #0 - 100 the lower the number the more faded 
-
-    font = pygame.font.SysFont('Sans', 30)
+    font = pygame.font.SysFont('Sans', 28)
     font.set_bold(True)
-    
-    text1 = font.render("Artist: "+artist, True, (255, 0, 0))
-    
+
+    text = font.render("Photographer: "+image['photographer'], True, (255, 0, 0))
+
     screen.fill((0,0,0)) 
     screen.blit(img, (0,0))      
-    screen.blit(text1, (0,0))
+    screen.blit(text, (0,0))
+    
+    txt = image.get('text', 'No title')
+    txt = wrapper.fill(txt)
+    lines = txt.split('\n')
+    font = pygame.font.SysFont('Sans', 16)
+    z = 36
+    for line in lines:
+        text = font.render(line, True, (255, 0, 0))
+        screen.blit(text, (0,z))
+        z+=24
+
+    #text = font.render(image.get('text', 'No title'), True, (255, 0, 0))
+    #screen.blit(text, (0,40))
 
     pygame.display.flip()
 
+    sleep(3)
+    screen.fill((0,0,0)) 
+    img.set_alpha(255)
+    screen.blit(img, (0,0))      
+    pygame.display.flip()
     os.remove("test1.bmp") 
 
 if __name__ == '__main__':
@@ -178,14 +137,32 @@ if __name__ == '__main__':
     images = get_photos(ids)
     L = len(images)
     print("Number of images = {}".format(L))
-    
     pygame.time.set_timer(SHOWNEWIMAGE, 20000)
-
+    pause = False
     while 1:
 
-        if pygame.event.get(SHOWNEWIMAGE):
-            url = images[random.randrange(0,L-1)]
-            display_image(url) 
+        event = pygame.event.poll()
+
+        if event.type == pygame.NOEVENT:
+            pass
+        
+        elif event.type == SHOWNEWIMAGE and not pause:
+            image = images[random.randrange(0,L-1)]
+            display_image(image)
+        
+        #elif event.type == pygame.QUIT:
+         #   sys.exit()
+                
+        elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
+            pause = not pause
+            #pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
+
+            font = pygame.font.SysFont('Sans', 14)
+            zzz = pygame.Surface((640,20)) 
+            zzz.fill((0,0,0))
+            text = font.render("Pause" if pause else "Play", True, (255, 0, 0))
+            screen.blit(zzz, (0,620))                 
+            screen.blit(text, (0,620)) 
+            pygame.display.flip()    
 
         sleep(.1)
-
