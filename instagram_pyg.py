@@ -138,6 +138,62 @@ def display_image(image):
     pygame.display.flip()
     os.remove("test1.bmp") 
 
+
+def display_image_and_info(image):
+
+    #image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
+    try:
+        response = requests.get(image['url'])
+    except Exception as detail:
+        print( "response = requests.get(url) generated exception:", detail)
+        image.status = False
+        print("changed image status to False")
+        session.commit()
+        img = wand.image.Image(filename = "test.bmp")
+    else:
+
+        try:
+            img = wand.image.Image(file=StringIO(response.content))
+        except Exception as detail:
+            img = wand.image.Image(filename = "test.bmp")
+            print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
+
+    size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
+    img.transform(resize = size)
+    img = img.convert('bmp')
+    img.save(filename = "test1.bmp")
+    img = pygame.image.load("test1.bmp").convert()
+    
+    img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
+
+    font = pygame.font.SysFont('Sans', 28)
+    font.set_bold(True)
+
+    text = font.render("Photographer: "+image['photographer'], True, (255, 0, 0))
+
+    screen.fill((0,0,0)) 
+    screen.blit(img, (0,0))      
+    screen.blit(text, (0,0))
+    
+    txt = image.get('text', 'No title')
+    txt = wrapper.fill(txt)
+    lines = txt.split('\n')
+    font = pygame.font.SysFont('Sans', 16)
+    z = 36
+    for line in lines:
+        try:
+            text = font.render(line, True, (255, 0, 0))
+        except UnicodeError as e:
+            print("UnicodeError in text lines: ", e)
+        else:
+            screen.blit(text, (0,z))
+            z+=24
+
+    pygame.display.flip()
+
+    os.remove("test1.bmp") 
+
+
 if __name__ == '__main__':
 
     SHOWNEWIMAGE = USEREVENT+1
@@ -146,6 +202,7 @@ if __name__ == '__main__':
     print("Number of images = {}".format(L))
     pygame.time.set_timer(SHOWNEWIMAGE, 20000)
     pause = False
+    pygame.event.post(pygame.event.Event(SHOWNEWIMAGE))
     while 1:
 
         event = pygame.event.poll()
@@ -163,13 +220,19 @@ if __name__ == '__main__':
         elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
             pause = not pause
             #pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
+            if pause:
+                display_image_and_info(image)
+            else:
+                pygame.time.set_timer(SHOWNEWIMAGE, 0)
+                pygame.time.set_timer(SHOWNEWIMAGE, 20000)
+                display_image(image)
 
-            font = pygame.font.SysFont('Sans', 14)
-            zzz = pygame.Surface((640,20)) 
-            zzz.fill((0,0,0))
-            text = font.render("Pause" if pause else "Play", True, (255, 0, 0))
-            screen.blit(zzz, (0,620))                 
-            screen.blit(text, (0,620)) 
-            pygame.display.flip()    
+            #font = pygame.font.SysFont('Sans', 14)
+            #zzz = pygame.Surface((640,20)) 
+            #zzz.fill((0,0,0))
+            #text = font.render("Pause" if pause else "Play", True, (255, 0, 0))
+            #screen.blit(zzz, (0,620))                 
+            #screen.blit(text, (0,620)) 
+            #pygame.display.flip()    
 
         sleep(.1)
