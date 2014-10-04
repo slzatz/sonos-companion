@@ -25,6 +25,8 @@ ids = [4616106, 17789355, 986542, 230625139]
 
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
+elif platform.system() == 'Darwin':
+    os.putenv('SDL_VIDEODRIVER', 'quartz')
 elif platform.machine() == 'armv6l':
     # from https://github.com/adafruit/adafruit-pi-cam/blob/master/cam.py
     os.putenv('SDL_VIDEODRIVER', 'fbcon')
