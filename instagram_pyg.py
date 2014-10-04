@@ -117,9 +117,14 @@ def display_image(image):
     font = pygame.font.SysFont('Sans', 16)
     z = 36
     for line in lines:
-        text = font.render(line, True, (255, 0, 0))
-        screen.blit(text, (0,z))
-        z+=24
+        try:
+            text = font.render(line, True, (255, 0, 0))
+        except UnicodeError as e:
+            print("UnicodeError in text lines: ", e)
+        else:
+            screen.blit(text, (0,z))
+            z+=24
+
 
     #text = font.render(image.get('text', 'No title'), True, (255, 0, 0))
     #screen.blit(text, (0,40))
