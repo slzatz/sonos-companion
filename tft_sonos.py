@@ -63,7 +63,7 @@ try:
 except IOError:
       artists = {}
 
-DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service'), ('scrobble','Scrobble')])
+DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service'), ('scrobble','Scrobble'), ('uri','uri')])
 
 #last.fm - in this program using for scrobble information, can also be used for artist bios 
 base_url = "http://ws.audioscrobbler.com/2.0/"
@@ -90,7 +90,11 @@ pygame.init()
 if platform.machine() == 'armv6l':
     pygame.mouse.set_visible(False)
 
-screen = pygame.display.set_mode((320, 240))
+w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
+if w > 640:
+    w,h = 640,640
+screen = pygame.display.set_mode((w, h))
+
 screen.fill((0,0,0))
 
 # need a backup image that should be renamed backup
@@ -99,7 +103,7 @@ screen.fill((0,0,0))
 #img.save(filename = "test.bmp")
 img = pygame.image.load("test.bmp").convert() ################
 
-text = txtlib.Text((320, 240), 'freesans')
+text = txtlib.Text((w, h), 'freesans')
 text.text = "Sonos-Companion TFT Edition"
 text.update()
 screen.blit(text.area, (0,0))
@@ -238,7 +242,8 @@ def display_song_info(i):
         img = wand.image.Image(filename = "test.bmp")
         print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
 
-    img.transform(resize = '320x240^')
+    #img.transform(resize = '320x240^')
+    img.transform(resize = str(h)+'x'+str(w)+'^')
     img = img.convert('bmp')
     img.save(filename = "test1.bmp")
     img = pygame.image.load("test1.bmp").convert()
@@ -252,7 +257,7 @@ def display_song_info(i):
     text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
     text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
     text5 = font.render("Scrobble info: "+track.get('scrobble'), True, (255, 0, 0))
-    
+    text6 = font.render("Uri: "+track.get('uri'), True, (255, 0, 0)) 
     screen.fill((0,0,0))
     screen.blit(img, (0,0))      
     screen.blit(text1, (0,0))
@@ -260,6 +265,7 @@ def display_song_info(i):
     screen.blit(text3, (0,36))
     screen.blit(text4, (0,54))
     screen.blit(text5, (0, 72))
+    screen.blit(text6, (0,90))
     pygame.display.flip()
     
     os.remove("test1.bmp")
@@ -282,7 +288,8 @@ def display_song_info2(i):
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception: ", e
 
     try:
-        img.transform(resize = '320x240^')
+       # img.transform(resize = '320x240^')
+        img.transform(resize = str(h)+'x'+str(w)+'^')
         img = img.convert('bmp')
         img.save(filename = "test1.bmp")
         img = pygame.image.load("test1.bmp").convert()
@@ -298,6 +305,7 @@ def display_song_info2(i):
     except Exception as e:
         print "Problem with img: ", e
 
+#not in use
 def display_initial_song_info():
 
     url = artist_image_list[0]['link']
@@ -488,11 +496,11 @@ def inc_volume():
 def display_action(text):
     
     font = pygame.font.SysFont('Sans', 14)
-    zzz = pygame.Surface((320,20)) 
+    zzz = pygame.Surface((w,20)) 
     zzz.fill((0,0,0))
     text = font.render(text, True, (255, 0, 0))
-    screen.blit(zzz, (0,224))                 
-    screen.blit(text, (0,224)) 
+    screen.blit(zzz, (0,h-16))                 
+    screen.blit(text, (0,h-16)) 
     pygame.display.flip()
 
 def scroll_up(): # not in use
@@ -893,11 +901,11 @@ if __name__ == '__main__':
                         font.set_bold(True)
                         
                         text = font.render(line, True, (255,0,0))
-                        zzz = pygame.Surface((320,20)) 
+                        zzz = pygame.Surface((w,20)) 
                         zzz.fill((0,0,0))
-                        
-                        screen.blit(zzz, (0,224))
-                        screen.blit(text, (0,224))
+                         
+                        screen.blit(zzz, (0,h-16))
+                        screen.blit(text, (0,h-16))
                         pygame.display.flip()
                         
                 else:
