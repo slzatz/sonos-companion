@@ -47,7 +47,7 @@ import httplib2
 #using the musicbrainz db to find the release date and album (if a compilation)
 import musicbrainzngs
 
-#from amazon_music_db import *
+from amazon_music_db import *
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 
@@ -827,9 +827,16 @@ if __name__ == '__main__':
                         print "displaying initial image of ", track.get('artist', '')
                         display_song_info(0)
                         
-                        #s = Song(artist=track.get('artist'),title=track.get('title'),album=track.get('album'),uri=track.get('uri'))
-                        #session.add(s)
-                        #session.commit()
+                        ##############################################################
+                        if track.get('uri','').find(':amz') != -1:
+                            try:
+                                s = Song(artist=track.get('artist'),title=track.get('title'),album=track.get('album'),uri=track.get('uri'))
+                                session.add(s)
+                                session.commit()
+                            except IntegrityError as e:
+                                session.rollback()
+                                print "IntegrityError: ",e
+                        ##################################################################
 
                     elif not new_song:
                         # show the next track_string if not the image and text from a new song
