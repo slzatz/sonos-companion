@@ -47,6 +47,8 @@ import httplib2
 #using the musicbrainz db to find the release date and album (if a compilation)
 import musicbrainzngs
 
+#from amazon_music_db import *
+
 parser = argparse.ArgumentParser(description='Command line options ...')
 
 # for all of the following: if the command line option is not present then the value is True and startup is normal
@@ -63,7 +65,7 @@ try:
 except IOError:
       artists = {}
 
-DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service'), ('scrobble','Scrobble'), ('uri','uri')])
+DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service'), ('scrobble','Scrobble'), ('uri','Uri')])
 
 #last.fm - in this program using for scrobble information, can also be used for artist bios 
 base_url = "http://ws.audioscrobbler.com/2.0/"
@@ -252,22 +254,15 @@ def display_song_info(i):
     font = pygame.font.SysFont('Sans', 16)
     font.set_bold(True)
     
-    text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
-    text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
-    text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
-    text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
-    text5 = font.render("Scrobble info: "+track.get('scrobble'), True, (255, 0, 0))
-    text6 = font.render("Uri: "+track.get('uri'), True, (255, 0, 0)) 
     screen.fill((0,0,0))
     screen.blit(img, (0,0))      
-    screen.blit(text1, (0,0))
-    screen.blit(text2, (0,18))
-    screen.blit(text3, (0,36))
-    screen.blit(text4, (0,54))
-    screen.blit(text5, (0, 72))
-    screen.blit(text6, (0,90))
+    n=0
+    for a,b in DISPLAY.items():
+        text = font.render("{}: {}".format(b, track.get(a)), True, (255, 0, 0))
+        screen.blit(text, (5,n))
+        n+=18
     pygame.display.flip()
-    
+
     os.remove("test1.bmp")
  
 def display_song_info2(i):
@@ -305,59 +300,6 @@ def display_song_info2(i):
     except Exception as e:
         print "Problem with img: ", e
 
-#not in use
-def display_initial_song_info():
-
-    url = artist_image_list[0]['link']
-    
-    try:
-        response = requests.get(url)
-    except Exception as detail:
-        print "response = requests.get(url) generated exception:", detail
-        
-    try:
-        img = wand.image.Image(file=StringIO(response.content))
-    except Exception as detail:
-        img = wand.image.Image(filename = "test.bmp")
-        print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
-    
-    img.transform(resize = '320x240^')
-    img = img.convert('bmp')
-                    
-    #f = StringIO() ###################### couldn't get these three lines to work hence why I am saving to disk
-    #img.save(file = f) ####################
-    #img = pygame.image.load(f, "z.bmp")
-                    
-    img.save(filename = "test1.bmp") #couldn't get it to save to StringIO object obviating need to save to disk
-    img = pygame.image.load("test1.bmp").convert()
-    #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; try 100
-                    
-    sub_img = img.subsurface((0,0,320,80))    #rect: (x1, y1, width, height)
-    sub_img.set_alpha(100)
-    zzz = pygame.Surface((320,80)) 
-    zzz.fill((0,0,0))
-
-    font = pygame.font.SysFont('Sans', 16)
-    font.set_bold(True)
-        
-    text1 = font.render("Artist: "+track.get('artist'), True, (255, 0, 0))
-    text2 = font.render("Album: "+track.get('album'), True, (255, 0, 0))
-    text3 = font.render("Song: "+track.get('title'), True, (255, 0, 0))
-    text4 = font.render("Release date: "+track.get('date'), True, (255, 0, 0))
-    
-    screen.fill((0,0,0)) 
-    screen.blit(img, (0,0))
-    screen.blit(zzz, (0,0))
-    screen.blit(sub_img, (0,0))                    
-    screen.blit(text1, (0,0)) 
-    screen.blit(text2, (0,18)) 
-    screen.blit(text3, (0,36)) 
-    screen.blit(text4, (0,54)) 
-
-    pygame.display.flip()
-        
-    os.remove("test1.bmp")
-        
 def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
     
     payload = {'method':'track.getinfo', 'artist':artist, 'track':track, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key, 'username':username}
@@ -837,7 +779,6 @@ if __name__ == '__main__':
                                 #u'duration': '0:02:45', 
                                 #u'position': '0:02:38', 
                                 #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
-
                     
                     current_track = master.get_current_track_info()
                     title = current_track['title']
@@ -873,11 +814,8 @@ if __name__ == '__main__':
                             print "Error in media_info: ",e
 
                         track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
-                        #print "track_strings = ",track_strings
-                        #print "artist = {artist}, album = {album}, title = {title}, release date = {date}".format(**track)
                     
                         z = time.time()
-                        
                                           
                         prev_title = title
                         i = 0
@@ -888,6 +826,10 @@ if __name__ == '__main__':
                         
                         print "displaying initial image of ", track.get('artist', '')
                         display_song_info(0)
+                        
+                        #s = Song(artist=track.get('artist'),title=track.get('title'),album=track.get('album'),uri=track.get('uri'))
+                        #session.add(s)
+                        #session.commit()
 
                     elif not new_song:
                         # show the next track_string if not the image and text from a new song
