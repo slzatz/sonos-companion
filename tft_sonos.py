@@ -26,7 +26,7 @@ from StringIO import StringIO
 import wand.image
 
 home = os.path.split(os.getcwd())[0]
-soco_dir = os.path.join(home,'SoCo','soco')
+soco_dir = os.path.join(home,'SoCo')
 sys.path = [soco_dir] + sys.path
 import soco
 from soco import config
@@ -830,7 +830,7 @@ if __name__ == '__main__':
                         ##############################################################
                         if track.get('uri','').find(':amz') != -1:
                             try:
-                                s = Song(artist=track.get('artist'),title=track.get('title'),album=track.get('album'),uri=track.get('uri'))
+                                s = Song(artist=track.get('artist'),title=track.get('title'),album=track.get('album'), album_art=track.get('album_art'), uri=track.get('uri'))
                                 session.add(s)
                                 session.commit()
                             except IntegrityError as e:
