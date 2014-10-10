@@ -245,11 +245,11 @@ def select():
         uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
         meta = meta_format_radio.format(title=station[0], service=station[2])
     
+    play_uri(uri, meta, station[0]) # station[0] is the title of the station
+
     print "uri=",uri
     print "meta=",meta
     print "\n"
-
-    play_uri(uri, meta, station[0]) # station[0] is the title of the station
         
     mode = 1
 
