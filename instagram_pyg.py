@@ -38,7 +38,11 @@ pygame.init()
 #pygame.mouse.set_visible(0)
 pygame.mouse.set_cursor(*pygame.cursors.diamond)
 
-DISPLAY = (640,640)
+w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
+if w > 640:
+    w,h = 640,640
+screen = pygame.display.set_mode((w, h))
+DISPLAY = (w,h)
 
 screen = pygame.display.set_mode(DISPLAY)
 screen.fill((0,0,0))
