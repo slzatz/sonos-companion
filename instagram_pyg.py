@@ -42,9 +42,9 @@ w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
 if w > 640:
     w,h = 640,640
 screen = pygame.display.set_mode((w, h))
-DISPLAY = (w,h)
+#DISPLAY = (w,h)
 
-screen = pygame.display.set_mode(DISPLAY)
+screen = pygame.display.set_mode((w,h))
 screen.fill((0,0,0))
 
 font = pygame.font.SysFont('Sans', 50)
@@ -86,9 +86,9 @@ def display_image(image):
         response = requests.get(image['url'])
     except Exception as detail:
         print( "response = requests.get(url) generated exception:", detail)
-        image.status = False
+        #image.status = False
         print("changed image status to False")
-        session.commit()
+        #session.commit()
         img = wand.image.Image(filename = "test.bmp")
     else:
 
@@ -98,7 +98,8 @@ def display_image(image):
             img = wand.image.Image(filename = "test.bmp")
             print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
 
-    size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
+    #size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
+    size = str(w)+'x'+str(h)+'^'
     img.transform(resize = size)
     img = img.convert('bmp')
     img.save(filename = "test1.bmp")
@@ -162,7 +163,8 @@ def display_image_and_info(image):
             img = wand.image.Image(filename = "test.bmp")
             print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
 
-    size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
+    #size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
+    size = str(w)+'x'+str(h)+'^'
     img.transform(resize = size)
     img = img.convert('bmp')
     img.save(filename = "test1.bmp")
