@@ -21,7 +21,11 @@ wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)
 #instagram
 base_url = "https://api.instagram.com/v1/users/{}/media/recent/"
 client_id = "8372f43ffb4b4bbbbd054871d6561668"
-ids = [4616106, 17789355, 986542, 230625139]
+
+#https://api.instagram.com/v1/users/search?q=brahmino&access_token=278917377.8372f43.33d3f65330834b9fa6126d30283b660e
+#ids = 4616106 Jason Peterson; 17789355 JR; 986542 Tyson Wheatley; 230625139 Nick Schade; 3399664 Zak Shelhamer; 6156112 Scott Rankin; 1607304 Laura Pritchet; janske 24078; 277810 Richard Koci Hernandez; 1918184 Simone Bramante; 197656340 Michael Christoper Brown; 200147864 David Maialetti; 4769265 eelco roos 
+
+ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
 
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
@@ -41,8 +45,6 @@ pygame.mouse.set_cursor(*pygame.cursors.diamond)
 w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
 if w > 640:
     w,h = 640,640
-screen = pygame.display.set_mode((w, h))
-#DISPLAY = (w,h)
 
 screen = pygame.display.set_mode((w,h))
 screen.fill((0,0,0))
@@ -81,14 +83,11 @@ def get_photos(ids=None):
 
 def display_image(image):
 
-    #image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
     try:
         response = requests.get(image['url'])
     except Exception as detail:
         print( "response = requests.get(url) generated exception:", detail)
-        #image.status = False
         print("changed image status to False")
-        #session.commit()
         img = wand.image.Image(filename = "test.bmp")
     else:
 
@@ -110,7 +109,7 @@ def display_image(image):
     font = pygame.font.SysFont('Sans', 28)
     font.set_bold(True)
 
-    text = font.render("Photographer: "+image['photographer'], True, (255, 0, 0))
+    text = font.render("Photographer: "+image.get('photographer', 'No photographer'), True, (255, 0, 0))
 
     screen.fill((0,0,0)) 
     screen.blit(img, (0,0))      
@@ -130,10 +129,6 @@ def display_image(image):
             screen.blit(text, (0,z))
             z+=24
 
-
-    #text = font.render(image.get('text', 'No title'), True, (255, 0, 0))
-    #screen.blit(text, (0,40))
-
     pygame.display.flip()
 
     sleep(3)
@@ -146,7 +141,6 @@ def display_image(image):
 
 def display_image_and_info(image):
 
-    #image = session.query(Image).join(Artist).filter(Artist.name == artist)[i] #.all()
     try:
         response = requests.get(image['url'])
     except Exception as detail:
@@ -163,7 +157,6 @@ def display_image_and_info(image):
             img = wand.image.Image(filename = "test.bmp")
             print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
 
-    #size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
     size = str(w)+'x'+str(h)+'^'
     img.transform(resize = size)
     img = img.convert('bmp')
@@ -232,13 +225,5 @@ if __name__ == '__main__':
                 pygame.time.set_timer(SHOWNEWIMAGE, 0)
                 pygame.time.set_timer(SHOWNEWIMAGE, 20000)
                 display_image(image)
-
-            #font = pygame.font.SysFont('Sans', 14)
-            #zzz = pygame.Surface((640,20)) 
-            #zzz.fill((0,0,0))
-            #text = font.render("Pause" if pause else "Play", True, (255, 0, 0))
-            #screen.blit(zzz, (0,620))                 
-            #screen.blit(text, (0,620)) 
-            #pygame.display.flip()    
 
         sleep(.1)
