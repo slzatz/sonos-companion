@@ -35,6 +35,8 @@ elif platform.machine() == 'armv6l':
     # from https://github.com/adafruit/adafruit-pi-cam/blob/master/cam.py
     os.putenv('SDL_VIDEODRIVER', 'fbcon')
     os.putenv('SDL_FBDEV', '/dev/fb1')
+    os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+    os.putenv('SDL_MOUSEDRV', 'TSLIB')
 else:
     os.putenv('SDL_VIDEODRIVER', 'x11')
 
