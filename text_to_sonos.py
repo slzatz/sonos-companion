@@ -2,10 +2,11 @@ import os
 import argparse
 from time import sleep
 import sys
-
+import textwrap
 home = os.path.split(os.getcwd())[0]
 soco_dir = os.path.join(home,'SoCo')
 sys.path = [soco_dir] + sys.path
+import requests
 #print sys.path
 import soco
 from soco import config
@@ -17,6 +18,8 @@ parser.add_argument('text', help='Text to speak')
 args = parser.parse_args()
 
 uri = "x-rincon-mp3radio://translate.google.com/translate_tts?tl=en&q={}"
+
+#wrapper = textwrap.TextWrapper(width=99)
 
 n = 0
 while 1:
@@ -76,6 +79,24 @@ def my_add_to_queue(uri, metadata):
     return int(qnumber)
     
 
+def display_weather():
+    
+    # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
+    # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
+    
+    try:
+        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+        m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+#        m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+    except requests.exceptions.ConnectionError as e:
+        print "ConnectionError in request in display_weather: ", e
+    else:
+        #text = txtlib.Text((320, 240), 'freesans')
+        #text.text = wrapper.fill(m1)#+'\n'+wrapper.fill(m2)
+        #text.update()
+        #return wrapper.fill(m1)
+        return textwrap.wrap(m1,99)
+
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
@@ -83,5 +104,11 @@ meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
 #master.play_uri("x-rincon-mp3radio://translate.google.com/translate_tts?tl=en&q=Neil+Young+Heart+of+Gold", meta)
 master.play_uri(uri.format(args.text), meta)
 sleep(20)
+#master.stop()
+text = display_weather()
+print text
+for line in text:
+    print line
+    master.play_uri(uri.format(line), meta)
+    sleep(20)
 master.stop()
-
