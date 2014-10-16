@@ -7,7 +7,6 @@ home = os.path.split(os.getcwd())[0]
 soco_dir = os.path.join(home,'SoCo')
 sys.path = [soco_dir] + sys.path
 import requests
-#print sys.path
 import soco
 from soco import config
 
@@ -18,8 +17,6 @@ parser.add_argument('text', help='Text to speak')
 args = parser.parse_args()
 
 uri = "x-rincon-mp3radio://translate.google.com/translate_tts?tl=en&q={}"
-
-#wrapper = textwrap.TextWrapper(width=99)
 
 n = 0
 while 1:
@@ -33,7 +30,7 @@ while 1:
         break
     sleep(0.1)
     
-print speakers ################
+print speakers 
 
 # appears that the property coordinator of s.group is not getting set properly and so can't use s.group.coordinator[.player_name]
 
@@ -57,7 +54,6 @@ else:
     # if s != master:
         # s.join(master)
 
-
 def get_info():
 
     info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
@@ -78,7 +74,6 @@ def my_add_to_queue(uri, metadata):
     print response
     return int(qnumber)
     
-
 def display_weather():
     
     # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.

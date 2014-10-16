@@ -13,7 +13,7 @@ import requests
 from lcdscroll import Scroller
 
 home = os.path.split(os.getcwd())[0]
-soco_dir = os.path.join(home,'SoCo','soco')
+soco_dir = os.path.join(home,'SoCo')
 sys.path = [soco_dir] + sys.path
 import soco
 from soco import config
@@ -23,6 +23,8 @@ config.CACHE_ENABLED = False
 parser = argparse.ArgumentParser(description="Command line options ...")
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
+
+uri = "x-rincon-mp3radio://translate.google.com/translate_tts?tl=en&q={}"
 
 n = 0
 while 1:
@@ -35,7 +37,7 @@ while 1:
     else:
         break
 
-print speakers ################
+print speakers 
 
 # appears that the property coordinator of s.group is not getting set properly and so can't use s.group.coordinator[.player_name]
 
@@ -141,6 +143,8 @@ def display_weather():
 
     scroller.setLines([m1, m2])
             
+    return textwrap.wrap(m1,99)
+
 def play_uri(uri, meta, title):
 
     try:
@@ -167,7 +171,16 @@ def cancel():
     mode = 1
 
 def forward():
-    master.next()
+    #master.next()
+    
+    meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
+    text = display_weather()
+    print text
+    for line in text:
+        print line
+        master.play_uri(uri.format(line), meta)
+        sleep(20)
+    master.stop()
 
 def dec_volume():
     
@@ -246,7 +259,7 @@ def select():
         meta = meta_format_radio.format(title=station[0], service=station[2])
     
     play_uri(uri, meta, station[0]) # station[0] is the title of the station
-
+    display_song_info() #################################################### trying to make this happen faster
     print "uri=",uri
     print "meta=",meta
     print "\n"
