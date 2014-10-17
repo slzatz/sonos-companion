@@ -6,7 +6,7 @@ import random
 import xml.etree.ElementTree as ET
 import threading
 import sys
-
+import textwrap
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 
 import requests
