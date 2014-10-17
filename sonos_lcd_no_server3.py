@@ -269,7 +269,7 @@ def select():
         meta = meta_format_radio.format(title=station[0], service=station[2])
     
     play_uri(uri, meta, station[0]) # station[0] is the title of the station
-    display_song_info() #################################################### trying to make this happen faster
+    #display_song_info() #################################################### trying to make this happen faster
     print "uri=",uri
     print "meta=",meta
     print "\n"
