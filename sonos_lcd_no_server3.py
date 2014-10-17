@@ -173,13 +173,23 @@ def cancel():
 def forward():
     #master.next()
     
+    state = master.get_current_transport_info()['current_transport_state']
+    print "state = ",state
+    #if state != 'PLAYING':
+        
+    media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+    #media_uri = media_info['CurrentURI']
+    #meta = media_info['CurrentURIMetaData']
+
     meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
+
     text = display_weather()
     print text
     for line in text:
         print line
         master.play_uri(uri.format(line), meta)
-        sleep(20)
+        sleep(5)
+    sleep(5)
     master.stop()
 
 def dec_volume():
