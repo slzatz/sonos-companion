@@ -39,8 +39,6 @@ for s in speakers:
         #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
         print s.player_name
            
-
-
 for s in speakers:
     if s.is_coordinator:
         master = s
@@ -86,24 +84,35 @@ def display_weather():
     except requests.exceptions.ConnectionError as e:
         print "ConnectionError in request in display_weather: ", e
     else:
-        #text = txtlib.Text((320, 240), 'freesans')
-        #text.text = wrapper.fill(m1)#+'\n'+wrapper.fill(m2)
-        #text.update()
-        #return wrapper.fill(m1)
         return textwrap.wrap(m1,99)
 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
 "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
-#master.play_uri("x-rincon-mp3radio://translate.google.com/translate_tts?tl=en&q=Neil+Young+Heart+of+Gold", meta)
-master.play_uri(uri.format(args.text), meta)
-sleep(20)
+#master.play_uri(uri.format(args.text), meta)
+#sleep(20)
 #master.stop()
+
 text = display_weather()
+#text = ["The rain in spain falls mainly on the plain", "Neil Young is the greatest rock star ever",  "Sarah is very sleepy", "The brick fireplace should be painted white"]
 print text
+
 for line in text:
     print line
     master.play_uri(uri.format(line), meta)
-    sleep(20)
+    sleep(.1)
+    played = False #= "TRANSITIONING"
+    while 1:
+        state = master.get_current_transport_info()['current_transport_state']
+        print "state = ", state
+        if state == 'PLAYING':
+            played = True
+        elif played == False:
+            continue
+        else:
+            break
+        #'PAUSED_PLAYBACK'
+        #    break
+        sleep(.2)
 master.stop()

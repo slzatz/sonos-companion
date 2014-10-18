@@ -188,8 +188,18 @@ def forward():
     for line in text:
         print line
         master.play_uri(uri.format(line), meta)
-        sleep(5)
-    sleep(5)
+        sleep(.1)
+        played = False
+        while 1:
+            state = master.get_current_transport_info()['current_transport_state']
+            print "state = ", state
+            if state == 'PLAYING':
+                played = True
+            elif played == False:
+                continue 
+            else:
+                break
+            sleep(.2)
     master.stop()
 
 def dec_volume():
