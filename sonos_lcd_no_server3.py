@@ -18,6 +18,8 @@ sys.path = [soco_dir] + sys.path
 import soco
 from soco import config
 
+import amazon_music_db
+
 config.CACHE_ENABLED = False
 
 parser = argparse.ArgumentParser(description="Command line options ...")
@@ -98,7 +100,8 @@ stations = [
 ('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
 ('Kris Delmhorst Radio', 'pndrradio:610111769614181954', 'SA_RINCON3_slzatz@gmail.com'),
 ('Counting Crows Radio', 'pndrradio:1727297518525703746', 'SA_RINCON3_slzatz@gmail.com'), 
-('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
+('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com'),
+('Random Amazon', 'amazon')]
 
 #media_info = soco.avTransport.GetMediaInfo([('InstanceID', 0)])
 #media_uri = media_info['CurrentURI']
@@ -106,8 +109,7 @@ stations = [
 
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
-meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
-"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
+meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 def display_song_info():
         
@@ -153,6 +155,19 @@ def play_uri(uri, meta, title):
         print "Had the following problem: {} switching to {}!".format(sys.exc_info()[0], title)
     else:
         print "switched to {}".format(title)
+
+
+def my_add_to_queue(uri, metadata):
+    response = master.avTransport.AddURIToQueue([
+            ('InstanceID', 0),
+            ('EnqueuedURI', uri),
+            ('EnqueuedURIMetaData', metadata),
+            ('DesiredFirstTrackNumberEnqueued', 0),
+            ('EnqueueAsNext', 1)
+            ])
+    qnumber = response['FirstTrackNumberEnqueued']
+    #print response
+    return int(qnumber)
 
 def play_pause():
     
@@ -272,14 +287,38 @@ def select():
     station = stations[station_index]
     uri = station[1]
     
-    if uri.startswith("pndrradio"):
+    if uri.startswith('pndrradio'):
         meta = meta_format_pandora.format(title=station[0], service=station[2])
-    else:
+        play_uri(uri, meta, station[0]) # station[0] is the title of the station
+    elif uri.startswith('x-sonosapi-stream'):
         uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
         meta = meta_format_radio.format(title=station[0], service=station[2])
-    
-    play_uri(uri, meta, station[0]) # station[0] is the title of the station
-    #display_song_info() #################################################### trying to make this happen faster
+        play_uri(uri, meta, station[0]) # station[0] is the title of the station
+    elif uri.startswith('amazon'):
+        master.stop()
+        master.clear_queue()
+
+        rows = session.query(Song).count()
+
+        for n in range(10):
+            r = random.randrange(0,rows-1)
+            song = session.query(Song).get(r)
+            print song.id
+            print song.artist
+            print song.album
+            print song.title
+            print song.uri
+            i = song.uri.find('amz')
+            ii = song.uri.find('.')
+            id_ = song.uri[i:ii]
+            print id_
+            meta = didl_amazon.format(id_=id_)
+            my_add_to_queue('', meta)
+            print "---------------------------------------------------------------"
+            
+        master.play()
+
+    #display_song_info() #################################################### trying to make this happen faster - for some reason did not work
     print "uri=",uri
     print "meta=",meta
     print "\n"

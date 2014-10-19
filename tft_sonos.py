@@ -4,7 +4,6 @@ import os
 import pygame
 #from pygame.locals import *
 import txtlib # may still use this for weather, lyrics, bio
-#import slider ###################################
 
 import time
 
