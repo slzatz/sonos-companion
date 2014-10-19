@@ -188,17 +188,18 @@ def cancel():
 def forward():
     #master.next()
     
-    state = master.get_current_transport_info()['current_transport_state']
-    print "state = ",state
+    #state = master.get_current_transport_info()['current_transport_state']
+    #print "state = ",state
     #if state != 'PLAYING':
         
-    media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+    #media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
     #media_uri = media_info['CurrentURI']
     #meta = media_info['CurrentURIMetaData']
 
     meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
 
     text = display_weather()
+    text.insert(0, datetime.datetime.today().strftime("%A %B %d"))
     print text
     for line in text:
         print line
