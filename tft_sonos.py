@@ -257,7 +257,7 @@ def display_song_info(i):
     screen.blit(img, (0,0))      
     n=0
     for a,b in DISPLAY.items():
-        text = font.render("{}: {}".format(b, track.get(a)), True, (255, 0, 0))
+        text = font.render(u"{}: {}".format(b, track.get(a)), True, (255, 0, 0))
         screen.blit(text, (5,n))
         n+=18
     pygame.display.flip()
