@@ -18,7 +18,7 @@ sys.path = [soco_dir] + sys.path
 import soco
 from soco import config
 
-import amazon_music_db
+from amazon_music_db import *
 
 config.CACHE_ENABLED = False
 
@@ -260,9 +260,9 @@ def inc_volume():
     
 def scroll_up():
     global station_index
-    
+    max = len(stations) 
     station_index+=1
-    station_index = station_index if station_index < 12 else 0
+    station_index = station_index if station_index < max else 0
     
     lcd.clear()
     lcd.backlight(lcd.YELLOW)
@@ -317,7 +317,7 @@ def select():
             my_add_to_queue('', meta)
             print "---------------------------------------------------------------"
             
-        master.play()
+        master.play_from_queue(0)
 
     #display_song_info() #################################################### trying to make this happen faster - for some reason did not work
     print "uri=",uri
