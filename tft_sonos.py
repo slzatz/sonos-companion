@@ -826,17 +826,6 @@ if __name__ == '__main__':
                         print "displaying initial image of ", track.get('artist', '')
                         display_song_info(0)
                         
-                        ##############################################################
-                        if track.get('uri','').find(':amz') != -1:
-                            try:
-                                s = Song(artist=track.get('artist'),title=track.get('title'),album=track.get('album'), album_art=track.get('album_art'), uri=track.get('uri'))
-                                session.add(s)
-                                session.commit()
-                            except IntegrityError as e:
-                                session.rollback()
-                                print "IntegrityError: ",e
-                        ##################################################################
-
                     elif not new_song:
                         # show the next track_string if not the image and text from a new song
                             
@@ -863,9 +852,13 @@ if __name__ == '__main__':
                         new_song = False
                         
                         i = i+1 if i < 9 else 0
-                        
-                        print "displaying a new image of ", track['artist']
-                        display_song_info2(i) 
+                        try:
+                           track 
+                        except NameError as e:
+                           print "NameError:", e
+                        else:
+                            print "displaying a new image of ", track['artist']
+                            display_song_info2(i) 
                         
                         z = time.time()
             
