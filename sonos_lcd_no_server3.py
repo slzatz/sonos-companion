@@ -114,15 +114,14 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 def display_song_info():
         
     media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-    #media_uri = media_info['CurrentURI']
     meta = media_info['CurrentURIMetaData']
     if meta:
         root = ET.fromstring(meta)
         service = root[0][0].text
     else:
-        service = "No service"
+        service = ""
     
-    message = '{}\n{} ({})'.format(title, track['artist'], service)
+    message = '{}\n{} {}'.format(title, track['artist'], service)
 
     lcd.clear()
     lcd.backlight(col[random.randrange(0,6)])
@@ -166,7 +165,6 @@ def my_add_to_queue(uri, metadata):
             ('EnqueueAsNext', 1)
             ])
     qnumber = response['FirstTrackNumberEnqueued']
-    #print response
     return int(qnumber)
 
 def play_pause():
@@ -192,10 +190,6 @@ def forward():
     #print "state = ",state
     #if state != 'PLAYING':
         
-    #media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-    #media_uri = media_info['CurrentURI']
-    #meta = media_info['CurrentURIMetaData']
-
     meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
 
     text = display_weather()
@@ -319,7 +313,7 @@ def select():
             
         master.play_from_queue(0)
 
-    #display_song_info() #################################################### trying to make this happen faster - for some reason did not work
+    #display_song_info() ##### trying to make this happen faster - for some reason did not work
     print "uri=",uri
     print "meta=",meta
     print "\n"
