@@ -126,7 +126,7 @@ s2 = s0 + s1
 s2.export('greeting.mp3', format='mp3')
 
 cn = os.environ['COMPUTERNAME']
-uri = '''x-file-cifs://'''+cn+'''/home/slzatz/greeting.mp3'''
+uri = '''x-file-cifs://'''+cn+'''/home/slzatz/sonos-companion/greeting.mp3'''
 #uri = 'x-file-cifs://my_Mac/my_iTunes_folder/any_old.mp3'
 #uri = URI('C:\home\slzatz\greeting.mp3')
 print uri
