@@ -235,6 +235,8 @@ def forward():
     master.stop()
 
 def forward2():
+    meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
+
     s0 = text2mp3(["Good Morning, Steve"], 'good_morning.mp3')
     weather = display_weather()
     #print weather
@@ -251,7 +253,7 @@ def forward2():
     z = client.media("/Public/greeting2.mp3")
     public_streaming_url = z['url']
     print "public_streaming_url =", public_streaming_url
-    master.play_uri(public_streaming_url, '')
+    master.play_uri(public_streaming_url, meta)
 
 def dec_volume():
     
