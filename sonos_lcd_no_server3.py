@@ -8,19 +8,22 @@ import threading
 import sys
 import textwrap
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
-
+import dropbox
 import requests
 from lcdscroll import Scroller
-
+import config as c
 home = os.path.split(os.getcwd())[0]
 soco_dir = os.path.join(home,'SoCo')
-sys.path = [soco_dir] + sys.path
+sys.path = [os.path.join(home,'SoCo')] + [os.path.join(home, 'pydub')] + sys.path
 import soco
 from soco import config
-
+from pydub import AudioSegment
 from amazon_music_db import *
 
 config.CACHE_ENABLED = False
+
+user_id = c.user_id
+client = dropbox.client.DropboxClient(c.code)
 
 parser = argparse.ArgumentParser(description="Command line options ...")
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
@@ -144,7 +147,26 @@ def display_weather():
 
     scroller.setLines([m1, m2])
             
-    return textwrap.wrap(m1,99)
+    return textwrap.wrap(m1+m2,99)
+
+def text2mp3(text, file_):
+    tts_uri = "http://translate.google.com/translate_tts?tl=en&q={}"
+    with open(file_, 'wb') as handle:
+        for line in text:
+            print line
+            response = requests.get(tts_uri.format(line), stream=True)
+
+            if not response.ok:
+                sys.exit()
+
+            for block in response.iter_content(1024):
+                if not block:
+                    break
+
+                handle.write(block)
+
+    output = AudioSegment.from_mp3(file_) #documentation suggests can use a file-like object
+    return output
 
 def play_uri(uri, meta, title):
 
@@ -211,6 +233,25 @@ def forward():
                 break
             sleep(.2)
     master.stop()
+
+def forward2():
+    s0 = text2mp3(["Good Morning, Steve"], 'good_morning.mp3')
+    weather = display_weather()
+    #print weather
+    s1 = text2mp3(weather, 'weather.mp3')
+    s2 = s0 + s1
+    s2.export('greeting.mp3', format='mp3')
+
+    #this is the absolute key and involves taking the file created on the local machine and writing it to dropbox
+    f = open('greeting.mp3', 'rb')
+    # put_file(full_path, file_obj, overwrite=False, parent_rev=None)
+    response = client.put_file('/Public/greeting2.mp3', f, overwrite=True) # suspect that this could be client.put_file('/Public/greeting2.mp3')
+    #print 'uploaded: ', response
+
+    z = client.media("/Public/greeting2.mp3")
+    public_streaming_url = z['url']
+    print "public_streaming_url =", public_streaming_url
+    master.play_uri(public_streaming_url, '')
 
 def dec_volume():
     
@@ -346,7 +387,7 @@ def thread_scroller():
 
 btns = {
            1: ( lcd.SELECT,   'Choose Station',           lcd.YELLOW, change_mode,         select),
-           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    forward, cancel),
+           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    forward2, cancel),
            4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
            8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
           16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)

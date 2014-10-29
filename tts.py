@@ -126,10 +126,12 @@ s2 = s0 + s1
 s2.export('greeting.mp3', format='mp3')
 
 #cn = os.environ['COMPUTERNAME']
-cn = os.uname()[1]
-uri = '''x-file-cifs://'''+cn+'''/home/pi/sonos-companion/greeting.mp3'''
+#cn = os.uname()[1]
+#uri = '''x-file-cifs://'''+cn+'''/home/pi/sonos-companion/greeting.mp3'''
 #uri = 'x-file-cifs://my_Mac/my_iTunes_folder/any_old.mp3'
-uri = '''http://192.168.1.107/home/pi/sonos-companion/greeting.mp3'''
+#uri = '''http://192.168.1.107/home/pi/sonos-companion/greeting.mp3'''
+uri = '''https://www.dropbox.com/s/8ks2cocvnuoteu9/greeting2.mp3?dl=0'''
+uri = '''https://dl.dropboxusercontent.com/1/view/oo5aqtywj7xevzg/Public/greeting2.mp3'''
 #uri = URI('C:\home\slzatz\greeting.mp3')
 print uri
 master.add_uri_to_queue(uri)
