@@ -242,18 +242,18 @@ def forward2():
     #print weather
     s1 = text2mp3(weather, 'weather.mp3')
     s2 = s0 + s1
-    s2.export('greeting.mp3', format='mp3')
+    # there appears to be a problem saving as an mp3 on raspi pi
+    s2.export('greeting.wav', format='wav')
 
     #this is the absolute key and involves taking the file created on the local machine and writing it to dropbox
-    f = open('greeting.mp3', 'rb')
-    # put_file(full_path, file_obj, overwrite=False, parent_rev=None)
-    response = client.put_file('/Public/greeting2.mp3', f, overwrite=True) # suspect that this could be client.put_file('/Public/greeting2.mp3')
+    f = open('greeting.wav', 'rb')
+    response = client.put_file('/Public/greeting.wav', f, overwrite=True) # the problem may be FFmpeg or avconv -- pydub can use either
     #print 'uploaded: ', response
 
-    z = client.media("/Public/greeting2.mp3")
+    z = client.media("/Public/greeting.wav")
     public_streaming_url = z['url']
     print "public_streaming_url =", public_streaming_url
-    master.play_uri(public_streaming_url, meta)
+    master.play_uri(public_streaming_url,'')
 
 def dec_volume():
     
