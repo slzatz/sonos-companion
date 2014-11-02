@@ -4,7 +4,7 @@ from time import sleep
 import sys
 import textwrap
 home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home, 'Soco')] + [os.path.join(home, 'pydub')] + sys.path
+sys.path = [os.path.join(home, 'Soco')] + [os.path.join(home, 'pydub')] + [os.path.join(home, 'twitter')] + sys.path
 import requests
 import soco
 import config as c
@@ -12,6 +12,7 @@ from soco import config
 from soco.data_structures import URI
 from pydub import AudioSegment
 import dropbox
+from twitter import *
 
 config.CACHE_ENABLED = False
 
@@ -59,7 +60,11 @@ else:
         # s.join(master)
 
 user_id = c.user_id
-client = dropbox.client.DropboxClient(c.code)
+client = dropbox.client.DropboxClient(c.dropbox_code)
+oauth_token = c.twitter_oauth_token 
+oauth_token_secret = c.twitter_oauth_token_secret
+CONSUMER_KEY = c.twitter_CONSUMER_KEY
+CONSUMER_SECRET = c.twitter_CONSUMER_SECRET
 
 def get_info():
 
@@ -111,20 +116,21 @@ def speak(phrases):
 
     z = client.media("/Public/output.wav")
     public_streaming_url = z['url']
-    print "public_streaming_url =", public_streaming_url
+    print "public_streaming_url =", public_streaming_url.encode('ascii','ignore')
     master.play_uri(public_streaming_url,'')
 
 def text2mp3(text, file_):
     for line in text:
-        print line
+        print line.encode('ascii','ignore')
         with open('output.mp3', 'wb') as handle:
             try:
                 response = requests.get(uri2.format(line), stream=True)
             except UnicodeEncodeError as e:
                 print e
                 continue
+
             if not response.ok:
-               continue 
+                continue
 
             for block in response.iter_content(1024):
                 if not block:
@@ -134,5 +140,10 @@ def text2mp3(text, file_):
         output = AudioSegment.from_mp3('output.mp3')
         return output
 
-#speak([args.text, display_weather()])
-speak([args.text]) 
+tw = Twitter(auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET))
+x = tw.statuses.home_timeline()
+
+for t in x:
+    text = t['text']
+    speak([t['user']['screen_name'], text[:text.find('http')]])
+    sleep(7)

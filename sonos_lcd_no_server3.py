@@ -13,7 +13,6 @@ import requests
 from lcdscroll import Scroller
 import config as c
 home = os.path.split(os.getcwd())[0]
-soco_dir = os.path.join(home,'SoCo')
 sys.path = [os.path.join(home,'SoCo')] + [os.path.join(home, 'pydub')] + sys.path
 import soco
 from soco import config
@@ -23,7 +22,7 @@ from amazon_music_db import *
 config.CACHE_ENABLED = False
 
 user_id = c.user_id
-client = dropbox.client.DropboxClient(c.code)
+client = dropbox.client.DropboxClient(c.dropbox_code)
 
 parser = argparse.ArgumentParser(description="Command line options ...")
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")

@@ -2,7 +2,7 @@
 import os
 import sys
 import random
-
+import config as c
 home = os.path.split(os.getcwd())[0]
 sqla_dir = os.path.join(home,'sqlalchemy','lib')
 sys.path = [sqla_dir] + sys.path
@@ -45,6 +45,8 @@ class Song(Base):
         return "<artist={}, album={}, title={}, uri={}>".format(self.artist, self.album, self.title, self.uri)
 
 engine = create_engine('sqlite:///amazon_music.db', echo=True)
+#engine = create_engine('sqlite://'+c.amazon_db_url, echo=True)
+Base.metadata.create_all(engine) # only creates tables if they don't exist
 Base.metadata.create_all(engine) # only creates tables if they don't exist
 
 conn = engine.connect()

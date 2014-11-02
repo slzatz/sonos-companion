@@ -1,3 +1,4 @@
+'''this script is old'''
 import os
 import argparse
 from time import sleep

@@ -23,7 +23,7 @@ import lxml.html
 from StringIO import StringIO
 
 import wand.image
-
+import config as c
 home = os.path.split(os.getcwd())[0]
 soco_dir = os.path.join(home,'SoCo')
 sys.path = [soco_dir] + sys.path
@@ -50,6 +50,8 @@ from amazon_music_db import *
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 
+g_api_key = c.google_api_key
+
 # for all of the following: if the command line option is not present then the value is True and startup is normal
 parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
 args = parser.parse_args()
@@ -68,7 +70,8 @@ DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'),
 
 #last.fm - in this program using for scrobble information, can also be used for artist bios 
 base_url = "http://ws.audioscrobbler.com/2.0/"
-api_key = "1c55c0a239072889fa7c11df73ecd566"
+#api_key = "1c55c0a239072889fa7c11df73ecd566"
+api_key = c.last_fm_api_key 
 
 wrapper = textwrap.TextWrapper(width=42, replace_whitespace=False) # may be able to be a little longer than 40
 
@@ -212,16 +215,16 @@ def button_press(pin, b=0):
         play_pause()
 
     else:
-        if mode:
-            url = get_url(artist, title)
-            lyrics = get_lyrics(url)
-            show_lyrics(lyrics)
-            mode = 0
-        else:
-            mode = 1
+        play_random_amazon()
+
+        #if mode:
+        #    url = get_url(artist, title)
+        #    lyrics = get_lyrics(url)
+        #    show_lyrics(lyrics)
+        #    mode = 0
+        #else:
+        #    mode = 1
         
-        return
-    
 if platform.machine() == 'armv6l':
     GPIO.add_event_detect(18, GPIO.FALLING, callback=partial(button_press, b=4), bouncetime=300) 
     GPIO.add_event_detect(27, GPIO.FALLING, callback=partial(button_press, b=3), bouncetime=300) 
@@ -317,8 +320,10 @@ def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
 def get_release_date(artist, album, title):
 
     try:
-        print "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
-    except UnicodeEncodeError as e:
+        #print "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
+        t = "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
+        print t.encode('ascii', 'ignore')
+    except UnicodeEncodeError as e: # should just be .encode('ascii', 'ignore')
         print "Unicode Error", e
 
     ## commented this out because I think in most circumstances where there is a legit album, there is an accompanying date
@@ -434,6 +439,41 @@ def inc_volume():
 
     display_action("Increase Volume")
         
+def play_random_amazon():
+    master.stop()
+    master.clear_queue()
+
+    rows = session.query(Song).count()
+
+    for n in range(10):
+        r = random.randrange(0,rows-1)
+        song = session.query(Song).get(r)
+        print song.id
+        print song.artist
+        print song.album
+        print song.title
+        print song.uri
+        i = song.uri.find('amz')
+        ii = song.uri.find('.')
+        id_ = song.uri[i:ii]
+        print id_
+        meta = didl_amazon.format(id_=id_)
+        my_add_to_queue('', meta)
+        print "---------------------------------------------------------------"
+        
+    master.play_from_queue(0)
+
+def my_add_to_queue(uri, metadata):
+    response = master.avTransport.AddURIToQueue([
+            ('InstanceID', 0),
+            ('EnqueuedURI', uri),
+            ('EnqueuedURIMetaData', metadata),
+            ('DesiredFirstTrackNumberEnqueued', 0),
+            ('EnqueueAsNext', 1)
+            ])
+    qnumber = response['FirstTrackNumberEnqueued']
+    return int(qnumber)
+
 def display_action(text):
     
     font = pygame.font.SysFont('Sans', 14)
@@ -512,7 +552,7 @@ def get_images(artist):
 
     if artist not in artists: 
         http = httplib2.Http()
-        service = discovery.build('customsearch', 'v1',  developerKey='AIzaSyCe7pbOm0sxYXwMWoMJMmWvqBcvaTftRC0', http=http)
+        service = discovery.build('customsearch', 'v1',  developerKey=g_api_key, http=http)
         z = service.cse().list(q=artist, searchType='image', imgSize='large', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
 
         print 'artist=',artist    #################################################
@@ -702,7 +742,9 @@ if __name__ == '__main__':
                 inc_volume()
             elif event.key == pygame.K_j:
                 dec_volume()
-                
+            elif event.key == pygame.K_a:
+                play_random_amazon()
+
         elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
             #if mode!=2:
             if mode==1:
