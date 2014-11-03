@@ -1,3 +1,7 @@
+'''Use on the command line and put whatever text you want to speak through 
+sonos in quotes
+python tts "hello, how are you - I am fine"
+'''
 import os
 import argparse
 from time import sleep
@@ -81,31 +85,13 @@ def my_add_to_queue(uri, metadata):
     print response
     return int(qnumber)
     
-def display_weather():
-    
-    # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
-    # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
-    
-    try:
-        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
-        m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-        m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
-    except requests.exceptions.ConnectionError as e:
-        print "ConnectionError in request in display_weather: ", e
-    else:
-        return m1+m2
-
-
-def speak(phrases):
+def speak(phrase):
     meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
 
-    s = AudioSegment.silent(duration=10)
-
-    for p in phrases:
-        s = s + text2mp3(textwrap.wrap(p, 99), 'output.mp3')
-
+    s0 = AudioSegment.silent(duration=10)
+    s = s0 + text2mp3(textwrap.wrap(phrase, 99), 'output.mp3')
     s.export('output.wav', format='wav')
-
+    # some problem on raspberry pi with creating mp3s
     f = open('output.wav', 'rb')
     response = client.put_file('/Public/output.wav', f, overwrite=True) # the problem may be FFmpeg or avconv -- pydub can use either
 
@@ -134,5 +120,4 @@ def text2mp3(text, file_):
         output = AudioSegment.from_mp3('output.mp3')
         return output
 
-#speak([args.text, display_weather()])
-speak([args.text]) 
+speak(args.text) 

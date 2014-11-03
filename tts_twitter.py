@@ -120,25 +120,23 @@ def speak(phrases):
     master.play_uri(public_streaming_url,'')
 
 def text2mp3(text, file_):
-    for line in text:
-        print line.encode('ascii','ignore')
-        with open('output.mp3', 'wb') as handle:
-            try:
-                response = requests.get(uri2.format(line), stream=True)
-            except UnicodeEncodeError as e:
-                print e
-                continue
+    with open('output.mp3', 'wb') as handle:
+        for line in text:
+            line = line.encode('ascii', 'ignore')
+            print line
+            response = requests.get(uri2.format(line), stream=True)
 
             if not response.ok:
-                continue
+                return AudioSegment.silent(duration=10)
 
             for block in response.iter_content(1024):
                 if not block:
                     break
 
                 handle.write(block)
-        output = AudioSegment.from_mp3('output.mp3')
-        return output
+
+    output = AudioSegment.from_mp3('output.mp3')
+    return output
 
 tw = Twitter(auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET))
 x = tw.statuses.home_timeline()
@@ -146,4 +144,4 @@ x = tw.statuses.home_timeline()
 for t in x:
     text = t['text']
     speak([t['user']['screen_name'], text[:text.find('http')]])
-    sleep(7)
+    sleep(10)

@@ -657,7 +657,7 @@ def get_lyrics(url):
 def show_lyrics(lyrics):
     
     screen.fill((0,0,0))
-    text = txtlib.Text((320, 240), 'freesans', font_size=10)
+    text = txtlib.Text((w, h), 'freesans', font_size=18)
     text.text = lyrics
     text.update()
     screen.blit(text.area, (0,0))
@@ -689,12 +689,14 @@ def show_screen_buttons():
     text3 = font.render("Increase Volume", True, (0, 0, 255))
     text4 = font.render("Decrease Volume", True, (0, 0, 255))
     screen.fill((0,0,0))
-    pygame.draw.line(screen, (0, 0, 255), (0, 120), (320, 120))
-    pygame.draw.line(screen, (0, 0, 255), (160, 0), (160, 240))
-    screen.blit(text1,(40,40))
-    screen.blit(text2,(30,160))
-    screen.blit(text3,(165,40))
-    screen.blit(text4,(160,160))
+    #pygame.draw.line(screen, (0, 0, 255), (0, 120), (320, 120))
+    pygame.draw.line(screen, (0, 0, 255), (0, h/2), (w, h/2))
+    #pygame.draw.line(screen, (0, 0, 255), (160, 0), (160, 240))
+    pygame.draw.line(screen, (0, 0, 255), (w/2, 0), (w/2, h))
+    screen.blit(text1,(w/8,h/6))
+    screen.blit(text2,(w/8,h*2/3))
+    screen.blit(text3,(w/2,h/6))
+    screen.blit(text4,(w/2,h*2/3))
     pygame.display.flip() 
     
 #2 = forward: lcd.RIGHT
@@ -762,8 +764,8 @@ if __name__ == '__main__':
                 pos = pygame.mouse.get_pos()
                 print "mouse position=",pos
                 print "some action was initiated"
-                if pos[0] <160:
-                    if pos[1] < 120:
+                if pos[0] < w/2:
+                    if pos[1] < h/2:
                         if artist:
                             print "must have tried to change mode"
                             url = get_url(artist, title)
@@ -778,7 +780,7 @@ if __name__ == '__main__':
                         print "mouse position=",pos
                         print "Now in button mode(1) - show artist images or weather"
                 else:
-                    if pos[1] < 120:
+                    if pos[1] < h/2:
                         inc_volume()
                     else:
                         dec_volume()
