@@ -3,6 +3,7 @@ import argparse
 from time import sleep
 import sys
 import textwrap
+import re
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'Soco')] + [os.path.join(home, 'pydub')] + [os.path.join(home, 'twitter')] + sys.path
 import requests
@@ -143,5 +144,9 @@ x = tw.statuses.home_timeline()
 
 for t in x:
     text = t['text']
-    speak([t['user']['screen_name'], text[:text.find('http')]])
+    text = text[:text.find('http')] ##
+    text = re.split('\.|\?', text) ##
+    text.insert(0, t['user']['screen_name']) ##
+    #speak([t['user']['screen_name'], text[:text.find('http')]])
+    speak(text)
     sleep(10)
