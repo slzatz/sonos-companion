@@ -708,11 +708,11 @@ def display_weather():
 def show_screen_buttons():
     font = pygame.font.SysFont('Sans', 20)
     font.set_bold(True)
-    button1 = pygbutton.PygButton((50,50,200,30), 'Lyrics')
-    button2 = pygbutton.PygButton((50,100,200,30), 'Play-Pause')
-    button3 = pygbutton.PygButton((50,150,200,30), 'Increase Volume')
-    button4 = pygbutton.PygButton((50,200,200,30), 'Decrease Volume')
-    button5 = pygbutton.PygButton((50,250,200,30), 'Hide Buttons')
+    button1 = pygbutton.PygButton((50,10,200,30), 'Lyrics')
+    button2 = pygbutton.PygButton((50,60,200,30), 'Play-Pause')
+    button3 = pygbutton.PygButton((50,110,200,30), 'Increase Volume')
+    button4 = pygbutton.PygButton((50,160,200,30), 'Decrease Volume')
+    button5 = pygbutton.PygButton((50,210,200,30), 'Hide Buttons')
     screen.fill((0,0,0))
     button1.draw(screen)
     button2.draw(screen)
@@ -772,67 +772,33 @@ if __name__ == '__main__':
         elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
              #if mode!=2:
             if mode==1:
-                pos = pygame.mouse.get_pos()
+                #pos = pygame.mouse.get_pos()
                 b1,b2,b3,b4,b5 = show_screen_buttons()
-                mode = 2
-                print "mouse position=",pos
-                print "Now in button mode(2) - show the buttons"
+                mode = 2 # mode = 2 is when the buttons are shown
+                #print "mouse position=",pos
                 sleep(1)
             elif mode==0:
-                mode = 1
-                print "mouse position=",pos
-                print "Now in button mode(1) - show artist images or weather"
-            else:   
-                pos = pygame.mouse.get_pos()
-                if 'down' in b1.handleEvent(event): #print "1" 
+                mode = 1 # when mode = 1 images are being flipped
+            else:  # mode = 2 meaning the buttons are showing 
+                if 'down' in b1.handleEvent(event): 
                     if artist:
                         print "must have tried to change mode"
                         url = get_url(artist, title)
                         lyrics = get_lyrics(url)
                         show_lyrics(lyrics)
-                        mode = 0
-                        print "mouse position=",pos
-                        print "Now in button mode(0) - show the lyrics"
-                elif 'down' in b2.handleEvent(event): #print "2" 
+                        mode = 0 # mode = 0 is when lyrics are showing
+                elif 'down' in b2.handleEvent(event): 
                     play_pause()
                     mode = 1
-                    print "mouse position=",pos
-                    print "Now in button mode(1) - show artist images or weather"
-                elif 'down' in b3.handleEvent(event): #print "3" 
+                elif 'down' in b3.handleEvent(event): 
                     inc_volume()
                     mode = 1
-                elif 'down' in b4.handleEvent(event): #print "4" 
+                elif 'down' in b4.handleEvent(event): 
                     dec_volume()
                     mode = 1
                 else:
                     mode = 1
                     
-                    #print "mouse position=",pos
-                #print "some action was initiated"
-                #if pos[0] < w/2:
-                #    if pos[1] < h/2:
-                #        if artist:
-                #            print "must have tried to change mode"
-                #            url = get_url(artist, title)
-                #            lyrics = get_lyrics(url)
-                #            show_lyrics(lyrics)
-                #            mode = 0
-                #            print "mouse position=",pos
-                #            print "Now in button mode(0) - show the lyrics"
-                #    else: 
-                #        play_pause()
-                #        mode = 1
-                #        print "mouse position=",pos
-                #        print "Now in button mode(1) - show artist images or weather"
-                #else:
-                #    if pos[1] < h/2:
-                #        inc_volume()
-                #    else:
-                #        dec_volume()
-                #    mode = 1 
-                #    print "mouse position=",pos
-                #    print "Now in button mode(1) - show artist images or weather"
-
             pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
                 
         # end of processing pygame events
