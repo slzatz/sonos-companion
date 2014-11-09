@@ -63,7 +63,7 @@ else:
         # s.join(master)
 
 user_id = c.user_id
-client = dropbox.client.DropboxClient(c.code)
+client = dropbox.client.DropboxClient(c.dropbox_code)
 
 def get_info():
 
@@ -99,6 +99,7 @@ def speak(phrase):
     public_streaming_url = z['url']
     print "public_streaming_url =", public_streaming_url
     master.play_uri(public_streaming_url,'')
+    sleep(10)
 
 def text2mp3(text, file_):
     for line in text:
