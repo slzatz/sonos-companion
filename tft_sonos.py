@@ -681,30 +681,6 @@ def display_weather():
         screen.blit(text.area, (0, 0))
         pygame.display.flip() # Update the full display Surface to the screen
 
-#def show_screen_buttons():
-#    font = pygame.font.SysFont('Sans', 20)
-#    font.set_bold(True)
-#    text1 = font.render("Lyrics", True, (255, 0, 0))
-#    text2 = font.render("Play-Pause", True, (0, 0, 255))
-#    text3 = font.render("Increase Volume", True, (0, 0, 255))
-#    text4 = font.render("Decrease Volume", True, (0, 0, 255))
-#    screen.fill((0,0,0))
-#    #pygame.draw.line(screen, (0, 0, 255), (0, 120), (320, 120))
-#    pygame.draw.line(screen, (0, 0, 255), (0, h/2), (w, h/2))
-#    #pygame.draw.line(screen, (0, 0, 255), (160, 0), (160, 240))
-#    pygame.draw.line(screen, (0, 0, 255), (w/2, 0), (w/2, h))
-#    screen.blit(text1,(w/8,h/6))
-#    screen.blit(text2,(w/8,h*2/3))
-#    screen.blit(text3,(w/2,h/6))
-#    screen.blit(text4,(w/2,h*2/3))
-#
-#    buttonObj = pygbutton.PygButton((50, 50, 200, 30), 'Button Caption')    
-#    buttonObj.draw(screen)
-#
-#    pygame.display.flip() 
-#    
-#    return buttonObj
-
 def show_screen_buttons():
     font = pygame.font.SysFont('Sans', 20)
     font.set_bold(True)
@@ -724,22 +700,6 @@ def show_screen_buttons():
     
     return (button1, button2, button3, button4, button5)
 
-#2 = forward: lcd.RIGHT
-#4 = volume lower: lcd.DOWN
-#8 = volume higher: lcd.UP
-#16 = pause: lcd.LEFT
-#1 = change mode: lcd.SELECT
-#0 = no button
-
-#btns = {
-#           1: ( 'select', 'Change Mode',           lcd.YELLOW,  select,         select),
-#           2: ( lcd.RIGHT,    'Next',                         lcd.VIOLET,    next),
-#           4: ( lcd.DOWN,    'Decrease\nVolume',    lcd.GREEN,    dec_volume, scroll_down),
-#           8: ( lcd.UP,       'Increase\nVolume',        lcd.BLUE,       inc_volume,  scroll_up),
-#          16: ( lcd.LEFT,    'Play/Pause',                 lcd.RED,        play_pause,  cancel)
-#         } 
-    
-
 if __name__ == '__main__':
     
     prev_title = None  #this is None so if the song title is the empty string, it's not equal
@@ -757,7 +717,7 @@ if __name__ == '__main__':
 
         event = pygame.event.poll()
         if event.type == pygame.NOEVENT:
-            continue 
+            pass # want pass and not continue because want this to fall through to the non pygame event stuff
             
         elif event.type == pygame.QUIT:
             sys.exit()
@@ -770,16 +730,18 @@ if __name__ == '__main__':
             KEYS.get(event.key, lambda:None)()
 
         elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
-             #if mode!=2:
+
             if mode==1:
                 #pos = pygame.mouse.get_pos()
                 b1,b2,b3,b4,b5 = show_screen_buttons()
                 mode = 2 # mode = 2 is when the buttons are shown
                 #print "mouse position=",pos
                 sleep(1)
+                
             elif mode==0:
                 prev_title = None
                 mode = 1 # when mode = 1 images are being flipped
+
             else:  # mode = 2 meaning the buttons are showing 
                 if 'down' in b1.handleEvent(event): 
                     b1.draw(screen)
@@ -813,119 +775,119 @@ if __name__ == '__main__':
                 
         # end of processing pygame events
              
-        if  mode==1:
+        if  mode!=1: continue
                         
-            try:
-                state = master.get_current_transport_info()['current_transport_state']
-            except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
-                state = 'ERROR'
-                print "Encountered error in state = master.get_current transport_info(): ", e
-            if state != 'PLAYING':
-                
-                hour = datetime.datetime.now().hour
-                if hour != prev_hour:
+        try:
+            state = master.get_current_transport_info()['current_transport_state']
+        except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
+            state = 'ERROR'
+            print "Encountered error in state = master.get_current transport_info(): ", e
 
-                    display_weather()
-                    
-                    prev_hour = hour
-                    prev_title = ''
-                
-            else:
+        if state != 'PLAYING':
             
-                if time.time() - tt > 2:
+            hour = datetime.datetime.now().hour
+            if hour != prev_hour:
 
-                    #get_current_track_info() =  {
-                                #u'album': 'We Walked In Song', 
-                                #u'artist': 'The Innocence Mission', 
-                                #u'title': 'My Sisters Return From Ireland', 
-                                #u'uri': 'pndrradio-http://audio-sv5-t3-1.pandora.com/access/5459257820921908950?version=4&lid=86206018&token=...', 
-                                #u'playlist_position': '3', 
-                                #u'duration': '0:02:45', 
-                                #u'position': '0:02:38', 
-                                #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
-                    
-                    current_track = master.get_current_track_info()
-                    title = current_track['title']
-                    artist = current_track['artist'] # for lyrics           
-                    tt = time.time()
-                    
-                    print str(tt), "checking to see if track has changed"
-                    
-                    if prev_title != title:
-                        
-                        track = dict(current_track)
+                display_weather()
+                
+                prev_hour = hour
+                prev_title = ''
 
-                        # there will be no date if from one of our compilations
-                        if not 'date' in track and track.get('artist') and track.get('title'):
-                            track['date'] = get_release_date(track['artist'], track['album'], track['title'])
-                        else:
-                            track['date'] = ''
-                        
-                        if not 'scrobble' in track and track.get('artist') and track.get('title'):
-                            track['scrobble'] = get_scrobble_info(track['artist'], track['title'])
-                        else:
-                            track['scrobble'] = ''
+            continue
+                
+        if time.time() - tt > 2:
 
-                        try:
-                            media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-                            #media_uri = media_info['CurrentURI']
-                            meta = media_info['CurrentURIMetaData']
-                            if meta:
-                                root = ET.fromstring(meta)
-                                service = root[0][0].text
-                                track['service'] = service
-                        except requests.exceptions.ConnectionError as e:
-                            print "Error in media_info: ",e
+            #get_current_track_info() =  {
+                        #u'album': 'We Walked In Song', 
+                        #u'artist': 'The Innocence Mission', 
+                        #u'title': 'My Sisters Return From Ireland', 
+                        #u'uri': 'pndrradio-http://audio-sv5-t3-1.pandora.com/access/5459257820921908950?version=4&lid=86206018&token=...', 
+                        #u'playlist_position': '3', 
+                        #u'duration': '0:02:45', 
+                        #u'position': '0:02:38', 
+                        #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
+            
+            current_track = master.get_current_track_info()
+            title = current_track['title']
+            artist = current_track['artist'] # for lyrics           
+            tt = time.time()
+            
+            print str(tt), "checking to see if track has changed"
+            
+            if prev_title != title:
+                
+                track = dict(current_track)
 
-                        track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
-                    
-                        z = time.time()
-                                          
-                        prev_title = title
-                        i = 0
-                        new_song = True
-                        
-                        #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
-                        artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
-                        
-                        print "displaying initial image of ", track.get('artist', '')
-                        display_song_info(0)
-                        
-                    elif not new_song:
-                        # show the next track_string if not the image and text from a new song
-                            
-                        if not track_strings:
-                            track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)])
-                                 
-                        line = track_strings.pop(0)
-
-                        font = pygame.font.SysFont('Sans', 14)
-                        font.set_bold(True)
-                        
-                        text = font.render(line, True, (255,0,0))
-                        zzz = pygame.Surface((w,20)) 
-                        zzz.fill((0,0,0))
-                         
-                        screen.blit(zzz, (0,h-16))
-                        screen.blit(text, (0,h-16))
-                        pygame.display.flip()
-                        
+                # there will be no date if from one of our compilations
+                if not 'date' in track and track.get('artist') and track.get('title'):
+                    track['date'] = get_release_date(track['artist'], track['album'], track['title'])
                 else:
+                    track['date'] = ''
                 
-                    if time.time() - z > 10:
-                        
-                        new_song = False
-                        
-                        i = i+1 if i < 9 else 0
-                        try:
-                           track 
-                        except NameError as e:
-                           print "NameError:", e
-                        else:
-                            print "displaying a new image of ", track['artist']
-                            display_song_info2(i) 
-                        
-                        z = time.time()
+                if not 'scrobble' in track and track.get('artist') and track.get('title'):
+                    track['scrobble'] = get_scrobble_info(track['artist'], track['title'])
+                else:
+                    track['scrobble'] = ''
+
+                try:
+                    media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
+                    #media_uri = media_info['CurrentURI']
+                    meta = media_info['CurrentURIMetaData']
+                    if meta:
+                        root = ET.fromstring(meta)
+                        service = root[0][0].text
+                        track['service'] = service
+                except requests.exceptions.ConnectionError as e:
+                    print "Error in media_info: ",e
+
+                track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
             
+                z = time.time()
+                                  
+                prev_title = title
+                i = 0
+                new_song = True
+                
+                #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
+                artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
+                
+                print "displaying initial image of ", track.get('artist', '')
+                display_song_info(0)
+                
+            elif not new_song:
+                # show the next track_string if not the image and text from a new song
+                    
+                if not track_strings:
+                    track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)])
+                         
+                line = track_strings.pop(0)
+
+                font = pygame.font.SysFont('Sans', 14)
+                font.set_bold(True)
+                
+                text = font.render(line, True, (255,0,0))
+                zzz = pygame.Surface((w,20)) 
+                zzz.fill((0,0,0))
+                 
+                screen.blit(zzz, (0,h-16))
+                screen.blit(text, (0,h-16))
+                pygame.display.flip()
+                
+        
+        if time.time() - z > 10:
+            
+            new_song = False
+            
+            i = i+1 if i < 9 else 0
+            try:
+               track 
+            except NameError as e:
+               print "NameError:", e
+            else:
+                print "displaying a new image of ", track['artist']
+                display_song_info2(i) 
+            
+            z = time.time()
+        
         sleep(0.1)
 
