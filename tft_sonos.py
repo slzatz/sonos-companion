@@ -713,7 +713,7 @@ def show_screen_buttons():
     button3 = pygbutton.PygButton((50,110,200,30), 'Increase Volume')
     button4 = pygbutton.PygButton((50,160,200,30), 'Decrease Volume')
     button5 = pygbutton.PygButton((50,210,200,30), 'Hide Buttons')
-    screen.fill((0,0,0))
+    screen.fill((100,100,100))
     button1.draw(screen)
     button2.draw(screen)
     button3.draw(screen)
@@ -742,7 +742,7 @@ def show_screen_buttons():
 
 if __name__ == '__main__':
     
-    prev_title = -1 #this is -1 so if the initial song title is the empty string, it's not equal
+    prev_title = None  #this is None so if the song title is the empty string, it's not equal
     prev_hour = -1
     tt = z = time.time()
     new_song = True
@@ -778,9 +778,11 @@ if __name__ == '__main__':
                 #print "mouse position=",pos
                 sleep(1)
             elif mode==0:
+                prev_title = None
                 mode = 1 # when mode = 1 images are being flipped
             else:  # mode = 2 meaning the buttons are showing 
                 if 'down' in b1.handleEvent(event): 
+                    b1.draw(screen)
                     if artist:
                         print "must have tried to change mode"
                         url = get_url(artist, title)
@@ -788,15 +790,23 @@ if __name__ == '__main__':
                         show_lyrics(lyrics)
                         mode = 0 # mode = 0 is when lyrics are showing
                 elif 'down' in b2.handleEvent(event): 
+                    b2.draw(screen)
                     play_pause()
+                    prev_title = None
                     mode = 1
                 elif 'down' in b3.handleEvent(event): 
+                    b3.draw(screen)
                     inc_volume()
+                    prev_title = None
                     mode = 1
                 elif 'down' in b4.handleEvent(event): 
+                    b4.draw(screen)
                     dec_volume()
+                    prev_title = None
                     mode = 1
                 else:
+                    b5.draw(screen)
+                    prev_title = None
                     mode = 1
                     
             pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
