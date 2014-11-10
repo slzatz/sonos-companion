@@ -767,6 +767,7 @@ if __name__ == '__main__':
                     prev_title = None
                     mode = 1
                 else:
+                    b5.handleEvent(event) # makes sure button is drawn in depressed view if it is pushed
                     b5.draw(screen)
                     prev_title = None
                     mode = 1
