@@ -25,11 +25,11 @@ from StringIO import StringIO
 import wand.image
 import config as c
 home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home,'pygbutton')] + [os.path.join(home,'SoCo')] + sys.path
+sys.path = [os.path.join(home,'SoCo')] + sys.path
 import soco
 from soco import config
 
-import pygbutton
+import pygbutton_lite as pygbutton
 
 if platform.machine() == 'armv6l':
     import RPi.GPIO as GPIO
@@ -743,32 +743,38 @@ if __name__ == '__main__':
                 mode = 1 # when mode = 1 images are being flipped
 
             else:  # mode = 2 meaning the buttons are showing 
-                if 'down' in b1.handleEvent(event): 
+                #if 'down' in b1.handleEvent(event): 
+                if b1.handleEvent(event):
                     b1.draw(screen)
+                    pygame.display.update(b1.rect)
                     if artist:
                         print "must have tried to change mode"
                         url = get_url(artist, title)
                         lyrics = get_lyrics(url)
                         show_lyrics(lyrics)
                         mode = 0 # mode = 0 is when lyrics are showing
-                elif 'down' in b2.handleEvent(event): 
+                elif b2.handleEvent(event): 
                     b2.draw(screen)
+                    pygame.display.update(b2.rect)
                     play_pause()
                     prev_title = None
                     mode = 1
-                elif 'down' in b3.handleEvent(event): 
+                elif b3.handleEvent(event): 
                     b3.draw(screen)
+                    pygame.display.update(b3.rect)
                     inc_volume()
                     prev_title = None
                     mode = 1
-                elif 'down' in b4.handleEvent(event): 
+                elif b4.handleEvent(event): 
                     b4.draw(screen)
+                    pygame.display.update(b4.rect)
                     dec_volume()
                     prev_title = None
                     mode = 1
                 else:
                     b5.handleEvent(event) # makes sure button is drawn in depressed view if it is pushed
                     b5.draw(screen)
+                    pygame.display.update(b5.rect)
                     prev_title = None
                     mode = 1
                     
