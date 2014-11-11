@@ -743,7 +743,7 @@ if __name__ == '__main__':
                 mode = 1 # when mode = 1 images are being flipped
 
             else:  # mode = 2 meaning the buttons are showing 
-                #if 'down' in b1.handleEvent(event): 
+                #for button in (b1,b2); if button.handleEvent(event);break;button_action(button); def button_action(button);button.draw(screen);pygame...
                 if b1.handleEvent(event):
                     b1.draw(screen)
                     pygame.display.update(b1.rect)
@@ -757,27 +757,39 @@ if __name__ == '__main__':
                     b2.draw(screen)
                     pygame.display.update(b2.rect)
                     play_pause()
-                    prev_title = None
-                    mode = 1
+                    b2.buttonDown = False
+                    b2.draw(screen)
+                    pygame.display.update(b2.rect)
+                    #prev_title = None
+                    #mode = 1
                 elif b3.handleEvent(event): 
                     b3.draw(screen)
                     pygame.display.update(b3.rect)
                     inc_volume()
-                    prev_title = None
-                    mode = 1
+                    b3.buttonDown = False
+                    b3.draw(screen)
+                    pygame.display.update(b3.rect)
+                    #prev_title = None
+                    #mode = 1
+                    #z = 0
+                    #tt = time.time() + 2
                 elif b4.handleEvent(event): 
                     b4.draw(screen)
                     pygame.display.update(b4.rect)
                     dec_volume()
-                    prev_title = None
-                    mode = 1
+                    b4.buttonDown = False
+                    b4.draw(screen)
+                    pygame.display.update(b4.rect)
+                    #prev_title = None
+                    #mode = 1
                 else:
                     b5.handleEvent(event) # makes sure button is drawn in depressed view if it is pushed
                     b5.draw(screen)
                     pygame.display.update(b5.rect)
-                    prev_title = None
+                    #prev_title = None
                     mode = 1
-                    
+                    z = 0
+                    tt = time.time() + 2     
             pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
                 
         # end of processing pygame events
@@ -887,12 +899,14 @@ if __name__ == '__main__':
             
             i = i+1 if i < 9 else 0
             try:
-               track 
-            except NameError as e:
-               print "NameError:", e
-            else:
+               #track 
                 print "displaying a new image of ", track['artist']
                 display_song_info2(i) 
+            except NameError as e:
+               print "NameError:", e
+            #else:
+                #print "displaying a new image of ", track['artist']
+                #display_song_info2(i) 
             
             z = time.time()
         
