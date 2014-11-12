@@ -742,54 +742,36 @@ if __name__ == '__main__':
                 prev_title = None
                 mode = 1 # when mode = 1 images are being flipped
 
-            else:  # mode = 2 meaning the buttons are showing 
+            else:  # mode 2 = the buttons are showing 
                 #for button in (b1,b2); if button.handleEvent(event);break;button_action(button); def button_action(button);button.draw(screen);pygame...
-                if b1.handleEvent(event):
-                    b1.draw(screen)
-                    pygame.display.update(b1.rect)
+                if b1.pressed(event):
+                    b1.draw_down(screen)
                     if artist:
                         print "must have tried to change mode"
                         url = get_url(artist, title)
                         lyrics = get_lyrics(url)
                         show_lyrics(lyrics)
                         mode = 0 # mode = 0 is when lyrics are showing
-                elif b2.handleEvent(event): 
-                    b2.draw(screen)
-                    pygame.display.update(b2.rect)
+                elif b2.pressed(event): 
+                    b2.draw_down(screen)
                     play_pause()
-                    b2.buttonDown = False
-                    b2.draw(screen)
-                    pygame.display.update(b2.rect)
-                    #prev_title = None
-                    #mode = 1
-                elif b3.handleEvent(event): 
-                    b3.draw(screen)
-                    pygame.display.update(b3.rect)
+                    b2.draw_normal(screen)
+                elif b3.pressed(event): 
+                    b3.draw_down(screen)
                     inc_volume()
-                    b3.buttonDown = False
-                    b3.draw(screen)
+                    b3.draw_normal(screen)
                     pygame.display.update(b3.rect)
-                    #prev_title = None
-                    #mode = 1
-                    #z = 0
-                    #tt = time.time() + 2
-                elif b4.handleEvent(event): 
-                    b4.draw(screen)
-                    pygame.display.update(b4.rect)
+                elif b4.pressed(event): 
+                    b4.draw_down(screen)
                     dec_volume()
-                    b4.buttonDown = False
-                    b4.draw(screen)
-                    pygame.display.update(b4.rect)
-                    #prev_title = None
-                    #mode = 1
+                    b4.draw_normal(screen)
                 else:
-                    b5.handleEvent(event) # makes sure button is drawn in depressed view if it is pushed
-                    b5.draw(screen)
-                    pygame.display.update(b5.rect)
-                    #prev_title = None
+                    b5.pressed(event) # makes sure button is drawn in depressed view if it is pushed
+                    b5.draw_down(screen)
                     mode = 1
                     z = 0
                     tt = time.time() + 2     
+                    
             pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
                 
         # end of processing pygame events

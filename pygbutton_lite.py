@@ -82,6 +82,17 @@ class PygButton(object):
         self.surfaceDown = pygame.Surface(self.rect.size)
         self._update() # draw the initial button images
 
+    def pressed(self, eventObj):
+        return self.rect.collidepoint(eventObj.pos)
+
+    def draw_normal(self, surfaceObj):
+        surfaceObj.blit(self.surfaceNormal, self.rect)
+        pygame.display.update(self.rect)
+
+    def draw_down (self, surfaceObj):
+        surfaceObj.blit(self.surfaceDown, self.rect)
+        pygame.display.update(self.rect)
+
     def handleEvent(self, eventObj):
         pressed = self.rect.collidepoint(eventObj.pos)
         self.buttonDown = pressed
