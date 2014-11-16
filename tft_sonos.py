@@ -779,7 +779,7 @@ if __name__ == '__main__':
     
     prev_title = None  #this is None so if the song title is the empty string, it's not equal
     prev_hour = -1
-    tt = z = time.time()
+    ttt = tt = z = time.time()
     new_song = True
     i = 0
     artist = None
@@ -858,8 +858,9 @@ if __name__ == '__main__':
         # end of processing pygame events
              
         if  mode!=1:
-            if time.time() - tt > 2:
-                print "mode=",mode
+            if time.time() - ttt > 2:
+                print time.time(),"mode=",mode
+                ttt = time.time()
             continue
 
         try:
