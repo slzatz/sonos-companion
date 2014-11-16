@@ -705,7 +705,6 @@ def hide_buttons():
     global mode
     sleep(1)
     mode = 1
-    
 
 def select(station=None):
     global mode
@@ -755,17 +754,18 @@ def show_screen_buttons():
     font = pygame.font.SysFont('Sans', 20)
     font.set_bold(True)
     w1 = (w/2) - 15
-    b0 = pygbutton.PygButton((10,10,w1,30), 'Lyrics', action=get_lyrics, redraw=False)
-    b1 = pygbutton.PygButton((10,60,w1,30), 'Play-Pause', action=play_pause)
-    b2 = pygbutton.PygButton((10,110,w1,30), 'Increase Volume', action=inc_volume)
-    b3 = pygbutton.PygButton((10,160,w1,30), 'Decrease Volume', action=dec_volume)
-    b4 = pygbutton.PygButton((10,210,w1,30), 'Hide Buttons', action=hide_buttons)
+    h1 = h/5
+    b0 = pygbutton.PygButton((10,5,w1,30), 'Lyrics', action=get_lyrics, redraw=False)
+    b1 = pygbutton.PygButton((10,5+h1,w1,30), 'Play-Pause', action=play_pause)
+    b2 = pygbutton.PygButton((10,5+2*h1,w1,30), 'Increase Volume', action=inc_volume)
+    b3 = pygbutton.PygButton((10,5+3*h1,w1,30), 'Decrease Volume', action=dec_volume)
+    b4 = pygbutton.PygButton((10,5+4*h1,w1,30), 'Hide Buttons', action=hide_buttons)
     w2 = (w/2) + 10
-    b5 = pygbutton.PygButton((w2,10,w1,30), 'Weather')
-    b6 = pygbutton.PygButton((w2,60,w1,30), 'Random Amazon', action=play_random_amazon)
-    b7 = pygbutton.PygButton((w2,110,w1,30), 'Patty Griffin Radio', action=partial(select, station=stations[6]))
-    b8 = pygbutton.PygButton((w2,160,w1,30), 'Decrease Volume')
-    b9 = pygbutton.PygButton((w2,210,w1,30), 'Hide Buttons')
+    b5 = pygbutton.PygButton((w2,5,w1,30), 'Weather')
+    b6 = pygbutton.PygButton((w2,5+h1,w1,30), 'Random Amazon', action=play_random_amazon)
+    b7 = pygbutton.PygButton((w2,5+2*h1,w1,30), 'Patty Griffin Radio', action=partial(select, station=stations[6]))
+    b8 = pygbutton.PygButton((w2,5+3*h1,w1,30), 'WNYC', action=partial(select, station=stations[0]))
+    b9 = pygbutton.PygButton((w2,5+4*h1,w1,30), 'Hide Buttons')
     screen.fill((100,100,100))
     buttons = (b0, b1, b2, b3, b4, b5, b6, b7, b8, b9) 
     for b in buttons:
@@ -783,6 +783,7 @@ if __name__ == '__main__':
     new_song = True
     i = 0
     artist = None
+    track_strings = []
 
     KEYS = {pygame.K_p:play_pause, pygame.K_k:inc_volume, pygame.K_j:dec_volume, pygame.K_a:play_random_amazon}
 
