@@ -399,8 +399,8 @@ def cancel():
     
     mode = 1
 
-def next():
-    master.next()
+#def next():
+#    master.next()
 
 def previous():
     
@@ -506,7 +506,7 @@ def scroll_down():# not in use
     #lcd.backlight(lcd.YELLOW)
     #lcd.message(stations[station_index][0])
     
-def select():# not in use
+def select______():# not in use
     
     global mode
     
@@ -577,6 +577,10 @@ def get_images(artist):
     return artists[artist]
     
 def get_url(artist, title):
+
+    if artist is None or title is None:
+        return None
+
     payload = {'func': 'getSong', 'artist': artist, 'song': title, 'fmt': 'realjson'}
     
     try:
@@ -624,8 +628,17 @@ def get_url(artist, title):
         
     return url
     
-def get_lyrics(url):
+def get_lyrics():
 
+    global mode
+    mode = 0
+    
+    if artist is None or title is None:
+         return "No artist or title"
+
+    print artist, title
+    
+    url = get_url(artist, title)
     if not url:
         return "Can't find lyrics - url couldn't be found or had 'edit'  "
     
@@ -652,9 +665,16 @@ def get_lyrics(url):
             lyrics.append("\n")
         if node.tail is not None:
             lyrics.append(node.tail)
-    return "".join(lyrics).strip()
-    
-def show_lyrics(lyrics):
+
+    text = txtlib.Text((w, h), 'freesans', font_size=18)
+    text.text = "".join(lyrics).strip()
+    text.update()
+
+    screen.fill((0,0,0))
+    screen.blit(text.area, (0,0))
+    pygame.display.flip()
+
+def show_lyrics(lyrics): #not in use
     
     screen.fill((0,0,0))
     text = txtlib.Text((w, h), 'freesans', font_size=18)
@@ -681,24 +701,79 @@ def display_weather():
         screen.blit(text.area, (0, 0))
         pygame.display.flip() # Update the full display Surface to the screen
 
+def hide_buttons():
+    global mode
+    sleep(1)
+    mode = 1
+    
+
+def select(station=None):
+    global mode
+
+    #station = stations[station_index]
+    uri = station[1]
+    
+    if uri.startswith('pndrradio'):
+        meta = meta_format_pandora.format(title=station[0], service=station[2])
+        play_uri(uri, meta, station[0]) # station[0] is the title of the station
+    elif uri.startswith('x-sonosapi-stream'):
+        uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+        meta = meta_format_radio.format(title=station[0], service=station[2])
+        play_uri(uri, meta, station[0]) # station[0] is the title of the station
+    elif uri.startswith('amazon'):
+        master.stop()
+        master.clear_queue()
+
+        rows = session.query(Song).count()
+
+        for n in range(10):
+            r = random.randrange(0,rows-1)
+            song = session.query(Song).get(r)
+            print song.id
+            print song.artist
+            print song.album
+            print song.title
+            print song.uri
+            i = song.uri.find('amz')
+            ii = song.uri.find('.')
+            id_ = song.uri[i:ii]
+            print id_
+            meta = didl_amazon.format(id_=id_)
+            my_add_to_queue('', meta)
+            print "---------------------------------------------------------------"
+            
+        master.play_from_queue(0)
+
+    #display_song_info() ##### trying to make this happen faster - for some reason did not work
+    print "uri=",uri
+    print "meta=",meta
+    print "\n"
+        
+    mode = 1
+
 def show_screen_buttons():
     font = pygame.font.SysFont('Sans', 20)
     font.set_bold(True)
-    button1 = pygbutton.PygButton((50,10,200,30), 'Lyrics')
-    button2 = pygbutton.PygButton((50,60,200,30), 'Play-Pause')
-    button3 = pygbutton.PygButton((50,110,200,30), 'Increase Volume')
-    button4 = pygbutton.PygButton((50,160,200,30), 'Decrease Volume')
-    button5 = pygbutton.PygButton((50,210,200,30), 'Hide Buttons')
+    w1 = (w/2) - 15
+    b0 = pygbutton.PygButton((10,10,w1,30), 'Lyrics', action=get_lyrics, redraw=False)
+    b1 = pygbutton.PygButton((10,60,w1,30), 'Play-Pause', action=play_pause)
+    b2 = pygbutton.PygButton((10,110,w1,30), 'Increase Volume', action=inc_volume)
+    b3 = pygbutton.PygButton((10,160,w1,30), 'Decrease Volume', action=dec_volume)
+    b4 = pygbutton.PygButton((10,210,w1,30), 'Hide Buttons', action=hide_buttons)
+    w2 = (w/2) + 10
+    b5 = pygbutton.PygButton((w2,10,w1,30), 'Weather')
+    b6 = pygbutton.PygButton((w2,60,w1,30), 'Random Amazon', action=play_random_amazon)
+    b7 = pygbutton.PygButton((w2,110,w1,30), 'Patty Griffin Radio', action=partial(select, station=stations[6]))
+    b8 = pygbutton.PygButton((w2,160,w1,30), 'Decrease Volume')
+    b9 = pygbutton.PygButton((w2,210,w1,30), 'Hide Buttons')
     screen.fill((100,100,100))
-    button1.draw(screen)
-    button2.draw(screen)
-    button3.draw(screen)
-    button4.draw(screen)
-    button5.draw(screen)
+    buttons = (b0, b1, b2, b3, b4, b5, b6, b7, b8, b9) 
+    for b in buttons:
+        b.draw(screen)
 
     pygame.display.flip() 
     
-    return (button1, button2, button3, button4, button5)
+    return buttons
 
 if __name__ == '__main__':
     
@@ -713,12 +788,63 @@ if __name__ == '__main__':
 
     while 1:
         
-       # pygame.event.get() # necessary to keep pygame window from going to sleep
+       # pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
 
         event = pygame.event.poll()
+        
         if event.type == pygame.NOEVENT:
             pass # want pass and not continue because want this to fall through to the non pygame event stuff
             
+        elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
+
+            if mode==1:
+                #pos = pygame.mouse.get_pos()
+                buttons = show_screen_buttons()
+                mode = 2 # mode = 2 is when the buttons are shown
+                #print "mouse position=",pos
+                sleep(1)
+                
+            elif mode==0:
+                prev_title = None
+                mode = 1 # when mode = 1 images are being flipped
+
+            else:  # mode 2 = the buttons are showing 
+
+                button = next((b for b in buttons if b.pressed(event)),buttons[4])
+                button.draw_down(screen)
+                button.action()
+                button.re_draw(screen)
+
+                #if b1.pressed(event):
+                #    b1.draw_down(screen)
+                #    if artist:
+                #        print "must have tried to change mode"
+                #        url = get_url(artist, title)
+                #        lyrics = get_lyrics(url)
+                #        show_lyrics(lyrics)
+                #        mode = 0 # mode = 0 is when lyrics are showing
+                #elif b2.pressed(event): 
+                #    b2.draw_down(screen)
+                #    play_pause()
+                #    b2.draw_normal(screen)
+                #elif b3.pressed(event): 
+                #    b3.draw_down(screen)
+                #    inc_volume()
+                #    b3.draw_normal(screen)
+                #    pygame.display.update(b3.rect)
+                #elif b4.pressed(event): 
+                #    b4.draw_down(screen)
+                #    dec_volume()
+                #    b4.draw_normal(screen)
+                #else:
+                #    b5.pressed(event) # makes sure button is drawn in depressed view if it is pushed
+                #    b5.draw_down(screen)
+                #    mode = 1
+                #    z = 0
+                #    tt = time.time() + 2     
+                    
+            pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
+                
         elif event.type == pygame.QUIT:
             sys.exit()
             
@@ -729,51 +855,6 @@ if __name__ == '__main__':
 
             KEYS.get(event.key, lambda:None)()
 
-        elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
-
-            if mode==1:
-                #pos = pygame.mouse.get_pos()
-                b1,b2,b3,b4,b5 = show_screen_buttons()
-                mode = 2 # mode = 2 is when the buttons are shown
-                #print "mouse position=",pos
-                sleep(1)
-                
-            elif mode==0:
-                prev_title = None
-                mode = 1 # when mode = 1 images are being flipped
-
-            else:  # mode 2 = the buttons are showing 
-                #for button in (b1,b2); if button.handleEvent(event);break;button_action(button); def button_action(button);button.draw(screen);pygame...
-                if b1.pressed(event):
-                    b1.draw_down(screen)
-                    if artist:
-                        print "must have tried to change mode"
-                        url = get_url(artist, title)
-                        lyrics = get_lyrics(url)
-                        show_lyrics(lyrics)
-                        mode = 0 # mode = 0 is when lyrics are showing
-                elif b2.pressed(event): 
-                    b2.draw_down(screen)
-                    play_pause()
-                    b2.draw_normal(screen)
-                elif b3.pressed(event): 
-                    b3.draw_down(screen)
-                    inc_volume()
-                    b3.draw_normal(screen)
-                    pygame.display.update(b3.rect)
-                elif b4.pressed(event): 
-                    b4.draw_down(screen)
-                    dec_volume()
-                    b4.draw_normal(screen)
-                else:
-                    b5.pressed(event) # makes sure button is drawn in depressed view if it is pushed
-                    b5.draw_down(screen)
-                    mode = 1
-                    z = 0
-                    tt = time.time() + 2     
-                    
-            pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
-                
         # end of processing pygame events
              
         if  mode!=1: continue

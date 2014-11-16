@@ -47,7 +47,7 @@ GRAY      = (128, 128, 128)
 LIGHTGRAY = (212, 208, 200)
 
 class PygButton(object):
-    def __init__(self, rect=None, caption='', bgcolor=LIGHTGRAY, fgcolor=BLACK, font=None):
+    def __init__(self, rect=None, caption='', bgcolor=LIGHTGRAY, fgcolor=BLACK, font=None, action=None, redraw=True):
         """Create a new button object. Parameters:
             rect - The size and position of the button as a pygame.Rect object
                 or 4-tuple of integers.
@@ -74,6 +74,10 @@ class PygButton(object):
         else:
             self._font = font
 
+        self.action = action if action else lambda:None
+
+        self.redraw = redraw
+        
         # tracks the state of the button
         self.buttonDown = False # is the button currently pushed down?
 
@@ -89,7 +93,12 @@ class PygButton(object):
         surfaceObj.blit(self.surfaceNormal, self.rect)
         pygame.display.update(self.rect)
 
-    def draw_down (self, surfaceObj):
+    def re_draw(self, surfaceObj):
+        if self.redraw:
+            surfaceObj.blit(self.surfaceNormal, self.rect)
+            pygame.display.update(self.rect)
+
+    def draw_down(self, surfaceObj):
         surfaceObj.blit(self.surfaceDown, self.rect)
         pygame.display.update(self.rect)
 
