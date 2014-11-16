@@ -857,8 +857,11 @@ if __name__ == '__main__':
 
         # end of processing pygame events
              
-        if  mode!=1: continue
-                        
+        if  mode!=1:
+            if time.time() - tt > 2:
+                print "mode=",mode
+            continue
+
         try:
             state = master.get_current_transport_info()['current_transport_state']
         except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
