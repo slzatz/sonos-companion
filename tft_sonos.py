@@ -21,13 +21,14 @@ import sys
 from operator import itemgetter
 import lxml.html
 from StringIO import StringIO
-
+import dropbox
 import wand.image
 import config as c
 home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home,'SoCo')] + sys.path
+sys.path = [os.path.join(home,'SoCo')] + [os.path.join(home, 'pydub')] + sys.path
 import soco
 from soco import config
+from pydub import AudioSegment
 
 import pygbutton_lite as pygbutton
 
@@ -48,6 +49,8 @@ import httplib2
 import musicbrainzngs
 
 from amazon_music_db import *
+
+client = dropbox.client.DropboxClient(c.dropbox_code)
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 
@@ -631,7 +634,6 @@ def get_url(artist, title):
 def get_lyrics():
 
     global mode
-    mode = 0
     
     if artist is None or title is None:
          return "No artist or title"
@@ -656,7 +658,8 @@ def get_lyrics():
     if len(doc.getroot().cssselect(".lyricbox a[title=\"Instrumental\"]")):
         return "No lyrics - appears to be instrumental"
 
-    # prepare output
+    mode = 0 # switch to this mode since there appear to actually be lyrics
+
     lyrics = []
     if lyricbox.text is not None:
         lyrics.append(lyricbox.text)
@@ -700,6 +703,56 @@ def display_weather():
         text.update()
         screen.blit(text.area, (0, 0))
         pygame.display.flip() # Update the full display Surface to the screen
+
+def weather_tts():
+    try:
+        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+        m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
+        m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
+    except requests.exceptions.ConnectionError as e:
+        print "ConnectionError in request in display_weather: ", e
+        weather = "Sorry, Steve, could not get the weather"
+    else:
+        weather = textwrap.wrap(m1+m2,99)
+
+    meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
+
+    s0 = text2mp3(["Good Morning, Steve"], 'good_morning.mp3')
+    #weather = display_weather()
+    #print weather
+    s1 = text2mp3(weather, 'weather.mp3')
+    s2 = s0 + s1
+    # there appears to be a problem saving as an mp3 on raspi pi
+    s2.export('greeting.wav', format='wav')
+
+    #this is the absolute key and involves taking the file created on the local machine and writing it to dropbox
+    f = open('greeting.wav', 'rb')
+    response = client.put_file('/Public/greeting.wav', f, overwrite=True) # the problem may be FFmpeg or avconv -- pydub can use either
+    #print 'uploaded: ', response
+
+    z = client.media("/Public/greeting.wav")
+    public_streaming_url = z['url']
+    print "public_streaming_url =", public_streaming_url
+    master.play_uri(public_streaming_url,'')
+
+def text2mp3(text, file_):
+    tts_uri = "http://translate.google.com/translate_tts?tl=en&q={}"
+    with open(file_, 'wb') as handle:
+        for line in text:
+            print line
+            response = requests.get(tts_uri.format(line), stream=True)
+
+            if not response.ok:
+                sys.exit()
+
+            for block in response.iter_content(1024):
+                if not block:
+                    break
+
+                handle.write(block)
+
+    output = AudioSegment.from_mp3(file_) #documentation suggests can use a file-like object
+    return output
 
 def hide_buttons():
     global mode
@@ -761,7 +814,7 @@ def show_screen_buttons():
     b3 = pygbutton.PygButton((10,5+3*h1,w1,30), 'Decrease Volume', action=dec_volume)
     b4 = pygbutton.PygButton((10,5+4*h1,w1,30), 'Hide Buttons', action=hide_buttons)
     w2 = (w/2) + 10
-    b5 = pygbutton.PygButton((w2,5,w1,30), 'Weather')
+    b5 = pygbutton.PygButton((w2,5,w1,30), 'Speak Weather', action=weather_tts)
     b6 = pygbutton.PygButton((w2,5+h1,w1,30), 'Random Amazon', action=play_random_amazon)
     b7 = pygbutton.PygButton((w2,5+2*h1,w1,30), 'Patty Griffin Radio', action=partial(select, station=stations[6]))
     b8 = pygbutton.PygButton((w2,5+3*h1,w1,30), 'WNYC', action=partial(select, station=stations[0]))
