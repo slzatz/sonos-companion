@@ -25,11 +25,11 @@ import dropbox
 import wand.image
 import config as c
 home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home,'SoCo')] + [os.path.join(home, 'pydub')] + sys.path
+sys.path = [os.path.join(home, 'Soco')] + [os.path.join(home, 'pydub')] + [os.path.join(home, 'twitter')] + sys.path
 import soco
 from soco import config
 from pydub import AudioSegment
-
+import twitter import *
 import pygbutton_lite as pygbutton
 
 if platform.machine() == 'armv6l':
@@ -179,10 +179,8 @@ colors = {
 }
 
 stations = [
-#('WNYC', 'aac://204.93.192.135:80/wnycfm-tunein.aac'),
-('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), # this is from favorites
-#('WSHU-FM', 'x-rincon-mp3radio://wshu.streamguys.org/wshu-news'),
-('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'), # this is from favorites
+('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), 
+('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'),
 ('QuickMix', 'pndrradio:52877953807377986', 'SA_RINCON3_slzatz@gmail.com'),
 ('R.E.M. Radio', 'pndrradio:637630342339192386', 'SA_RINCON3_slzatz@gmail.com'), 
 ('Nick Drake Radio', 'pndrradio:409866109213435458', 'SA_RINCON3_slzatz@gmail.com'),
@@ -200,12 +198,11 @@ station_index = 0
 
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
-meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns=
-"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
+meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 def button_press(pin, b=0):
-    global mode
-    print "mode = ",mode
+    #global mode
+    #print "mode = ",mode
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
 
     if b == 4:
@@ -218,16 +215,9 @@ def button_press(pin, b=0):
         play_pause()
 
     else:
+        # this could be anything but right now playing random amazon
         play_random_amazon()
 
-        #if mode:
-        #    url = get_url(artist, title)
-        #    lyrics = get_lyrics(url)
-        #    show_lyrics(lyrics)
-        #    mode = 0
-        #else:
-        #    mode = 1
-        
 if platform.machine() == 'armv6l':
     GPIO.add_event_detect(18, GPIO.FALLING, callback=partial(button_press, b=4), bouncetime=300) 
     GPIO.add_event_detect(27, GPIO.FALLING, callback=partial(button_press, b=3), bouncetime=300) 
@@ -396,17 +386,11 @@ def play_pause():
 
     display_action("Play-Pause")
 
-def cancel():
-    
-    global mode
-    
-    mode = 1
-
 #def next():
 #    master.next()
 
-def previous():
-    
+def previous():# not in use
+    global mode 
     mode = 0
     #lcd.clear()
     #lcd.backlight(lcd.YELLOW)
@@ -487,62 +471,6 @@ def display_action(text):
     screen.blit(text, (0,h-16)) 
     pygame.display.flip()
 
-def scroll_up(): # not in use
-    
-    global station_index
-    
-    station_index+=1
-    station_index = station_index if station_index < 12 else 0
-    
-    #lcd.clear()
-    #lcd.backlight(lcd.YELLOW)
-    #lcd.message(stations[station_index][0])
-
-def scroll_down():# not in use
-       
-    global station_index
-    
-    station_index-=1
-    station_index = station_index if station_index > -1 else 0
-    
-    #lcd.clear()
-    #lcd.backlight(lcd.YELLOW)
-    #lcd.message(stations[station_index][0])
-    
-def select______():# not in use
-    
-    global mode
-    
-    if mode:
-        mode = 0
-        sleep(.5)
-    else:
-        station = stations[station_index]
-        uri = station[1]
-        
-        if uri.startswith("pndrradio"):
-            meta = meta_format_pandora.format(title=station[0], service=station[2])
-        else:
-            uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
-            meta = meta_format_radio.format(title=station[0], service=station[2])
-        
-        print "uri=",uri
-        print "meta=",meta
-        print "\n"
-  
-        play_uri(uri, meta, station[0]) # station[0] is the title of the station
-            
-        mode = 1
-        sleep(.5)
-        
-def list_stations():# not in use
-    z = ""
-    for i,s in enumerate(stations):
-        print "{:d} - {}".format(i+1,s[0])
-        z+= "{:d} - {}<br>".format(i+1,s[0])
-        
-    return z
-    
 def get_images(artist):
     '''
     10 is the max you can bring back on any individual search
@@ -677,15 +605,6 @@ def get_lyrics():
     screen.blit(text.area, (0,0))
     pygame.display.flip()
 
-def show_lyrics(lyrics): #not in use
-    
-    screen.fill((0,0,0))
-    text = txtlib.Text((w, h), 'freesans', font_size=18)
-    text.text = lyrics
-    text.update()
-    screen.blit(text.area, (0,0))
-    pygame.display.flip()
-    
 def display_weather():
     
     # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.

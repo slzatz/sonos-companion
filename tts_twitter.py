@@ -128,6 +128,7 @@ def text2mp3(text, file_):
             response = requests.get(uri2.format(line), stream=True)
 
             if not response.ok:
+                print "response not OK"
                 return AudioSegment.silent(duration=10)
 
             for block in response.iter_content(1024):
@@ -136,8 +137,11 @@ def text2mp3(text, file_):
 
                 handle.write(block)
 
-    output = AudioSegment.from_mp3('output.mp3')
-    return output
+    sleep(1) # seems to make sure file is written and closed
+    if os.stat('output.mp3')[6]==0:
+        return AudioSegment.silent(duration=10)
+    else:
+        return AudioSegment.from_mp3('output.mp3')
 
 tw = Twitter(auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET))
 x = tw.statuses.home_timeline()
