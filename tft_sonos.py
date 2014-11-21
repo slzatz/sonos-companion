@@ -29,7 +29,7 @@ sys.path = [os.path.join(home, 'Soco')] + [os.path.join(home, 'pydub')] + [os.pa
 import soco
 from soco import config
 from pydub import AudioSegment
-import twitter import *
+from twitter import *
 import pygbutton_lite as pygbutton
 
 if platform.machine() == 'armv6l':
@@ -755,9 +755,9 @@ if __name__ == '__main__':
     new_song = True
     i = 0
     artist = None
-    track_strings = []
+    track_strings = track = []
 
-    KEYS = {pygame.K_p:play_pause, pygame.K_k:inc_volume, pygame.K_j:dec_volume, pygame.K_a:play_random_amazon}
+    KEYS = {pygame.K_p:play_pause, pygame.K_u:inc_volume, pygame.K_d:dec_volume, pygame.K_s:play_random_amazon}
 
     while 1:
         
