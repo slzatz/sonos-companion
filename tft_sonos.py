@@ -529,7 +529,7 @@ def play_random_amazon():
     rows = session.query(Song).count()
 
     for n in range(10):
-        r = random.randrange(0,rows-1)
+        r = random.randrange(1,rows-1)
         song = session.query(Song).get(r)
         print song.id
         print song.artist
