@@ -38,8 +38,10 @@ if platform.machine() == 'armv6l':
     GPIO.setmode(GPIO.BCM)
     for pin in PINS:
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+else:
+    GPIO = None
 
-# google custom search api
+#google custom search api
 from apiclient import discovery
 
 # needed by the google custom search engine module apiclient
@@ -56,6 +58,12 @@ parser = argparse.ArgumentParser(description='Command line options ...')
 
 g_api_key = c.google_api_key
 
+# twitter
+oauth_token = c.twitter_oauth_token 
+oauth_token_secret = c.twitter_oauth_token_secret
+CONSUMER_KEY = c.twitter_CONSUMER_KEY
+CONSUMER_SECRET = c.twitter_CONSUMER_SECRET
+tw = Twitter(auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET))
 # for all of the following: if the command line option is not present then the value is True and startup is normal
 parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
 args = parser.parse_args()
@@ -224,6 +232,55 @@ if platform.machine() == 'armv6l':
     GPIO.add_event_detect(22, GPIO.FALLING, callback=partial(button_press, b=2), bouncetime=300) 
     GPIO.add_event_detect(23, GPIO.FALLING, callback=partial(button_press, b=1), bouncetime=300)
 
+def display_artist_info(artist):
+
+    artist_image_list = get_images(artist)
+    r = random.randint(0,9)
+    url = artist_image_list[r]['link']
+
+    try:
+        response = requests.get(url)
+    except Exception as e:
+        print "response = requests.get(url) generated exception:", e
+        img = wand.image.Image(filename = "test.bmp")
+    else:
+        
+        try:
+            img = wand.image.Image(file=StringIO(response.content))
+        except Exception as e:
+            print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
+            img = wand.image.Image(filename = "test.bmp")
+
+    #img.transform(resize = '320x240^')
+    img.transform(resize = str(h)+'x'+str(w)+'^')
+    img = img.convert('bmp')
+    img.save(filename = "test1.bmp")
+    img = pygame.image.load("test1.bmp").convert()
+    img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
+
+    font = pygame.font.SysFont('Sans', 28)
+    font.set_bold(True)
+    
+    screen.fill((0,0,0))
+    screen.blit(img, (0,0))      
+
+    text = font.render(u"{}".format(artist), True, (255, 0, 0))
+    screen.blit(text, (5,5))
+
+    bio = get_artist_info(artist, autocorrect=0)
+    bio = textwrap.wrap(bio, 70)
+    font = pygame.font.SysFont('Sans', 18)
+    font.set_bold(False)
+    n=40
+    for line in bio:
+        text = font.render(u"{}".format(line), True, (255, 0, 0))
+        screen.blit(text, (5,n))
+        n+=18
+
+    pygame.display.flip()
+
+    os.remove("test1.bmp")
+ 
 def display_song_info(i):
 
     url = artist_image_list[i]['link']
@@ -307,7 +364,24 @@ def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
         return "playcount: "+z+" loved: "+zz
 
     except Exception as e:
-        print "Exception in get_artist_info: ", e
+        print "Exception in get_scrobble_info: ", e
+        return ''
+
+def get_artist_info(artist, autocorrect=0):
+    
+    payload = {'method':'artist.getinfo', 'artist':artist, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key}
+    
+    try:
+        r = requests.get(base_url, params=payload)
+        bio = r.json()['artist']['bio']['summary']
+        text = lxml.html.fromstring(bio).text_content()
+        idx = text.find("Read more")
+        if idx != -1:
+            text = text[:idx]
+        
+        return text
+        
+    except:
         return ''
 
 def get_release_date(artist, album, title):
@@ -385,6 +459,28 @@ def play_pause():
         master.play()
 
     display_action("Play-Pause")
+
+def scroll_up():
+    global station_index
+    max = len(stations) 
+    station_index+=1
+    station_index = station_index if station_index < max else 0
+    artist = stations[station_index][0]
+    idx = artist.find('Radio')
+    if idx != -1:
+        artist = artist[:idx-1]
+    display_artist_info(artist)
+
+def scroll_down():
+    global station_index
+    
+    station_index-=1
+    station_index = station_index if station_index > -1 else 0
+    artist = stations[station_index][0]
+    idx = artist.find('Radio')
+    if idx != -1:
+        artist = artist[:idx-1]
+    display_artist_info(artist)
 
 #def next():
 #    master.next()
@@ -605,6 +701,33 @@ def get_lyrics():
     screen.blit(text.area, (0,0))
     pygame.display.flip()
 
+def display_twitter_feed():
+    feed = tw.statuses.home_timeline()[:5] # list of dictionaries for each tweet
+    n = 0
+    font = pygame.font.SysFont('Sans', 18)
+    font.set_bold(False)
+    surface = pygame.Surface((600,450))
+    surface.fill((0,0,0))
+    #screen.fill((0,0,0))
+    for tweet in feed:
+        #print "LINE = ",line
+        txt = tweet['text']
+        txt = txt[:txt.find('http')] 
+        lines = textwrap.wrap(txt, 70)
+        lines.insert(0, tweet['user']['screen_name']) 
+        n+=20
+        m = 0
+        nn = n
+        for line in lines:
+            txt = font.render(u"{}".format(line), True, (255, 0, 0))
+            #screen.blit(txt, (5,nn+m))
+            surface.blit(txt, (5,nn+m))
+            screen.blit(surface, (0,150))
+            m+=20
+            n+=20
+
+        pygame.display.flip()
+
 def display_weather():
     
     # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
@@ -617,10 +740,17 @@ def display_weather():
     except requests.exceptions.ConnectionError as e:
         print "ConnectionError in request in display_weather: ", e
     else:
-        text = txtlib.Text((320, 240), 'freesans')
-        text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
-        text.update()
-        screen.blit(text.area, (0, 0))
+        #text = txtlib.Text((320, 240), 'freesans')
+        #text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
+        #text.update()
+        #screen.blit(text.area, (0, 0))
+        screen.fill((0,0,0))
+        lines = textwrap.wrap(m1+m2, 70)
+        n = 5
+        for line in lines:
+            txt = font.render(u"{}".format(line), True, (255, 0, 0))
+            screen.blit(txt, (5,n))
+            n+=20
         pygame.display.flip() # Update the full display Surface to the screen
 
 def weather_tts():
@@ -678,10 +808,27 @@ def hide_buttons():
     sleep(1)
     mode = 1
 
+def show_or_select_station():
+    global mode
+    global station_index
+    #if mode == 1:
+    if mode !=0:
+        station_index=0
+        artist = stations[0][0]
+        idx = artist.find('Radio')
+        if idx != -1:
+            artist = artist[:idx-1]
+        display_artist_info(artist)
+        mode = 0 #2 both station select and lyrics are mode 0 
+    else:
+        select()
+
 def select(station=None):
     global mode
 
-    #station = stations[station_index]
+    if station is None:
+        station = stations[station_index]
+
     uri = station[1]
     
     if uri.startswith('pndrradio'):
@@ -722,31 +869,49 @@ def select(station=None):
         
     mode = 1
 
-def show_screen_buttons():
+def cancel():
+    global mode
+    mode = 1
+
+def end():
+    if GPIO:
+        GPIO.cleanup()
+    sys.exit()
+
+def create_screen_buttons():
     font = pygame.font.SysFont('Sans', 20)
     font.set_bold(True)
-    w1 = (w/2) - 15
+
     h1 = h/5
-    b0 = pygbutton.PygButton((10,5,w1,30), 'Lyrics', action=get_lyrics, redraw=False)
-    b1 = pygbutton.PygButton((10,5+h1,w1,30), 'Play-Pause', action=play_pause)
-    b2 = pygbutton.PygButton((10,5+2*h1,w1,30), 'Increase Volume', action=inc_volume)
-    b3 = pygbutton.PygButton((10,5+3*h1,w1,30), 'Decrease Volume', action=dec_volume)
-    b4 = pygbutton.PygButton((10,5+4*h1,w1,30), 'Hide Buttons', action=hide_buttons)
+
+    w1 = (w/2) - 15
+    b0 = pygbutton.PygButton((10,5,w1,h1-5), 'Lyrics', action=get_lyrics, font=font, redraw=False)
+    b1 = pygbutton.PygButton((10,5+h1,w1,h1-5), 'Play-Pause', action=play_pause, font=font)
+    b2 = pygbutton.PygButton((10,5+2*h1,w1,h1-5), 'Increase Volume', action=inc_volume, font=font)
+    b3 = pygbutton.PygButton((10,5+3*h1,w1,h1-5), 'Decrease Volume', action=dec_volume, font=font)
+    b4 = pygbutton.PygButton((10,5+4*h1,w1,h1-5), 'Hide Buttons', action=hide_buttons, font=font)
+    
     w2 = (w/2) + 10
-    b5 = pygbutton.PygButton((w2,5,w1,30), 'Speak Weather', action=weather_tts)
-    b6 = pygbutton.PygButton((w2,5+h1,w1,30), 'Random Amazon', action=play_random_amazon)
-    b7 = pygbutton.PygButton((w2,5+2*h1,w1,30), 'Patty Griffin Radio', action=partial(select, station=stations[6]))
-    b8 = pygbutton.PygButton((w2,5+3*h1,w1,30), 'WNYC', action=partial(select, station=stations[0]))
-    b9 = pygbutton.PygButton((w2,5+4*h1,w1,30), 'Hide Buttons')
-    screen.fill((100,100,100))
+    b5 = pygbutton.PygButton((w2,5,w1,h1-5), 'Speak Weather', action=weather_tts, font=font)
+    b6 = pygbutton.PygButton((w2,5+h1,w1,h1-5), 'Random Amazon', action=play_random_amazon, font=font)
+    b7 = pygbutton.PygButton((w2,5+2*h1,w1,h1-5), 'Patty Griffin Radio', action=partial(select, station=stations[6]), font=font)
+    b8 = pygbutton.PygButton((w2,5+3*h1,w1,h1-5), 'WNYC', action=partial(select, station=stations[0]), font=font)
+    b9 = pygbutton.PygButton((w2,5+4*h1,w1,h1-5), 'Show Presets', action=show_or_select_station, font=font, redraw=False)
+
     buttons = (b0, b1, b2, b3, b4, b5, b6, b7, b8, b9) 
+    return buttons
+
+buttons = create_screen_buttons()
+
+def show_screen_buttons():
+
+    screen.fill((100,100,100))
+
     for b in buttons:
         b.draw(screen)
 
     pygame.display.flip() 
     
-    return buttons
-
 if __name__ == '__main__':
     
     prev_title = None  #this is None so if the song title is the empty string, it's not equal
@@ -755,9 +920,9 @@ if __name__ == '__main__':
     new_song = True
     i = 0
     artist = None
-    track_strings = track = []
-
-    KEYS = {pygame.K_p:play_pause, pygame.K_u:inc_volume, pygame.K_d:dec_volume, pygame.K_s:play_random_amazon}
+    track_strings = []
+    track = {}
+    KEYS = {pygame.K_p:play_pause, pygame.K_u:inc_volume, pygame.K_d:dec_volume, pygame.K_s:show_or_select_station, pygame.K_l:scroll_down, pygame.K_r:scroll_up, pygame.K_BACKSPACE:cancel, pygame.K_ESCAPE:end} #play_random_amazon}
 
     while 1:
         
@@ -772,7 +937,8 @@ if __name__ == '__main__':
 
             if mode==1:
                 #pos = pygame.mouse.get_pos()
-                buttons = show_screen_buttons()
+                #buttons = show_screen_buttons()
+                show_screen_buttons()
                 mode = 2 # mode = 2 is when the buttons are shown
                 #print "mouse position=",pos
                 sleep(1)
@@ -819,13 +985,9 @@ if __name__ == '__main__':
             pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
                 
         elif event.type == pygame.QUIT:
-            sys.exit()
+            end()
             
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                GPIO.cleanup()
-                sys.exit()
-
             KEYS.get(event.key, lambda:None)()
 
         # end of processing pygame events
@@ -836,24 +998,28 @@ if __name__ == '__main__':
                 ttt = time.time()
             continue
 
+        # mode = 1 --> flipping pictures or showing weather
         try:
             state = master.get_current_transport_info()['current_transport_state']
         except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
             state = 'ERROR'
             print "Encountered error in state = master.get_current transport_info(): ", e
 
+        # check if sonos is playing anything and, if not, display weather - could be weather and tweets
         if state != 'PLAYING':
             
             hour = datetime.datetime.now().hour
             if hour != prev_hour:
 
                 display_weather()
+                display_twitter_feed()
                 
                 prev_hour = hour
                 prev_title = ''
 
             continue
                 
+        # check every two seconds if the track has changed - can you just subscribe to something?
         if time.time() - tt > 2:
 
             #get_current_track_info() =  {
@@ -942,8 +1108,8 @@ if __name__ == '__main__':
                #track 
                 print "displaying a new image of ", track['artist']
                 display_song_info2(i) 
-            except NameError as e:
-               print "NameError:", e
+            except Exception as e:
+               print "Exception:", e
             #else:
                 #print "displaying a new image of ", track['artist']
                 #display_song_info2(i) 
