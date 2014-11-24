@@ -704,16 +704,16 @@ def get_lyrics():
 def display_twitter_feed():
     feed = tw.statuses.home_timeline()[:5] # list of dictionaries for each tweet
     n = 0
-    font = pygame.font.SysFont('Sans', 18)
+    font = pygame.font.SysFont('Sans', h/20 )
     font.set_bold(False)
-    surface = pygame.Surface((600,450))
+    surface = pygame.Surface((w,int(.75*h))
     surface.fill((0,0,0))
     #screen.fill((0,0,0))
     for tweet in feed:
         #print "LINE = ",line
         txt = tweet['text']
         txt = txt[:txt.find('http')] 
-        lines = textwrap.wrap(txt, 70)
+        lines = textwrap.wrap(txt, 60)
         lines.insert(0, tweet['user']['screen_name']) 
         n+=20
         m = 0
@@ -722,7 +722,7 @@ def display_twitter_feed():
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
             #screen.blit(txt, (5,nn+m))
             surface.blit(txt, (5,nn+m))
-            screen.blit(surface, (0,150))
+            screen.blit(surface, (0,int(.25*h))
             m+=20
             n+=20
 
@@ -744,8 +744,10 @@ def display_weather():
         #text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
         #text.update()
         #screen.blit(text.area, (0, 0))
+        font = pygame.font.SysFont('Sans', h/20 )
+        font.set_bold(False)
         screen.fill((0,0,0))
-        lines = textwrap.wrap(m1+m2, 70)
+        lines = textwrap.wrap(m1+m2, 60)
         n = 5
         for line in lines:
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
