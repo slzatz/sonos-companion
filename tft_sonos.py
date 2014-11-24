@@ -706,7 +706,7 @@ def display_twitter_feed():
     n = 0
     font = pygame.font.SysFont('Sans', h/20 )
     font.set_bold(False)
-    surface = pygame.Surface((w,int(.75*h))
+    surface = pygame.Surface((w,int(.75*h)))
     surface.fill((0,0,0))
     #screen.fill((0,0,0))
     for tweet in feed:
@@ -722,7 +722,7 @@ def display_twitter_feed():
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
             #screen.blit(txt, (5,nn+m))
             surface.blit(txt, (5,nn+m))
-            screen.blit(surface, (0,int(.25*h))
+            screen.blit(surface, (0,int(.25*h)))
             m+=20
             n+=20
 
