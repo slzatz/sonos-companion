@@ -44,9 +44,8 @@ class Song(Base):
     def __repr__(self):
         return "<artist={}, album={}, title={}, uri={}>".format(self.artist, self.album, self.title, self.uri)
 
-engine = create_engine('sqlite:///amazon_music.db', echo=True)
-#engine = create_engine('sqlite://'+c.amazon_db_url, echo=True)
-Base.metadata.create_all(engine) # only creates tables if they don't exist
+#engine = create_engine('sqlite:///amazon_music.db', echo=True)
+engine = create_engine('postgresql+psycopg2://{}:{}@{}:5432/music'.format(c.aws_id, c.aws_pw, c.aws_host), echo=True)
 Base.metadata.create_all(engine) # only creates tables if they don't exist
 
 conn = engine.connect()
@@ -59,38 +58,35 @@ if __name__ == '__main__':
     rows = session.query(Song).count()
     print "rows = ", rows
     #image = images[random.randrange(0,L-1)]
-
+    print "First 10"
     n=0
     songs = session.query(Song) 
     for song in songs:
-        print song.id
-        print song.artist
-        print song.album
-        print song.title
-        print song.uri
-        #print song.album_art
-        i = song.uri.find('amz')
-        ii = song.uri.find('.')
-        id_ = song.uri[i:ii]
-        print id_
+        print "id=",song.id
+        print "artist=",song.artist.encode('ascii', 'ignore')
+        print "album=",song.album.encode('ascii', 'ignore')
+        print "song title=",song.title.encode('ascii', 'ignore')
+        print "sonos/amazon uri=",song.uri.encode('ascii', 'ignore')
+        print "album art=",song.album_art.encode('ascii', 'ignore')
         print "---------------------------------------------------------------"
         n+=1
         if n==10:
             break
+            
+    print "Random 10"
+
+    print "---------------------------------------------------------------"
+    print "---------------------------------------------------------------"
 
     for n in range(10):
-        r = random.randrange(0,rows-1)
+        r = random.randint(1,rows)
         #song = session.query(Song).filter(Song.id==r).one()
         song = session.query(Song).get(r)
-        print song.id
-        print song.artist
-        print song.album
-        print song.title
-        print song.uri
-        #print song.album_art
-        i = song.uri.find('amz')
-        ii = song.uri.find('.')
-        id_ = song.uri[i:ii]
-        print id_
+        print "id=",song.id
+        print "artist=",song.artist.encode('ascii', 'ignore')
+        print "album=",song.album.encode('ascii', 'ignore')
+        print "song title=",song.title.encode('ascii', 'ignore')
+        print "sonos/amazon uri=",song.uri.encode('ascii', 'ignore')
+        print "album art=",song.album_art.encode('ascii', 'ignore')
         print "---------------------------------------------------------------"
 

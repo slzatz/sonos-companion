@@ -704,7 +704,7 @@ def get_lyrics():
 def display_twitter_feed():
     feed = tw.statuses.home_timeline()[:5] # list of dictionaries for each tweet
     n = 0
-    font = pygame.font.SysFont('Sans', h/20 )
+    font = pygame.font.SysFont('Sans', h/28 )
     font.set_bold(False)
     surface = pygame.Surface((w,int(.75*h)))
     surface.fill((0,0,0))
@@ -713,14 +713,13 @@ def display_twitter_feed():
         #print "LINE = ",line
         txt = tweet['text']
         txt = txt[:txt.find('http')] 
-        lines = textwrap.wrap(txt, 60)
+        lines = textwrap.wrap(txt, 70)
         lines.insert(0, tweet['user']['screen_name']) 
         n+=20
         m = 0
         nn = n
         for line in lines:
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
-            #screen.blit(txt, (5,nn+m))
             surface.blit(txt, (5,nn+m))
             screen.blit(surface, (0,int(.25*h)))
             m+=20
@@ -734,26 +733,22 @@ def display_weather():
     # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
     
     try:
-        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/10011.json")
+        r = requests.get("http://api.wunderground.com/api/9862edd5de2d456c/forecast/q/06880.json")
         m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
         m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
     except requests.exceptions.ConnectionError as e:
         print "ConnectionError in request in display_weather: ", e
     else:
-        #text = txtlib.Text((320, 240), 'freesans')
-        #text.text = wrapper.fill(m1)+'\n'+wrapper.fill(m2)
-        #text.update()
-        #screen.blit(text.area, (0, 0))
-        font = pygame.font.SysFont('Sans', h/20 )
+        font = pygame.font.SysFont('Sans', h/28 )
         font.set_bold(False)
         screen.fill((0,0,0))
-        lines = textwrap.wrap(m1+m2, 60)
+        lines = textwrap.wrap(m1+m2, 70)
         n = 5
         for line in lines:
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
             screen.blit(txt, (5,n))
             n+=20
-        pygame.display.flip() # Update the full display Surface to the screen
+        pygame.display.flip() 
 
 def weather_tts():
     try:
