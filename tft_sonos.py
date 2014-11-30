@@ -1002,7 +1002,7 @@ if __name__ == '__main__':
             #print "event.key=",event.key, type(event.key)
             if 47 < event.key < 58:
                 print "Key between 48 and 57", event.key
-                partial(select, station=stations[event.key-48])
+                partial(select, station=stations[event.key-48])()
 
         # end of processing pygame events
         # two purposes for next few lines -- return to mode 1 if someone shoes lyrics or shows presets and does nothing and just to see what mode for debugging     
