@@ -875,6 +875,39 @@ def end():
         GPIO.cleanup()
     sys.exit()
 
+def create_preset_buttons():
+    font = pygame.font.SysFont('Sans', 18)
+    font.set_bold(False)
+
+    h1 = h/6
+    w1 = (w/2) - 15
+    presets = []
+
+    for i,s in enumerate(stations[0:6]):
+        p = pygbutton.PygButton((10,5+i*h1,w1,h1-5), "{}: {}".format(str(i),s[0]), action=partial(select, station=stations[i]), redraw=False, font=font)
+        presets.append(p)
+    
+    w2 = (w/2) + 10
+
+    for i,s in enumerate(stations[6:13]):
+        p = pygbutton.PygButton((w2,5+i*h1,w1,h1-5), "{}: {}".format(str(i+6),s[0]), action=partial(select, station=stations[i+6]), redraw=False, font=font)
+        presets.append(p)
+
+    return presets
+
+presets = create_preset_buttons()
+
+def show_preset_buttons():
+
+    global mode
+    mode = 3
+    screen.fill((100,100,100))
+
+    for p in presets:
+        p.draw(screen)
+
+    pygame.display.flip() 
+
 def create_screen_buttons():
     font = pygame.font.SysFont('Sans', 20)
     font.set_bold(True)
@@ -891,7 +924,7 @@ def create_screen_buttons():
     w2 = (w/2) + 10
     b5 = pygbutton.PygButton((w2,5,w1,h1-5), 'Speak Weather', action=weather_tts, font=font)
     b6 = pygbutton.PygButton((w2,5+h1,w1,h1-5), 'Random Amazon', action=play_random_amazon, font=font)
-    b7 = pygbutton.PygButton((w2,5+2*h1,w1,h1-5), 'Patty Griffin Radio', action=partial(select, station=stations[6]), font=font)
+    b7 = pygbutton.PygButton((w2,5+2*h1,w1,h1-5), 'Show All Presets', action=show_preset_buttons, font=font, redraw=False)
     b8 = pygbutton.PygButton((w2,5+3*h1,w1,h1-5), 'WNYC', action=partial(select, station=stations[0]), font=font)
     b9 = pygbutton.PygButton((w2,5+4*h1,w1,h1-5), 'Show Presets', action=show_or_select_station, font=font, redraw=False)
 
@@ -919,7 +952,7 @@ if __name__ == '__main__':
     artist = None
     track_strings = []
     track = {}
-    KEYS = {pygame.K_p:play_pause, pygame.K_u:inc_volume, pygame.K_d:dec_volume, pygame.K_s:show_or_select_station, pygame.K_l:scroll_down, pygame.K_r:scroll_up, pygame.K_BACKSPACE:cancel, pygame.K_ESCAPE:end} #play_random_amazon}
+    KEYS = {pygame.K_p:play_pause, pygame.K_i:inc_volume, pygame.K_d:dec_volume, pygame.K_s:show_or_select_station, pygame.K_j:scroll_down, pygame.K_k:scroll_up, pygame.K_BACKSPACE:cancel, pygame.K_ESCAPE:end, pygame.K_b:cancel, pygame.K_6:partial(select, station=stations[6])} #play_random_amazon}
 
     while 1:
         
@@ -944,40 +977,20 @@ if __name__ == '__main__':
                 prev_title = None
                 mode = 1 # when mode = 1 images are being flipped
 
-            else:  # mode 2 = the buttons are showing 
+            elif mode==2: #else:  # mode 2 = the buttons are showing 
 
                 button = next((b for b in buttons if b.pressed(event)),buttons[4])
                 button.draw_down(screen)
                 button.action()
                 button.re_draw(screen)
 
-                #if b1.pressed(event):
-                #    b1.draw_down(screen)
-                #    if artist:
-                #        print "must have tried to change mode"
-                #        url = get_url(artist, title)
-                #        lyrics = get_lyrics(url)
-                #        show_lyrics(lyrics)
-                #        mode = 0 # mode = 0 is when lyrics are showing
-                #elif b2.pressed(event): 
-                #    b2.draw_down(screen)
-                #    play_pause()
-                #    b2.draw_normal(screen)
-                #elif b3.pressed(event): 
-                #    b3.draw_down(screen)
-                #    inc_volume()
-                #    b3.draw_normal(screen)
-                #    pygame.display.update(b3.rect)
-                #elif b4.pressed(event): 
-                #    b4.draw_down(screen)
-                #    dec_volume()
-                #    b4.draw_normal(screen)
-                #else:
-                #    b5.pressed(event) # makes sure button is drawn in depressed view if it is pushed
-                #    b5.draw_down(screen)
-                #    mode = 1
-                #    z = 0
-                #    tt = time.time() + 2     
+            elif mode==3: #else:  # mode 3 = the presets are showing 
+
+                preset = next((p for p in presets if p.pressed(event)),buttons[4])
+                preset.draw_down(screen)
+                preset.action()
+                #preset.re_draw(screen)
+                mode = 1
                     
             pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
                 
@@ -986,16 +999,26 @@ if __name__ == '__main__':
             
         elif event.type == pygame.KEYDOWN:
             KEYS.get(event.key, lambda:None)()
+            #print "event.key=",event.key, type(event.key)
+            if 47 < event.key < 58:
+                partial(select, station=stations[event.key-48])
 
         # end of processing pygame events
              
+        if time.time() - ttt > 2:
+            print time.time(),"mode=",mode
+            ttt = time.time()
+
         if  mode!=1:
-            if time.time() - ttt > 2:
-                print time.time(),"mode=",mode
-                ttt = time.time()
             continue
 
-        # mode = 1 --> flipping pictures or showing weather
+        #if  mode!=1:
+        #    if time.time() - ttt > 2:
+        #        print time.time(),"mode=",mode
+        #        ttt = time.time()
+        #    continue
+
+        ## mode = 1 --> flipping pictures or showing weather
         try:
             state = master.get_current_transport_info()['current_transport_state']
         except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
