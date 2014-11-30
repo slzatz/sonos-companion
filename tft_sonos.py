@@ -827,7 +827,7 @@ def select(station=None):
         station = stations[station_index]
 
     uri = station[1]
-    
+    print "uri=",uri
     if uri.startswith('pndrradio'):
         meta = meta_format_pandora.format(title=station[0], service=station[2])
         play_uri(uri, meta, station[0]) # station[0] is the title of the station
@@ -1001,11 +1001,12 @@ if __name__ == '__main__':
             KEYS.get(event.key, lambda:None)()
             #print "event.key=",event.key, type(event.key)
             if 47 < event.key < 58:
+                print "Key between 48 and 57", event.key
                 partial(select, station=stations[event.key-48])
 
         # end of processing pygame events
-             
-        if time.time() - ttt > 2:
+        # two purposes for next few lines -- return to mode 1 if someone shoes lyrics or shows presets and does nothing and just to see what mode for debugging     
+        if time.time() - ttt > 10:
             print time.time(),"mode=",mode
             ttt = time.time()
 
@@ -1126,7 +1127,7 @@ if __name__ == '__main__':
             i = i+1 if i < 9 else 0
             try:
                #track 
-                print "displaying a new image of ", track['artist']
+                print time.time(),"displaying a new image of ", track['artist']
                 display_song_info2(i) 
             except Exception as e:
                print "Exception:", e
