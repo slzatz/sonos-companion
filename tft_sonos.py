@@ -96,18 +96,19 @@ if platform.machine() == 'armv6l' and not args.display:
 elif platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 elif platform.system() == "Linux":
-    os.putenv('SDL_VIDEODRIVER', 'x11')
+    os.environ['SDL_VIDEODRIVER'] = 'x11' #note: this works if you launch x (startx) and run terminal requires keyboard/mouse
 else:
     sys.exit("Currently unsupported hardware/OS")
 
-pygame.init()
+r = pygame.init()
+print r
 
-if platform.machine() == 'armv6l':
+if platform.machine() == 'armv6l' and not args.display:
     pygame.mouse.set_visible(False)
 
 w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
-if w > 640:
-    w,h = 640,640
+if w > 800:
+    w,h = 800,800
 screen = pygame.display.set_mode((w, h))
 
 screen.fill((0,0,0))
