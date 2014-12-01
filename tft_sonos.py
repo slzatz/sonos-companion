@@ -107,8 +107,10 @@ if platform.machine() == 'armv6l' and not args.display:
     pygame.mouse.set_visible(False)
 
 w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
-if w > 800:
-    w,h = 800,800
+if w > 1000:
+    w = 1000
+if h > 700:
+    h = h - 100
 screen = pygame.display.set_mode((w, h))
 
 screen.fill((0,0,0))
