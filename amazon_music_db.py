@@ -16,8 +16,6 @@ from sqlalchemy import Column, Integer, String #, Boolean, ForeignKey
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.exc import IntegrityError, OperationalError
 
-import json
-
 #this is what was captured by wireshark
 didl_wire = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020amz%3atr%3a9d59de5f-fdb7-4741-8a29-ccaf8d1cd34f" parentID="0006006camz%3apl%3a98eeb62c-179f-4f79-9870-11ca87bad2fe" restricted="true"><dc:title>Campaigner</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
 

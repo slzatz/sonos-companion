@@ -1,6 +1,6 @@
-'''This script is intended to collect metadata on Amazon Music Cloud songs and place it in a local database
-amazon_music.db'''
-
+'''
+This script is intended to collect metadata on Amazon Music Cloud songs and place it in a database amazon_music.db
+'''
 import os
 #import argparse
 import time
