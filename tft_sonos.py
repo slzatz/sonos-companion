@@ -32,6 +32,16 @@ from pydub import AudioSegment
 from twitter import *
 import pygbutton_lite as pygbutton
 
+import boto.sqs
+from boto.sqs.message import Message
+
+conn = boto.sqs.connect_to_region(
+    "us-east-1",
+    aws_access_key_id=c.aws_access_key_id,
+    aws_secret_access_key=c.aws_secret_access_key)
+
+sqs_track_queue = conn.get_all_queues()[0]
+
 if platform.machine() == 'armv6l':
     import RPi.GPIO as GPIO
     PINS = [23,22,27,18] #pins 1 through 4
@@ -79,7 +89,7 @@ except IOError:
       artists = {}
 
 DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service'), ('scrobble','Scrobble'), ('uri','Uri')])
-
+MINI_DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song')])
 #last.fm - using for scrobble information, can also be used for artist bios 
 base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = c.last_fm_api_key 
@@ -1096,7 +1106,15 @@ if __name__ == '__main__':
                 prev_title = title
                 i = 0
                 new_song = True
-                
+
+                # this is for AWS SQS
+                m = Message()
+                msg = '--'.join([MINI_DISPLAY[x]+': '+track[x] for x in MINI_DISPLAY if track.get(x)])
+                m.set_body(msg)
+                sqs_track_queue.write(m)
+
+                tw.direct_messages.new(user='slzatz', text=msg)
+
                 #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
                 artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
                 

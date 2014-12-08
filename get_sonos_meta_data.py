@@ -84,7 +84,10 @@ def my_add_to_queue(uri, metadata):
     return int(qnumber)
     
 prev_title = -1 #this is -1 so if the initial song title is the empty string, it's not equal
-tt = z = time.time()
+tt = time.time()
+
+rows = session.query(Song).count()
+print "rows = ", rows
 
 while 1:
 
@@ -96,7 +99,7 @@ while 1:
 
     if state == 'PLAYING':
         
-        if time.time() - tt > 2:
+        if time.time() - tt > 10:
 
             #get_current_track_info() =  {
                         #u'album': 'We Walked In Song', 
@@ -129,10 +132,23 @@ while 1:
                         print "IntegrityError: ",e
                     else:
                         try:
-                            print u"{} {} {} {} added to db".format(track.get('artist'), track.get('title'), track.get('album'), track.get('uri'))
+                            print u"\n{} {} {} {} added to db\n".format(track.get('artist'), track.get('title'), track.get('album'), track.get('uri'))
                         except UnicodeEncodeError as e:
                             print "UnicodeEncodeError: ",e
 
                 prev_title = title
                 tt = time.time()
-                master.next()
+
+                try:
+                    master.next()
+                except:
+                    sys.exit(1)
+
+    else:
+        print "state=",state
+
+    sleep(.1)
+
+
+rows = session.query(Song).count()
+print "rows = ", rows
