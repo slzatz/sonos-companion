@@ -62,7 +62,7 @@ import httplib2
 import musicbrainzngs
 
 from amazon_music_db import *
-from create_image_db import *
+#from create_image_db import *
 
 client = dropbox.client.DropboxClient(c.dropbox_code)
 
@@ -267,7 +267,7 @@ def display_artist_info(artist):
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
             img = wand.image.Image(filename = "test.bmp")
             artist_image_list[r].ok = False
-            img_session.commit()
+            session.commit()
 
     #img.transform(resize = '320x240^')
     img.transform(resize = str(h)+'x'+str(w)+'^')
@@ -315,7 +315,7 @@ def display_song_info(i):
         img = wand.image.Image(filename = "test.bmp")
         print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
         artist_image_list[r].ok = False
-        img_session.commit()
+        session.commit()
 
     #img.transform(resize = '320x240^')
     img.transform(resize = str(h)+'x'+str(w)+'^')
@@ -356,7 +356,7 @@ def display_song_info2(i):
             img = wand.image.Image(filename = "test.bmp")
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception: ", e
             artist_image_list[i].ok = False
-            img_session.commit()
+            session.commit()
 
     try:
        # img.transform(resize = '320x240^')
@@ -601,12 +601,12 @@ def get_images(name):
     using link, height, width
     '''
     try:
-        artist = img_session.query(Artist).filter(Artist.name==name).one()
+        artist = session.query(Artist).filter(Artist.name==name).one()
     except NoResultFound:
         #artist = None
         artist = Artist(name=name)
-        img_session.add(artist)
-        img_session.commit()
+        session.add(artist)
+        session.commit()
     
     #if artist not in artists: 
         http = httplib2.Http()
@@ -622,7 +622,7 @@ def get_images(name):
             images.append(image)
             
         artist.images = images
-        img_session.commit()
+        session.commit()
      #   for x in z['items']:
      #       y = {}
      #       y['image'] = {k:x['image'][k] for k in ['height','width']}

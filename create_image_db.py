@@ -41,7 +41,7 @@ from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm.exc import NoResultFound
 
-__all__ = ['Artist', 'Image', 'img_session', 'IntegrityError',  'OperationalError', 'NoResultFound'] #, 'conn'] #, 'select', 'join', 'and_']
+__all__ = ['Artist', 'Image', 'session', 'IntegrityError',  'OperationalError', 'NoResultFound'] #, 'conn'] #, 'select', 'join', 'and_']
 
 Base = declarative_base()
 
@@ -67,12 +67,12 @@ class Image(Base):
     def __repr__(self):
         return "<artist_id={}; link={}; ({},{})>".format(self.artist_id, self.link, self.width, self.height)
 
-engine = create_engine('sqlite:///artist_images.db', echo=True)
-#engine = create_engine('postgresql+psycopg2://{}:{}@{}:5432/music'.format(c.aws_id, c.aws_pw, c.aws_host), echo=True)
+#engine = create_engine('sqlite:///artist_images.db', echo=True)
+engine = create_engine('postgresql+psycopg2://{}:{}@{}:5432/music'.format(c.aws_id, c.aws_pw, c.aws_host), echo=True)
 Base.metadata.create_all(engine) # only creates tables if they don't exist
 
 Session = sessionmaker(bind=engine)
-img_session = Session()
+session = Session()
 
 if __name__ == '__main__':
 
