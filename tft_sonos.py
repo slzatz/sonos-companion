@@ -30,6 +30,7 @@ import soco
 from soco import config
 from pydub import AudioSegment
 from twitter import *
+from twitter.api import TwitterHTTPError
 import pygbutton_lite as pygbutton
 
 import boto.sqs
@@ -61,6 +62,7 @@ import httplib2
 import musicbrainzngs
 
 from amazon_music_db import *
+from create_image_db import *
 
 client = dropbox.client.DropboxClient(c.dropbox_code)
 
@@ -82,11 +84,11 @@ args = parser.parse_args()
 
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
-try:
-  with open('artists.json', 'r') as f:
-      artists = json.load(f)
-except IOError:
-      artists = {}
+#try:
+#  with open('artists.json', 'r') as f:
+#      artists = json.load(f)
+#except IOError:
+#      artists = {}
 
 DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service'), ('scrobble','Scrobble'), ('uri','Uri')])
 MINI_DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song')])
@@ -249,7 +251,8 @@ def display_artist_info(artist):
 
     artist_image_list = get_images(artist)
     r = random.randint(0,9)
-    url = artist_image_list[r]['link']
+    #url = artist_image_list[r]['link']
+    url = artist_image_list[r].link
 
     try:
         response = requests.get(url)
@@ -263,6 +266,8 @@ def display_artist_info(artist):
         except Exception as e:
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
             img = wand.image.Image(filename = "test.bmp")
+            artist_image_list[r].ok = False
+            img_session.commit()
 
     #img.transform(resize = '320x240^')
     img.transform(resize = str(h)+'x'+str(w)+'^')
@@ -296,7 +301,8 @@ def display_artist_info(artist):
  
 def display_song_info(i):
 
-    url = artist_image_list[i]['link']
+    #url = artist_image_list[i]['link']
+    url = artist_image_list[i].link
 
     try:
         response = requests.get(url)
@@ -308,6 +314,8 @@ def display_song_info(i):
     except Exception as detail:
         img = wand.image.Image(filename = "test.bmp")
         print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail
+        artist_image_list[r].ok = False
+        img_session.commit()
 
     #img.transform(resize = '320x240^')
     img.transform(resize = str(h)+'x'+str(w)+'^')
@@ -332,7 +340,8 @@ def display_song_info(i):
  
 def display_song_info2(i):
 
-    url = artist_image_list[i]['link']
+    #url = artist_image_list[i]['link']
+    url = artist_image_list[i].link
 
     try:
         response = requests.get(url)
@@ -346,6 +355,8 @@ def display_song_info2(i):
         except Exception as e:
             img = wand.image.Image(filename = "test.bmp")
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception: ", e
+            artist_image_list[i].ok = False
+            img_session.commit()
 
     try:
        # img.transform(resize = '320x240^')
@@ -580,7 +591,7 @@ def display_action(text):
     screen.blit(text, (0,h-16)) 
     pygame.display.flip()
 
-def get_images(artist):
+def get_images(name):
     '''
     10 is the max you can bring back on any individual search
     I think you  separate the orterms by a space
@@ -589,32 +600,47 @@ def get_images(artist):
     start=1 or 11
     using link, height, width
     '''
-
-    if artist not in artists: 
+    try:
+        artist = img_session.query(Artist).filter(Artist.name==name).one()
+    except NoResultFound:
+        #artist = None
+        artist = Artist(name=name)
+        img_session.add(artist)
+        img_session.commit()
+    
+    #if artist not in artists: 
         http = httplib2.Http()
         service = discovery.build('customsearch', 'v1',  developerKey=g_api_key, http=http)
         z = service.cse().list(q=artist, searchType='image', imgSize='large', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
 
-        print 'artist=',artist    #################################################
-        image_list = []
+        #print 'artist=',artist    #################################################
+        #iimage_list = []
 
-        for x in z['items']:
-            y = {}
-            y['image'] = {k:x['image'][k] for k in ['height','width']}
-            y['link'] = x['link']
-            image_list.append(y)
-      
-        artists[artist] = image_list
+        images = []
+        for i in z['items']:
+            image = Image(link=i['link'], width=i['image']['width'],height=i['image']['height'])
+            images.append(image)
+            
+        artist.images = images
+        img_session.commit()
+     #   for x in z['items']:
+     #       y = {}
+     #       y['image'] = {k:x['image'][k] for k in ['height','width']}
+     #       y['link'] = x['link']
+     #       image_list.append(y)
+     # 
+     #   artists[artist] = image_list
 
-        print "**************Google Custom Search Engine Request for "+artist+"**************"
-          
-        try:
-            with open('artists.json', 'w') as f:
-                json.dump(artists, f)
-        except IOError:
-            print "Could not write 'artists' json file"
+     #   print "**************Google Custom Search Engine Request for "+artist+"**************"
+     #     
+     #   try:
+     #       with open('artists.json', 'w') as f:
+     #           json.dump(artists, f)
+     #   except IOError:
+     #       print "Could not write 'artists' json file"
 
-    return artists[artist]
+    #return artists[artist]
+    return artist.images 
     
 def get_url(artist, title):
 
@@ -1113,7 +1139,10 @@ if __name__ == '__main__':
                 m.set_body(msg)
                 sqs_track_queue.write(m)
 
-                tw.direct_messages.new(user='slzatz', text=msg)
+                try:
+                    tw.direct_messages.new(user='slzatz', text=msg)
+                except TwitterHTTPError:
+                    print "twitter issue"   
 
                 #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
                 artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
