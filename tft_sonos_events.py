@@ -28,10 +28,12 @@ home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'Soco')] + [os.path.join(home, 'pydub')] + [os.path.join(home, 'twitter')] + sys.path
 import soco
 from soco import config
+from soco.events import event_listener
 from pydub import AudioSegment
 from twitter import *
 from twitter.api import TwitterHTTPError
 import pygbutton_lite as pygbutton
+from Queue import Empty
 
 import boto.sqs
 from boto.sqs.message import Message
@@ -182,6 +184,7 @@ for s in speakers:
     if s != master:
         s.join(master)
     
+sub = master.avTransport.subscribe()
 print "\n"
 #for s in speakers:
 #if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
@@ -607,18 +610,13 @@ def get_images(name):
     try:
         artist = session.query(Artist).filter(Artist.name==name).one()
     except NoResultFound:
-        #artist = None
         artist = Artist(name=name)
         session.add(artist)
         session.commit()
     
-    #if artist not in artists: 
         http = httplib2.Http()
         service = discovery.build('customsearch', 'v1',  developerKey=g_api_key, http=http)
         z = service.cse().list(q=artist, searchType='image', imgSize='large', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
-
-        #print 'artist=',artist    #################################################
-        #iimage_list = []
 
         images = []
         for i in z['items']:
@@ -627,23 +625,7 @@ def get_images(name):
             
         artist.images = images
         session.commit()
-     #   for x in z['items']:
-     #       y = {}
-     #       y['image'] = {k:x['image'][k] for k in ['height','width']}
-     #       y['link'] = x['link']
-     #       image_list.append(y)
-     # 
-     #   artists[artist] = image_list
 
-     #   print "**************Google Custom Search Engine Request for "+artist+"**************"
-     #     
-     #   try:
-     #       with open('artists.json', 'w') as f:
-     #           json.dump(artists, f)
-     #   except IOError:
-     #       print "Could not write 'artists' json file"
-
-    #return artists[artist]
     return artist.images 
     
 def get_url(artist, title):
@@ -989,7 +971,7 @@ if __name__ == '__main__':
     
     prev_title = None  #this is None so if the song title is the empty string, it's not equal
     prev_hour = -1
-    ttt = tt = z = time.time()
+    ttt = z = time.time()
     new_song = True
     i = 0
     artist = None
@@ -1056,12 +1038,6 @@ if __name__ == '__main__':
         if  mode!=1:
             continue
 
-        #if  mode!=1:
-        #    if time.time() - ttt > 2:
-        #        print time.time(),"mode=",mode
-        #        ttt = time.time()
-        #    continue
-
         ## mode = 1 --> flipping pictures or showing weather
         try:
             state = master.get_current_transport_info()['current_transport_state']
@@ -1084,14 +1060,15 @@ if __name__ == '__main__':
             continue
                 
         # check every two seconds if the track has changed - can you just subscribe to something?
-        #try: 
-        #event = sub.events.get(timeout=0.5)
-        #except Empty:
-            #pass
-        #else
-            #current_track =
-            ...
-        if time.time() - tt > 2:
+        try: 
+            event = sub.events.get(timeout=0.5)
+        except Empty:
+            new_song = False
+        #except DIDLMetadataError:
+        #    print "DIDLMetadataError related to subscribing from events"
+        except Exception as e:
+            print "DIDL issue:", e
+        else:
 
             #get_current_track_info() =  {
                         #u'album': 'We Walked In Song', 
@@ -1105,10 +1082,9 @@ if __name__ == '__main__':
             
             current_track = master.get_current_track_info()
             title = current_track['title']
-            artist = current_track['artist'] # for lyrics           
-            tt = time.time()
+            artist = current_track['artist'] # for lyrics           ##################1-18-2015
             
-            print str(tt), "checking to see if track has changed"
+            print str(time.time()), "checking to see if track has changed"
             
             if prev_title != title:
                 
@@ -1138,14 +1114,33 @@ if __name__ == '__main__':
 
                 track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
             
+                #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
+                artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
+                
+                print "displaying initial image of ", track.get('artist', '')
+                display_song_info(0)
                 z = time.time()
                                   
                 prev_title = title
                 i = 0
                 new_song = True
-
-                # this is for AWS SQS
+                
                 m = Message()
+                m.message_attributes = {
+                     "artist": {
+                         "data_type": "String",
+                         "string_value": track.get('artist', '')
+                               },
+                     "song": {
+                         "data_type": "String",
+                         "string_value": track.get('title', '')
+                             },
+                     "album": {
+                         "data_type": "String",
+                         "string_value": track.get('album', '')
+                             }
+                         }
+                #MINI_DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song')])
                 msg = '--'.join([MINI_DISPLAY[x]+': '+track[x] for x in MINI_DISPLAY if track.get(x)])
                 m.set_body(msg)
                 sqs_track_queue.write(m)
@@ -1156,19 +1151,20 @@ if __name__ == '__main__':
                 #except TwitterHTTPError:
                 #    print "twitter issue"   
 
-                #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
-                artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
-                
-                print "displaying initial image of ", track.get('artist', '')
-                display_song_info(0)
-                
-            elif not new_song:
-                # show the next track_string if not the image and text from a new song
-                    
+        if time.time() - z > 10:
+            
+            i = i+1 if i < 9 else 0
+
+            try:
+                print time.time(),"displaying a new image of ", track['artist']
+                display_song_info2(i) 
+            except Exception as e:
+               print "Exception:", e
+            else:
                 if not track_strings:
                     track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)])
                          
-                line = track_strings.pop(0)
+                line = track_strings.pop(0) if track_strings else 'No info found'
 
                 font = pygame.font.SysFont('Sans', 14)
                 font.set_bold(True)
@@ -1180,22 +1176,6 @@ if __name__ == '__main__':
                 screen.blit(zzz, (0,h-16))
                 screen.blit(text, (0,h-16))
                 pygame.display.flip()
-                
-        
-        if time.time() - z > 10:
-            
-            new_song = False
-            
-            i = i+1 if i < 9 else 0
-            try:
-               #track 
-                print time.time(),"displaying a new image of ", track['artist']
-                display_song_info2(i) 
-            except Exception as e:
-               print "Exception:", e
-            #else:
-                #print "displaying a new image of ", track['artist']
-                #display_song_info2(i) 
             
             z = time.time()
         
