@@ -1154,15 +1154,15 @@ if __name__ == '__main__':
                 m.message_attributes = {
                      "artist": {
                          "data_type": "String",
-                         "string_value": track.get('artist', 'None')
+                         "string_value": track.get('artist') if track.get('artist') else 'None' # need something other than ''
                                },
                      "song": {
                          "data_type": "String",
-                         "string_value": track.get('title', 'None')
+                         "string_value": track.get('title') if track.get('title') else 'None'
                              },
                      "album": {
                          "data_type": "String",
-                         "string_value": track.get('album', 'None')
+                         "string_value": track.get('album') if track.get('album') else 'None'
                              }
                          }
                 msg = '--'.join([MINI_DISPLAY[x]+': '+track[x] for x in MINI_DISPLAY if track.get(x)])
