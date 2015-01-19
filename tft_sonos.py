@@ -1138,6 +1138,11 @@ if __name__ == '__main__':
 
                 track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
             
+                #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
+                artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
+                
+                print "displaying initial image of ", track.get('artist', '')
+                display_song_info(0)
                 z = time.time()
                                   
                 prev_title = title
@@ -1146,6 +1151,20 @@ if __name__ == '__main__':
 
                 # this is for AWS SQS
                 m = Message()
+                m.message_attributes = {
+                     "artist": {
+                         "data_type": "String",
+                         "string_value": track.get('artist', '')
+                               },
+                     "song": {
+                         "data_type": "String",
+                         "string_value": track.get('title', '')
+                             },
+                     "album": {
+                         "data_type": "String",
+                         "string_value": track.get('album', '')
+                             }
+                         }
                 msg = '--'.join([MINI_DISPLAY[x]+': '+track[x] for x in MINI_DISPLAY if track.get(x)])
                 m.set_body(msg)
                 sqs_track_queue.write(m)
@@ -1156,11 +1175,6 @@ if __name__ == '__main__':
                 #except TwitterHTTPError:
                 #    print "twitter issue"   
 
-                #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
-                artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
-                
-                print "displaying initial image of ", track.get('artist', '')
-                display_song_info(0)
                 
             elif not new_song:
                 # show the next track_string if not the image and text from a new song
@@ -1168,7 +1182,7 @@ if __name__ == '__main__':
                 if not track_strings:
                     track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)])
                          
-                line = track_strings.pop(0)
+                line = track_strings.pop(0) if track_strings else "No info found"
 
                 font = pygame.font.SysFont('Sans', 14)
                 font.set_bold(True)
