@@ -1150,30 +1150,31 @@ if __name__ == '__main__':
                 new_song = True
 
                 # this is for AWS SQS
-                m = Message()
-                m.message_attributes = {
-                     "artist": {
-                         "data_type": "String",
-                         "string_value": track.get('artist') if track.get('artist') else 'None' # need something other than ''
-                               },
-                     "song": {
-                         "data_type": "String",
-                         "string_value": track.get('title') if track.get('title') else 'None'
-                             },
-                     "album": {
-                         "data_type": "String",
-                         "string_value": track.get('album') if track.get('album') else 'None'
-                             }
-                         }
                 msg = '--'.join([MINI_DISPLAY[x]+': '+track[x] for x in MINI_DISPLAY if track.get(x)])
-                m.set_body(msg)
-                sqs_track_queue.write(m)
+                if msg:
+                    m = Message()
+                    m.message_attributes = {
+                         "artist": {
+                             "data_type": "String",
+                             "string_value": track.get('artist') if track.get('artist') else 'None' # need something other than ''
+                                   },
+                         "song": {
+                             "data_type": "String",
+                             "string_value": track.get('title') if track.get('title') else 'None'
+                                 },
+                         "album": {
+                             "data_type": "String",
+                             "string_value": track.get('album') if track.get('album') else 'None'
+                                 }
+                             }
+                    m.set_body(msg)
+                    sqs_track_queue.write(m)
 
-                #this works but not sure there is any reason to tweet each song
-                #try:
-                #    tw.direct_messages.new(user='slzatz', text=msg)
-                #except TwitterHTTPError:
-                #    print "twitter issue"   
+                    #this works but not sure there is any reason to tweet each song
+                    #try:
+                    #    tw.direct_messages.new(user='slzatz', text=msg)
+                    #except TwitterHTTPError:
+                    #    print "twitter issue"   
 
                 
             elif not new_song:
