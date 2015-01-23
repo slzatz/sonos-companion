@@ -254,6 +254,14 @@ def forward2():
     print "public_streaming_url =", public_streaming_url
     master.play_uri(public_streaming_url,'')
 
+    sleep(10)
+
+    station = stations[0]
+    uri = station[1]
+    uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+    meta = meta_format_radio.format(title=station[0], service=station[2])
+    play_uri(uri, meta, station[0]) # station[0] is the title of the station
+
 def dec_volume():
     
     volume = master.volume
