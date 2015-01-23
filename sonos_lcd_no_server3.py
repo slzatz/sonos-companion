@@ -123,7 +123,7 @@ def display_song_info():
     else:
         service = ""
     
-    message = '{}\n{} {}'.format(title, track['artist'], service)
+    message = '{}\n{} {}'.format(title.encode('ascii', 'ignore'), track['artist'].encode('ascii', 'ignore'), service.encode('ascii', 'ignore'))
 
     lcd.clear()
     lcd.backlight(col[random.randrange(0,6)])
@@ -254,7 +254,7 @@ def forward2():
     print "public_streaming_url =", public_streaming_url
     master.play_uri(public_streaming_url,'')
 
-    sleep(10)
+    sleep(15)
 
     station = stations[0]
     uri = station[1]
