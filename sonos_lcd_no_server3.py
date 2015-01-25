@@ -123,7 +123,7 @@ def display_song_info():
     else:
         service = ""
     
-    message = '{}\n{} {}'.format(title, track['artist'], service)
+    message = '{}\n{} {}'.format(title.encode('ascii', 'ignore'), track['artist'].encode('ascii', 'ignore'), service.encode('ascii', 'ignore'))
 
     lcd.clear()
     lcd.backlight(col[random.randrange(0,6)])
@@ -253,6 +253,14 @@ def forward2():
     public_streaming_url = z['url']
     print "public_streaming_url =", public_streaming_url
     master.play_uri(public_streaming_url,'')
+
+    sleep(15)
+
+    station = stations[0]
+    uri = station[1]
+    uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+    meta = meta_format_radio.format(title=station[0], service=station[2])
+    play_uri(uri, meta, station[0]) # station[0] is the title of the station
 
 def dec_volume():
     
