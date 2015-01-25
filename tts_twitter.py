@@ -10,7 +10,6 @@ import requests
 import soco
 import config as c
 from soco import config
-from soco.data_structures import URI
 from pydub import AudioSegment
 import dropbox
 from twitter import *

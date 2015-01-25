@@ -5,7 +5,7 @@ However, tft_sonos.py is still putting songs in SQS and the code below retrieves
 
 '''
 import sys
-from time import sleep
+from datetime import datetime
 import boto.sqs
 import config as c
 conn = boto.sqs.connect_to_region(
@@ -33,8 +33,16 @@ while 1:
         #print "attributes=",attributes
         ma = m.message_attributes
         if ma:
-            text = "artist: {}; song: {}; album: {}".format(ma['artist']['string_value'], ma['song']['string_value'], ma['album']['string_value'])
-            zz.append((int(m.attributes['SentTimestamp']), text))
+            artist = ma['artist']['string_value'].encode('ascii', 'ignore')
+            song = ma['song']['string_value'].encode('ascii', 'ignore')
+            album = ma['album']['string_value'].encode('ascii', 'ignore')
+            date = ma['date']['string_value'] if 'date' in ma else "No date"
+            scrobble = ma['scrobble']['string_value'] if 'scrobble' in ma else -1
+            #print "type(date)=",type(date)
+            text = "artist: {}; song: {}; album: {}; date: {}; scrobble: {}".format(artist, song, album, date, scrobble)
+            ts = float(int(m.attributes['SentTimestamp'])/1000)
+            date = datetime.fromtimestamp(ts)
+            zz.append((date, text))
         else:
             q.delete_message(m)
             

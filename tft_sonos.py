@@ -389,11 +389,11 @@ def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
         
         z = r.json()['track']['userplaycount']
         zz = r.json()['track']['userloved']
-        return "playcount: "+z+" loved: "+zz
-
+        #return "playcount: "+z+" loved: "+zz
+        return int(z)
     except Exception as e:
         print "Exception in get_scrobble_info: ", e
-        return ''
+        return -1
 
 def get_artist_info(artist, autocorrect=0):
     
@@ -414,34 +414,37 @@ def get_artist_info(artist, autocorrect=0):
 
 def get_release_date(artist, album, title):
 
+    t = "artist = {}; album = {} [used in search], title = {} [in get_release_date]".format(artist, album, title)
+    print t.encode('ascii', 'ignore')
+
+    # commented this out because I think in most circumstances where there is a legit album, there is an accompanying date
+    # (like for a ripped CD, a Rhapsody song, Pandora
+    # In addition, this allows you to display the first album where the song appeared 
     try:
-        #print "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
-        t = "artist = {}; album = {} [not used in search], title = {} [in get_release_date]".format(artist, album, title)
-        print t.encode('ascii', 'ignore')
-    except UnicodeEncodeError as e: # should just be .encode('ascii', 'ignore')
-        print "Unicode Error", e
+        result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
+    except:
+        return "No date exception (search_releases)"
+    
+    release_list = result['release-list'] # can be missing
+    
+    if 'release-list' in result:
+        release_list = result['release-list'] # can be missing
+        dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
+    
+        if dates:
+            dates.sort()
+            return "{}".format(dates[0])  
 
-    ## commented this out because I think in most circumstances where there is a legit album, there is an accompanying date
-    ## (like for a ripped CD, a Rhapsody song, Pandora
-    ## In addition, this allows you to display the first album where the song appeared 
-    # try:
-        # result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
-    # except:
-        # return "No date exception (search_releases)"
-    
-    # #release_list = result['release-list'] # can be missing
-    
-    # if 'release-list' in result:
-            # release_list = result['release-list'] # can be missing
-            # dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
-    
-            # if dates:
-                # dates.sort()
-                # return dates[0]  
-        
-    ### Generally if there was no date provided it's because there is also a bogus album (because it's a collection
-    ### and so decided to comment out the above.  We'll see how that works over time.
+    return ''
+       
+    ## Generally if there was no date provided it's because there is also a bogus album (because it's a collection
+    ## and so decided to comment out the above.  We'll see how that works over time.
 
+def get_recording_date(artist, album, title):
+
+    t = "artist = {}; album = {} [not used in search], title = {} [in get_recording_date]".format(artist, album, title)
+    print t.encode('ascii', 'ignore')
+    
     try:
         result = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=40, offset=None, strict=False)
     except:
@@ -468,7 +471,7 @@ def get_release_date(artist, album, title):
         dates.sort(key=itemgetter(0,2)) # idea is to put albums by the artist ahead of albums by various artists
         return u"{} - {}".format(dates[0][0], dates[0][1])   
     else:
-        return "?" 
+        return '' 
     
 def play_uri(uri, meta, title):
     try:
@@ -745,11 +748,11 @@ def get_lyrics():
     pygame.display.flip()
 
 def display_twitter_feed():
-    feed = tw.statuses.home_timeline()[:5] # list of dictionaries for each tweet
+    feed = tw.statuses.home_timeline()[:8] # list of dictionaries for each tweet
     n = 0
     font = pygame.font.SysFont('Sans', h/28 )
     font.set_bold(False)
-    surface = pygame.Surface((w,int(.75*h)))
+    surface = pygame.Surface((w,int(.90*h)))
     surface.fill((0,0,0))
     #screen.fill((0,0,0))
     for tweet in feed:
@@ -758,15 +761,15 @@ def display_twitter_feed():
         txt = txt[:txt.find('http')] 
         lines = textwrap.wrap(txt, 70)
         lines.insert(0, tweet['user']['screen_name']) 
-        n+=20
+        n+=24
         m = 0
         nn = n
         for line in lines:
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
             surface.blit(txt, (5,nn+m))
-            screen.blit(surface, (0,int(.25*h)))
-            m+=20
-            n+=20
+            screen.blit(surface, (0,int(.10*h)))
+            m+=24
+            n+=24
 
         pygame.display.flip()
 
@@ -790,7 +793,7 @@ def display_weather():
         for line in lines:
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
             screen.blit(txt, (5,n))
-            n+=20
+            n+=24
         pygame.display.flip() 
 
 def weather_tts():
@@ -1115,15 +1118,19 @@ if __name__ == '__main__':
                 track = dict(current_track)
 
                 # there will be no date if from one of our compilations
-                if not 'date' in track and track.get('artist') and track.get('title'):
-                    track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+                if not 'date' in track and track.get('artist') and track.get('title') and track.get('album'):
+                    if track['album'].find('(c)') == -1:
+                        track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+                    else:
+                        track['date'] = get_recording_date(track['artist'], track['album'], track['title'])
+                         
                 else:
                     track['date'] = ''
                 
                 if not 'scrobble' in track and track.get('artist') and track.get('title'):
                     track['scrobble'] = get_scrobble_info(track['artist'], track['title'])
                 else:
-                    track['scrobble'] = ''
+                    track['scrobble'] = -1
 
                 try:
                     media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
@@ -1136,7 +1143,7 @@ if __name__ == '__main__':
                 except requests.exceptions.ConnectionError as e:
                     print "Error in media_info: ",e
 
-                track_strings = [DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)] 
+                track_strings = [DISPLAY[x]+': '+str(track[x]) for x in DISPLAY if track.get(x)] # str is for scrobble integer 
             
                 #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
                 artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
@@ -1165,8 +1172,16 @@ if __name__ == '__main__':
                          "album": {
                              "data_type": "String",
                              "string_value": track.get('album') if track.get('album') else 'None'
+                                 },
+                         "date": {
+                             "data_type": "String",
+                             "string_value": track.get('date') if track.get('date') else '0' 
+                                 },
+                         "scrobble": {
+                             "data_type": "Number",
+                             "string_value": track.get('scrobble', -1)  
                                  }
-                             }
+                                 }
                     m.set_body(msg)
                     sqs_track_queue.write(m)
 
@@ -1181,7 +1196,7 @@ if __name__ == '__main__':
                 # show the next track_string if not the image and text from a new song
                     
                 if not track_strings:
-                    track_strings.extend([DISPLAY[x]+': '+track[x] for x in DISPLAY if track.get(x)])
+                    track_strings.extend([DISPLAY[x]+': '+str(track[x]) for x in DISPLAY if track.get(x)])
                          
                 line = track_strings.pop(0) if track_strings else "No info found"
 
