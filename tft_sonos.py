@@ -1158,7 +1158,7 @@ if __name__ == '__main__':
                 new_song = True
 
                 # this is for AWS SQS
-                msg = '--'.join([MINI_DISPLAY[x]+': '+track[x]encode('ascii', 'ignore') for x in MINI_DISPLAY if track.get(x)])
+                msg = '--'.join([MINI_DISPLAY[x]+': '+track[x].encode('ascii', 'ignore') for x in MINI_DISPLAY if track.get(x)])
                 if msg:
                     m = Message()
                     m.message_attributes = {
