@@ -390,10 +390,11 @@ def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
         z = r.json()['track']['userplaycount']
         zz = r.json()['track']['userloved']
         #return "playcount: "+z+" loved: "+zz
-        return int(z)
+        return z # will need to be converted to integer when sent to SQS
     except Exception as e:
         print "Exception in get_scrobble_info: ", e
-        return -1
+        return '-1' # will need to be converted to integer when sent to SQS
+
 
 def get_artist_info(artist, autocorrect=0):
     
@@ -1130,7 +1131,7 @@ if __name__ == '__main__':
                 if not 'scrobble' in track and track.get('artist') and track.get('title'):
                     track['scrobble'] = get_scrobble_info(track['artist'], track['title'])
                 else:
-                    track['scrobble'] = -1
+                    track['scrobble'] = '-100'
 
                 try:
                     media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
@@ -1143,7 +1144,7 @@ if __name__ == '__main__':
                 except requests.exceptions.ConnectionError as e:
                     print "Error in media_info: ",e
 
-                track_strings = [DISPLAY[x]+': '+str(track[x]) for x in DISPLAY if track.get(x)] # str is for scrobble integer 
+                track_strings = [DISPLAY[x]+': '+track[x].encode('ascii', 'ignore') for x in DISPLAY if track.get(x)] # str is for scrobble integer 
             
                 #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
                 artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
@@ -1157,7 +1158,7 @@ if __name__ == '__main__':
                 new_song = True
 
                 # this is for AWS SQS
-                msg = '--'.join([MINI_DISPLAY[x]+': '+track[x] for x in MINI_DISPLAY if track.get(x)])
+                msg = '--'.join([MINI_DISPLAY[x]+': '+track[x]encode('ascii', 'ignore') for x in MINI_DISPLAY if track.get(x)])
                 if msg:
                     m = Message()
                     m.message_attributes = {
@@ -1179,7 +1180,7 @@ if __name__ == '__main__':
                                  },
                          "scrobble": {
                              "data_type": "Number",
-                             "string_value": track.get('scrobble', -1)  
+                             "string_value": int(track.get('scrobble', -1))
                                  }
                                  }
                     m.set_body(msg)
@@ -1196,7 +1197,7 @@ if __name__ == '__main__':
                 # show the next track_string if not the image and text from a new song
                     
                 if not track_strings:
-                    track_strings.extend([DISPLAY[x]+': '+str(track[x]) for x in DISPLAY if track.get(x)])
+                    track_strings.extend([DISPLAY[x]+': '+track[x].encode('ascii', 'ignore') for x in DISPLAY if track.get(x)])
                          
                 line = track_strings.pop(0) if track_strings else "No info found"
 
