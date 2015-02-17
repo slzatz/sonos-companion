@@ -176,7 +176,6 @@ def play_uri(uri, meta, title):
     else:
         print "switched to {}".format(title)
 
-
 def my_add_to_queue(uri, metadata):
     response = master.avTransport.AddURIToQueue([
             ('InstanceID', 0),
@@ -234,27 +233,43 @@ def forward():
     master.stop()
 
 def forward2():
+
+    vol = 25
+    
+    for s in speakers:
+        s.volume = new_volume
+
     meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
 
     s0 = text2mp3(["Good Morning, Steve"], 'good_morning.mp3')
     weather = display_weather()
-    #print weather
     s1 = text2mp3(weather, 'weather.mp3')
     s2 = s0 + s1
+
     # there appears to be a problem saving as an mp3 on raspi pi
     s2.export('greeting.wav', format='wav')
 
     #this is the absolute key and involves taking the file created on the local machine and writing it to dropbox
     f = open('greeting.wav', 'rb')
     response = client.put_file('/Public/greeting.wav', f, overwrite=True) # the problem may be FFmpeg or avconv -- pydub can use either
-    #print 'uploaded: ', response
 
     z = client.media("/Public/greeting.wav")
     public_streaming_url = z['url']
     print "public_streaming_url =", public_streaming_url
     master.play_uri(public_streaming_url,'')
+    sleep(.1)
+    played = False
+    while 1:
+        state = master.get_current_transport_info()['current_transport_state']
+        if state == 'PLAYING':
+            played = True
+        elif played == False:
+            continue 
+        else:
+            break
+        sleep(.2)
 
-    sleep(15)
+    #sleep(15)
 
     station = stations[0]
     uri = station[1]
