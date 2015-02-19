@@ -261,6 +261,7 @@ def forward2():
     played = False
     while 1:
         state = master.get_current_transport_info()['current_transport_state']
+        print state
         if state == 'PLAYING':
             played = True
         elif played == False:
