@@ -234,10 +234,8 @@ def forward():
 
 def forward2():
 
-    vol = 25
-    
     for s in speakers:
-        s.volume = new_volume
+        s.volume = 25
 
     meta = meta_format_radio.format(title='google', service='SA_RINCON65031_')
 
@@ -261,7 +259,6 @@ def forward2():
     played = False
     while 1:
         state = master.get_current_transport_info()['current_transport_state']
-        print state
         if state == 'PLAYING':
             played = True
         elif played == False:
