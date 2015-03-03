@@ -113,7 +113,7 @@ else:
     sys.exit("Currently unsupported hardware/OS")
 
 r = pygame.init()
-print r
+print "pygame.init=",r
 
 if platform.machine() == 'armv6l' and not args.display:
     pygame.mouse.set_visible(False)
