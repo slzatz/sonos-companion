@@ -20,7 +20,7 @@ import argparse
 import sys
 from operator import itemgetter
 import lxml.html
-from StringIO import StringIO
+from cStringIO import StringIO
 import dropbox
 import wand.image
 import config as c
@@ -274,8 +274,11 @@ def display_artist_info(artist):
     #img.transform(resize = '320x240^')
     img.transform(resize = str(h)+'x'+str(w)+'^')
     img = img.convert('bmp')
-    img.save(filename = "test1.bmp")
-    img = pygame.image.load("test1.bmp").convert()
+    f = StringIO()
+    img.save(f)
+    f.seek(0)
+    img = pygame.image.load(f, 'bmp').convert()
+    f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 28)
@@ -299,8 +302,6 @@ def display_artist_info(artist):
 
     pygame.display.flip()
 
-    os.remove("test1.bmp")
- 
 def display_song_info(i):
 
     url = artist_image_list[i].link
@@ -324,8 +325,11 @@ def display_song_info(i):
     #img.transform(resize = '320x240^')
     img.transform(resize = str(h)+'x'+str(w)+'^')
     img = img.convert('bmp')
-    img.save(filename = "test1.bmp")
-    img = pygame.image.load("test1.bmp").convert()
+    f = StringIO()
+    img.save(f)
+    f.seek(0)
+    img = pygame.image.load(f, 'bmp').convert()
+    f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 16)
@@ -339,8 +343,6 @@ def display_song_info(i):
         screen.blit(text, (5,n))
         n+=18
     pygame.display.flip()
-
-    os.remove("test1.bmp")
  
 def display_song_info2(i):
 
@@ -366,8 +368,11 @@ def display_song_info2(i):
        # img.transform(resize = '320x240^')
         img.transform(resize = str(h)+'x'+str(w)+'^')
         img = img.convert('bmp')
-        img.save(filename = "test1.bmp")
-        img = pygame.image.load("test1.bmp").convert()
+        f = StringIO()
+        img.save(f)
+        f.seek(0)
+        img = pygame.image.load(f, 'bmp').convert()
+        f.close()
         #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; now not fading for display_images
         
         screen.fill((0,0,0)) 
@@ -375,8 +380,6 @@ def display_song_info2(i):
 
         pygame.display.flip()
         
-        os.remove("test1.bmp") 
-
     except Exception as e:
         print "Problem with img: ", e
 
