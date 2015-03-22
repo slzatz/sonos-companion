@@ -1,7 +1,7 @@
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
-from future_builtins import *
+#from __future__ import unicode_literals
+#from future_builtins import *
 
 import requests
 from cStringIO import StringIO
@@ -103,9 +103,11 @@ def display_image(image):
     size = str(w)+'x'+str(h)+'^'
     img.transform(resize = size)
     img = img.convert('bmp')
-    img.save(filename = "test1.bmp")
-    img = pygame.image.load("test1.bmp").convert()
-    
+    f = StringIO()
+    img.save(f)
+    f.seek(0)
+    img = pygame.image.load(f, 'bmp').convert()
+    f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 28)
@@ -116,7 +118,7 @@ def display_image(image):
     screen.fill((0,0,0)) 
     screen.blit(img, (0,0))      
     screen.blit(text, (0,0))
-    
+
     txt = image.get('text', 'No title')
     txt = wrapper.fill(txt)
     lines = txt.split('\n')
@@ -138,8 +140,6 @@ def display_image(image):
     img.set_alpha(255)
     screen.blit(img, (0,0))      
     pygame.display.flip()
-    os.remove("test1.bmp") 
-
 
 def display_image_and_info(image):
 
@@ -162,8 +162,11 @@ def display_image_and_info(image):
     size = str(w)+'x'+str(h)+'^'
     img.transform(resize = size)
     img = img.convert('bmp')
-    img.save(filename = "test1.bmp")
-    img = pygame.image.load("test1.bmp").convert()
+    f = StringIO()
+    img.save(f)
+    f.seek(0)
+    img = pygame.image.load(f, 'bmp').convert()
+    f.close()
     
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
@@ -191,9 +194,6 @@ def display_image_and_info(image):
             z+=24
 
     pygame.display.flip()
-
-    os.remove("test1.bmp") 
-
 
 if __name__ == '__main__':
 
