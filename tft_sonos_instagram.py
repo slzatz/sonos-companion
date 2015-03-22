@@ -47,7 +47,6 @@ client_id = "8372f43ffb4b4bbbbd054871d6561668"
 ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
 #################instagram
 
-
 conn = boto.sqs.connect_to_region(
     "us-east-1",
     aws_access_key_id=c.aws_access_key_id,
@@ -92,20 +91,13 @@ tw = Twitter(auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_
 parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
 args = parser.parse_args()
 
-#if args.display ...
-
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
-
-#try:
-#  with open('artists.json', 'r') as f:
-#      artists = json.load(f)
-#except IOError:
-#      artists = {}
 
 DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song'), ('date','Date'), ('service','Service'), ('scrobble','Scrobble'), ('uri','Uri')])
 MINI_DISPLAY = OrderedDict([('artist','Artist'), ('album','Album'), ('title','Song')])
+
 #last.fm - using for scrobble information, can also be used for artist bios 
-base_url = "http://ws.audioscrobbler.com/2.0/"
+scrobbler_base_url = "http://ws.audioscrobbler.com/2.0/"
 api_key = c.last_fm_api_key 
 
 wrapper = textwrap.TextWrapper(width=42, replace_whitespace=False) # may be able to be a little longer than 40
@@ -401,23 +393,22 @@ def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
     payload = {'method':'track.getinfo', 'artist':artist, 'track':track, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key, 'username':username}
     
     try:
-        r = requests.get(base_url, params=payload)
+        r = requests.get(scrobbler_base_url, params=payload)
         
         z = r.json()['track']['userplaycount']
-        zz = r.json()['track']['userloved']
+        #zz = r.json()['track']['userloved']
         #return "playcount: "+z+" loved: "+zz
         return z # will need to be converted to integer when sent to SQS
     except Exception as e:
         print "Exception in get_scrobble_info: ", e
         return '-1' # will need to be converted to integer when sent to SQS
 
-
 def get_artist_info(artist, autocorrect=0):
     
     payload = {'method':'artist.getinfo', 'artist':artist, 'autocorrect':autocorrect, 'format':'json', 'api_key':api_key}
     
     try:
-        r = requests.get(base_url, params=payload)
+        r = requests.get(scrobbler_base_url, params=payload)
         bio = r.json()['artist']['bio']['summary']
         text = lxml.html.fromstring(bio).text_content()
         idx = text.find("Read more")
@@ -627,18 +618,14 @@ def get_images(name):
     try:
         artist = session.query(Artist).filter(Artist.name==name).one()
     except NoResultFound:
-        #artist = None
         artist = Artist(name=name)
         session.add(artist)
         session.commit()
     
-    #if artist not in artists: 
+        print "**************Google Custom Search Engine Request for "+name+"**************"
         http = httplib2.Http()
         service = discovery.build('customsearch', 'v1',  developerKey=g_api_key, http=http)
         z = service.cse().list(q=artist, searchType='image', imgSize='large', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
-
-        #print 'artist=',artist    #################################################
-        #iimage_list = []
 
         images = []
         for i in z['items']:
@@ -647,23 +634,7 @@ def get_images(name):
             
         artist.images = images
         session.commit()
-     #   for x in z['items']:
-     #       y = {}
-     #       y['image'] = {k:x['image'][k] for k in ['height','width']}
-     #       y['link'] = x['link']
-     #       image_list.append(y)
-     # 
-     #   artists[artist] = image_list
 
-     #   print "**************Google Custom Search Engine Request for "+artist+"**************"
-     #     
-     #   try:
-     #       with open('artists.json', 'w') as f:
-     #           json.dump(artists, f)
-     #   except IOError:
-     #       print "Could not write 'artists' json file"
-
-    #return artists[artist]
     return artist.images 
     
 def get_url(artist, title):
@@ -1046,7 +1017,6 @@ def display_image(image):
             img = wand.image.Image(filename = "test.bmp")
             print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
 
-    #size = str(DISPLAY[0])+'x'+str(DISPLAY[1])+'^'
     size = str(w)+'x'+str(h)+'^'
     img.transform(resize = size)
     img = img.convert('bmp')
@@ -1160,13 +1130,15 @@ if __name__ == '__main__':
     while 1:
         
        # pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
+       # mode = 1 --> flipping artist or instagram pictures depending on whether anything is playing or not 
+       # mode = 0 both station select and lyrics display
 
         event = pygame.event.poll()
         
         if event.type == pygame.NOEVENT:
             pass # want pass and not continue because want this to fall through to the non pygame event stuff
             
-        elif event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
+        elif 0: #event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
 
             if mode==1:
                 #pos = pygame.mouse.get_pos()
@@ -1374,14 +1346,10 @@ if __name__ == '__main__':
             
             i = i+1 if i < 9 else 0
             try:
-               #track 
                 print time.time(),"displaying a new image of ", track['artist']
                 display_song_info2(i) 
             except Exception as e:
                print "Exception:", e
-            #else:
-                #print "displaying a new image of ", track['artist']
-                #display_song_info2(i) 
             
             z = time.time()
         
