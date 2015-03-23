@@ -193,19 +193,6 @@ print "\n"
 
 print "program running ..."
 
-# backlight colors
-#col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
-
-#colors
-colors = {
-'red': (0,0,0),
-'yellow': (0,0,0),
-'green': (0,0,0),
-'teal': (0,0,0),
-'blue': (0,0,0),
-'violet': (0,0,0),
-}
-
 stations = [
 ('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), 
 ('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'),
@@ -621,7 +608,8 @@ def get_images(name):
         artist = Artist(name=name)
         session.add(artist)
         session.commit()
-    
+
+    if not artist.images: #this should only be true for new artists but you never know
         print "**************Google Custom Search Engine Request for "+name+"**************"
         http = httplib2.Http()
         service = discovery.build('customsearch', 'v1',  developerKey=g_api_key, http=http)
@@ -1185,16 +1173,9 @@ if __name__ == '__main__':
             print time.time(),"mode=",mode
             ttt = time.time()
 
-        if  mode!=1:
-            continue
+        #if  mode!=1:  #03222015
+        #    continue  #03222015
 
-        #if  mode!=1:
-        #    if time.time() - ttt > 2:
-        #        print time.time(),"mode=",mode
-        #        ttt = time.time()
-        #    continue
-
-        ## mode = 1 --> flipping pictures or showing weather
         try:
             state = master.get_current_transport_info()['current_transport_state']
         except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
