@@ -1109,6 +1109,7 @@ if __name__ == '__main__':
     prev_minute = -1
     ttt = tt = z = time.time()
     new_song = True
+    state = 'UNKNOWN'
     i = 0
     artist = None
     track_strings = []
@@ -1170,7 +1171,7 @@ if __name__ == '__main__':
         # end of processing pygame events
         # two purposes for next few lines -- return to mode 1 if someone shoes lyrics or shows presets and does nothing and just to see what mode for debugging     
         if time.time() - ttt > 10:
-            print time.time(),"mode=",mode
+            print time.time(),"mode=",mode," state=",state
             ttt = time.time()
 
         #if  mode!=1:  #03222015
