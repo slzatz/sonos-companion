@@ -1106,8 +1106,7 @@ if __name__ == '__main__':
     print "Number of images = {}".format(L)
 
     prev_title = None  #this is None so if the song title is the empty string, it's not equal
-    prev_minute = -1
-    ttt = tt = z = time.time()
+    tttt = ttt = tt = z = time.time()
     new_song = True
     state = 'UNKNOWN'
     i = 0
@@ -1187,11 +1186,11 @@ if __name__ == '__main__':
         if state != 'PLAYING':
             
             minute = datetime.datetime.now().minute
-            if minute > prev_minute:
+            if time.time() - tttt > 60:
 
                 image = images[random.randrange(0,L-1)]
                 display_image(image)
-                prev_minute = minute
+                tttt = time.time()
                 prev_title = ''
 
             continue
