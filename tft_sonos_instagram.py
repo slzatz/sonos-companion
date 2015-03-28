@@ -1106,14 +1106,23 @@ if __name__ == '__main__':
     print "Number of images = {}".format(L)
 
     prev_title = None  #this is None so if the song title is the empty string, it's not equal
-    tttt = ttt = tt = z = time.time()
+    t1 = t2 = t0 = t3 = time.time()
     new_song = True
     state = 'UNKNOWN'
     i = 0
     artist = None
     track_strings = []
     track = {}
-    KEYS = {pygame.K_p:play_pause, pygame.K_i:inc_volume, pygame.K_d:dec_volume, pygame.K_s:show_or_select_station, pygame.K_j:scroll_down, pygame.K_k:scroll_up, pygame.K_BACKSPACE:cancel, pygame.K_ESCAPE:end, pygame.K_b:cancel, pygame.K_6:partial(select, station=stations[6])} #play_random_amazon}
+    KEYS = {pygame.K_p:play_pause,
+            pygame.K_i:inc_volume,
+            pygame.K_d:dec_volume,
+            pygame.K_s:show_or_select_station,
+            pygame.K_j:scroll_down,
+            pygame.K_k:scroll_up,
+            pygame.K_BACKSPACE:cancel,
+            pygame.K_ESCAPE:end,
+            pygame.K_b:cancel,
+            pygame.K_6:partial(select, station=stations[6])} #play_random_amazon}
 
     while 1:
         
@@ -1126,37 +1135,6 @@ if __name__ == '__main__':
         if event.type == pygame.NOEVENT:
             pass # want pass and not continue because want this to fall through to the non pygame event stuff
             
-        elif 0: #event.type == pygame.MOUSEBUTTONDOWN: #=5 - MOUSEMOTION ==4
-
-            if mode==1:
-                #pos = pygame.mouse.get_pos()
-                #buttons = show_screen_buttons()
-                show_screen_buttons()
-                mode = 2 # mode = 2 is when the buttons are shown
-                #print "mouse position=",pos
-                sleep(1)
-                
-            elif mode==0:
-                prev_title = None
-                mode = 1 # when mode = 1 images are being flipped
-
-            elif mode==2: #else:  # mode 2 = the buttons are showing 
-
-                button = next((b for b in buttons if b.pressed(event)),buttons[4])
-                button.draw_down(screen)
-                button.action()
-                button.re_draw(screen)
-
-            elif mode==3: #else:  # mode 3 = the presets are showing 
-
-                preset = next((p for p in presets if p.pressed(event)),buttons[4])
-                preset.draw_down(screen)
-                preset.action()
-                #preset.re_draw(screen)
-                mode = 1
-                    
-            pygame.event.clear()  #trying not to catch stray mousedown events since a little unclear how touch screen generates them
-                
         elif event.type == pygame.QUIT:
             end()
             
@@ -1167,14 +1145,11 @@ if __name__ == '__main__':
                 print "Key between 48 and 57", event.key
                 partial(select, station=stations[event.key-48])()
 
-        # end of processing pygame events
-        # two purposes for next few lines -- return to mode 1 if someone shoes lyrics or shows presets and does nothing and just to see what mode for debugging     
-        if time.time() - ttt > 10:
-            print time.time(),"mode=",mode," state=",state
-            ttt = time.time()
+        cur_time = time.time()
 
-        #if  mode!=1:  #03222015
-        #    continue  #03222015
+        if cur_time - t2 > 10:
+            print cur_time, "state=",state
+            t2 = time.time()
 
         try:
             state = master.get_current_transport_info()['current_transport_state']
@@ -1182,28 +1157,21 @@ if __name__ == '__main__':
             state = 'ERROR'
             print "Encountered error in state = master.get_current transport_info(): ", e
 
-        # check if sonos is playing anything and, if not, display weather - could be weather and tweets
+        # check if sonos is playing anything and, if not, display instagram photos
         if state != 'PLAYING':
             
-            minute = datetime.datetime.now().minute
-            if time.time() - tttt > 60:
+            if cur_time - t1 > 60:
 
                 image = images[random.randrange(0,L-1)]
                 display_image(image)
-                tttt = time.time()
+                t1 = time.time()
                 prev_title = ''
 
             continue
                 
         # check every two seconds if the track has changed - can you just subscribe to something?
-        #try: 
-        #event = sub.events.get(timeout=0.5)
-        #except Empty:
-            #pass
-        #else
-            #current_track =
             
-        if time.time() - tt > 2:
+        if cur_time - t0 > 2:
 
             #get_current_track_info() =  {
                         #u'album': 'We Walked In Song', 
@@ -1218,9 +1186,9 @@ if __name__ == '__main__':
             current_track = master.get_current_track_info()
             title = current_track['title']
             artist = current_track['artist'] # for lyrics           
-            tt = time.time()
+            #t0 = time.time()
             
-            print str(tt), "checking to see if track has changed"
+            print str(t0), "checking to see if track has changed"
             
             if prev_title != title:
                 
@@ -1259,7 +1227,7 @@ if __name__ == '__main__':
                 
                 print "displaying initial image of ", track.get('artist', '')
                 display_song_info(0)
-                z = time.time()
+                t3 = cur_time #time.time()
                                   
                 prev_title = title
                 i = 0
@@ -1294,13 +1262,6 @@ if __name__ == '__main__':
                     m.set_body(msg)
                     sqs_track_queue.write(m)
 
-                    #this works but not sure there is any reason to tweet each song
-                    #try:
-                    #    tw.direct_messages.new(user='slzatz', text=msg)
-                    #except TwitterHTTPError:
-                    #    print "twitter issue"   
-
-                
             elif not new_song:
                 # show the next track_string if not the image and text from a new song
                     
@@ -1321,7 +1282,9 @@ if __name__ == '__main__':
                 pygame.display.flip()
                 
         
-        if time.time() - z > 10:
+            t0 = time.time()
+
+        if cur_time - t3 > 10:
             
             new_song = False
             
@@ -1332,7 +1295,7 @@ if __name__ == '__main__':
             except Exception as e:
                print "Exception:", e
             
-            z = time.time()
+            t3 = time.time()
         
         sleep(0.1)
 
