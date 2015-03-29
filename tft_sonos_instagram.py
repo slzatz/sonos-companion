@@ -36,6 +36,9 @@ import pygbutton_lite as pygbutton
 import boto.sqs
 from boto.sqs.message import Message
 
+parser = argparse.ArgumentParser(description='Command line options ...')
+parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
+args = parser.parse_args()
 
 #################instagram
 instagram_base_url = "https://api.instagram.com/v1/users/{}/media/recent/"
@@ -43,6 +46,7 @@ client_id = "8372f43ffb4b4bbbbd054871d6561668"
 
 #https://api.instagram.com/v1/users/search?q=brahmino&access_token=278917377.8372f43.33d3f65330834b9fa6126d30283b660e
 #ids = 4616106 Jason Peterson; 17789355 JR; 986542 Tyson Wheatley; 230625139 Nick Schade; 3399664 Zak Shelhamer; 6156112 Scott Rankin; 1607304 Laura Pritchet; janske 24078; 277810 Richard Koci Hernandez; 1918184 Simone Bramante; 197656340 Michael Christoper Brown; 200147864 David Maialetti; 4769265 eelco roos 
+
 with open('instagram_ids') as f:
     data = f.read()
 
@@ -79,8 +83,6 @@ from amazon_music_db import *
 
 client = dropbox.client.DropboxClient(c.dropbox_code)
 
-parser = argparse.ArgumentParser(description='Command line options ...')
-
 g_api_key = c.google_api_key
 
 # twitter
@@ -90,8 +92,6 @@ CONSUMER_KEY = c.twitter_CONSUMER_KEY
 CONSUMER_SECRET = c.twitter_CONSUMER_SECRET
 tw = Twitter(auth=OAuth(oauth_token, oauth_token_secret, CONSUMER_KEY, CONSUMER_SECRET))
 # for all of the following: if the command line option is not present then the value is True and startup is normal
-parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
-args = parser.parse_args()
 
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
@@ -1092,13 +1092,14 @@ if __name__ == '__main__':
     display_image(image)
     
     prev_title = None  #this is None so if the song title is the empty string, it's not equal
-    t1 = t2 = t0 = t3 = time.time()
+    t0 = t1 = t2 = t3 = time.time()
     new_song = True
     state = 'UNKNOWN'
     image_num = counter = 0
     artist = None
     track_strings = []
     track = {}
+
     KEYS = {pygame.K_p:play_pause,
             pygame.K_i:inc_volume,
             pygame.K_d:dec_volume,
@@ -1107,8 +1108,8 @@ if __name__ == '__main__':
             pygame.K_k:scroll_up,
             pygame.K_BACKSPACE:cancel,
             pygame.K_ESCAPE:end,
-            pygame.K_b:cancel,
-            pygame.K_6:partial(select, station=stations[6])} #play_random_amazon}
+            pygame.K_b:cancel} #,
+            #pygame.K_6:partial(select, station=stations[6])} #play_random_amazon}
 
     while 1:
         
@@ -1144,19 +1145,27 @@ if __name__ == '__main__':
             print "Encountered error in state = master.get_current transport_info(): ", e
 
         # check if sonos is playing anything and, if not, display instagram photos
-        if state != 'PLAYING':
+        if state != 'PLAYING' or 'tunein' in track.get('uri', ''):
 
-            prev_title = None
+            #prev_title = None
             
             if cur_time - t1 > 60:
-                counter+=1
-                if counter == 10:
-                    display_twitter_feed()
-                    counter = 0
-                else:
-                    image = images[random.randrange(0,L-1)]
-                    display_image(image)
-                    t1 = time.time()
+                image = images[random.randrange(0,L-1)]
+                display_image(image)
+                line = track.get('service', 'nothing is playing') + ' ' + track.get('title', '')
+
+                font = pygame.font.SysFont('Sans', 14)
+                font.set_bold(True)
+                
+                text = font.render(line, True, (255,0,0))
+                zzz = pygame.Surface((w,20)) 
+                zzz.fill((0,0,0))
+                 
+                screen.blit(zzz, (0,h-16))
+                screen.blit(text, (0,h-16))
+                pygame.display.flip()
+
+                t1 = time.time()
 
             continue
                 
@@ -1177,9 +1186,9 @@ if __name__ == '__main__':
             current_track = master.get_current_track_info()
             title = current_track['title']
             artist = current_track['artist'] # for lyrics           
-            #t0 = time.time()
             
-            print str(t0), "checking to see if track has changed"
+            ts = datetime.datetime.fromtimestamp(cur_time).strftime('%Y-%m-%d %H:%M:%S')
+            print str(ts), "checking to see if track has changed"
             
             if prev_title != title:
                 
