@@ -43,8 +43,11 @@ client_id = "8372f43ffb4b4bbbbd054871d6561668"
 
 #https://api.instagram.com/v1/users/search?q=brahmino&access_token=278917377.8372f43.33d3f65330834b9fa6126d30283b660e
 #ids = 4616106 Jason Peterson; 17789355 JR; 986542 Tyson Wheatley; 230625139 Nick Schade; 3399664 Zak Shelhamer; 6156112 Scott Rankin; 1607304 Laura Pritchet; janske 24078; 277810 Richard Koci Hernandez; 1918184 Simone Bramante; 197656340 Michael Christoper Brown; 200147864 David Maialetti; 4769265 eelco roos 
+with open('instagram_ids') as f:
+    data = f.read()
 
-ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
+ids = list(int(d) for d in data.split() if d)
+#ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
 #################instagram
 
 conn = boto.sqs.connect_to_region(
@@ -73,7 +76,6 @@ import httplib2
 import musicbrainzngs
 
 from amazon_music_db import *
-#from create_image_db import *
 
 client = dropbox.client.DropboxClient(c.dropbox_code)
 
@@ -103,8 +105,6 @@ api_key = c.last_fm_api_key
 wrapper = textwrap.TextWrapper(width=42, replace_whitespace=False) # may be able to be a little longer than 40
 wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  #instagram
 
-prev_track = ""
-
 if platform.machine() == 'armv6l' and not args.display:
     os.putenv('SDL_VIDEODRIVER', 'fbcon')
     os.putenv('SDL_FBDEV', '/dev/fb1')
@@ -129,27 +129,13 @@ if w > 1000:
 if h > 700:
     h = h - 100
 screen = pygame.display.set_mode((w, h))
-
 screen.fill((0,0,0))
 
-# need a backup image that should be renamed backup
-#img = wand.image.Image(filename = "test.bmp") #########
-#img.transform(resize = '320x240^')#############
-#img.save(filename = "test.bmp")
-img = pygame.image.load("test.bmp").convert() ################
 
-text = txtlib.Text((w, h), 'freesans')
+text = txtlib.Text((w, h), 'freesans', font_size=30)
 text.text = "Sonos-Companion TFT Edition"
 text.update()
 screen.blit(text.area, (0,0))
-
-pygame.display.flip()
-sleep(5)
-
-font = pygame.font.SysFont('Sans', 20)
-text = font.render("Welcome to Sonos-Companion", True, (255, 0, 0))
-img.blit(text, (0,25)) 
-screen.blit(img, (0,0))
 pygame.display.flip()
 
 config.CACHE_ENABLED = False
@@ -218,8 +204,6 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
 
 def button_press(pin, b=0):
-    #global mode
-    #print "mode = ",mode
     print "Pressed GPIO: "+str(pin)+" = button: "+str(b)
 
     if b == 4:
@@ -1104,19 +1088,21 @@ if __name__ == '__main__':
     images = get_photos(ids)
     L = len(images)
     print "Number of images = {}".format(L)
-
+    image = images[random.randrange(0,L-1)]
+    display_image(image)
+    
     prev_title = None  #this is None so if the song title is the empty string, it's not equal
     t1 = t2 = t0 = t3 = time.time()
     new_song = True
     state = 'UNKNOWN'
-    i = 0
+    image_num = counter = 0
     artist = None
     track_strings = []
     track = {}
     KEYS = {pygame.K_p:play_pause,
             pygame.K_i:inc_volume,
             pygame.K_d:dec_volume,
-            pygame.K_s:show_or_select_station,
+            pygame.K_s:display_twitter_feed, #show_or_select_station,
             pygame.K_j:scroll_down,
             pygame.K_k:scroll_up,
             pygame.K_BACKSPACE:cancel,
@@ -1140,7 +1126,6 @@ if __name__ == '__main__':
             
         elif event.type == pygame.KEYDOWN:
             KEYS.get(event.key, lambda:None)()
-            #print "event.key=",event.key, type(event.key)
             if 47 < event.key < 58:
                 print "Key between 48 and 57", event.key
                 partial(select, station=stations[event.key-48])()
@@ -1148,7 +1133,8 @@ if __name__ == '__main__':
         cur_time = time.time()
 
         if cur_time - t2 > 10:
-            print cur_time, "state=",state
+            ts = datetime.datetime.fromtimestamp(cur_time).strftime('%Y-%m-%d %H:%M:%S')
+            print ts, "state =",state
             t2 = time.time()
 
         try:
@@ -1159,17 +1145,22 @@ if __name__ == '__main__':
 
         # check if sonos is playing anything and, if not, display instagram photos
         if state != 'PLAYING':
+
+            prev_title = None
             
             if cur_time - t1 > 60:
-
-                image = images[random.randrange(0,L-1)]
-                display_image(image)
-                t1 = time.time()
-                prev_title = ''
+                counter+=1
+                if counter == 10:
+                    display_twitter_feed()
+                    counter = 0
+                else:
+                    image = images[random.randrange(0,L-1)]
+                    display_image(image)
+                    t1 = time.time()
 
             continue
                 
-        # check every two seconds if the track has changed - can you just subscribe to something?
+        # checking every two seconds if the track has changed - could do it as a subscription too
             
         if cur_time - t0 > 2:
 
@@ -1230,7 +1221,7 @@ if __name__ == '__main__':
                 t3 = cur_time #time.time()
                                   
                 prev_title = title
-                i = 0
+                image_num = 0
                 new_song = True
 
                 # this is for AWS SQS
@@ -1288,10 +1279,10 @@ if __name__ == '__main__':
             
             new_song = False
             
-            i = i+1 if i < 9 else 0
+            image_num = image_num+1 if image_num < 9 else 0
             try:
                 print time.time(),"displaying a new image of ", track['artist']
-                display_song_info2(i) 
+                display_song_info2(image_num) 
             except Exception as e:
                print "Exception:", e
             
