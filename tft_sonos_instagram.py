@@ -1152,18 +1152,19 @@ if __name__ == '__main__':
             if cur_time - t1 > 60:
                 image = images[random.randrange(0,L-1)]
                 display_image(image)
-                line = track.get('service', 'nothing is playing') + ' ' + track.get('title', '')
+                if state == 'PLAYING':
+                    line = track.get('service', 'nothing is playing') + ' ' + track.get('title', '')
 
-                font = pygame.font.SysFont('Sans', 14)
-                font.set_bold(True)
-                
-                text = font.render(line, True, (255,0,0))
-                zzz = pygame.Surface((w,20)) 
-                zzz.fill((0,0,0))
-                 
-                screen.blit(zzz, (0,h-16))
-                screen.blit(text, (0,h-16))
-                pygame.display.flip()
+                    font = pygame.font.SysFont('Sans', 14)
+                    font.set_bold(True)
+                    
+                    text = font.render(line, True, (255,0,0))
+                    zzz = pygame.Surface((w,20)) 
+                    zzz.fill((0,0,0))
+                     
+                    screen.blit(zzz, (0,h-16))
+                    screen.blit(text, (0,h-16))
+                    pygame.display.flip()
 
                 t1 = time.time()
 
