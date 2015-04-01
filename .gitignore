@@ -1,5 +1,6 @@
 .DS_Store
 *.pyc
+*.swp
 settings.py
 config.py
 artists.json

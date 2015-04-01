@@ -121,7 +121,7 @@ else:
 r = pygame.init()
 print r
 
-if platform.machine() == 'armv6l' and not args.display:
+if platform.machine() == 'armv6l': # and not args.display:
     pygame.mouse.set_visible(False)
 
 w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
