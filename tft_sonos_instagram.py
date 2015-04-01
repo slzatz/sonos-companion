@@ -114,7 +114,7 @@ elif platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 elif platform.system() == "Linux":
     os.environ['SDL_VIDEODRIVER'] = 'x11' #note: this works if you launch x (startx) and run terminal requires keyboard/mouse
-    os.environ['SDL_VIDEO_CENTERED'] = 1
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
 else:
     sys.exit("Currently unsupported hardware/OS")
 
