@@ -114,6 +114,7 @@ elif platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 elif platform.system() == "Linux":
     os.environ['SDL_VIDEODRIVER'] = 'x11' #note: this works if you launch x (startx) and run terminal requires keyboard/mouse
+    os.environ['SDL_VIDEO_CENTERED'] = 1
 else:
     sys.exit("Currently unsupported hardware/OS")
 
@@ -1144,8 +1145,9 @@ if __name__ == '__main__':
             state = 'ERROR'
             print "Encountered error in state = master.get_current transport_info(): ", e
 
+        current_track = master.get_current_track_info()
         # check if sonos is playing anything and, if not, display instagram photos
-        if state != 'PLAYING' or 'tunein' in track.get('uri', ''):
+        if state != 'PLAYING' or 'tunein' in current_track.get('uri', ''): #track.get('uri', ''):
 
             #prev_title = None
             
@@ -1153,7 +1155,8 @@ if __name__ == '__main__':
                 image = images[random.randrange(0,L-1)]
                 display_image(image)
                 if state == 'PLAYING':
-                    line = track.get('service', 'nothing is playing') + ' ' + track.get('title', '')
+                    #line = track.get('service', 'nothing is playing') + ' ' + track.get('title', '')
+                    line = track.get('title', '')
 
                     font = pygame.font.SysFont('Sans', 14)
                     font.set_bold(True)
@@ -1173,7 +1176,6 @@ if __name__ == '__main__':
         # checking every two seconds if the track has changed - could do it as a subscription too
             
         if cur_time - t0 > 2:
-
             #get_current_track_info() =  {
                         #u'album': 'We Walked In Song', 
                         #u'artist': 'The Innocence Mission', 
@@ -1184,14 +1186,14 @@ if __name__ == '__main__':
                         #u'position': '0:02:38', 
                         #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
             
-            current_track = master.get_current_track_info()
-            title = current_track['title']
-            artist = current_track['artist'] # for lyrics           
+            #current_track = master.get_current_track_info()
+            #title = current_track['title']
+            #artist = current_track['artist'] # for lyrics           
             
             ts = datetime.datetime.fromtimestamp(cur_time).strftime('%Y-%m-%d %H:%M:%S')
             print str(ts), "checking to see if track has changed"
             
-            if prev_title != title:
+            if prev_title != current_track.get('title'): #title:
                 
                 track = dict(current_track)
 
@@ -1230,7 +1232,7 @@ if __name__ == '__main__':
                 display_song_info(0)
                 t3 = cur_time #time.time()
                                   
-                prev_title = title
+                prev_title = track.get('title') #title
                 image_num = 0
                 new_song = True
 
