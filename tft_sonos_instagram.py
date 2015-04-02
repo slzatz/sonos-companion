@@ -1104,12 +1104,12 @@ if __name__ == '__main__':
     KEYS = {pygame.K_p:play_pause,
             pygame.K_i:inc_volume,
             pygame.K_d:dec_volume,
-            pygame.K_s:display_twitter_feed, #show_or_select_station,
-            pygame.K_j:scroll_down,
-            pygame.K_k:scroll_up,
-            pygame.K_BACKSPACE:cancel,
-            pygame.K_ESCAPE:end,
-            pygame.K_b:cancel} #,
+            pygame.K_m:display_twitter_feed, #show_or_select_station,
+            pygame.K_h:scroll_down,
+            pygame.K_l:scroll_up,
+            #pygame.K_BACKSPACE:cancel,
+            pygame.K_ESCAPE:end} #,
+            #pygame.K_b:cancel} #,
             #pygame.K_6:partial(select, station=stations[6])} #play_random_amazon}
 
     while 1:
