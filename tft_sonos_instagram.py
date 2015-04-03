@@ -710,29 +710,26 @@ def get_lyrics():
 
 def display_twitter_feed():
     feed = tw.statuses.home_timeline()[:8] # list of dictionaries for each tweet
-    n = 0
     font = pygame.font.SysFont('Sans', h/28 )
     font.set_bold(False)
     surface = pygame.Surface((w,int(.90*h)))
     surface.fill((0,0,0))
-    #screen.fill((0,0,0))
+    screen.fill((0,0,0))
+
+    n=0
     for tweet in feed:
-        #print "LINE = ",line
         txt = tweet['text']
         txt = txt[:txt.find('http')] 
         lines = textwrap.wrap(txt, 70)
         lines.insert(0, tweet['user']['screen_name']) 
-        n+=24
-        m = 0
-        nn = n
         for line in lines:
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
-            surface.blit(txt, (5,nn+m))
-            screen.blit(surface, (0,int(.10*h)))
-            m+=24
-            n+=24
+            surface.blit(txt, (5,n))
+            screen.blit(surface, (0,0))
+            n+=30
 
         pygame.display.flip()
+        n+=30 #creates a blank line between tweets
 
 def display_weather():
     
@@ -754,7 +751,7 @@ def display_weather():
         for line in lines:
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
             screen.blit(txt, (5,n))
-            n+=24
+            n+=30
         pygame.display.flip() 
 
 def weather_tts():
