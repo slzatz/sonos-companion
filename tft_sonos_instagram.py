@@ -183,13 +183,13 @@ print "program running ..."
 stations = [
 ('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), 
 ('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'),
+('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
 ('QuickMix', 'pndrradio:52877953807377986', 'SA_RINCON3_slzatz@gmail.com'),
 ('R.E.M. Radio', 'pndrradio:637630342339192386', 'SA_RINCON3_slzatz@gmail.com'), 
 ('Nick Drake Radio', 'pndrradio:409866109213435458', 'SA_RINCON3_slzatz@gmail.com'),
 ('Dar Williams Radio', 'pndrradio:1823409579416053314', 'SA_RINCON3_slzatz@gmail.com'),
 ('Patty Griffin Radio', 'pndrradio:52876609482614338', 'SA_RINCON3_slzatz@gmail.com'),
 ('Lucinda Williams Radio', 'pndrradio:360878777387148866', 'SA_RINCON3_slzatz@gmail.com'),
-('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
 ('Kris Delmhorst Radio', 'pndrradio:610111769614181954', 'SA_RINCON3_slzatz@gmail.com'),
 ('Counting Crows Radio', 'pndrradio:1727297518525703746', 'SA_RINCON3_slzatz@gmail.com'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
@@ -896,9 +896,14 @@ def create_preset_buttons():
     
     w2 = (w/2) + 10
 
-    for i,s in enumerate(stations[6:13]):
+    for i,s in enumerate(stations[6:10]):
         p = pygbutton.PygButton((w2,5+i*h1,w1,h1-5), "{}: {}".format(str(i+6),s[0]), action=partial(select, station=stations[i+6]), redraw=False, font=font)
         presets.append(p)
+
+    p = pygbutton.PygButton((w2,5+4*h1,w1,h1-5), "{}: {}".format('setup','random amazon'), action=play_random_amazon, redraw=False, font=font)
+    presets.append(p)
+    p = pygbutton.PygButton((w2,5+5*h1,w1,h1-5), "{}: {}".format('stop/mode','twitter feed'), action=display_twitter_feed, redraw=False, font=font)
+    presets.append(p)
 
     return presets
 
@@ -1107,6 +1112,8 @@ if __name__ == '__main__':
             pygame.K_m:display_twitter_feed, #show_or_select_station,
             pygame.K_h:scroll_down,
             pygame.K_l:scroll_up,
+            pygame.K_e:show_preset_buttons,
+            pygame.K_s:play_random_amazon,
             #pygame.K_BACKSPACE:cancel,
             pygame.K_ESCAPE:end} #,
             #pygame.K_b:cancel} #,
@@ -1128,6 +1135,8 @@ if __name__ == '__main__':
             
         elif event.type == pygame.KEYDOWN:
             KEYS.get(event.key, lambda:None)()
+            if event.key == pygame.K_e:
+               t3 = time.time() # will delay flipping if showing presets
             if 47 < event.key < 58:
                 print "Key between 48 and 57", event.key
                 partial(select, station=stations[event.key-48])()
