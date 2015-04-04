@@ -146,7 +146,7 @@ while 1:
     n+=1
     print "attempt "+str(n)
     try:
-        speakers = list(soco.discover())
+        speakers = list(soco.discover(timeout=4))
     except TypeError:    
         sleep(1)       
     else:
@@ -181,6 +181,7 @@ print "\n"
 print "program running ..."
 
 stations = [
+('Add 10 to number',),
 ('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), 
 ('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'),
 ('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
@@ -195,7 +196,6 @@ stations = [
 ('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
 
 #globals
-mode = 1
 station_index = 0
 
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
@@ -493,16 +493,15 @@ def scroll_down():
         artist = artist[:idx-1]
     display_artist_info(artist)
 
-#def next():
-#    master.next()
+def next_():
+    master.next()
 
 def previous():# not in use
-    global mode 
-    mode = 0
-    #lcd.clear()
-    #lcd.backlight(lcd.YELLOW)
-    #lcd.message(stations[station_index][0])
-    
+    try:
+        master.previous()
+    except:
+        print "Probably tried previous track where it wasn't allowed"
+
 def dec_volume():
     
     volume = master.volume
@@ -664,8 +663,6 @@ def get_url(artist, title):
     
 def get_lyrics():
 
-    global mode
-    
     if artist is None or title is None:
          return "No artist or title"
 
@@ -688,8 +685,6 @@ def get_lyrics():
     # look for a sign that it's instrumental
     if len(doc.getroot().cssselect(".lyricbox a[title=\"Instrumental\"]")):
         return "No lyrics - appears to be instrumental"
-
-    mode = 0 # switch to this mode since there appear to actually be lyrics
 
     lyrics = []
     if lyricbox.text is not None:
@@ -804,28 +799,7 @@ def text2mp3(text, file_):
     output = AudioSegment.from_mp3(file_) #documentation suggests can use a file-like object
     return output
 
-def hide_buttons():
-    global mode
-    sleep(1)
-    mode = 1
-
-def show_or_select_station():
-    global mode
-    global station_index
-    #if mode == 1:
-    if mode !=0:
-        station_index=0
-        artist = stations[0][0]
-        idx = artist.find('Radio')
-        if idx != -1:
-            artist = artist[:idx-1]
-        display_artist_info(artist)
-        mode = 0 #2 both station select and lyrics are mode 0 
-    else:
-        select()
-
 def select(station=None):
-    global mode
 
     if station is None:
         station = stations[station_index]
@@ -868,12 +842,6 @@ def select(station=None):
     print "meta=",meta
     print "\n"
         
-    mode = 1
-
-def cancel():
-    global mode
-    mode = 1
-
 def end():
     if GPIO:
         GPIO.cleanup()
@@ -883,23 +851,25 @@ def create_preset_buttons():
     font = pygame.font.SysFont('Sans', 18)
     font.set_bold(False)
 
-    h1 = h/6
+    h1 = h/8
     w1 = (w/2) - 15
     presets = []
 
-    for i,s in enumerate(stations[0:6]):
+    for i,s in enumerate(stations[0:8]):
         p = pygbutton.PygButton((10,5+i*h1,w1,h1-5), "{}: {}".format(str(i),s[0]), action=partial(select, station=stations[i]), redraw=False, font=font)
         presets.append(p)
     
     w2 = (w/2) + 10
 
-    for i,s in enumerate(stations[6:10]):
-        p = pygbutton.PygButton((w2,5+i*h1,w1,h1-5), "{}: {}".format(str(i+6),s[0]), action=partial(select, station=stations[i+6]), redraw=False, font=font)
+    for i,s in enumerate(stations[8:13]):
+        p = pygbutton.PygButton((w2,5+i*h1,w1,h1-5), "{}: {}".format(str(i+8),s[0]), action=partial(select, station=stations[i+6]), redraw=False, font=font)
         presets.append(p)
 
-    p = pygbutton.PygButton((w2,5+4*h1,w1,h1-5), "{}: {}".format('setup','random amazon'), action=play_random_amazon, redraw=False, font=font)
+    p = pygbutton.PygButton((w2,5+5*h1,w1,h1-5), "{}: {}".format('13','random amazon'), action=play_random_amazon, redraw=False, font=font)
     presets.append(p)
-    p = pygbutton.PygButton((w2,5+5*h1,w1,h1-5), "{}: {}".format('stop/mode','twitter feed'), action=display_twitter_feed, redraw=False, font=font)
+    p = pygbutton.PygButton((w2,5+6*h1,w1,h1-5), "{}: {}".format('14','twitter feed'), action=display_twitter_feed, redraw=False, font=font)
+    presets.append(p)
+    p = pygbutton.PygButton((w2,5+7*h1,w1,h1-5), "{}: {}".format('15','weather'), action=display_weather, redraw=False, font=font)
     presets.append(p)
 
     return presets
@@ -908,8 +878,6 @@ presets = create_preset_buttons()
 
 def show_preset_buttons():
 
-    global mode
-    mode = 3
     screen.fill((100,100,100))
 
     for p in presets:
@@ -917,40 +885,6 @@ def show_preset_buttons():
 
     pygame.display.flip() 
 
-def create_screen_buttons():
-    font = pygame.font.SysFont('Sans', 20)
-    font.set_bold(True)
-
-    h1 = h/5
-
-    w1 = (w/2) - 15
-    b0 = pygbutton.PygButton((10,5,w1,h1-5), 'Lyrics', action=get_lyrics, font=font, redraw=False)
-    b1 = pygbutton.PygButton((10,5+h1,w1,h1-5), 'Play-Pause', action=play_pause, font=font)
-    b2 = pygbutton.PygButton((10,5+2*h1,w1,h1-5), 'Increase Volume', action=inc_volume, font=font)
-    b3 = pygbutton.PygButton((10,5+3*h1,w1,h1-5), 'Decrease Volume', action=dec_volume, font=font)
-    b4 = pygbutton.PygButton((10,5+4*h1,w1,h1-5), 'Hide Buttons', action=hide_buttons, font=font)
-    
-    w2 = (w/2) + 10
-    b5 = pygbutton.PygButton((w2,5,w1,h1-5), 'Speak Weather', action=weather_tts, font=font)
-    b6 = pygbutton.PygButton((w2,5+h1,w1,h1-5), 'Random Amazon', action=play_random_amazon, font=font)
-    b7 = pygbutton.PygButton((w2,5+2*h1,w1,h1-5), 'Show All Presets', action=show_preset_buttons, font=font, redraw=False)
-    b8 = pygbutton.PygButton((w2,5+3*h1,w1,h1-5), 'WNYC', action=partial(select, station=stations[0]), font=font)
-    b9 = pygbutton.PygButton((w2,5+4*h1,w1,h1-5), 'Show Presets', action=show_or_select_station, font=font, redraw=False)
-
-    buttons = (b0, b1, b2, b3, b4, b5, b6, b7, b8, b9) 
-    return buttons
-
-buttons = create_screen_buttons()
-
-def show_screen_buttons():
-
-    screen.fill((100,100,100))
-
-    for b in buttons:
-        b.draw(screen)
-
-    pygame.display.flip() 
-    
 def get_photos(ids=None):
     
     payload = {'client_id':client_id}
@@ -1098,7 +1032,7 @@ if __name__ == '__main__':
     t0 = t1 = t2 = t3 = time.time()
     new_song = True
     state = 'UNKNOWN'
-    image_num = counter = 0
+    zero_or_ten = image_num = 0
     artist = None
     track_strings = []
     track = {}
@@ -1106,21 +1040,21 @@ if __name__ == '__main__':
     KEYS = {pygame.K_p:play_pause,
             pygame.K_i:inc_volume,
             pygame.K_d:dec_volume,
-            pygame.K_m:display_twitter_feed, #show_or_select_station,
+            pygame.K_m:display_twitter_feed, 
             pygame.K_h:scroll_down,
             pygame.K_l:scroll_up,
             pygame.K_e:show_preset_buttons,
             pygame.K_s:play_random_amazon,
-            #pygame.K_BACKSPACE:cancel,
-            pygame.K_ESCAPE:end} #,
-            #pygame.K_b:cancel} #,
-            #pygame.K_6:partial(select, station=stations[6])} #play_random_amazon}
+            pygame.K_j:next_,
+            pygame.K_k:previous,
+            pygame.K_b:display_weather,
+            pygame.K_ESCAPE:end}
+
+    actions = {13:play_random_amazon, 14:display_twitter_feed, 15:display_weather}
 
     while 1:
         
        # pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
-       # mode = 1 --> flipping artist or instagram pictures depending on whether anything is playing or not 
-       # mode = 0 both station select and lyrics display
 
         event = pygame.event.poll()
         
@@ -1131,12 +1065,34 @@ if __name__ == '__main__':
             end()
             
         elif event.type == pygame.KEYDOWN:
-            KEYS.get(event.key, lambda:None)()
+            #KEYS.get(event.key, lambda:None)()
             if event.key == pygame.K_e:
-               t3 = time.time() # will delay flipping if showing presets
-            if 47 < event.key < 58:
+                show_preset_buttons()
+                t3 = time.time() # will delay flipping if showing presets
+                continue
+            elif event.key == 48:
+                zero_or_ten = 10
+                t3 = time.time() # will set zero_or_ten = 10 for ~10 seconds and then revert to 0 
+                print "zero_or_ten=",zero_or_ten
+                continue
+            elif 48 < event.key < 58:
                 print "Key between 48 and 57", event.key
-                partial(select, station=stations[event.key-48])()
+                keypadnum = zero_or_ten+event.key-48
+                if keypadnum < 13:
+                    #partial(select, station=stations[keypadnum])()
+                    select(station=stations[keypadnum])
+                else:
+                    actions.get(keypadnum, lambda:None)()
+
+                #elif keypadnum == 13:
+                #    play_random_amazon()
+                #elif keypadnum == 14:
+                #    display_twitter_feed()
+                #else:
+                #    display_weather()
+
+            else:
+                KEYS.get(event.key, lambda:None)()
 
         cur_time = time.time()
 
@@ -1199,7 +1155,7 @@ if __name__ == '__main__':
             ts = datetime.datetime.fromtimestamp(cur_time).strftime('%Y-%m-%d %H:%M:%S')
             print str(ts), "checking to see if track has changed"
             
-            if prev_title != current_track.get('title'): #title:
+            if prev_title != current_track.get('title'): 
                 
                 track = dict(current_track)
 
@@ -1294,7 +1250,10 @@ if __name__ == '__main__':
             t0 = time.time()
 
         if cur_time - t3 > 10:
-            
+
+            zero_or_ten = 0 #if 10 sec go by without another number revert back
+            #print "zero_or_ten=",zero_or_ten
+
             new_song = False
             
             image_num = image_num+1 if image_num < 9 else 0

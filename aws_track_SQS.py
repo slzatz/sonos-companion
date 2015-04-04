@@ -48,8 +48,8 @@ while 1:
             
         n+=1
 
-print "Printed {} messages".format(n)
+print "Total of {} messages; will print {}.".format(n, 100)
 zz.sort()
 zz.reverse()
-for z in zz:
+for z in zz[0:100]:
     print z[0],z[1]
