@@ -494,13 +494,24 @@ def scroll_down():
     display_artist_info(artist)
 
 def next_():
-    master.next()
 
-def previous():# not in use
+    if state != 'PLAYING' or 'tunein' in current_track.get('uri', ''):
+
+        image = images[random.randrange(0,L-1)]
+        display_image(image)
+
+    else:
+        try:
+            master.next()
+        except:
+            print "Probably tried to go next where it was not allowed"
+
+def previous():
+
     try:
         master.previous()
     except:
-        print "Probably tried previous track where it wasn't allowed"
+        print "Probably tried previous track where it was not allowed"
 
 def dec_volume():
     
@@ -1084,13 +1095,6 @@ if __name__ == '__main__':
                 else:
                     actions.get(keypadnum, lambda:None)()
 
-                #elif keypadnum == 13:
-                #    play_random_amazon()
-                #elif keypadnum == 14:
-                #    display_twitter_feed()
-                #else:
-                #    display_weather()
-
             else:
                 KEYS.get(event.key, lambda:None)()
 
@@ -1109,15 +1113,13 @@ if __name__ == '__main__':
 
         current_track = master.get_current_track_info()
         # check if sonos is playing anything and, if not, display instagram photos
-        if state != 'PLAYING' or 'tunein' in current_track.get('uri', ''): #track.get('uri', ''):
+        if state != 'PLAYING' or 'tunein' in current_track.get('uri', ''):
 
-            #prev_title = None
-            
             if cur_time - t1 > 60:
                 image = images[random.randrange(0,L-1)]
                 display_image(image)
-                if state == 'PLAYING':
-                    #line = track.get('service', 'nothing is playing') + ' ' + track.get('title', '')
+
+                if state == 'PLAYING': #means a radio station is on
                     line = track.get('title', '')
 
                     font = pygame.font.SysFont('Sans', 14)
