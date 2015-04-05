@@ -674,8 +674,16 @@ def get_url(artist, title):
     
 def get_lyrics():
 
+    if state != 'PLAYING' or 'tunein' in current_track.get('uri', ''):
+        print "No song playing"
+        return "No song playing"
+
+    artist = track.get('artist')
+    title = track.get('title')
+
     if artist is None or title is None:
-         return "No artist or title"
+        print "No artist or title"
+        return "No artist or title"
 
     print artist, title
     
@@ -706,7 +714,7 @@ def get_lyrics():
         if node.tail is not None:
             lyrics.append(node.tail)
 
-    text = txtlib.Text((w, h), 'freesans', font_size=18)
+    text = txtlib.Text((w, h), 'freesans', font_size=h/40)
     text.text = "".join(lyrics).strip()
     text.update()
 
@@ -1061,7 +1069,7 @@ if __name__ == '__main__':
             pygame.K_b:display_weather,
             pygame.K_ESCAPE:end}
 
-    actions = {13:play_random_amazon, 14:display_twitter_feed, 15:display_weather}
+    actions = {13:play_random_amazon, 14:display_twitter_feed, 15:display_weather, 16:get_lyrics}
 
     while 1:
         
@@ -1094,6 +1102,7 @@ if __name__ == '__main__':
                     select(station=stations[keypadnum])
                 else:
                     actions.get(keypadnum, lambda:None)()
+                    t3 = time.time()
 
             else:
                 KEYS.get(event.key, lambda:None)()
