@@ -25,7 +25,7 @@ import dropbox
 import wand.image
 import config as c
 home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home, 'Soco')] + [os.path.join(home, 'pydub')] + [os.path.join(home, 'twitter')] + sys.path
+sys.path = [os.path.join(home, 'SoCo')] + [os.path.join(home, 'pydub')] + [os.path.join(home, 'twitter')] + sys.path
 import soco
 from soco import config
 from pydub import AudioSegment
