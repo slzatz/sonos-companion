@@ -1238,6 +1238,12 @@ if __name__ == '__main__':
                     m.set_body(msg)
                     sqs_track_queue.write(m)
 
+                    #this works but not sure there is any reason to tweet each song
+                    try:
+                        tw.direct_messages.new(user='slzatz', text=msg)
+                    except TwitterHTTPError:
+                        print "twitter issue"   
+
             elif not new_song:
                 # show the next track_string if not the image and text from a new song
                     
