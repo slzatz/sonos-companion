@@ -456,8 +456,9 @@ def get_recording_date(artist, album, title):
 def play_uri(uri, meta, title):
     try:
         master.play_uri(uri, meta)
-    except:
+    except Exception as e:
         print "had a problem switching to {}!".format(title)
+        print "exception:",e
     else:
         print "switched to {}".format(title)
 
