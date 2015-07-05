@@ -161,22 +161,35 @@ for s in speakers:
         #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
         print s.player_name
            
-for s in speakers:
-    if s.is_coordinator:
-        master = s
-        print "\nNOTE: found coordinator and master =", master.player_name
-        break
-else:
-    master = speakers[0]
-    print "\nALERT: id not find coordinator so took speaker[0] =",master.player_name
+if args.player.lower() == 'all':
 
-for s in speakers:
-    if s != master:
-        s.join(master)
+    for s in speakers:
+        if s.is_coordinator:
+            master = s
+            print "\nNOTE: found coordinator and master =", master.player_name
+            break
+    else:
+        master = speakers[0]
+        print "\nALERT: id not find coordinator so took speaker[0] =",master.player_name
+
+    for s in speakers:
+        if s != master:
+            s.join(master)
     
+else:
+
+    for s in speakers:
+        if s:
+            print s.player_name
+            if s.player_name.lower() == args.player.lower():
+                master = s
+                print "The single master speaker is: ", master.player_name
+                break
+    else:
+        print "Could not find the specified speaker"
+        sys.exit()
+
 print "\n"
-#for s in speakers:
-#if s:  print "speaker: {} - master: {}".format(s.player_name, s.group.coordinator)
 
 print "program running ..."
 
