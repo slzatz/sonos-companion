@@ -38,6 +38,7 @@ from boto.sqs.message import Message
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
+parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
 #################instagram
