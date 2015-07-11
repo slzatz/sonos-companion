@@ -1,0 +1,12 @@
+OneshotSonosIntent play {Neil Young|Artist}
+OneshotSonosIntent {Neil Young|Artist}
+OneshotSonosIntent play {Neil Young|Artist} using {Pandora|Source}
+OneshotSonosIntent {Neil Young|Artist} using {Pandora|Source}
+OneshotSonosIntent play {Neil Young|Artist} with {Pandora|Source}
+OneshotSonosIntent {Neil Young|Artist} with {Pandora|Source}
+
+DialogSonosIntent {Neil Young|Artist}
+DialogSonosIntent {Patty Griffin|Artist}
+DialogSonosIntent {Lucinda Williams|Artist}
+DialogSonosIntent {Pandora|Source}
+DialogSonosIntent {Amazon|Source}

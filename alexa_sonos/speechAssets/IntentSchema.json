@@ -1,0 +1,38 @@
+{
+  "intents": [
+    {
+      "intent": "OneshotSonosIntent",
+      "slots": [
+        {
+          "name": "Artist",
+          "type": "LITERAL"
+        },
+        {
+          "name": "Source",
+          "type": "LITERAL"
+        }
+      ]
+    },
+    {
+      "intent": "DialogSonosIntent",
+      "slots": [
+        {
+          "name": "Artist",
+          "type": "LITERAL"
+        },
+        {
+          "name": "Source",
+          "type": "LITERAL"
+        }
+      ]
+    },
+    {
+      "intent": "SupportedArtistsIntent",
+      "slots": [ ]
+    },
+    {
+      "intent": "HelpIntent",
+      "slots": [ ]
+    }
+  ]
+}

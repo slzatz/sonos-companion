@@ -194,6 +194,7 @@ print "\n"
 
 print "program running ..."
 
+#globals
 stations = [
 ('Add 10 to number',),
 ('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), 
@@ -209,7 +210,8 @@ stations = [
 ('Counting Crows Radio', 'pndrradio:1727297518525703746', 'SA_RINCON3_slzatz@gmail.com'), 
 ('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
 
-#globals
+echo = [x[0].lower() for x in stations]
+print "echo=",echo
 station_index = 0
 
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
@@ -1121,7 +1123,34 @@ if __name__ == '__main__':
 
             else:
                 KEYS.get(event.key, lambda:None)()
+##############################################################################################################
 
+        try:
+            res = requests.get("http://54.173.234.69:5000/sonos_companion_check")
+            jres = res.json()
+        except requests.exceptions.ConnectionError as e:
+            print "ConnectionError in request in display_weather: ", e
+        else:
+            if jres['updated']:
+                #select(station=stations[keypadnum])
+                #('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
+                print jres['updated']
+                print jres['artist']
+                print jres['source']
+                if jres['source'] == 'pandora':
+                    station = jres['artist'] + ' radio'
+                    print "station=",station
+                    i = echo.index(station) if station in echo else None
+                    print "i=",i
+                    if i is not None:
+                        select(stations[i])
+            else:
+                pass
+                #print jres['updated']
+                #print jres['artist']
+                #print jres['source']
+
+##################################################################################################################
         cur_time = time.time()
 
         if cur_time - t2 > 10:
