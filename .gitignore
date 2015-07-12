@@ -3,6 +3,7 @@
 *.swp
 settings.py
 config.py
+config.js
 artists.json
 musicbrainzngs/
  cse_result.json
