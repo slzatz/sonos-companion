@@ -38,12 +38,13 @@ from boto.sqs.message import Message
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
+parser.add_argument('-a', '--alexa', action='store_true', help="Enable Alexa voice commands") #default is opposite of action
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
 #################instagram
-instagram_base_url = "https://api.instagram.com/v1/users/{}/media/recent/"
-client_id = "8372f43ffb4b4bbbbd054871d6561668"
+instagram_base_url = c.instagram_base_url
+client_id = c.client_id
 
 #https://api.instagram.com/v1/users/search?q=brahmino&access_token=278917377.8372f43.33d3f65330834b9fa6126d30283b660e
 #ids = 4616106 Jason Peterson; 17789355 JR; 986542 Tyson Wheatley; 230625139 Nick Schade; 3399664 Zak Shelhamer; 6156112 Scott Rankin; 1607304 Laura Pritchet; janske 24078; 277810 Richard Koci Hernandez; 1918184 Simone Bramante; 197656340 Michael Christoper Brown; 200147864 David Maialetti; 4769265 eelco roos 
@@ -81,6 +82,7 @@ import httplib2
 import musicbrainzngs
 
 from amazon_music_db import *
+from sqlalchemy.sql.expression import func
 
 client = dropbox.client.DropboxClient(c.dropbox_code)
 
@@ -1125,30 +1127,51 @@ if __name__ == '__main__':
                 KEYS.get(event.key, lambda:None)()
 ##############################################################################################################
 
-        try:
-            res = requests.get("http://54.173.234.69:5000/sonos_companion_check")
-            jres = res.json()
-        except requests.exceptions.ConnectionError as e:
-            print "ConnectionError in request in display_weather: ", e
-        else:
-            if jres['updated']:
-                #select(station=stations[keypadnum])
-                #('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
-                print jres['updated']
-                print jres['artist']
-                print jres['source']
-                if jres['source'] == 'pandora':
-                    station = jres['artist'] + ' radio'
-                    print "station=",station
-                    i = echo.index(station) if station in echo else None
-                    print "i=",i
-                    if i is not None:
-                        select(stations[i])
+        if args.alexa:
+            try:
+                res = requests.get(c.uri)
+                jres = res.json()
+            except requests.exceptions.ConnectionError as e:
+                print "ConnectionError in request in display_weather: ", e
             else:
-                pass
-                #print jres['updated']
-                #print jres['artist']
-                #print jres['source']
+                if jres['updated']:
+                    #select(station=stations[keypadnum])
+                    #('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
+                    print jres['updated']
+                    print jres['artist']
+                    print jres['source']
+                    if jres['source'] == 'pandora':
+                        station = jres['artist'] + ' radio'
+                        print "station=",station
+                        i = echo.index(station) if station in echo else None
+                        print "i=",i
+                        if i is not None:
+                            select(stations[i])
+                    else:
+                        
+                        master.stop()
+                        master.clear_queue()
+                        songs = session.query(Song).filter(Song.artist==jres['artist'].title()).order_by(func.random()).limit(10).all()
+                        for song in songs:
+                            print song.id
+                            print song.artist
+                            print song.album
+                            print song.title
+                            print song.uri
+                            i = song.uri.find('amz')
+                            ii = song.uri.find('.')
+                            id_ = song.uri[i:ii]
+                            print id_
+                            meta = didl_amazon.format(id_=id_)
+                            my_add_to_queue('', meta)
+                            print "---------------------------------------------------------------"
+            
+                        master.play_from_queue(0)
+                else:
+                    pass
+                    #print jres['updated']
+                    #print jres['artist']
+                    #print jres['source']
 
 ##################################################################################################################
         cur_time = time.time()
