@@ -127,11 +127,11 @@ print r
 if platform.machine() == 'armv6l': # and not args.display:
     pygame.mouse.set_visible(False)
 
-w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
-#if w > 1000:
-#    w = 1000
-#if h > 700:
-#    h = h - 100
+if platform.system() == 'Windows':
+    w,h = 1000,700
+else:
+    w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
+
 screen = pygame.display.set_mode((w, h))
 screen.fill((0,0,0))
 
@@ -149,8 +149,11 @@ while 1:
     n+=1
     print "attempt "+str(n)
     try:
-        speakers = list(soco.discover(timeout=4))
-    except TypeError:    
+        sp = soco.discover(timeout=5)
+        speakers = list(sp)
+        #speakers = list(soco.discover(timeout=5))
+    except TypeError as e:    
+        print e
         sleep(1)       
     else:
         break 
@@ -266,19 +269,16 @@ def display_artist_info(artist):
             artist_image_list[r].ok = False
             session.commit()
 
-    #img.transform(resize = '320x240^')
-    #img.transform(resize = str(h)+'x'+str(w)+'^')
-    #wxh< - enlarges images with smaller than the corresponding width and/or height dimension(s)
-    img.transform(resize = str(w)+'x'+str(h)+'<')
+    img.transform(resize = "{}x{}".format(w,h))
     img = img.convert('bmp')
     f = StringIO()
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
     img_rect = img.get_rect()
-    print img_rect
+    #print img_rect
     center = ((w-img_rect.width)/2, 0)
-    print center
+    #print center
     f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
@@ -323,18 +323,16 @@ def display_song_info(i):
             artist_image_list[i].ok = False
             session.commit()
 
-    #img.transform(resize = '320x240^')
-    #img.transform(resize = str(h)+'x'+str(w)+'^')
-    img.transform(resize = str(w)+'x'+str(h)+'<')
+    img.transform(resize = "{}x{}".format(w,h))
     img = img.convert('bmp')
     f = StringIO()
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
     img_rect = img.get_rect()
-    print img_rect
+    #print img_rect
     center = ((w-img_rect.width)/2, 0)
-    print center
+    #print center
     f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
@@ -371,18 +369,16 @@ def display_song_info2(i):
             session.commit()
 
     try:
-       # img.transform(resize = '320x240^')
-        #img.transform(resize = str(h)+'x'+str(w)+'^')
-        img.transform(resize = str(w)+'x'+str(h)+'<')
+        img.transform(resize = "{}x{}".format(w,h))
         img = img.convert('bmp')
         f = StringIO()
         img.save(f)
         f.seek(0)
         img = pygame.image.load(f, 'bmp').convert()
         img_rect = img.get_rect()
-        print img_rect
+        #print img_rect
         center = ((w-img_rect.width)/2, 0)
-        print center
+        #print center
         f.close()
         #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; now not fading for display_images
         
@@ -980,7 +976,7 @@ def display_image(image):
             img = wand.image.Image(filename = "test.bmp")
             print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
 
-    size = str(w)+'x'+str(h)+'<'
+    size = "{}x{}".format(w,h)
     img.transform(resize = size)
     img = img.convert('bmp')
     f = StringIO()
@@ -988,9 +984,9 @@ def display_image(image):
     f.seek(0)
     img = pygame.image.load(f).convert()
     img_rect = img.get_rect()
-    print img_rect
+    #print img_rect
     center = ((w-img_rect.width)/2, 0)
-    print center
+    #print center
     f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
@@ -1043,7 +1039,7 @@ def display_image_and_info(image):
             img = wand.image.Image(filename = "test.bmp")
             print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
 
-    size = str(w)+'x'+str(h)+'<'
+    size = "{}x{}".format(w,h)
     img.transform(resize = size)
     img = img.convert('bmp')
     f = StringIO()
@@ -1051,9 +1047,9 @@ def display_image_and_info(image):
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
     img_rect = img.get_rect()
-    print img_rect
+    #print img_rect
     center = ((w-img_rect.width)/2, 0)
-    print center
+    #print center
     f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
