@@ -128,10 +128,10 @@ if platform.machine() == 'armv6l': # and not args.display:
     pygame.mouse.set_visible(False)
 
 w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
-if w > 1000:
-    w = 1000
-if h > 700:
-    h = h - 100
+#if w > 1000:
+#    w = 1000
+#if h > 700:
+#    h = h - 100
 screen = pygame.display.set_mode((w, h))
 screen.fill((0,0,0))
 
@@ -267,12 +267,18 @@ def display_artist_info(artist):
             session.commit()
 
     #img.transform(resize = '320x240^')
-    img.transform(resize = str(h)+'x'+str(w)+'^')
+    #img.transform(resize = str(h)+'x'+str(w)+'^')
+    #wxh< - enlarges images with smaller than the corresponding width and/or height dimension(s)
+    img.transform(resize = str(w)+'x'+str(h)+'<')
     img = img.convert('bmp')
     f = StringIO()
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
+    img_rect = img.get_rect()
+    print img_rect
+    center = ((w-img_rect.width)/2, 0)
+    print center
     f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
@@ -280,7 +286,7 @@ def display_artist_info(artist):
     font.set_bold(True)
     
     screen.fill((0,0,0))
-    screen.blit(img, (0,0))      
+    screen.blit(img, center)      
 
     text = font.render(u"{}".format(artist), True, (255, 0, 0))
     screen.blit(text, (5,5))
@@ -318,12 +324,17 @@ def display_song_info(i):
             session.commit()
 
     #img.transform(resize = '320x240^')
-    img.transform(resize = str(h)+'x'+str(w)+'^')
+    #img.transform(resize = str(h)+'x'+str(w)+'^')
+    img.transform(resize = str(w)+'x'+str(h)+'<')
     img = img.convert('bmp')
     f = StringIO()
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
+    img_rect = img.get_rect()
+    print img_rect
+    center = ((w-img_rect.width)/2, 0)
+    print center
     f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
@@ -331,7 +342,7 @@ def display_song_info(i):
     font.set_bold(True)
     
     screen.fill((0,0,0))
-    screen.blit(img, (0,0))      
+    screen.blit(img, center)      
     n=0
     for a,b in DISPLAY.items():
         text = font.render(u"{}: {}".format(b, track.get(a)), True, (255, 0, 0))
@@ -361,17 +372,22 @@ def display_song_info2(i):
 
     try:
        # img.transform(resize = '320x240^')
-        img.transform(resize = str(h)+'x'+str(w)+'^')
+        #img.transform(resize = str(h)+'x'+str(w)+'^')
+        img.transform(resize = str(w)+'x'+str(h)+'<')
         img = img.convert('bmp')
         f = StringIO()
         img.save(f)
         f.seek(0)
         img = pygame.image.load(f, 'bmp').convert()
+        img_rect = img.get_rect()
+        print img_rect
+        center = ((w-img_rect.width)/2, 0)
+        print center
         f.close()
         #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; now not fading for display_images
         
         screen.fill((0,0,0)) 
-        screen.blit(img, (0,0))      
+        screen.blit(img, center)      
 
         pygame.display.flip()
         
@@ -738,7 +754,7 @@ def get_lyrics():
     text.update()
 
     screen.fill((0,0,0))
-    screen.blit(text.area, (0,0))
+    screen.blit(text.area,(0,0))
     pygame.display.flip()
 
 def display_twitter_feed():
@@ -758,7 +774,7 @@ def display_twitter_feed():
         for line in lines:
             txt = font.render(u"{}".format(line), True, (255, 0, 0))
             surface.blit(txt, (5,n))
-            screen.blit(surface, (0,0))
+            screen.blit(surface,(0,0))
             n+=30
 
         pygame.display.flip()
@@ -964,13 +980,17 @@ def display_image(image):
             img = wand.image.Image(filename = "test.bmp")
             print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
 
-    size = str(w)+'x'+str(h)+'^'
+    size = str(w)+'x'+str(h)+'<'
     img.transform(resize = size)
     img = img.convert('bmp')
     f = StringIO()
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f).convert()
+    img_rect = img.get_rect()
+    print img_rect
+    center = ((w-img_rect.width)/2, 0)
+    print center
     f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
@@ -980,7 +1000,7 @@ def display_image(image):
     text = font.render("Photographer: "+image.get('photographer', 'No photographer'), True, (255, 0, 0))
 
     screen.fill((0,0,0)) 
-    screen.blit(img, (0,0))      
+    screen.blit(img, center)      
     screen.blit(text, (0,0))
     
     txt = image.get('text', 'No title')
@@ -1002,7 +1022,7 @@ def display_image(image):
     sleep(3)
     screen.fill((0,0,0)) 
     img.set_alpha(255)
-    screen.blit(img, (0,0))      
+    screen.blit(img, center)      
     pygame.display.flip()
 
 def display_image_and_info(image):
@@ -1023,13 +1043,17 @@ def display_image_and_info(image):
             img = wand.image.Image(filename = "test.bmp")
             print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
 
-    size = str(w)+'x'+str(h)+'^'
+    size = str(w)+'x'+str(h)+'<'
     img.transform(resize = size)
     img = img.convert('bmp')
     f = StringIO()
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
+    img_rect = img.get_rect()
+    print img_rect
+    center = ((w-img_rect.width)/2, 0)
+    print center
     f.close()
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
@@ -1039,7 +1063,7 @@ def display_image_and_info(image):
     text = font.render("Photographer: "+image['photographer'], True, (255, 0, 0))
 
     screen.fill((0,0,0)) 
-    screen.blit(img, (0,0))      
+    screen.blit(img, center)      
     screen.blit(text, (0,0))
     
     txt = image.get('text', 'No title')
