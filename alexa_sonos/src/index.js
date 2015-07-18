@@ -102,7 +102,9 @@ var ARTISTS = [
     'patty griffin',
     'gillian welch',
     'lucinda williams',
-    'deb talan'
+    'deb talan',
+    'joni mitchell',
+    'damien rice'
 ];
 
 // current list of recognized music sources
