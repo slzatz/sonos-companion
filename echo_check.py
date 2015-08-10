@@ -1,4 +1,5 @@
 import os
+import time
 from time import sleep
 import datetime
 import random
@@ -144,54 +145,58 @@ def my_add_to_queue(uri, metadata):
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
 
-if __name__ == '__main__':
+q = conn.get_queue('sonos')
+
+while 1:
     
-    while 1:
-        
+    print time.time(), "checking"
+    try:
+        #q = conn.get_queue('sonos')
+        #m = q.get_messages() # below have added wait time so not generating too many requests
+        m = q.get_messages(1, visibility_timeout=100, wait_time_seconds=20)
+    except Exception as e:
+        print "Alexa exception: ", e
+        continue
+
+    if m:
+        m = m[0]
+        body = m.get_body()
+        print "message =", m
+        print "body =", body
+
         try:
-            q = conn.get_queue('sonos')
-            m = q.get_messages()
+            z = json.loads(body)
         except Exception as e:
-            print "Alexa exception: ", e
+            print "Alexa json exception: ", e
+            q.delete_message(m)
             continue
 
-        if m:
-            m = m[0]
-            body = m.get_body()
+        q.delete_message(m)
 
-            try:
-                z = json.loads(body)
-            except Exception as e:
-                print "Alexa json exception: ", e
-                continue
+        print z.get('action', "no action present")
+        print z.get('artist', "no artist present")
+        print z.get('number', "no number present")
 
-            print "message =",m
-            q.delete_message(m)
+        if z.get('action') == 'shuffle' and z.get('artist') and z.get('number'):
+            
+            master.stop()
+            master.clear_queue()
+            songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(int(z['number'])).all()
+            for song in songs:
+                print song.id
+                print song.artist
+                print song.album
+                print song.title
+                print song.uri
+                i = song.uri.find('amz')
+                ii = song.uri.find('.')
+                id_ = song.uri[i:ii]
+                print id_
+                meta = didl_amazon.format(id_=id_)
+                my_add_to_queue('', meta)
+                print "---------------------------------------------------------------"
 
-            print z.get('action', "no action present")
-            print z.get('artist', "no artist present")
-            print z.get('number', "no number present")
-
-            if z.get('action') == 'shuffle' and z.get('artist') and z.get('number'):
-                
-                master.stop()
-                master.clear_queue()
-                songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(int(z['number'])).all()
-                for song in songs:
-                    print song.id
-                    print song.artist
-                    print song.album
-                    print song.title
-                    print song.uri
-                    i = song.uri.find('amz')
-                    ii = song.uri.find('.')
-                    id_ = song.uri[i:ii]
-                    print id_
-                    meta = didl_amazon.format(id_=id_)
-                    my_add_to_queue('', meta)
-                    print "---------------------------------------------------------------"
+            master.play_from_queue(0)
     
-                master.play_from_queue(0)
-        
-        sleep(0.3)
+    sleep(0.3)
 
