@@ -145,7 +145,7 @@ def my_add_to_queue(uri, metadata):
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
 
-q = conn.get_queue('sonos')
+q = conn.get_queue('echo_sonos')
 
 while 1:
     

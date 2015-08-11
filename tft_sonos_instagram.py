@@ -61,7 +61,7 @@ conn = boto.sqs.connect_to_region(
     aws_access_key_id=c.aws_access_key_id,
     aws_secret_access_key=c.aws_secret_access_key)
 
-sqs_track_queue = conn.get_all_queues()[0]
+sqs_track_queue = conn.get_queue('sonos_scrobble')
 
 if platform.machine() == 'armv6l':
     import RPi.GPIO as GPIO
