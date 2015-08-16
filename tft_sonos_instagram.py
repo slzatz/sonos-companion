@@ -2,7 +2,6 @@ import platform
 import os
 
 import pygame
-#from pygame.locals import *
 import txtlib # may still use this for weather, lyrics, bio
 
 import time
@@ -36,6 +35,9 @@ import pygbutton_lite as pygbutton
 import boto.sqs
 from boto.sqs.message import Message
 
+from boto.dynamodb2.table import Table
+dynamo_scrobble_table = Table('scrobble')
+
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
 parser.add_argument('-a', '--alexa', action='store_true', help="Enable Alexa voice commands") #default is opposite of action
@@ -55,13 +57,6 @@ with open('instagram_ids') as f:
 ids = list(int(d) for d in data.split() if d)
 #ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
 #################instagram
-
-conn = boto.sqs.connect_to_region(
-    "us-east-1",
-    aws_access_key_id=c.aws_access_key_id,
-    aws_secret_access_key=c.aws_secret_access_key)
-
-sqs_track_queue = conn.get_queue('sonos_scrobble')
 
 if platform.machine() == 'armv6l':
     import RPi.GPIO as GPIO
@@ -1299,31 +1294,20 @@ if __name__ == '__main__':
                 # this is for AWS SQS
                 msg = '--'.join([MINI_DISPLAY[x]+': '+track[x].encode('ascii', 'ignore') for x in MINI_DISPLAY if track.get(x)])
                 if msg:
-                    m = Message()
-                    m.message_attributes = {
-                         "artist": {
-                             "data_type": "String",
-                             "string_value": track.get('artist') if track.get('artist') else 'None' # need something other than ''
-                                   },
-                         "song": {
-                             "data_type": "String",
-                             "string_value": track.get('title') if track.get('title') else 'None'
-                                 },
-                         "album": {
-                             "data_type": "String",
-                             "string_value": track.get('album') if track.get('album') else 'None'
-                                 },
-                         "date": {
-                             "data_type": "String",
-                             "string_value": track.get('date') if track.get('date') else '0' 
-                                 },
-                         "scrobble": {
-                             "data_type": "Number",
-                             "string_value": int(track.get('scrobble', -1))
-                                 }
-                                 }
-                    m.set_body(msg)
-                    sqs_track_queue.write(m)
+
+                    data = {
+                            'artist':track.get('artist', 'None'),
+                            'ts': cur_time,
+                            'title':track.get('title', 'None'),
+                            'album':track.get('album'),
+                            'date':track.get('date'),
+                            'scrobble':track.get('scrobble')}
+
+                    data = {k:v for k,v in data.items() if v} 
+                    try:
+                        dynamo_scrobble_table.put_item(data=data)
+                    except Exception as e:
+                       print "Exception trying to write dynamodb scrobble:", e
 
                     #this works but not sure there is any reason to tweet each song
                     try:

@@ -13,8 +13,8 @@ conn = boto.sqs.connect_to_region(
     aws_access_key_id=c.aws_access_key_id,
     aws_secret_access_key=c.aws_secret_access_key)
 
-q = conn.get_all_queues()[0]
-print "Queues =",q
+q = conn.get_queue('sonos_scrobble')
+print "Queue =",q
 count = q.count()
 print "Queue count =",count
 
