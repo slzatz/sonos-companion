@@ -1297,7 +1297,7 @@ if __name__ == '__main__':
 
                     data = {
                             'artist':track.get('artist', 'None'),
-                            'ts': cur_time,
+                            'ts': int(cur_time), # should need to convert but getting 20 digits to left of decimal point in dynamo
                             'title':track.get('title', 'None'),
                             'album':track.get('album'),
                             'date':track.get('date'),
