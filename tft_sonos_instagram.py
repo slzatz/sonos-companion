@@ -32,8 +32,8 @@ from twitter import *
 from twitter.api import TwitterHTTPError
 import pygbutton_lite as pygbutton
 
-import boto.sqs
-from boto.sqs.message import Message
+#import boto.sqs
+#from boto.sqs.message import Message
 
 from boto.dynamodb2.table import Table
 dynamo_scrobble_table = Table('scrobble')
@@ -1297,11 +1297,11 @@ if __name__ == '__main__':
 
                     data = {
                             'artist':track.get('artist', 'None'),
-                            'ts': int(cur_time), # should need to convert but getting 20 digits to left of decimal point in dynamo
+                            'ts': int(cur_time), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
                             'title':track.get('title', 'None'),
                             'album':track.get('album'),
                             'date':track.get('date'),
-                            'scrobble':track.get('scrobble')}
+                            'scrobble':track.get('scrobble')} #it's a string although probably should be converted to a integer
 
                     data = {k:v for k,v in data.items() if v} 
                     try:
