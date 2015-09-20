@@ -85,54 +85,60 @@ print "\n"
 print "program running ..."
 
 #globals
-stations = [
-('Add 10 to number',),
-('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), 
-('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'),
-('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
-('QuickMix', 'pndrradio:52877953807377986', 'SA_RINCON3_slzatz@gmail.com'),
-('R.E.M. Radio', 'pndrradio:637630342339192386', 'SA_RINCON3_slzatz@gmail.com'), 
-('Nick Drake Radio', 'pndrradio:409866109213435458', 'SA_RINCON3_slzatz@gmail.com'),
-('Dar Williams Radio', 'pndrradio:1823409579416053314', 'SA_RINCON3_slzatz@gmail.com'),
-('Patty Griffin Radio', 'pndrradio:52876609482614338', 'SA_RINCON3_slzatz@gmail.com'),
-('Lucinda Williams Radio', 'pndrradio:360878777387148866', 'SA_RINCON3_slzatz@gmail.com'),
-('Kris Delmhorst Radio', 'pndrradio:610111769614181954', 'SA_RINCON3_slzatz@gmail.com'),
-('Counting Crows Radio', 'pndrradio:1727297518525703746', 'SA_RINCON3_slzatz@gmail.com'), 
-('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
+#stations = [
+#('Add 10 to number',),
+#('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), 
+#('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'),
+#('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
+#('QuickMix', 'pndrradio:52877953807377986', 'SA_RINCON3_slzatz@gmail.com'),
+#('R.E.M. Radio', 'pndrradio:637630342339192386', 'SA_RINCON3_slzatz@gmail.com'), 
+#('Nick Drake Radio', 'pndrradio:409866109213435458', 'SA_RINCON3_slzatz@gmail.com'),
+#('Dar Williams Radio', 'pndrradio:1823409579416053314', 'SA_RINCON3_slzatz@gmail.com'),
+#('Patty Griffin Radio', 'pndrradio:52876609482614338', 'SA_RINCON3_slzatz@gmail.com'),
+#('Lucinda Williams Radio', 'pndrradio:360878777387148866', 'SA_RINCON3_slzatz@gmail.com'),
+#('Kris Delmhorst Radio', 'pndrradio:610111769614181954', 'SA_RINCON3_slzatz@gmail.com'),
+#('Counting Crows Radio', 'pndrradio:1727297518525703746', 'SA_RINCON3_slzatz@gmail.com'), 
+#('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
 
-echo = [x[0].lower() for x in stations]
-print "echo=",echo
-station_index = 0
+#echo = [x[0].lower() for x in stations]
+#print "echo=",echo
+#station_index = 0
 
-meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
+#meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
-meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
+#meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
 
-def play_random_amazon():
-    master.stop()
-    master.clear_queue()
+#def play_random_amazon():
+#    master.stop()
+#    master.clear_queue()
+#
+#    rows = session.query(Song).count()
+#
+#    for n in range(10):
+#        r = random.randrange(1,rows-1)
+#        song = session.query(Song).get(r)
+#        print song.id
+#        print song.artist
+#        print song.album
+#        print song.title
+#        print song.uri
+#        i = song.uri.find('amz')
+#        ii = song.uri.find('.')
+#        id_ = song.uri[i:ii]
+#        print id_
+#        meta = didl_amazon.format(id_=id_)
+#        my_add_to_queue('', meta)
+#        print "---------------------------------------------------------------"
+#        
+#    master.play_from_queue(0)
 
-    rows = session.query(Song).count()
+with open('deborah_albums') as f:
+    z = f.read()
 
-    for n in range(10):
-        r = random.randrange(1,rows-1)
-        song = session.query(Song).get(r)
-        print song.id
-        print song.artist
-        print song.album
-        print song.title
-        print song.uri
-        i = song.uri.find('amz')
-        ii = song.uri.find('.')
-        id_ = song.uri[i:ii]
-        print id_
-        meta = didl_amazon.format(id_=id_)
-        my_add_to_queue('', meta)
-        print "---------------------------------------------------------------"
-        
-    master.play_from_queue(0)
+zz = json.loads(z)
+zzz = [x for x in zz]
 
 def my_add_to_queue(uri, metadata):
     response = master.avTransport.AddURIToQueue([
@@ -151,7 +157,6 @@ while 1:
     
     print time.time(), "checking"
     try:
-        #q = conn.get_queue('sonos')
         #m = q.get_messages() # below have added wait time so not generating too many requests
         m = q.get_messages(1, visibility_timeout=100, wait_time_seconds=20)
     except Exception as e:
@@ -177,11 +182,36 @@ while 1:
         print z.get('artist', "no artist present")
         print z.get('number', "no number present")
 
-        if z.get('action') == 'shuffle' and z.get('artist') and z.get('number'):
+        if z.get('action') == 'deborah' and z.get('number'):
             
+            songs = []
+
             master.stop()
             master.clear_queue()
+
+            for x in range(int(z['number'])):
+                n = random.randint(0,len(zzz)-1)
+                print "album: ", zzz[n]
+                songs+=zz[zzz[n]]
+
+            for uri in songs:
+                print uri
+                i = uri.find('amz')
+                ii = uri.find('.')
+                id_ = uri[i:ii]
+                print id_
+                meta = didl_amazon.format(id_=id_)
+                my_add_to_queue('', meta)
+                print "---------------------------------------------------------------"
+
+            master.play_from_queue(0)
+    
+        elif z.get('action') == 'shuffle' and z.get('artist') and z.get('number'):
+            master.stop()
+            master.clear_queue()
+
             songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(int(z['number'])).all()
+
             for song in songs:
                 print song.id
                 print song.artist
@@ -197,6 +227,5 @@ while 1:
                 print "---------------------------------------------------------------"
 
             master.play_from_queue(0)
-    
     sleep(0.3)
 

@@ -36,6 +36,7 @@ class Song(Base):
     
     def __repr__(self):
         return "<artist={}, album={}, title={}, uri={}>".format(self.artist, self.album, self.title, self.uri)
+
 class Artist(Base):
     __tablename__ = 'artists'
     id = Column(Integer, primary_key=True)
