@@ -54,7 +54,7 @@ client_id = c.client_id
 with open('instagram_ids') as f:
     data = f.read()
 
-ids = list(int(d.split('#')) for d in data.split() if d)
+ids = list(int(d.split('#')[0]) for d in data.split() if d.split('#')[0])
 #ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
 #################instagram
 
