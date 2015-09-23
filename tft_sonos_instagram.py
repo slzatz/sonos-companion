@@ -252,7 +252,8 @@ def display_artist_info(artist):
         response = requests.get(url)
     except Exception as e:
         print "response = requests.get(url) generated exception:", e
-        img = wand.image.Image(filename = "test.bmp")
+        #img = wand.image.Image(filename = "test.bmp")
+        img = None
         artist_image_list[r].ok = False
         session.commit()
     else:
@@ -260,10 +261,14 @@ def display_artist_info(artist):
             img = wand.image.Image(file=StringIO(response.content))
         except Exception as e:
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
-            img = wand.image.Image(filename = "test.bmp")
+            #img = wand.image.Image(filename = "test.bmp")
+            img = None
             artist_image_list[r].ok = False
             session.commit()
 
+    if img is None:
+        return
+    
     img.transform(resize = "{}x{}".format(w,h))
     img = img.convert('bmp')
     f = StringIO()
@@ -643,6 +648,7 @@ def get_images(name):
             
         artist.images = images
         session.commit()
+    # for image in artist.images: what if not OK
 
     return artist.images 
     
@@ -1310,10 +1316,10 @@ if __name__ == '__main__':
                        print "Exception trying to write dynamodb scrobble:", e
 
                     #this works but not sure there is any reason to tweet each song
-                    try:
-                        tw.direct_messages.new(user='slzatz', text=msg)
-                    except TwitterHTTPError:
-                        print "twitter issue"   
+                    #try:
+                    #    tw.direct_messages.new(user='slzatz', text=msg)
+                    #except TwitterHTTPError:
+                    #    print "twitter issue"   
 
             elif not new_song:
                 # show the next track_string if not the image and text from a new song

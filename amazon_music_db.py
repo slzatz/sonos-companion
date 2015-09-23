@@ -54,13 +54,14 @@ class Image(Base):
     height = Column(Integer)
     ok = Column(Boolean, default=True)
     
-    user = relationship("Artist", backref=backref('images')) 
+    #user = relationship("Artist", backref=backref('images')) 
+    artist = relationship("Artist", backref=backref('images')) 
    
     def __repr__(self):
         return "<artist_id={}; link={}; ({},{})>".format(self.artist_id, self.link, self.width, self.height)
 
 #engine = create_engine('sqlite:///amazon_music.db', echo=True)
-engine = create_engine('postgresql+psycopg2://{}:{}@{}:5432/music'.format(c.aws_id, c.aws_pw, c.aws_host), echo=True)
+engine = create_engine('postgresql+psycopg2://{}:{}@{}:5432/music'.format(c.aws_id, c.aws_pw, c.aws_host), echo=False)
 #Base.metadata.create_all(engine) # only creates tables if they don't exist
 
 #conn = engine.connect()
