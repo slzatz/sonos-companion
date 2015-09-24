@@ -311,17 +311,22 @@ def display_song_info(i):
         response = requests.get(url)
     except Exception as e:
         print "response = requests.get(url) generated exception: ", e
-        img = wand.image.Image(filename = "test.bmp")
+        #img = wand.image.Image(filename = "test.bmp")
+        img = None
         artist_image_list[i].ok = False
         session.commit()
     else:     
         try:
             img = wand.image.Image(file=StringIO(response.content))
         except Exception as e:
-            img = wand.image.Image(filename = "test.bmp")
+            #img = wand.image.Image(filename = "test.bmp")
+            img = None
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e 
             artist_image_list[i].ok = False
             session.commit()
+
+    if img is None:
+         return
 
     img.transform(resize = "{}x{}".format(w,h))
     img = img.convert('bmp')
@@ -356,17 +361,22 @@ def display_song_info2(i):
         response = requests.get(url)
     except Exception as e:
         print "response = requests.get(url) generated exception: ", e
-        img = wand.image.Image(filename = "test.bmp")
+        #img = wand.image.Image(filename = "test.bmp")
+        img = None
         artist_image_list[i].ok = False
         session.commit()
     else:
         try:
             img = wand.image.Image(file=StringIO(response.content))
         except Exception as e:
-            img = wand.image.Image(filename = "test.bmp")
+            #img = wand.image.Image(filename = "test.bmp")
+            img = None
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception: ", e
             artist_image_list[i].ok = False
             session.commit()
+
+    if img is None:
+        return
 
     try:
         img.transform(resize = "{}x{}".format(w,h))
