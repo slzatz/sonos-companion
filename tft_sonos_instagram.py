@@ -260,7 +260,7 @@ def display_artist_info(artist):
         try:
             img = wand.image.Image(file=StringIO(response.content))
         except Exception as e:
-            print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
+            print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", url, "Exception:", e
             #img = wand.image.Image(filename = "test.bmp")
             img = None
             artist_image_list[r].ok = False
@@ -321,7 +321,7 @@ def display_song_info(i):
         except Exception as e:
             #img = wand.image.Image(filename = "test.bmp")
             img = None
-            print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e 
+            print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", url, "Exception:", e
             artist_image_list[i].ok = False
             session.commit()
 
@@ -371,7 +371,7 @@ def display_song_info2(i):
         except Exception as e:
             #img = wand.image.Image(filename = "test.bmp")
             img = None
-            print "img = wand.image.Image(file=StringIO(response.content)) generated exception: ", e
+            print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", url, "Exception:", e
             artist_image_list[i].ok = False
             session.commit()
 
