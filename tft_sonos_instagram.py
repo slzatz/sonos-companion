@@ -32,14 +32,11 @@ from twitter import *
 from twitter.api import TwitterHTTPError
 import pygbutton_lite as pygbutton
 
-#import boto.sqs
-#from boto.sqs.message import Message
-
 from boto.dynamodb2.table import Table
 dynamo_scrobble_table = Table('scrobble')
 
 parser = argparse.ArgumentParser(description='Command line options ...')
-parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default is opposite of action
+parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default args.display == False (opposite of action)
 parser.add_argument('-a', '--alexa', action='store_true', help="Enable Alexa voice commands") #default is opposite of action
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
@@ -311,7 +308,6 @@ def display_song_info(i):
         response = requests.get(url)
     except Exception as e:
         print "response = requests.get(url) generated exception: ", e
-        #img = wand.image.Image(filename = "test.bmp")
         img = None
         artist_image_list[i].ok = False
         session.commit()
@@ -319,7 +315,6 @@ def display_song_info(i):
         try:
             img = wand.image.Image(file=StringIO(response.content))
         except Exception as e:
-            #img = wand.image.Image(filename = "test.bmp")
             img = None
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", url, "Exception:", e
             artist_image_list[i].ok = False
@@ -361,7 +356,6 @@ def display_song_info2(i):
         response = requests.get(url)
     except Exception as e:
         print "response = requests.get(url) generated exception: ", e
-        #img = wand.image.Image(filename = "test.bmp")
         img = None
         artist_image_list[i].ok = False
         session.commit()
@@ -369,7 +363,6 @@ def display_song_info2(i):
         try:
             img = wand.image.Image(file=StringIO(response.content))
         except Exception as e:
-            #img = wand.image.Image(filename = "test.bmp")
             img = None
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", url, "Exception:", e
             artist_image_list[i].ok = False
