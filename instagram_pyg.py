@@ -54,9 +54,12 @@ pygame.init()
 pygame.mouse.set_visible(0)
 #pygame.mouse.set_cursor(*pygame.cursors.diamond)
 
-w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
-if w > 1080:
+w_max, h_max = pygame.display.Info().current_w, pygame.display.Info().current_h
+if w_max > 1080:
     w,h = 1080,1080
+else:
+    w = w_max
+    h = h_max
 
 screen = pygame.display.set_mode((w,h))
 screen.fill((0,0,0))
@@ -130,6 +133,8 @@ def display_image(image):
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
+    img_rect = img.get_rect()
+    center = ((w_max - img_rect.width)/2, 0)
     f.close()
     img.set_alpha(75) # the lower the number the more faded 
 
@@ -139,7 +144,8 @@ def display_image(image):
     text = font.render("Photographer: "+image.get('photographer', 'No photographer'), True, (255, 0, 0))
 
     screen.fill((0,0,0)) 
-    screen.blit(img, (0,0))      
+    #screen.blit(img, (0,0))      
+    screen.blit(img, center)      
     screen.blit(text, (0,0))
 
     txt = image.get('text', 'No title')
