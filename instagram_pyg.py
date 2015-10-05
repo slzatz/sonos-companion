@@ -168,7 +168,7 @@ def display_image(image):
     screen.fill((0,0,0)) 
     img.set_alpha(255)
     #screen.blit(img, (0,0))      
-    screen.blit(img, center))      
+    screen.blit(img, center)      
     pygame.display.flip()
 
 def display_image_and_info(image):
