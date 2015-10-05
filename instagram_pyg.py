@@ -61,7 +61,7 @@ else:
     w = w_max
     h = h_max
 
-screen = pygame.display.set_mode((w,h))
+screen = pygame.display.set_mode((w_max,h_max))
 screen.fill((0,0,0))
 
 font = pygame.font.SysFont('Sans', 50)
@@ -195,6 +195,8 @@ def display_image_and_info(image):
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
+    img_rect = img.get_rect()
+    center = ((w_max - img_rect.width)/2, 0)
     f.close()
     
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
@@ -205,7 +207,8 @@ def display_image_and_info(image):
     text = font.render("Photographer: "+image['photographer'], True, (255, 0, 0))
 
     screen.fill((0,0,0)) 
-    screen.blit(img, (0,0))      
+    #screen.blit(img, (0,0))      
+    screen.blit(img, center)      
     screen.blit(text, (0,0))
     
     txt = image.get('text', 'No title')
