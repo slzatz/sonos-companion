@@ -642,7 +642,7 @@ def get_images(name):
         print "**************Google Custom Search Engine Request for "+name+"**************"
         http = httplib2.Http()
         service = discovery.build('customsearch', 'v1',  developerKey=g_api_key, http=http)
-        z = service.cse().list(q=artist, searchType='image', imgSize='large', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
+        z = service.cse().list(q=artist, searchType='image', imgType='face', imgSize='xlarge', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
 
         images = []
         for i in z['items']:
