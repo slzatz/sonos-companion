@@ -634,6 +634,7 @@ def get_images(name):
     try:
         artist = session.query(Artist).filter(Artist.name==name).one()
     except NoResultFound:
+        print "Couldn't find artist", name
         artist = Artist(name=name)
         session.add(artist)
         session.commit()
@@ -652,7 +653,7 @@ def get_images(name):
         artist.images = images
         session.commit()
     # for image in artist.images: what if not OK
-
+    print "artist.images = ", artist.images
     return artist.images 
     
 def get_url(artist, title):
@@ -1291,8 +1292,9 @@ if __name__ == '__main__':
             
                 #if there is no artist (for example when Sonos isn't playing anything or for some radio) then show images of sunsets  ;-)
                 artist_image_list = get_images(track['artist'] if track.get('artist') else "sunsets")
-                
-                print "displaying initial image of ", track.get('artist', '')
+                num_images = len(artist_image_list)
+                print "I have found", num_images, "images for ", track.get('artist', '') 
+                print "displaying initial image of", track.get('artist', '')
                 display_song_info(0)
                 t3 = cur_time #time.time()
                                   
@@ -1353,9 +1355,9 @@ if __name__ == '__main__':
 
             new_song = False
             
-            image_num = image_num+1 if image_num < 9 else 0
+            image_num = image_num+1 if image_num < num_images-1 else 0
             try:
-                print time.time(),"displaying a new image of ", track['artist']
+                print time.time(),"displaying image", image_num, "of ", track['artist']
                 display_song_info2(image_num) 
             except Exception as e:
                print "Exception:", e
