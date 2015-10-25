@@ -1,3 +1,6 @@
+'''
+uses boto but should probably be re-written for boto3
+'''
 import os
 import time
 from time import sleep
@@ -13,7 +16,8 @@ import soco
 from soco import config
 
 import boto.sqs
-from boto.sqs.message import Message
+#from boto.sqs.message import Message
+#import boto3 #####################################################################################3
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
@@ -23,6 +27,10 @@ conn = boto.sqs.connect_to_region(
     "us-east-1",
     aws_access_key_id=c.aws_access_key_id,
     aws_secret_access_key=c.aws_secret_access_key)
+
+
+#sqs = boto3.resource('sqs') ########################################################################
+#queue = sqs.get_queue_by_name(QueueName='echo_sonos') ############################################### 
 
 from amazon_music_db import *
 from sqlalchemy.sql.expression import func
@@ -157,7 +165,20 @@ while 1:
     
     print time.time(), "checking"
     try:
-        #m = q.get_messages() # below have added wait time so not generating too many requests
+ #   response = client.receive_message(
+ #   QueueUrl='string',
+ #   AttributeNames=[
+ #       'Policy'|'VisibilityTimeout'|'MaximumMessageSize'|'MessageRetentionPeriod'|'ApproximateNumberOfMessages'|'ApproximateNumberOfMessagesNotVisible'|'CreatedTimestamp'|'LastModifiedTimestamp'|'QueueArn'|'ApproximateNumberOfMessagesDelayed'|'DelaySeconds'|'ReceiveMessageWaitTimeSeconds'|'RedrivePolicy',
+ #   ],
+ #   MessageAttributeNames=[
+ #       'string',
+ #   ],
+ #   MaxNumberOfMessages=1,
+ #   VisibilityTimeout=100,
+ #   WaitTimeSeconds=20
+ # )
+        #m = q.receive_message(MaxNumberOfMessages=1, VisibilityTimeout=100, WaitTimeSeconds=20) ##########################################################
+        #body = response['Messages'][0]['Body']
         m = q.get_messages(1, visibility_timeout=100, wait_time_seconds=20)
     except Exception as e:
         print "Alexa exception: ", e
@@ -231,7 +252,7 @@ while 1:
         elif z.get('action') == 'skip':
             master.next()
 
-        elif z.get('action') == 'lower':
+        elif z.get('action') == 'quieter':
             volume = master.volume
             
             new_volume = volume - 10
