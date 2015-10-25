@@ -227,5 +227,35 @@ while 1:
                 print "---------------------------------------------------------------"
 
             master.play_from_queue(0)
+
+        elif z.get('action') == 'skip':
+            master.next()
+
+        elif z.get('action') == 'lower':
+            volume = master.volume
+            
+            new_volume = volume - 10
+            
+            if args.player == 'all':
+                for s in speakers:
+                    s.volume = new_volume
+            else:
+                master.volume = new_volume
+
+        elif z.get('action') == 'louder':
+            volume = master.volume
+            
+            new_volume = volume + 10
+            
+            if new_volume > 75:
+                new_volume = 75
+                print "volume set to over 75 was reset to 75"
+                            
+            if args.player == 'all':
+                for s in speakers:
+                    s.volume = new_volume
+            else:
+                master.volume = new_volume
+
     sleep(0.3)
 
