@@ -202,6 +202,7 @@ while 1:
         print z.get('action', "no action present")
         print z.get('artist', "no artist present")
         print z.get('number', "no number present")
+        print (z.get('action')=='louder')
 
         if z.get('action') == 'deborah' and z.get('number'):
             
