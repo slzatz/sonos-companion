@@ -263,6 +263,9 @@ while 1:
             else:
                 master.volume = new_volume
 
+            print "args.player=",args.player
+            print "I tried to turn down the volume"
+
         elif z.get('action') == 'louder':
             volume = master.volume
             
@@ -277,6 +280,9 @@ while 1:
                     s.volume = new_volume
             else:
                 master.volume = new_volume
+
+            print "args.player=",args.player
+            print "I tried to turn up the volume"
 
     sleep(0.3)
 
