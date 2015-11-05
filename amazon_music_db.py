@@ -7,7 +7,7 @@ do not seem to work and need to be replaced
 The lines below may be better way to pull images (uses xlarge and face)
 service = discovery.build('customsearch', 'v1',  developerKey=g_api_key, http=http)
 z = service.cse().list(q=artist, start=1, imgType='face', searchType='image', imgSize='xlarge', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
-
+NOTE:  I have added a playlist so I can create them (although need a tool to do that) but haven't actually created the table
 '''
 #Need to put sqlalchemy on the sys.path
 import os
@@ -70,6 +70,15 @@ class Image(Base):
     def __repr__(self):
         return "<artist_id={}; link={}; ({},{})>".format(self.artist_id, self.link, self.width, self.height)
 
+#association_table = Table('association', Base.metadata,
+#    Column('playlist_id', Integer, ForeignKey('playlists.id')),
+#    Column('song_id', Integer, ForeignKey('songs.id'))
+
+#class Playlist(Base):
+#    __tablename__ = 'playlists'
+#    id = Column(Integer, primary_key=True)
+#    songs = relationship("Song", secondary=association_table)
+#
 #engine = create_engine('sqlite:///amazon_music.db', echo=True)
 engine = create_engine('postgresql+psycopg2://{}:{}@{}:5432/music'.format(c.aws_id, c.aws_pw, c.aws_host), echo=False)
 #Base.metadata.create_all(engine) # only creates tables if they don't exist

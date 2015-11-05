@@ -204,6 +204,7 @@ while 1:
         print z.get('number', "no number present")
         print (z.get('action')=='louder')
 
+        #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(z) def f1(**kw); kw = 
         if z.get('action') == 'deborah' and z.get('number'):
             
             songs = []

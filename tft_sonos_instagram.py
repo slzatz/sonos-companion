@@ -953,15 +953,16 @@ def get_photos(ids=None):
         else:
             for d in z: 
                 try:
+                    dd = {}
                     if d['type']=='image': #note they have a caption and the caption has text
-                        dd = {}
                         dd['url'] = d['images']['standard_resolution']['url']
                         dd['text'] = d['caption']['text']
                         dd['photographer'] = d['caption']['from']['full_name']
                 except Exception as e:
                     print "Exception in get_photos - adding indiviual photo {} related to id: {} ".format(e, _id)
                 else:
-                    images.append(dd)
+                    if dd:
+                        images.append(dd)
 
     return images
 
