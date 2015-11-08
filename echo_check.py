@@ -199,10 +199,8 @@ while 1:
 
         q.delete_message(m)
 
-        print z.get('action', "no action present")
-        print z.get('artist', "no artist present")
-        print z.get('number', "no number present")
-        print (z.get('action')=='louder')
+        for x in z:
+            print x, z[x]
 
         #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(z) def f1(**kw); kw = 
         if z.get('action') == 'deborah' and z.get('number'):
@@ -265,7 +263,6 @@ while 1:
             else:
                 master.volume = new_volume
 
-            print "args.player=",args.player
             print "I tried to turn down the volume"
 
         elif z.get('action') == 'louder':
@@ -283,7 +280,6 @@ while 1:
             else:
                 master.volume = new_volume
 
-            print "args.player=",args.player
             print "I tried to turn up the volume"
 
     sleep(0.3)
