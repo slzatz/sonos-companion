@@ -37,7 +37,7 @@ dynamo_scrobble_table = Table('scrobble')
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default args.display == False (opposite of action)
-parser.add_argument('-a', '--alexa', action='store_true', help="Enable Alexa voice commands") #default is opposite of action
+#parser.add_argument('-a', '--alexa', action='store_true', help="Enable Alexa voice commands") #default is opposite of action
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
@@ -1151,55 +1151,55 @@ if __name__ == '__main__':
 
             else:
                 KEYS.get(event.key, lambda:None)()
-##############################################################################################################
-
-        if args.alexa:
-            try:
-                res = requests.get(c.uri)
-                jres = res.json()
-            except requests.exceptions.ConnectionError as e:
-                print "ConnectionError in request in display_weather: ", e
-            else:
-                if jres['updated']:
-                    #select(station=stations[keypadnum])
-                    #('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
-                    print jres['updated']
-                    print jres['artist']
-                    print jres['source']
-                    if jres['source'] == 'pandora':
-                        station = jres['artist'] + ' radio'
-                        print "station=",station
-                        i = echo.index(station) if station in echo else None
-                        print "i=",i
-                        if i is not None:
-                            select(stations[i])
-                    else:
-                        
-                        master.stop()
-                        master.clear_queue()
-                        songs = session.query(Song).filter(Song.artist==jres['artist'].title()).order_by(func.random()).limit(10).all()
-                        for song in songs:
-                            print song.id
-                            print song.artist
-                            print song.album
-                            print song.title
-                            print song.uri
-                            i = song.uri.find('amz')
-                            ii = song.uri.find('.')
-                            id_ = song.uri[i:ii]
-                            print id_
-                            meta = didl_amazon.format(id_=id_)
-                            my_add_to_queue('', meta)
-                            print "---------------------------------------------------------------"
-            
-                        master.play_from_queue(0)
-                else:
-                    pass
-                    #print jres['updated']
-                    #print jres['artist']
-                    #print jres['source']
-
-##################################################################################################################
+###############################################################################################################
+#
+#        if args.alexa:
+#            try:
+#                res = requests.get(c.uri)
+#                jres = res.json()
+#            except requests.exceptions.ConnectionError as e:
+#                print "ConnectionError in request in display_weather: ", e
+#            else:
+#                if jres['updated']:
+#                    #select(station=stations[keypadnum])
+#                    #('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
+#                    print jres['updated']
+#                    print jres['artist']
+#                    print jres['source']
+#                    if jres['source'] == 'pandora':
+#                        station = jres['artist'] + ' radio'
+#                        print "station=",station
+#                        i = echo.index(station) if station in echo else None
+#                        print "i=",i
+#                        if i is not None:
+#                            select(stations[i])
+#                    else:
+#                        
+#                        master.stop()
+#                        master.clear_queue()
+#                        songs = session.query(Song).filter(Song.artist==jres['artist'].title()).order_by(func.random()).limit(10).all()
+#                        for song in songs:
+#                            print song.id
+#                            print song.artist
+#                            print song.album
+#                            print song.title
+#                            print song.uri
+#                            i = song.uri.find('amz')
+#                            ii = song.uri.find('.')
+#                            id_ = song.uri[i:ii]
+#                            print id_
+#                            meta = didl_amazon.format(id_=id_)
+#                            my_add_to_queue('', meta)
+#                            print "---------------------------------------------------------------"
+#            
+#                        master.play_from_queue(0)
+#                else:
+#                    pass
+#                    #print jres['updated']
+#                    #print jres['artist']
+#                    #print jres['source']
+#
+###################################################################################################################
         cur_time = time.time()
 
         if cur_time - t2 > 10:

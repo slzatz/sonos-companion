@@ -30,30 +30,43 @@ import random
 import json
 import argparse
 import sys
+import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config
+import requests
 import boto3 
+import config as c
+from amazon_music_db import *
+from sqlalchemy.sql.expression import func
+import musicbrainzngs
+#from boto.dynamodb2.table import Table
+#dynamo_scrobble_table = Table('scrobble')
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
 sqs = boto3.resource('sqs', region_name='us-east-1') 
-q = sqs.get_queue_by_name(QueueName='echo_sonos') 
+sqs_queue = sqs.get_queue_by_name(QueueName='echo_sonos') 
 
-from amazon_music_db import *
-from sqlalchemy.sql.expression import func
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+dynamodb_table = dynamodb.Table('scrobble')
 
 config.CACHE_ENABLED = False
+
+scrobbler_base_url = "http://ws.audioscrobbler.com/2.0/"
+lastfm_api_key = c.last_fm_api_key 
+
+musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
 n = 0
 while 1:
     n+=1
     print "attempt "+str(n)
     try:
-        sp = soco.discover(timeout=5)
+        sp = soco.discover(timeout=20)
         speakers = list(sp)
         #speakers = list(soco.discover(timeout=5))
     except TypeError as e:    
@@ -138,12 +151,88 @@ def my_add_to_queue(uri, metadata):
 #    else:
 #        print "switched to {}".format(title)
 
-while 1:
+def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
     
-    print time.time(), "checking"
+    payload = {'method':'track.getinfo', 'artist':artist, 'track':track, 'autocorrect':autocorrect, 'format':'json', 'api_key':lastfm_api_key, 'username':username}
+    
+    try:
+        r = requests.get(scrobbler_base_url, params=payload)
+        
+        z = r.json()['track']['userplaycount']
+        #zz = r.json()['track']['userloved']
+        #return "playcount: "+z+" loved: "+zz
+        return z # will need to be converted to integer when sent to SQS
+    except Exception as e:
+        print "Exception in get_scrobble_info: ", e
+        return '-1' # will need to be converted to integer when sent to SQS
+
+def get_release_date(artist, album, title):
+
+    t = "artist = {}; album = {} [used in search], title = {} [in get_release_date]".format(artist, album, title)
+    print t.encode('ascii', 'ignore')
 
     try:
-        r = q.receive_messages(MaxNumberOfMessages=1, VisibilityTimeout=0, WaitTimeSeconds=20) 
+        result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
+    except:
+        return "No date exception (search_releases)"
+    
+    release_list = result['release-list'] # can be missing
+    
+    if 'release-list' in result:
+        release_list = result['release-list'] # can be missing
+        dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
+    
+        if dates:
+            dates.sort()
+            return "{}".format(dates[0])  
+
+    return ''
+       
+    ## Generally if there was no date provided it's because there is also a bogus album (because it's a collection
+    ## and so decided to comment out the above.  We'll see how that works over time.
+
+def get_recording_date(artist, album, title):
+
+    t = "artist = {}; album = {} [not used in search], title = {} [in get_recording_date]".format(artist, album, title)
+    print t.encode('ascii', 'ignore')
+    
+    try:
+        result = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=40, offset=None, strict=False)
+    except:
+        return "No date exception (search_recordings)"
+    
+    recording_list = result.get('recording-list')
+    
+    if recording_list is None:
+        return "No date (search of musicbrainzngs did not produce a recording_list)"
+    
+    dates = []
+    for d in recording_list:
+        if int(d['ext:score']) > 98 and 'release-list' in d:
+            rel_dict = d['release-list'][0] # it's a list but seems to have one element and that's a dictionary
+            date = rel_dict.get('date', '9999')[0:4]
+            title = rel_dict.get('title','No title')
+
+            if rel_dict.get('artist-credit-phrase') == 'Various Artists':  #possibly could also use status:promotion
+                dates.append((date,title,'z'))
+            else:
+                dates.append((date,title,'a'))
+                
+    if dates:
+        dates.sort(key=itemgetter(0,2)) # idea is to put albums by the artist ahead of albums by various artists
+        return u"{} - {}".format(dates[0][0], dates[0][1])   
+    else:
+        return '' 
+
+prev_title = ''
+
+while 1:
+    
+    print "{} checking sqs queue for new message".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+    # check sqs_queue for new actions to take
+    try:
+        r = sqs_queue.receive_messages(MaxNumberOfMessages=1, VisibilityTimeout=0, WaitTimeSeconds=20) 
     except Exception as e:
         print "Alexa exception: ", e
         continue
@@ -257,5 +346,77 @@ while 1:
         else:
             print "I have no idea what you said"
 
-    sleep(0.3)
+    ###########################################################################################
+    # Below is about using track info, getting additional information
+    try:
+        state = master.get_current_transport_info()['current_transport_state']
+    except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
+        state = 'ERROR'
+        print "Encountered error in state = master.get_current transport_info(): ", e
+
+    current_track = master.get_current_track_info()
+    # check if sonos is playing anything and, if not, display instagram photos
+    if state != 'PLAYING' or 'tunein' in current_track.get('uri', ''):
+
+        continue
+            
+    # checking every two seconds if the track has changed - could do it as a subscription too
+        
+    #get_current_track_info() =  {
+                #u'album': 'We Walked In Song', 
+                #u'artist': 'The Innocence Mission', 
+                #u'title': 'My Sisters Return From Ireland', 
+                #u'uri': 'pndrradio-http://audio-sv5-t3-1.pandora.com/access/5459257820921908950?version=4&lid=86206018&token=...', 
+                #u'playlist_position': '3', 
+                #u'duration': '0:02:45', 
+                #u'position': '0:02:38', 
+                #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
+    
+    #current_track = master.get_current_track_info()
+    #title = current_track['title']
+    #artist = current_track['artist'] # for lyrics           
+    
+    #ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print "{} checking to see if track has changed".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+    
+    if prev_title != current_track.get('title') and current_track.get('artist'): 
+        
+        track = dict(current_track)
+
+        # there will be no date if from one of our compilations
+        if not 'date' in track and track.get('artist') and track.get('title') and track.get('album'):
+            if track['album'].find('(c)') == -1:
+                track['date'] = get_release_date(track['artist'], track['album'], track['title'])
+            else:
+                track['date'] = get_recording_date(track['artist'], track['album'], track['title'])
+                 
+        else:
+            track['date'] = ''
+        
+        if not 'scrobble' in track and track.get('artist') and track.get('title'):
+            track['scrobble'] = get_scrobble_info(track['artist'], track['title'])
+        else:
+            track['scrobble'] = '-100'
+
+        prev_title = track.get('title') 
+
+        # this is for AWS DynamoDB
+        data = {
+                'artist':track['artist'],
+                'ts': int(time.time()), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
+                'title':track.get('title', 'None'),
+                'album':track.get('album'),
+                'date':track.get('date'),
+                'scrobble':track.get('scrobble')} #it's a string although probably should be converted to a integer
+
+        data = {k:v for k,v in data.items() if v} 
+        try:
+            dynamodb_table.put_item(Item=data)
+        except Exception as e:
+            print "Exception trying to write dynamodb scrobble table:", e
+        else:
+            print "{} sent successfully to dynamodb".format(json.dumps(data))
+    ###########################################################################################
+    sleep(0.1)
 
