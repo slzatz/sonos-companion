@@ -41,8 +41,6 @@ import config as c
 from amazon_music_db import *
 from sqlalchemy.sql.expression import func
 import musicbrainzngs
-#from boto.dynamodb2.table import Table
-#dynamo_scrobble_table = Table('scrobble')
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
@@ -56,6 +54,7 @@ dynamodb_table = dynamodb.Table('scrobble')
 
 config.CACHE_ENABLED = False
 
+#lastfm scrobbles
 scrobbler_base_url = "http://ws.audioscrobbler.com/2.0/"
 lastfm_api_key = c.last_fm_api_key 
 
@@ -153,14 +152,15 @@ def my_add_to_queue(uri, metadata):
 
 def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
     
-    payload = {'method':'track.getinfo', 'artist':artist, 'track':track, 'autocorrect':autocorrect, 'format':'json', 'api_key':lastfm_api_key, 'username':username}
+    payload = {'method':'track.getinfo',
+               'artist':artist, 'track':track,
+               'autocorrect':autocorrect,
+               'format':'json', 'api_key':lastfm_api_key,
+               'username':username}
     
     try:
         r = requests.get(scrobbler_base_url, params=payload)
-        
         z = r.json()['track']['userplaycount']
-        #zz = r.json()['track']['userloved']
-        #return "playcount: "+z+" loved: "+zz
         return z # will need to be converted to integer when sent to SQS
     except Exception as e:
         print "Exception in get_scrobble_info: ", e
@@ -188,9 +188,6 @@ def get_release_date(artist, album, title):
 
     return ''
        
-    ## Generally if there was no date provided it's because there is also a bogus album (because it's a collection
-    ## and so decided to comment out the above.  We'll see how that works over time.
-
 def get_recording_date(artist, album, title):
 
     t = "artist = {}; album = {} [not used in search], title = {} [in get_recording_date]".format(artist, album, title)
@@ -320,11 +317,10 @@ while 1:
             master.play_from_queue(0)
 
         elif action == 'pause':
-            state = master.get_current_transport_info()['current_transport_state']
-            if state == 'PLAYING':   #'PAUSED_PLAYBACK'
-                master.pause()
-            else:
-                master.play()
+            master.pause()
+
+        elif action == 'resume':
+            master.play()
 
         elif action == 'skip':
             master.next()
