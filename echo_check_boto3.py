@@ -328,7 +328,10 @@ while 1:
             master.play()
 
         elif action == 'skip':
-            master.next()
+            try:
+                master.next()
+            except soco.exceptions.SoCoUPnPException as e:
+                print "Probably tried to do 'next' when not possible:", e
 
         elif action in ('quieter','louder'):
             volume = master.volume
