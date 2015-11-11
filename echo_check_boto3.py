@@ -261,6 +261,9 @@ while 1:
             master.stop()
             master.clear_queue()
 
+            if type(z['number']) != int:
+                z['number'] = 1
+
             for x in range(z['number']):
                 n = random.randint(0,len(DEBORAH_ALBUMS)-1)
                 print "album: ", DEBORAH_ALBUMS[n][0]
