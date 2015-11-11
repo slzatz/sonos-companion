@@ -262,7 +262,8 @@ while 1:
             master.clear_queue()
 
             if type(z['number']) != int:
-                z['number'] = 1
+                z['number'] = int(z['number'])
+                print "Needed to convert to int"
 
             for x in range(z['number']):
                 n = random.randint(0,len(DEBORAH_ALBUMS)-1)
