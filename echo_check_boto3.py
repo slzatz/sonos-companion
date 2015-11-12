@@ -262,8 +262,8 @@ while 1:
             master.clear_queue()
 
             if type(z['number']) != int:
-                z['number'] = int(z['number'])
-                print "Needed to convert to int"
+                print "There was a problem with number:", z['number']
+                z['number'] = 1
 
             for x in range(z['number']):
                 n = random.randint(0,len(DEBORAH_ALBUMS)-1)
@@ -302,6 +302,10 @@ while 1:
         elif action == 'shuffle' and z.get('artist') and z.get('number'):
             master.stop()
             master.clear_queue()
+
+            if type(z['number']) != int:
+                print "There was a problem with number:", z['number']
+                z['number'] = 1
 
             songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(int(z['number'])).all()
 
