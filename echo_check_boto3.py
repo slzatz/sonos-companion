@@ -261,11 +261,13 @@ while 1:
             master.stop()
             master.clear_queue()
 
-            if type(z['number']) != int:
-                print "There was a problem with number:", z['number']
-                z['number'] = 1
+            try:
+                number = int(z['number'])
+            except ValueError as e:
+                print e
+                number = 1
 
-            for x in range(z['number']):
+            for x in range(number):
                 n = random.randint(0,len(DEBORAH_ALBUMS)-1)
                 print "album: ", DEBORAH_ALBUMS[n][0]
                 songs+=DEBORAH_ALBUMS[n][1]
@@ -303,11 +305,13 @@ while 1:
             master.stop()
             master.clear_queue()
 
-            if type(z['number']) != int:
-                print "There was a problem with number:", z['number']
-                z['number'] = 1
+            try:
+                number = int(z['number'])
+            except ValueError as e:
+                print e
+                number = 1
 
-            songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(int(z['number'])).all()
+            songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(number).all()
 
             for song in songs:
                 print song.id
