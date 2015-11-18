@@ -2,7 +2,8 @@
 uses boto3(duh)
 Radio Play {neil young|artist} radio
 Radio Play {WNYC|artist} radio
-Shuffle please shuffle {one|number} songs from {neil young|artist}
+Shuffle shuffle {one|number} songs from {neil young|artist}
+Select select {myartist}
 Deborah play {one|number} of Deborah's albums
 WhatIsPlaying what is playing now
 WhatIsPlaying what song is playing now
@@ -21,6 +22,14 @@ Quieter quiet
 Quieter softer
 TurnTheVolume Turn the volume {volume}
 TurnTheVolume Turn {volume} the volume
+
+http://docs.aws.amazon.com/amazondynamodb/latest/gettingstartedguide/GettingStarted.Python.04.html
+response = table.query(
+    ProjectionExpression="#yr, title, info.genres, info.actors[0]",
+    ExpressionAttributeNames={ "#yr": "year" }, # Expression Attribute Names for Projection Expression only.
+    KeyConditionExpression=Key('year').eq(1992) & Key('title').between('A', 'L')
+
+    I think I am going to need to query on ATTR artist -- am hoping I don't need primary hash or range keys -- if I do, will need to scan
 '''
 
 import os
@@ -38,9 +47,10 @@ import soco
 from soco import config
 import requests
 import boto3 
+from boto3.dynamodb.conditions import Key
 import config as c
-from amazon_music_db import *
-from sqlalchemy.sql.expression import func
+#from amazon_music_db import *
+#from sqlalchemy.sql.expression import func
 import musicbrainzngs
 
 parser = argparse.ArgumentParser(description='Command line options ...')
@@ -51,7 +61,8 @@ sqs = boto3.resource('sqs', region_name='us-east-1')
 sqs_queue = sqs.get_queue_by_name(QueueName='echo_sonos') 
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-dynamodb_table = dynamodb.Table('scrobble')
+scrobble_table = dynamodb.Table('scrobble')
+amazon_music_table = dynamodb.Table('amazon_music')
 
 config.CACHE_ENABLED = False
 
@@ -311,21 +322,31 @@ while 1:
                 print e
                 number = 1
 
-            songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(number).all()
-
-            for song in songs:
-                print song.id
-                print song.artist
-                print song.album
-                print song.title
-                print song.uri
-                i = song.uri.find('amz')
-                ii = song.uri.find('.')
-                id_ = song.uri[i:ii]
-                print id_
-                meta = didl_amazon.format(id_=id_)
-                my_add_to_queue('', meta)
-                print "---------------------------------------------------------------"
+            #songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(number).all()
+            result = amazon_music_table.query(IndexName='artist-index', KeyConditionExpression=Key('artist').eq(z['artist'].title()))
+            count = result['Count']
+            if count:
+                songs = result['Items']
+                k = 5 if 5 <= count else count
+                for j in range(k):
+                    n = random.randint(0, count-1)
+                    song = songs[n]
+                    try:
+                        print 'artist: ' + song.get('artist', 'No artist')
+                        print 'album: ' + song.get('album', 'No album')
+                        print 'song: ' + song.get('title', 'No title')
+                    except Exception as e:
+                        print "Unicode error"
+                    uri = song.get('uri', '')
+                    print 'uri: ' + uri
+                    i = uri.find('amz')
+                    ii = uri.find('.')
+                    id_ = uri[i:ii]
+                    print 'id: ' + id_
+                    if id_:
+                        meta = didl_amazon.format(id_=id_)
+                        my_add_to_queue('', meta)
+                    print "---------------------------------------------------------------"
 
             master.play_from_queue(0)
 
@@ -424,7 +445,7 @@ while 1:
 
         data = {k:v for k,v in data.items() if v} 
         try:
-            dynamodb_table.put_item(Item=data)
+            scrobble_table.put_item(Item=data)
         except Exception as e:
             print "Exception trying to write dynamodb scrobble table:", e
         else:

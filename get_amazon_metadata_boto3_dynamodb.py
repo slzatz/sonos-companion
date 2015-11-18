@@ -11,8 +11,8 @@ Presumably you have to queue all of your amazon songs
         u'duration': '0:02:45', 
         u'position': '0:02:38', 
         u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
-Partition Key and Sort Key – A composite primary key, composed of two attributes. The first attribute is the partition key, and the second attribute is the sort key. DynamoDB uses the partition key value as input to an internal hash function; the output from the hash function determines the partition where the item will be stored. All items with the same partition key are stored together, in sorted order by sort key value. It is possible for two items to have the same partition key value, but those two items must have different sort key values.ses boto3 and dynamodb(duh)
 
+Partition Key and Sort Key  A composite primary key, composed of two attributes. The first attribute is the partition key, and the second attribute is the sort key. DynamoDB uses the partition key value as input to an internal hash function; the output from the hash function determines the partition where the item will be stored. All items with the same partition key are stored together, in sorted order by sort key value. It is possible for two items to have the same partition key value, but those two items must have different sort key values.ses boto3 and dynamodb(duh)
 album and title should be the unique constraint -- it is possible for one album to have the same tititle (although usually labeled differently) or possibly for two different albums to have the same album name and song title but that's life.  The alternative is to make up a unique key like album-title-artist
 Seems to me that the partition should be album and the sort should be title
 Note that you just create the table with the two indexes and then add items that have additional attributes like uri, artist, etc.
