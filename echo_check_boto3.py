@@ -61,7 +61,7 @@ sqs = boto3.resource('sqs', region_name='us-east-1')
 sqs_queue = sqs.get_queue_by_name(QueueName='echo_sonos') 
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-scrobble_table = dynamodb.Table('scrobble')
+scrobble_table = dynamodb.Table('scrobble_new')
 amazon_music_table = dynamodb.Table('amazon_music')
 
 config.CACHE_ENABLED = False
@@ -430,15 +430,16 @@ while 1:
         if not 'scrobble' in track and track.get('artist') and track.get('title'):
             track['scrobble'] = get_scrobble_info(track['artist'], track['title'])
         else:
-            track['scrobble'] = '-100'
+            track['scrobble'] = '-1'
 
         prev_title = track.get('title') 
 
         # this is for AWS DynamoDB
         data = {
-                'artist':track['artist'],
+                'location':'nyc',
+                'artist':track.get('artist'),
                 'ts': int(time.time()), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
-                'title':track.get('title', 'None'),
+                'title':track.get('title'),
                 'album':track.get('album'),
                 'date':track.get('date'),
                 'scrobble':track.get('scrobble')} #it's a string although probably should be converted to a integer
