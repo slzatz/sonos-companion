@@ -1,10 +1,11 @@
 '''
 uses boto3(duh)
-Radio Play {neil young|artist} radio
-Radio Play {WNYC|artist} radio
-Shuffle shuffle {one|number} songs from {neil young|artist}
-Select select {myartist}
-Deborah play {one|number} of Deborah's albums
+uses dynamodb for radio stations and shuffling songs
+uses cloudsearch to enable searching on tracks and artists
+Radio select {myartist} radio
+Shuffle shuffle {myartist}
+Track play {after the gold rush|tracktitle}
+Deborah play {number} of Deborah's albums
 WhatIsPlaying what is playing now
 WhatIsPlaying what song is playing now
 WhatIsPlaying what is playing
@@ -23,13 +24,19 @@ Quieter softer
 TurnTheVolume Turn the volume {volume}
 TurnTheVolume Turn {volume} the volume
 
-http://docs.aws.amazon.com/amazondynamodb/latest/gettingstartedguide/GettingStarted.Python.04.html
-response = table.query(
-    ProjectionExpression="#yr, title, info.genres, info.actors[0]",
-    ExpressionAttributeNames={ "#yr": "year" }, # Expression Attribute Names for Projection Expression only.
-    KeyConditionExpression=Key('year').eq(1992) & Key('title').between('A', 'L')
-
-    I think I am going to need to query on ATTR artist -- am hoping I don't need primary hash or range keys -- if I do, will need to scan
+current_track = master.get_current_track_info() --> {
+            u'album': 'We Walked In Song', 
+            u'artist': 'The Innocence Mission', 
+            u'title': 'My Sisters Return From Ireland', 
+            u'uri': 'pndrradio-http://audio-sv5-t3-1.pandora.com/access/5459257820921908950?version=4&lid=86206018&token=...', 
+            u'playlist_position': '3', 
+            u'duration': '0:02:45', 
+            u'position': '0:02:38', 
+            u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
+To Do:
+- Artist shuffling could move from dynamodb to cloudsearch: result = cloudsearchdomain.search(query=z['artist'], queryOptions='{"fields":["artist"]}')
+- Could also have an Album search -> Album play album {after the gold rush|albumtitle} - could be custom slot but not sure any real benefit
+- May not need a special album search just "play ..." since I could look for word song or album remove them from search and limit search fields
 '''
 
 import os
@@ -64,6 +71,7 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 scrobble_table = dynamodb.Table('scrobble_new')
 amazon_music_table = dynamodb.Table('amazon_music')
 
+cloudsearchdomain = boto3.client('cloudsearchdomain', endpoint_url=c.aws_cs_url, region_name='us-east-1')
 config.CACHE_ENABLED = False
 
 #lastfm scrobbles
@@ -185,7 +193,8 @@ def get_release_date(artist, album, title):
 
     try:
         result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
-    except:
+    except Exception as e:
+        print "Exception in get_release_date -> musicbrainzngs.search_releases ...:", e
         return "No date exception (search_releases)"
     
     release_list = result['release-list'] # can be missing
@@ -262,7 +271,7 @@ while 1:
 
         action = z.get('action', '')
 
-        #An alternative would be to define a dictionaly of actions and related functions but not particularly motivated to do that right now
+        #An alternative would be to define a dictionary of actions and related functions but not particularly motivated to do that right now
         #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(z) def f1(**kw); kw = 
 
         if action == 'deborah' and z.get('number'):
@@ -297,7 +306,6 @@ while 1:
     
         elif action == 'radio' and z.get('artist'):
 
-            #uri = station[1]
             station = STATIONS.get(z['artist'].lower())
             if station:
                 uri = station[1]
@@ -312,22 +320,63 @@ while 1:
             else:
                 print "Couldn't find Pandora station " + z.get('artist')
 
-        elif action == 'shuffle' and z.get('artist') and z.get('number'):
+        elif action == 'track' and z.get('title'):
             master.stop()
             master.clear_queue()
+
+            #Had previously tried to do this through dynamodb but not using AWS CloudSearch
+            #result = amazon_music_table.query(IndexName='title-index', KeyConditionExpression=Key('title').eq(z['title']))
+
+            #The query below works but searches all fields including album and sometimes song and album are the same
+            #result = cloudsearchdomain.search(query=z['title'])
+
+            #The query below only searches title and artist fields
+            result = cloudsearchdomain.search(query=z['title'], queryOptions='{"fields":["title", "artist"]}')
+
+            count = result['hits']['found']
+            if count:
+                master.stop()
+                master.clear_queue()
+                for track in result['hits']['hit']:
+                    song = track['fields']
+                    try:
+                        print 'artist: ' + song.get('artist', ['No artist'])[0]
+                        print 'album: ' + song.get('album', ['No album'])[0]
+                        print 'song: ' + song.get('title', ['No title'])[0]
+                    except Exception as e:
+                        print "Unicode error"
+                    uri = song.get('uri', [''])[0]
+                    print 'uri: ' + uri
+                    i = uri.find('amz')
+                    ii = uri.find('.')
+                    id_ = uri[i:ii]
+                    print 'id: ' + id_
+                    if id_:
+                        meta = didl_amazon.format(id_=id_)
+                        my_add_to_queue('', meta)
+                    print "---------------------------------------------------------------"
+
+                master.play_from_queue(0)
+
+            else:
+                print "Could not find requested track " + z['title']
+
+        elif action == 'shuffle' and z.get('artist') and z.get('number'):
 
             try:
                 number = int(z['number'])
             except ValueError as e:
                 print e
-                number = 1
+                number = 5
 
-            #songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(number).all()
-            result = amazon_music_table.query(IndexName='artist-index', KeyConditionExpression=Key('artist').eq(z['artist'].title()))
+            #I really only need artist-index and probably won't need that if I eventually use cloudsearch and not dynamodb
+            result = amazon_music_table.query(IndexName='artist-title-index', KeyConditionExpression=Key('artist').eq(z['artist']))
             count = result['Count']
             if count:
+                master.stop()
+                master.clear_queue()
                 songs = result['Items']
-                k = 5 if 5 <= count else count
+                k = number if number <= count else count
                 for j in range(k):
                     n = random.randint(0, count-1)
                     song = songs[n]
@@ -348,7 +397,7 @@ while 1:
                         my_add_to_queue('', meta)
                     print "---------------------------------------------------------------"
 
-            master.play_from_queue(0)
+                master.play_from_queue(0)
 
         elif action == 'pause':
             master.pause()
@@ -387,29 +436,12 @@ while 1:
         state = 'ERROR'
         print "Encountered error in state = master.get_current transport_info(): ", e
 
+    # check if sonos is playing music and, if not, do nothing
     current_track = master.get_current_track_info()
-    # check if sonos is playing anything and, if not, display instagram photos
     if state != 'PLAYING' or 'tunein' in current_track.get('uri', ''):
 
         continue
             
-    # checking every two seconds if the track has changed - could do it as a subscription too
-        
-    #get_current_track_info() =  {
-                #u'album': 'We Walked In Song', 
-                #u'artist': 'The Innocence Mission', 
-                #u'title': 'My Sisters Return From Ireland', 
-                #u'uri': 'pndrradio-http://audio-sv5-t3-1.pandora.com/access/5459257820921908950?version=4&lid=86206018&token=...', 
-                #u'playlist_position': '3', 
-                #u'duration': '0:02:45', 
-                #u'position': '0:02:38', 
-                #u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
-    
-    #current_track = master.get_current_track_info()
-    #title = current_track['title']
-    #artist = current_track['artist'] # for lyrics           
-    
-    #ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print "{} checking to see if track has changed".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     
@@ -434,7 +466,7 @@ while 1:
 
         prev_title = track.get('title') 
 
-        # this is for AWS DynamoDB
+        # Write the latest scrobble to dynamodb 'scrobble_new'
         data = {
                 'location':'nyc',
                 'artist':track.get('artist'),
@@ -452,5 +484,6 @@ while 1:
         else:
             print "{} sent successfully to dynamodb".format(json.dumps(data))
     ###########################################################################################
-    sleep(0.1)
+
+    sleep(0.5)
 

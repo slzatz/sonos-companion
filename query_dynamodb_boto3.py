@@ -25,7 +25,8 @@ from time import time
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('scrobble_new')
 
-result = table.query(KeyConditionExpression=Key('location').eq('nyc'), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
+result = table.query(KeyConditionExpression=Key('location').eq('nyc'), ScanIndexForward=False, Limit=5) #by default the sort order is ascending
+print(result)
 
 track = result['Items'][0]
 if track['ts'] > 0: #Decimal(time.time())-300:
