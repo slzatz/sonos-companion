@@ -4,7 +4,7 @@ uses dynamodb for radio stations and shuffling songs
 uses cloudsearch to enable searching on tracks and artists
 Radio select {myartist} radio
 Shuffle shuffle {myartist}
-Track play {after the gold rush|tracktitle}
+Track play {after the gold rush|tracktitle} #should really call this trackinfo since it can include title and artist (not searching album)
 Deborah play {number} of Deborah's albums
 WhatIsPlaying what is playing now
 WhatIsPlaying what song is playing now
@@ -34,7 +34,7 @@ current_track = master.get_current_track_info() --> {
             u'position': '0:02:38', 
             u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
 To Do:
-- Artist shuffling could move from dynamodb to cloudsearch: result = cloudsearchdomain.search(query=z['artist'], queryOptions='{"fields":["artist"]}')
+- Artist shuffling could move from dynamodb to cloudsearch: result = cloudsearchdomain.search(query=task['artist'], queryOptions='{"fields":["artist"]}')
 - Could also have an Album search -> Album play album {after the gold rush|albumtitle} - could be custom slot but not sure any real benefit
 - May not need a special album search just "play ..." since I could look for word song or album remove them from search and limit search fields
 '''
@@ -252,7 +252,7 @@ while 1:
     try:
         r = sqs_queue.receive_messages(MaxNumberOfMessages=1, VisibilityTimeout=0, WaitTimeSeconds=20) 
     except Exception as e:
-        print "Alexa exception: ", e
+        print "sqs receive error checking for posted actions: ", e
         continue
 
     if r:
@@ -261,20 +261,20 @@ while 1:
         print "sqs messge body =", body
 
         try:
-            z = json.loads(body)
+            task = json.loads(body)
         except Exception as e:
-            print "Alexa json exception: ", e
+            print "error reading the sqs message body: ", e
             m.delete()
             continue
 
         m.delete()
 
-        action = z.get('action', '')
+        action = task.get('action', '')
 
         #An alternative would be to define a dictionary of actions and related functions but not particularly motivated to do that right now
-        #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(z) def f1(**kw); kw = 
+        #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(task) def f1(**kw); kw = 
 
-        if action == 'deborah' and z.get('number'):
+        if action == 'deborah' and task.get('number'):
             
             songs = []
 
@@ -282,7 +282,7 @@ while 1:
             master.clear_queue()
 
             try:
-                number = int(z['number'])
+                number = int(task['number'])
             except ValueError as e:
                 print e
                 number = 1
@@ -304,9 +304,9 @@ while 1:
 
             master.play_from_queue(0)
     
-        elif action == 'radio' and z.get('artist'):
+        elif action == 'radio' and task.get('artist'):
 
-            station = STATIONS.get(z['artist'].lower())
+            station = STATIONS.get(task['artist'].lower())
             if station:
                 uri = station[1]
                 print "uri=",uri
@@ -318,20 +318,18 @@ while 1:
                     meta = meta_format_radio.format(title=station[0], service=station[2])
                     master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
             else:
-                print "Couldn't find Pandora station " + z.get('artist')
+                print "Couldn't find Pandora station " + task.get('artist')
 
-        elif action == 'track' and z.get('title'):
-            master.stop()
-            master.clear_queue()
+        elif action == 'track' and task.get('title'): #title should be trackinfo because can involve title and artist and maybe album
 
             #Had previously tried to do this through dynamodb but not using AWS CloudSearch
-            #result = amazon_music_table.query(IndexName='title-index', KeyConditionExpression=Key('title').eq(z['title']))
+            #result = amazon_music_table.query(IndexName='title-index', KeyConditionExpression=Key('title').eq(task['title']))
 
             #The query below works but searches all fields including album and sometimes song and album are the same
-            #result = cloudsearchdomain.search(query=z['title'])
+            #result = cloudsearchdomain.search(query=task['title'])
 
-            #The query below only searches title and artist fields
-            result = cloudsearchdomain.search(query=z['title'], queryOptions='{"fields":["title", "artist"]}')
+            #The query below only searches title and artist fields so you don't get every song on After the Gold Rush
+            result = cloudsearchdomain.search(query=task['title'], queryOptions='{"fields":["title", "artist"]}')
 
             count = result['hits']['found']
             if count:
@@ -359,18 +357,18 @@ while 1:
                 master.play_from_queue(0)
 
             else:
-                print "Could not find requested track " + z['title']
+                print "Could not find requested track " + task['title']
 
-        elif action == 'shuffle' and z.get('artist') and z.get('number'):
+        elif action == 'shuffle' and task.get('artist') and task.get('number'):
 
             try:
-                number = int(z['number'])
+                number = int(task['number'])
             except ValueError as e:
                 print e
                 number = 5
 
             #I really only need artist-index and probably won't need that if I eventually use cloudsearch and not dynamodb
-            result = amazon_music_table.query(IndexName='artist-title-index', KeyConditionExpression=Key('artist').eq(z['artist']))
+            result = amazon_music_table.query(IndexName='artist-title-index', KeyConditionExpression=Key('artist').eq(task['artist']))
             count = result['Count']
             if count:
                 master.stop()
