@@ -2,10 +2,11 @@
 uses boto3(duh)
 uses dynamodb for radio stations and shuffling songs
 uses cloudsearch to enable searching on tracks and artists
+
 Radio select {myartist} radio
 Shuffle shuffle {myartist}
-Track play {after the gold rush|tracktitle} #should really call this trackinfo since it can include title and artist (not searching album)
-Deborah play {number} of Deborah's albums
+PlayTrack play {after the gold rush|trackinfo} #should really call this trackinfo since it can include title and artist (not searching album)
+AddTrack add {after the gold rush|trackinfo} #should really call this trackinfo since it can include title and artist (not searching album)
 WhatIsPlaying what is playing now
 WhatIsPlaying what song is playing now
 WhatIsPlaying what is playing
@@ -161,87 +162,6 @@ def my_add_to_queue(uri, metadata):
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
 
-#def play_uri(uri, meta, title):
-#    try:
-#        master.play_uri(uri, meta)
-#    except Exception as e:
-#        print "had a problem switching to {}!".format(title)
-#        print "exception:",e
-#    else:
-#        print "switched to {}".format(title)
-
-def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
-    
-    payload = {'method':'track.getinfo',
-               'artist':artist, 'track':track,
-               'autocorrect':autocorrect,
-               'format':'json', 'api_key':lastfm_api_key,
-               'username':username}
-    
-    try:
-        r = requests.get(scrobbler_base_url, params=payload)
-        z = r.json()['track']['userplaycount']
-        return z # will need to be converted to integer when sent to SQS
-    except Exception as e:
-        print "Exception in get_scrobble_info: ", e
-        return '-1' # will need to be converted to integer when sent to SQS
-
-def get_release_date(artist, album, title):
-
-    t = "artist = {}; album = {} [used in search], title = {} [in get_release_date]".format(artist, album, title)
-    print t.encode('ascii', 'ignore')
-
-    try:
-        result = musicbrainzngs.search_releases(artist=artist, release=album, limit=20, strict=True)
-    except Exception as e:
-        print "Exception in get_release_date -> musicbrainzngs.search_releases ...:", e
-        return "No date exception (search_releases)"
-    
-    release_list = result['release-list'] # can be missing
-    
-    if 'release-list' in result:
-        release_list = result['release-list'] # can be missing
-        dates = [d['date'][0:4] for d in release_list if 'date' in d and int(d['ext:score']) > 90] 
-    
-        if dates:
-            dates.sort()
-            return "{}".format(dates[0])  
-
-    return ''
-       
-def get_recording_date(artist, album, title):
-
-    t = "artist = {}; album = {} [not used in search], title = {} [in get_recording_date]".format(artist, album, title)
-    print t.encode('ascii', 'ignore')
-    
-    try:
-        result = musicbrainzngs.search_recordings(artist=artist, recording=title, limit=40, offset=None, strict=False)
-    except:
-        return "No date exception (search_recordings)"
-    
-    recording_list = result.get('recording-list')
-    
-    if recording_list is None:
-        return "No date (search of musicbrainzngs did not produce a recording_list)"
-    
-    dates = []
-    for d in recording_list:
-        if int(d['ext:score']) > 98 and 'release-list' in d:
-            rel_dict = d['release-list'][0] # it's a list but seems to have one element and that's a dictionary
-            date = rel_dict.get('date', '9999')[0:4]
-            title = rel_dict.get('title','No title')
-
-            if rel_dict.get('artist-credit-phrase') == 'Various Artists':  #possibly could also use status:promotion
-                dates.append((date,title,'z'))
-            else:
-                dates.append((date,title,'a'))
-                
-    if dates:
-        dates.sort(key=itemgetter(0,2)) # idea is to put albums by the artist ahead of albums by various artists
-        return u"{} - {}".format(dates[0][0], dates[0][1])   
-    else:
-        return '' 
-
 prev_title = ''
 
 while 1:
@@ -320,44 +240,60 @@ while 1:
             else:
                 print "Couldn't find Pandora station " + task.get('artist')
 
-        elif action == 'track' and task.get('title'): #title should be trackinfo because can involve title and artist and maybe album
-
-            #Had previously tried to do this through dynamodb but not using AWS CloudSearch
-            #result = amazon_music_table.query(IndexName='title-index', KeyConditionExpression=Key('title').eq(task['title']))
-
-            #The query below works but searches all fields including album and sometimes song and album are the same
-            #result = cloudsearchdomain.search(query=task['title'])
+        elif action in ('play','add') and task.get('trackinfo'): 
 
             #The query below only searches title and artist fields so you don't get every song on After the Gold Rush
-            result = cloudsearchdomain.search(query=task['title'], queryOptions='{"fields":["title", "artist"]}')
+            result = cloudsearchdomain.search(query=task['trackinfo'], queryOptions='{"fields":["title", "artist"]}')
 
             count = result['hits']['found']
             if count:
-                master.stop()
-                master.clear_queue()
-                for track in result['hits']['hit']:
-                    song = track['fields']
-                    try:
-                        print 'artist: ' + song.get('artist', ['No artist'])[0]
-                        print 'album: ' + song.get('album', ['No album'])[0]
-                        print 'song: ' + song.get('title', ['No title'])[0]
-                    except Exception as e:
-                        print "Unicode error"
-                    uri = song.get('uri', [''])[0]
-                    print 'uri: ' + uri
-                    i = uri.find('amz')
-                    ii = uri.find('.')
-                    id_ = uri[i:ii]
-                    print 'id: ' + id_
-                    if id_:
-                        meta = didl_amazon.format(id_=id_)
-                        my_add_to_queue('', meta)
-                    print "---------------------------------------------------------------"
+            #    if action == 'play':
+            #        master.stop()
+            #        master.clear_queue()
+            #    for track in result['hits']['hit']:
+            #        song = track['fields']
+            #        try:
+            #            print 'artist: ' + song.get('artist', ['No artist'])[0]
+            #            print 'album: ' + song.get('album', ['No album'])[0]
+            #            print 'song: ' + song.get('title', ['No title'])[0]
+            #        except Exception as e:
+            #            print "Unicode error"
+            #        uri = song.get('uri', [''])[0]
+            #        print 'uri: ' + uri
+            #        i = uri.find('amz')
+            #        ii = uri.find('.')
+            #        id_ = uri[i:ii]
+            #        print 'id: ' + id_
+            #        if id_:
+            #            meta = didl_amazon.format(id_=id_)
+            #            my_add_to_queue('', meta)
+            #        print "---------------------------------------------------------------"
+                track = result['hits']['hit'][random.randint(0, count-1)]
+                song = track['fields']
+                try:
+                    print 'artist: ' + song.get('artist', ['No artist'])[0]
+                    print 'album: ' + song.get('album', ['No album'])[0]
+                    print 'song: ' + song.get('title', ['No title'])[0]
+                except Exception as e:
+                    print "Unicode error"
+                uri = song.get('uri', [''])[0]
+                print 'uri: ' + uri
+                i = uri.find('amz')
+                ii = uri.find('.')
+                id_ = uri[i:ii]
+                print 'id: ' + id_
+                if id_:
+                    meta = didl_amazon.format(id_=id_)
+                    my_add_to_queue('', meta)
+                print "---------------------------------------------------------------"
 
-                master.play_from_queue(0)
+                if action == 'play':
+                    master.stop()
+                    master.clear_queue()
+                    master.play_from_queue(0)
 
             else:
-                print "Could not find requested track " + task['title']
+                print "Could not find requested track " + task['trackinfo']
 
         elif action == 'shuffle' and task.get('artist') and task.get('number'):
 
@@ -435,32 +371,17 @@ while 1:
         print "Encountered error in state = master.get_current transport_info(): ", e
 
     # check if sonos is playing music and, if not, do nothing
-    current_track = master.get_current_track_info()
-    if state != 'PLAYING' or 'tunein' in current_track.get('uri', ''):
+    track = master.get_current_track_info()
+    if state != 'PLAYING' or 'tunein' in track.get('uri', ''):
 
         continue
             
     print "{} checking to see if track has changed".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     
-    if prev_title != current_track.get('title') and current_track.get('artist'): 
+    if prev_title != track.get('title') and track.get('artist'): 
         
-        track = dict(current_track)
-
-        # there will be no date if from one of our compilations
-        if not 'date' in track and track.get('artist') and track.get('title') and track.get('album'):
-            if track['album'].find('(c)') == -1:
-                track['date'] = get_release_date(track['artist'], track['album'], track['title'])
-            else:
-                track['date'] = get_recording_date(track['artist'], track['album'], track['title'])
-                 
-        else:
-            track['date'] = ''
-        
-        if not 'scrobble' in track and track.get('artist') and track.get('title'):
-            track['scrobble'] = get_scrobble_info(track['artist'], track['title'])
-        else:
-            track['scrobble'] = '-1'
+        #track = dict(current_track)
 
         prev_title = track.get('title') 
 
@@ -471,8 +392,8 @@ while 1:
                 'ts': int(time.time()), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
                 'title':track.get('title'),
                 'album':track.get('album'),
-                'date':track.get('date'),
-                'scrobble':track.get('scrobble')} #it's a string although probably should be converted to a integer
+                'date':track.get('date')}
+                #'scrobble':track.get('scrobble')} #it's a string although probably should be converted to a integer
 
         data = {k:v for k,v in data.items() if v} 
         try:
