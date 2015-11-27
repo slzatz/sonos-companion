@@ -4,25 +4,18 @@ uses dynamodb for radio stations and shuffling songs
 uses cloudsearch to enable searching on tracks and artists
 
 Radio select {myartist} radio
-Shuffle shuffle {myartist}
-PlayTrack play {after the gold rush|trackinfo} #should really call this trackinfo since it can include title and artist (not searching album)
-AddTrack add {after the gold rush|trackinfo} #should really call this trackinfo since it can include title and artist (not searching album)
+Shuffle shuffle {myartist} MY_ARTIST -> Ten thousand Maniacs | A3 | Abra Moore | Adam Duritz ...
+PlayTrack play {after the gold rush|trackinfo} #better maybe play {mytitle} by {myartist}
+AddTrack add {after the gold rush|trackinfo} #better maybe add {mytitle} by {myartist}
+PlayAlbum play album {myalbum} MY_ALBUM -> Nineteen | Twenty-one | Four Way Street ...
 WhatIsPlaying what is playing now
 WhatIsPlaying what song is playing now
 WhatIsPlaying what is playing
 WhatIsPlaying what song is playing
 Skip skip
 Skip next
-Skip skip this song
-Skip next song
-Pause pause #note pauses or plays
-Louder louder
-Louder loud
-Quieter lower
-Quieter quieter
-Quieter quiet
-Quieter softer
-TurnTheVolume Turn the volume {volume}
+PauseResume {pauseorresume} the music PAUSE_RESUME -> pause | stop | unpause | resume
+TurnTheVolume Turn the volume {volume} VOLUME -> up | down | louder | higher | quieter | lower | mute
 TurnTheVolume Turn {volume} the volume
 
 current_track = master.get_current_track_info() --> {
@@ -74,10 +67,6 @@ amazon_music_table = dynamodb.Table('amazon_music')
 
 cloudsearchdomain = boto3.client('cloudsearchdomain', endpoint_url=c.aws_cs_url, region_name='us-east-1')
 config.CACHE_ENABLED = False
-
-#lastfm scrobbles
-scrobbler_base_url = "http://ws.audioscrobbler.com/2.0/"
-lastfm_api_key = c.last_fm_api_key 
 
 musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
@@ -141,6 +130,8 @@ meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
+
+didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="RDCPI:GLBTRACK:Tra.{id_}" parentID="-1" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON1_{}</desc></item></DIDL-Lite>'''.format(c.user_id)
 
 with open('deborah_albums') as f:
     z = f.read()
@@ -268,8 +259,8 @@ while 1:
             #            meta = didl_amazon.format(id_=id_)
             #            my_add_to_queue('', meta)
             #        print "---------------------------------------------------------------"
-                track = result['hits']['hit'][random.randint(0, count-1)]
-                song = track['fields']
+                trak = result['hits']['hit'][random.randint(0, count-1)]
+                song = trak['fields']
                 try:
                     print 'artist: ' + song.get('artist', ['No artist'])[0]
                     print 'album: ' + song.get('album', ['No album'])[0]
@@ -278,19 +269,69 @@ while 1:
                     print "Unicode error"
                 uri = song.get('uri', [''])[0]
                 print 'uri: ' + uri
-                i = uri.find('amz')
-                ii = uri.find('.')
-                id_ = uri[i:ii]
-                print 'id: ' + id_
-                if id_:
-                    meta = didl_amazon.format(id_=id_)
-                    my_add_to_queue('', meta)
                 print "---------------------------------------------------------------"
+
+                if 'amz' in uri:
+                    i = uri.find('amz')
+                    ii = uri.find('.')
+                    id_ = uri[i:ii]
+                    meta = didl_amazon.format(id_=id_)
+                else:
+                    i = uri.find('.')+1
+                    ii = uri.find('.',i)
+                    id_ = uri[i:ii]
+                    meta = didl_rhapsody.format(id_=id_)
+                    print '---------------------------------------------------------------'
+                    print 'meta: ',meta
 
                 if action == 'play':
                     master.stop()
                     master.clear_queue()
+                    my_add_to_queue('', meta)
                     master.play_from_queue(0)
+
+                else:
+                    my_add_to_queue('', meta)
+
+            else:
+                print "Could not find requested track " + task['trackinfo']
+
+        elif action == 'play_album' and task.get('album'): 
+
+            result = cloudsearchdomain.search(query=task['album'], queryOptions='{"fields":["album"]}')
+
+            count = result['hits']['found']
+            if count:
+                master.stop()
+                master.clear_queue()
+                for trak in result['hits']['hit']:
+                    song = trak['fields']
+                    try:
+                        print 'artist: ' + song.get('artist', ['No artist'])[0]
+                        print 'album: ' + song.get('album', ['No album'])[0]
+                        print 'song: ' + song.get('title', ['No title'])[0]
+                    except Exception as e:
+                        print "Unicode error"
+                    uri = song.get('uri', [''])[0]
+                    print 'uri: ' + uri
+                    print "---------------------------------------------------------------"
+
+                    if 'amz' in uri:
+                        i = uri.find('amz')
+                        ii = uri.find('.')
+                        id_ = uri[i:ii]
+                        meta = didl_amazon.format(id_=id_)
+                    else:
+                        i = uri.find('.')+1
+                        ii = uri.find('.',i)
+                        id_ = uri[i:ii]
+                        meta = didl_rhapsody.format(id_=id_)
+                        print '---------------------------------------------------------------'
+                        print 'meta: ',meta
+
+                    my_add_to_queue('', meta)
+
+                master.play_from_queue(0)
 
             else:
                 print "Could not find requested track " + task['trackinfo']
@@ -303,33 +344,48 @@ while 1:
                 print e
                 number = 5
 
-            #I really only need artist-index and probably won't need that if I eventually use cloudsearch and not dynamodb
-            result = amazon_music_table.query(IndexName='artist-title-index', KeyConditionExpression=Key('artist').eq(task['artist']))
-            count = result['Count']
-            if count:
+            # below could be cloudsearch artist search
+            result = cloudsearchdomain.search(query=task['artist'], queryOptions='{"fields":["artist"]}', size=500)
+            #result = amazon_music_table.query(IndexName='artist-index', KeyConditionExpression=Key('artist').eq(task['artist'].title()))
+
+            #count = result['Count'] #amazondb
+
+            if result['hits']['found']:
                 master.stop()
                 master.clear_queue()
-                songs = result['Items']
+                #songs = result['Items'] #amazondb
+                tracks = result['hits']['hit']
+                count = len(tracks)
+                print "track count =",count
                 k = number if number <= count else count
                 for j in range(k):
                     n = random.randint(0, count-1)
-                    song = songs[n]
+                    #song = songs[n]
+                    song = tracks[n]['fields']
                     try:
-                        print 'artist: ' + song.get('artist', 'No artist')
-                        print 'album: ' + song.get('album', 'No album')
-                        print 'song: ' + song.get('title', 'No title')
+                        print 'artist: ' + song.get('artist', 'No artist')[0]
+                        print 'album: ' + song.get('album', 'No album')[0]
+                        print 'song: ' + song.get('title', 'No title')[0]
                     except Exception as e:
                         print "Unicode error"
-                    uri = song.get('uri', '')
+                    uri = song.get('uri', '')[0]
                     print 'uri: ' + uri
-                    i = uri.find('amz')
-                    ii = uri.find('.')
-                    id_ = uri[i:ii]
-                    print 'id: ' + id_
-                    if id_:
+                    print '---------------------------------------------------------------'
+
+                    if 'amz' in uri:
+                        i = uri.find('amz')
+                        ii = uri.find('.')
+                        id_ = uri[i:ii]
                         meta = didl_amazon.format(id_=id_)
-                        my_add_to_queue('', meta)
-                    print "---------------------------------------------------------------"
+                    else:
+                        i = uri.find('.')+1
+                        ii = uri.find('.',i)
+                        id_ = uri[i:ii]
+                        meta = didl_rhapsody.format(id_=id_)
+
+                    print '---------------------------------------------------------------'
+                    print 'meta: ',meta
+                    my_add_to_queue('', meta)
 
                 master.play_from_queue(0)
 
@@ -363,7 +419,7 @@ while 1:
             print "I have no idea what you said"
 
     ###########################################################################################
-    # Below is about using track info, getting additional information
+    # Below is the check if the track has changed and if so it is scrobbled to dynamodb
     try:
         state = master.get_current_transport_info()['current_transport_state']
     except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
@@ -373,7 +429,6 @@ while 1:
     # check if sonos is playing music and, if not, do nothing
     track = master.get_current_track_info()
     if state != 'PLAYING' or 'tunein' in track.get('uri', ''):
-
         continue
             
     print "{} checking to see if track has changed".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -381,8 +436,6 @@ while 1:
     
     if prev_title != track.get('title') and track.get('artist'): 
         
-        #track = dict(current_track)
-
         prev_title = track.get('title') 
 
         # Write the latest scrobble to dynamodb 'scrobble_new'
