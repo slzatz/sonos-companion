@@ -75,28 +75,81 @@ if result['Count']:
     #        print("Unicode error")
     
 
-    d = {}
-    for track in result['Items']:
-        artist = track.get('artist', '')
-        title = track.get('title', '')
-        if artist and title:
-            scrobble = int(get_scrobble_info(artist, title))
-        else:
-            scrobble = -1
-        #d[artist + "'s " + title] = scrobble
-        d[artist] = scrobble
+    #d = {}
+    #for track in result['Items']:
+    #    artist = track.get('artist', '')
+    #    title = track.get('title', '')
+    #    if artist and title:
+    #        scrobble = int(get_scrobble_info(artist, title))
+    #    else:
+    #        scrobble = -1
+    #    #d[artist + "'s " + title] = scrobble
+    #    d[title] = scrobble
 
-    f =  open('tracks3', 'w')
-    for w in sorted(d, key=d.get, reverse=True):
-        try:
-            #s = "{}    {}\n".format(w, d[w])
-            #s = "Track play {{{}|tracktitle}}\n".format(w)
-            s = "{}\n".format(w)
-            f.write(s)
-            #print("{}    {}".format(w, d[w]))
-            print(s)
-        except Exception:
-            print("Unicode error")
+    #f =  open('titles', 'w')
+    #for w in sorted(d, key=d.get, reverse=True):
+    #    try:
+    #        #s = "{}    {}\n".format(w, d[w])
+    #        #s = "Track play {{{}|tracktitle}}\n".format(w)
+    #        s = "{}\n".format(w)
+    #        f.write(s)
+    #        #print("{}    {}".format(w, d[w]))
+    #        print(s)
+    #    except Exception:
+    #        print("Unicode error")
 
-    f.close()
+    #f.close()
+
+    if 1: # albums in scrobble order
+        d = {}
+        for track in result['Items']:
+            artist = track.get('artist', '')
+            title = track.get('title', '')
+            album = track.get('album','')
+            if artist and title:
+                scrobble = int(get_scrobble_info(artist, title))
+            else:
+                scrobble = -1
+            if album not in d:
+                d[album] = scrobble
+            else:
+                if scrobble > 0:
+                    d[album] = d[album] + scrobble
+
+        f =  open('album2', 'w')
+        for w in sorted(d, key=d.get, reverse=True):
+            try:
+                s = "{}\n".format(w)
+                f.write(s)
+                print(s)
+            except Exception:
+                print("Unicode error")
+
+        f.close()
+
+    if 0: # artists in scrobble order
+        d = {}
+        for track in result['Items']:
+            artist = track.get('artist', '')
+            title = track.get('title', '')
+            if artist and title:
+                scrobble = int(get_scrobble_info(artist, title))
+            else:
+                scrobble = -1
+            if artist not in d:
+                d[artist] = scrobble
+            else:
+                if scrobble > 0:
+                    d[artist] = d[artist] + scrobble
+
+        f =  open('artist', 'w')
+        for w in sorted(d, key=d.get, reverse=True):
+            try:
+                s = "{}\n".format(w)
+                f.write(s)
+                print(s)
+            except Exception:
+                print("Unicode error")
+
+        f.close()
 
