@@ -41,17 +41,14 @@ import json
 import argparse
 import sys
 import datetime
-from operator import itemgetter
+#from operator import itemgetter
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config
 import requests
 import boto3 
-from boto3.dynamodb.conditions import Key
 import config as c
-#from amazon_music_db import *
-#from sqlalchemy.sql.expression import func
 import musicbrainzngs
 
 parser = argparse.ArgumentParser(description='Command line options ...')
@@ -131,7 +128,7 @@ meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xm
 
 didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
 
-didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="RDCPI:GLBTRACK:Tra.{id_}" parentID="-1" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON1_{}</desc></item></DIDL-Lite>'''.format(c.user_id)
+didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="RDCPI:GLBTRACK:Tra.{id_}" parentID="-1" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">''' + '''SA_RINCON1_{}</desc></item></DIDL-Lite>'''.format(c.user_id)
 
 with open('deborah_albums') as f:
     z = f.read()
@@ -344,16 +341,11 @@ while 1:
                 print e
                 number = 5
 
-            # below could be cloudsearch artist search
             result = cloudsearchdomain.search(query=task['artist'], queryOptions='{"fields":["artist"]}', size=500)
-            #result = amazon_music_table.query(IndexName='artist-index', KeyConditionExpression=Key('artist').eq(task['artist'].title()))
-
-            #count = result['Count'] #amazondb
 
             if result['hits']['found']:
                 master.stop()
                 master.clear_queue()
-                #songs = result['Items'] #amazondb
                 tracks = result['hits']['hit']
                 count = len(tracks)
                 print "track count =",count
