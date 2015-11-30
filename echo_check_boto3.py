@@ -3,19 +3,19 @@ uses boto3(duh)
 uses dynamodb for radio stations and shuffling songs
 uses cloudsearch to enable searching on tracks and artists
 
-Radio select {myartist} radio
-Shuffle shuffle {myartist} MY_ARTIST -> Ten thousand Maniacs | A3 | Abra Moore | Adam Duritz ...
-PlayTrack play {after the gold rush|trackinfo} #better maybe play {mytitle} by {myartist}
-AddTrack add {after the gold rush|trackinfo} #better maybe add {mytitle} by {myartist}
-PlayAlbum play album {myalbum} MY_ALBUM -> Nineteen | Twenty-one | Four Way Street ...
-WhatIsPlaying what is playing now
-WhatIsPlaying what song is playing now
+PlayStation play {myartist} radio
+PlayStation play {myartist} pandora
+PlayStation play {myartist} station
+PlayTrack play {mytitle} by {myartist}
+AddTrack add {mytitle} by {myartist}
+Shuffle shuffle {myartist}
 WhatIsPlaying what is playing
 WhatIsPlaying what song is playing
 Skip skip
 Skip next
-PauseResume {pauseorresume} the music PAUSE_RESUME -> pause | stop | unpause | resume
-TurnTheVolume Turn the volume {volume} VOLUME -> up | down | louder | higher | quieter | lower | mute
+PlayAlbum play album {myalbum}
+PauseResume {pauseorresume} the music
+TurnTheVolume Turn the volume {volume}
 TurnTheVolume Turn {volume} the volume
 
 current_track = master.get_current_track_info() --> {
@@ -49,7 +49,7 @@ from soco import config
 import requests
 import boto3 
 import config as c
-import musicbrainzngs
+#import musicbrainzngs
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
@@ -60,12 +60,12 @@ sqs_queue = sqs.get_queue_by_name(QueueName='echo_sonos')
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 scrobble_table = dynamodb.Table('scrobble_new')
-amazon_music_table = dynamodb.Table('amazon_music')
+#amazon_music_table = dynamodb.Table('amazon_music')
 
 cloudsearchdomain = boto3.client('cloudsearchdomain', endpoint_url=c.aws_cs_url, region_name='us-east-1')
 config.CACHE_ENABLED = False
 
-musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
+#musicbrainzngs.set_useragent("Sonos", "0.1", contact="slzatz")
 
 n = 0
 while 1:
@@ -410,21 +410,27 @@ while 1:
         else:
             print "I have no idea what you said"
 
-    ###########################################################################################
     # Below is the check if the track has changed and if so it is scrobbled to dynamodb
     try:
         state = master.get_current_transport_info()['current_transport_state']
     except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
-        state = 'ERROR'
-        print "Encountered error in state = master.get_current transport_info(): ", e
+        print "Encountered error in state = master.get_current_transport_info(): ", e
+        sleep(0.5)
+        continue
 
-    # check if sonos is playing music and, if not, do nothing
-    track = master.get_current_track_info()
+    try:
+        # check if sonos is playing music and, if not, do nothing
+        track = master.get_current_track_info()
+    except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
+        print "Encountered error in state = master.get_current_track_info(): ", e
+        sleep(0.5)
+        continue
+
     if state != 'PLAYING' or 'tunein' in track.get('uri', ''):
+        sleep(0.5)
         continue
             
     print "{} checking to see if track has changed".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
     
     if prev_title != track.get('title') and track.get('artist'): 
         
@@ -447,7 +453,6 @@ while 1:
             print "Exception trying to write dynamodb scrobble table:", e
         else:
             print "{} sent successfully to dynamodb".format(json.dumps(data))
-    ###########################################################################################
 
     sleep(0.5)
 
