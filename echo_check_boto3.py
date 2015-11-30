@@ -339,7 +339,7 @@ while 1:
                 number = int(task['number'])
             except ValueError as e:
                 print e
-                number = 5
+                number = 8
 
             result = cloudsearchdomain.search(query=task['artist'], queryOptions='{"fields":["artist"]}', size=500)
 
@@ -351,7 +351,7 @@ while 1:
                 print "track count =",count
                 k = number if number <= count else count
                 for j in range(k):
-                    n = random.randint(0, count-1)
+                    n = random.randint(0, count-1) if count > number else j
                     #song = songs[n]
                     song = tracks[n]['fields']
                     try:
@@ -375,8 +375,8 @@ while 1:
                         id_ = uri[i:ii]
                         meta = didl_rhapsody.format(id_=id_)
 
-                    print '---------------------------------------------------------------'
-                    print 'meta: ',meta
+                    #print '---------------------------------------------------------------'
+                    #print 'meta: ',meta
                     my_add_to_queue('', meta)
 
                 master.play_from_queue(0)
