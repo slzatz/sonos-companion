@@ -212,9 +212,9 @@ while 1:
 
             master.play_from_queue(0)
     
-        elif action == 'radio' and task.get('artist'):
+        elif action == 'radio' and task.get('station'):
 
-            station = STATIONS.get(task['artist'].lower())
+            station = STATIONS.get(task['station'].lower())
             if station:
                 uri = station[1]
                 print "uri=",uri
@@ -226,7 +226,7 @@ while 1:
                     meta = meta_format_radio.format(title=station[0], service=station[2])
                     master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
             else:
-                print "Couldn't find Pandora station " + task.get('artist')
+                print "{} radio is not a preset station.".format(task['station'])
 
         elif action in ('play','add') and task.get('trackinfo'): 
 
