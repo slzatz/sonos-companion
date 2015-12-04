@@ -1,17 +1,15 @@
-import os
-import argparse
 from time import sleep
 import datetime
 import random
-import xml.etree.ElementTree as ET
 import threading
 import sys
 import textwrap
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
-import dropbox
 import requests
 from lcdscroll import Scroller
 import config as c
+import boto3
+from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('scrobble_new')
@@ -23,7 +21,6 @@ lcd.message("Sonos-companion")
 
 # backlight colors
 col = (lcd.RED , lcd.YELLOW, lcd.GREEN, lcd.TEAL, lcd.BLUE, lcd.VIOLET, lcd.ON, lcd.OFF)
-
 
 def display_song_info(track):
         
