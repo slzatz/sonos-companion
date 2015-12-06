@@ -4,6 +4,7 @@ along with file2cloudsearch was used to move rhapsody information into cloudsear
 Could be used for rhapsody or amazon tracks
 '''
 import os
+from time import sleep
 import argparse
 import sys
 import json
@@ -13,10 +14,6 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config
 import boto3 
-import config as c
-from amazon_music_db import *
-from sqlalchemy.sql.expression import func
-import musicbrainzngs
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
@@ -77,6 +74,8 @@ else:
 
 print '\n'
 
+file_name = raw_input("What do you want to call the file that will have the track info for uploading to CloudSearch ?")
+
 prev_title = -1
 tracks = []
 
@@ -84,14 +83,21 @@ while True:
 
     try:
         state = master.get_current_transport_info()['current_transport_state']
-    except Exception as e:
-        state = 'ERROR'
-        print "Encountered error in state = master.get_current transport_info(): ", e
+    except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
+        print "Encountered error in state = master.get_current_transport_info(): ", e
+        sleep(0.5)
+        continue
 
-    # check if sonos is playing music and, if not, do nothing
-    track = master.get_current_track_info()
+    try:
+        # check if sonos is playing music and, if not, do nothing
+        track = master.get_current_track_info()
+    except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
+        print "Encountered error in state = master.get_current_track_info(): ", e
+        sleep(0.5)
+        continue
+
     if state != 'PLAYING' or 'tunein' in track.get('uri', ''):
-
+        sleep(0.5)
         continue
             
     print "{} checking to see if track has changed".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -120,5 +126,5 @@ while True:
 
     sleep(5)
     
-with open('rhapsody_tracks', 'w') as f:
+with open(file_name, 'w') as f:
     f.write(json.dumps(tracks))
