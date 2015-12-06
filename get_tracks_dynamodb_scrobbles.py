@@ -1,8 +1,6 @@
 '''
 uses boto3
-This program was used to test whether when you scrobble songs to dynamodb that they
-could be picked up by using boto3 to check on them
-
+This program allows you to take songs in my Amazon Music database and use scrobbles to rank 
 rrr = table.scan(Limit=10, FilterExpression=Attr("ts").gt(Decimal(z)-1000000))
 rrr
 {u'Count': 1, u'Items': [{u'album': u'I Carry Your Heart With Me (c)', u'artist': u'Hem', u'title': u'The Part Where You Let Go', 
