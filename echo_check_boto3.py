@@ -235,27 +235,6 @@ while 1:
 
             count = result['hits']['found']
             if count:
-            #    if action == 'play':
-            #        master.stop()
-            #        master.clear_queue()
-            #    for track in result['hits']['hit']:
-            #        song = track['fields']
-            #        try:
-            #            print 'artist: ' + song.get('artist', ['No artist'])[0]
-            #            print 'album: ' + song.get('album', ['No album'])[0]
-            #            print 'song: ' + song.get('title', ['No title'])[0]
-            #        except Exception as e:
-            #            print "Unicode error"
-            #        uri = song.get('uri', [''])[0]
-            #        print 'uri: ' + uri
-            #        i = uri.find('amz')
-            #        ii = uri.find('.')
-            #        id_ = uri[i:ii]
-            #        print 'id: ' + id_
-            #        if id_:
-            #            meta = didl_amazon.format(id_=id_)
-            #            my_add_to_queue('', meta)
-            #        print "---------------------------------------------------------------"
                 trak = result['hits']['hit'][random.randint(0, count-1)]
                 song = trak['fields']
                 try:
