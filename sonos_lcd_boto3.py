@@ -78,7 +78,6 @@ if __name__ == '__main__':
 
     while 1:
         try:
-
             result = table.query(KeyConditionExpression=Key('location').eq('nyc'), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
 
             if result['Count']:

@@ -302,7 +302,7 @@ while 1:
                 master.play_from_queue(0)
 
             else:
-                print "Could not find requested track " + task['trackinfo']
+                print "Could not find requested album " + task['album']
 
         elif action == 'shuffle' and task.get('artist') and task.get('number'):
 
