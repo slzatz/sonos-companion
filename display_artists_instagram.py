@@ -600,8 +600,8 @@ if __name__ == '__main__':
     print "Number of images = {}".format(L)
     image = images[random.randrange(0,L-1)]
     display_image(image)
-    t0 = t2 = t3 = time.time()
-    prev_title = titoe = 'No title'  #this is None so if the song title is the empty string, it's not equal
+    t0 = t1 = t2 = t3 = time.time()
+    prev_title = title = 'No title'  #this is None so if the song title is the empty string, it's not equal
     image_num = 0
     artist = None
     track_strings = []
@@ -618,11 +618,23 @@ if __name__ == '__main__':
             sys.exit(0)
         
         # No need to ping dynamodb and incur costs if no one listening
+
+        cur_time = time.time()
         now = datetime.datetime.now()
         hour = now.hour
         isoweekday = now.isoweekday()
         if hour < 5 or (hour > 8 and hour < 16) and isoweekday in range(1,6):
-            print "Not checking because of time: day of week: {} and time: {}".format(isoweekday,hour)
+            print "Not checking for tracks because of time: day of week: {} and time: {}".format(isoweekday,hour)
+
+            # Below is code to flip instagram pictures when tracks not playing
+            ##################################################################
+
+            if cur_time - t1 > 60:
+                image = images[random.randrange(0,L-1)]
+                display_image(image)
+                t1 = time.time()
+            ##################################################################
+
             sleep(5)
             continue
 
@@ -639,7 +651,7 @@ if __name__ == '__main__':
         except:
             print "Experienced exception during while loop: ", sys.exc_info()[0]
 
-        cur_time = time.time()
+        #cur_time = time.time() ###############12082015
 
         # checking every two seconds if the track has changed - could do it as a subscription too
             
