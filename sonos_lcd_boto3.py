@@ -77,6 +77,15 @@ if __name__ == '__main__':
     t.start()
 
     while 1:
+        # No need to ping dynamodb and incur costs if no one listening
+        now = datetime.datetime.now()
+        hour = now.hour
+        isoweekday = now.isoweekday()
+        if hour < 5 or (hour > 8 and hour < 16) and isoweekday in range(1,6):
+            print "Not checking because of time: day of week: {} and time: {}".format(isoweekday,hour)
+            sleep(5)
+            continue
+
         try:
             result = table.query(KeyConditionExpression=Key('location').eq('nyc'), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
 
@@ -92,7 +101,7 @@ if __name__ == '__main__':
                         sleep(1) 
                         scroll = True
                     
-            sleep(0.1)
+            sleep(0.5)
 
         except KeyboardInterrupt:
             raise

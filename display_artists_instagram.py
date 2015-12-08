@@ -30,7 +30,8 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('scrobble_new')
 
 parser = argparse.ArgumentParser(description='Command line options ...')
-parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") #default args.display == False (opposite of action)
+#default for display is args.display == False (opposite of action); on windows don't need that parameter
+parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") 
 args = parser.parse_args()
 
 #################instagram
@@ -73,6 +74,7 @@ api_key = c.last_fm_api_key
 wrapper = textwrap.TextWrapper(width=42, replace_whitespace=False) # may be able to be a little longer than 40
 wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  #instagram
 
+# Environment varialbes for pygame
 if platform.machine() == 'armv6l' and not args.display:
     os.putenv('SDL_VIDEODRIVER', 'fbcon')
     os.putenv('SDL_FBDEV', '/dev/fb1')
@@ -86,8 +88,9 @@ elif platform.system() == "Linux":
 else:
     sys.exit("Currently unsupported hardware/OS")
 
+# Should be (6,0) if pygame inits correctly
 r = pygame.init()
-print r
+print "pygame init",r
 
 if platform.machine() == 'armv6l': # and not args.display:
     pygame.mouse.set_visible(False)
@@ -100,13 +103,13 @@ else:
 screen = pygame.display.set_mode((w, h))
 screen.fill((0,0,0))
 
-
 text = txtlib.Text((w, h), 'freesans', font_size=30)
 text.text = "Sonos-Companion TFT Edition"
 text.update()
 screen.blit(text.area, (0,0))
 pygame.display.flip()
 
+# Early use of Soco had some funny things happening if the cache was on -- no idea if this is still necessary but solved problem at the time
 config.CACHE_ENABLED = False
 
 print "\n"
@@ -144,11 +147,10 @@ def display_artist_info(artist):
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
-    img_rect = img.get_rect()
-    #print img_rect
-    center = ((w-img_rect.width)/2, 0)
-    #print center
     f.close()
+    img_rect = img.get_rect()
+    center = ((w-img_rect.width)/2, 0)
+    #f.close() moved on 12072015
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 28)
@@ -201,11 +203,10 @@ def display_song_info(i):
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
-    img_rect = img.get_rect()
-    #print img_rect
-    center = ((w-img_rect.width)/2, 0)
-    #print center
     f.close()
+    img_rect = img.get_rect()
+    center = ((w-img_rect.width)/2, 0)
+    #f.close() moved on 12072015
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 16)
@@ -218,10 +219,6 @@ def display_song_info(i):
         text = font.render(u"{}".format(s), True, (255, 0, 0))
         screen.blit(text, (5,n))
         n+=18
-    #for a,b in DISPLAY.items():
-    #    text = font.render(u"{}: {}".format(b, track.get(a)), True, (255, 0, 0))
-    #    screen.blit(text, (5,n))
-    #    n+=18
     pygame.display.flip()
 
 def display_song_info2(i):
@@ -254,12 +251,10 @@ def display_song_info2(i):
         img.save(f)
         f.seek(0)
         img = pygame.image.load(f, 'bmp').convert()
-        img_rect = img.get_rect()
-        #print img_rect
-        center = ((w-img_rect.width)/2, 0)
-        #print center
         f.close()
-        #img.set_alpha(100) # the lower the number the more faded - 75 seems too faded; now not fading for display_images
+        img_rect = img.get_rect()
+        center = ((w-img_rect.width)/2, 0)
+        #f.close() # moved on 12072015
         
         screen.fill((0,0,0)) 
         screen.blit(img, center)      
@@ -277,8 +272,6 @@ def get_scrobble_info(artist, track, username='slzatz', autocorrect=True):
         r = requests.get(scrobbler_base_url, params=payload)
         
         z = r.json()['track']['userplaycount']
-        #zz = r.json()['track']['userloved']
-        #return "playcount: "+z+" loved: "+zz
         return z # will need to be converted to integer when sent to SQS
     except Exception as e:
         print "Exception in get_scrobble_info: ", e
@@ -362,25 +355,6 @@ def get_recording_date(artist, album, title):
     else:
         return '' 
     
-def play_pause():
-    
-    display_action("Play-Pause")
-
-def next_():
-    pass
-
-def previous():
-    pass
-
-def dec_volume():
-   
-    display_action("Decrease Volume")
-    
-def inc_volume():
-    
-    display_action("Increase Volume")
-        
-
 def display_action(text):
     
     font = pygame.font.SysFont('Sans', 14)
@@ -526,11 +500,10 @@ def display_image(image):
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f).convert()
-    img_rect = img.get_rect()
-    #print img_rect
-    center = ((w-img_rect.width)/2, 0)
-    #print center
     f.close()
+    img_rect = img.get_rect()
+    center = ((w-img_rect.width)/2, 0)
+    #f.close() 12072015
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 28)
@@ -589,11 +562,10 @@ def display_image_and_info(image):
     img.save(f)
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
-    img_rect = img.get_rect()
-    #print img_rect
-    center = ((w-img_rect.width)/2, 0)
-    #print center
     f.close()
+    img_rect = img.get_rect()
+    center = ((w-img_rect.width)/2, 0)
+    #f.close() 12072015
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 28)
@@ -645,6 +617,15 @@ if __name__ == '__main__':
         elif event.type == pygame.QUIT:
             sys.exit(0)
         
+        # No need to ping dynamodb and incur costs if no one listening
+        now = datetime.datetime.now()
+        hour = now.hour
+        isoweekday = now.isoweekday()
+        if hour < 5 or (hour > 8 and hour < 16) and isoweekday in range(1,6):
+            print "Not checking because of time: day of week: {} and time: {}".format(isoweekday,hour)
+            sleep(5)
+            continue
+
         try:
             result = table.query(KeyConditionExpression=Key('location').eq('nyc'), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
 
@@ -734,5 +715,5 @@ if __name__ == '__main__':
             
             t3 = time.time()
         
-        sleep(0.1)
+        sleep(0.5)
 
