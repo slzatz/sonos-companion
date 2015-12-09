@@ -648,8 +648,8 @@ if __name__ == '__main__':
 
         except KeyboardInterrupt:
             raise
-        except:
-            print "Experienced exception during while loop: ", sys.exc_info()[0]
+        except Exception as e:
+            print "Experienced exception during while loop: ", sys.exc_info()[0], e
 
         #cur_time = time.time() ###############12082015
 
