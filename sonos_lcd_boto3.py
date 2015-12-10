@@ -5,6 +5,7 @@ import random
 from decimal import Decimal
 import threading
 import sys
+import json
 import textwrap
 from Adafruit_LCD_Plate.Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 import requests
@@ -17,7 +18,7 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('scrobble_new')
 
 def send_sqs(**kw):
-    sqs = boto3.resource('sqs')
+    sqs = boto3.resource('sqs', region_name='us-east-1')
     # below is the action queue; may also need storage queue or use S3, e.g., echo_sonos_history
     queue = sqs.get_queue_by_name(QueueName='echo_sonos')
     sqs_response = queue.send_message(MessageBody=json.dumps(kw))
@@ -32,11 +33,11 @@ lcd = Adafruit_CharLCDPlate()
 #0 = no button
 
 btns = {
-          1: (lcd.SELECT,'pause',lcd.YELLOW),
-          2: (lcd.RIGHT,'pause',lcd.VIOLET),
+          1: (lcd.SELECT,'nothing',lcd.YELLOW),
+          2: (lcd.RIGHT,'resume',lcd.VIOLET),
           4: (lcd.DOWN, 'quieter',lcd.GREEN),
           8: (lcd.UP,'louder',lcd.BLUE),
-         16: (lcd.LEFT,'resume',lcd.RED)
+         16: (lcd.LEFT,'pause',lcd.RED)
        } 
 lcd.clear()
 lcd.message("Sonos-companion")
@@ -97,18 +98,24 @@ if __name__ == '__main__':
     t.start()
 
     while 1:
+        now = datetime.datetime.now()
+        if not now.second:
+            print "{} checking".format(now)
+
         b = btns.get(lcd.buttons())
 
         if b:
+            print b
+            print b[1]
             lcd.clear()
             lcd.backlight(b[2])
             send_sqs(action=b[1])
-            lcd.message('\n'+b[1]) #\n puts the text on the lcd's second line
+            #lcd.message(b[1]) #\n puts the text on the lcd's second line
             #prev_title = ""
-            sleep(2)
+            scroller.setLines(b[1])
+            sleep(1)
 
         # No need to ping dynamodb and incur costs if no one listening
-        now = datetime.datetime.now()
         hour = now.hour
         isoweekday = now.isoweekday()
         if hour < 5 or (hour > 8 and hour < 16) and isoweekday in range(1,6):
@@ -131,7 +138,7 @@ if __name__ == '__main__':
                         sleep(1) 
                         scroll = True
                     
-            sleep(0.5)
+            sleep(.5)
 
         except KeyboardInterrupt:
             raise
