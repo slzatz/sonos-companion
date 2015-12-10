@@ -16,8 +16,28 @@ from boto3.dynamodb.conditions import Key
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('scrobble_new')
 
+def send_sqs(**kw):
+    sqs = boto3.resource('sqs')
+    # below is the action queue; may also need storage queue or use S3, e.g., echo_sonos_history
+    queue = sqs.get_queue_by_name(QueueName='echo_sonos')
+    sqs_response = queue.send_message(MessageBody=json.dumps(kw))
+
 lcd = Adafruit_CharLCDPlate()
 
+#2 = forward: lcd.RIGHT
+#4 = volume lower: lcd.DOWN
+#8 = volume higher: lcd.UP
+#16 = pause: lcd.LEFT
+#1 = change mode: lcd.SELECT
+#0 = no button
+
+btns = {
+          1: (lcd.SELECT,'pause',lcd.YELLOW),
+          2: (lcd.RIGHT,'pause',lcd.VIOLET),
+          4: (lcd.DOWN, 'quieter',lcd.GREEN),
+          8: (lcd.UP,'louder',lcd.BLUE),
+         16: (lcd.LEFT,'resume',lcd.RED)
+       } 
 lcd.clear()
 lcd.message("Sonos-companion")
 
@@ -77,6 +97,16 @@ if __name__ == '__main__':
     t.start()
 
     while 1:
+        b = btns.get(lcd.buttons())
+
+        if b:
+            lcd.clear()
+            lcd.backlight(b[2])
+            send_sqs(action=b[1])
+            lcd.message('\n'+b[1]) #\n puts the text on the lcd's second line
+            #prev_title = ""
+            sleep(2)
+
         # No need to ping dynamodb and incur costs if no one listening
         now = datetime.datetime.now()
         hour = now.hour
