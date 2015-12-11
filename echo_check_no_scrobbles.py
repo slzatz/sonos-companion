@@ -174,7 +174,7 @@ while 1:
         #An alternative would be to define a dictionary of actions and related functions but not particularly motivated to do that right now
         #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(task) def f1(**kw); kw = 
 
-        if action == 'deborah' and task.get('number'):
+        if action == 'deborah':
             
             songs = []
 
@@ -182,7 +182,7 @@ while 1:
             master.clear_queue()
 
             try:
-                number = int(task['number'])
+                number = int(task.get('number', 1))
             except ValueError as e:
                 print e
                 number = 1

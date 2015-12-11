@@ -32,7 +32,7 @@ lcd = Adafruit_CharLCDPlate()
 #0 = no button
 
 btns = {
-          1: (lcd.SELECT,'pause',lcd.YELLOW),
+          1: (lcd.SELECT,'deborah',lcd.YELLOW),
           2: (lcd.RIGHT,'pause',lcd.VIOLET),
           4: (lcd.DOWN, 'quieter',lcd.GREEN),
           8: (lcd.UP,'louder',lcd.BLUE),
@@ -104,7 +104,6 @@ if __name__ == '__main__':
             lcd.backlight(b[2])
             send_sqs(action=b[1])
             lcd.message('\n'+b[1]) #\n puts the text on the lcd's second line
-            #prev_title = ""
             sleep(2)
 
         # No need to ping dynamodb and incur costs if no one listening
