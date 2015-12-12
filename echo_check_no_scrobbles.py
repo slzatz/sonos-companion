@@ -128,7 +128,7 @@ with open('deborah_albums') as f:
 z = json.loads(z)
 DEBORAH_TRACKS = []
 for x in z:
-    DEBORAH_TRACKS.extend(z[x])
+    DEBORAH_TRACKS.append(z[x])
 
 def play_deborah_radio(num):
 
