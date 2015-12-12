@@ -53,7 +53,7 @@ parser.add_argument('player', default='all', help="This is the name of the playe
 args = parser.parse_args()
 
 sqs = boto3.resource('sqs', region_name='us-east-1') 
-sqs_queue = sqs.get_queue_by_name(QueueName='echo_sonos') 
+sqs_queue = sqs.get_queue_by_name(QueueName=c.aws_sqs_queue) 
 
 cloudsearchdomain = boto3.client('cloudsearchdomain', endpoint_url=c.aws_cs_url, region_name='us-east-1')
 

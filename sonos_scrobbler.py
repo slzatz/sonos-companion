@@ -23,6 +23,7 @@ import sys
 import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
+import config as c
 import soco
 from soco import config
 import boto3 
@@ -130,7 +131,7 @@ while 1:
 
         # Write the latest scrobble to dynamodb 'scrobble_new'
         data = {
-                'location':'nyc',
+                'location':c.location,
                 'artist':track.get('artist'),
                 'ts': int(time.time()), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
                 'title':track.get('title'),
