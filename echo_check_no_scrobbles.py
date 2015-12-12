@@ -206,7 +206,7 @@ while 1:
     
         elif action == 'radio' and task.get('station'):
 
-            if task['station'] == 'deborah':
+            if task['station'].lower() == 'deborah':
                 play_deborah_radio(20)
             else:
                 station = STATIONS.get(task['station'].lower())
