@@ -128,7 +128,7 @@ with open('deborah_albums') as f:
 z = json.loads(z)
 DEBORAH_TRACKS = []
 for x in z:
-    DEBORAH_TRACKS.append(z[x])
+    DEBORAH_TRACKS.extend(z[x])
 
 def play_deborah_radio(num):
 
@@ -139,7 +139,7 @@ def play_deborah_radio(num):
 
     for x in range(num):
         n = random.randint(0,len(DEBORAH_TRACKS)-1)
-        songs+=DEBORAH_TRACKS[n]
+        songs.append(DEBORAH_TRACKS[n])
 
     for uri in songs:
         print uri
