@@ -124,7 +124,34 @@ didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:
 
 with open('deborah_albums') as f:
     z = f.read()
-DEBORAH_ALBUMS = list(json.loads(z).items())
+#DEBORAH_ALBUMS = list(json.loads(z).items())
+
+DEBORAH_TRACKS = []
+for x in json.loads(z):
+    DEBORAH_TRACKS.extend(zz[x])
+
+def play_deborah_radio(num):
+
+    songs = []
+
+    master.stop()
+    master.clear_queue()
+
+    for x in range(num):
+        n = random.randint(0,len(DEBORAH_TRACKS)-1)
+        songs+=DEBORAH_TRACKS[n]
+
+    for uri in songs:
+        print uri
+        i = uri.find('amz')
+        ii = uri.find('.')
+        id_ = uri[i:ii]
+        print id_
+        meta = didl_amazon.format(id_=id_)
+        my_add_to_queue('', meta)
+        print "---------------------------------------------------------------"
+
+    master.play_from_queue(0)
 
 with open('stations') as f:
     z = f.read()
@@ -175,50 +202,26 @@ while 1:
         #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(task) def f1(**kw); kw = 
 
         if action == 'deborah':
-            
-            songs = []
-
-            master.stop()
-            master.clear_queue()
-
-            try:
-                number = int(task.get('number', 1))
-            except ValueError as e:
-                print e
-                number = 1
-
-            for x in range(number):
-                n = random.randint(0,len(DEBORAH_ALBUMS)-1)
-                print "album: ", DEBORAH_ALBUMS[n][0]
-                songs+=DEBORAH_ALBUMS[n][1]
-
-            for uri in songs:
-                print uri
-                i = uri.find('amz')
-                ii = uri.find('.')
-                id_ = uri[i:ii]
-                print id_
-                meta = didl_amazon.format(id_=id_)
-                my_add_to_queue('', meta)
-                print "---------------------------------------------------------------"
-
-            master.play_from_queue(0)
+            play_deborah_radio(20)         
     
         elif action == 'radio' and task.get('station'):
 
-            station = STATIONS.get(task['station'].lower())
-            if station:
-                uri = station[1]
-                print "uri=",uri
-                if uri.startswith('pndrradio'):
-                    meta = meta_format_pandora.format(title=station[0], service=station[2])
-                    master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
-                elif uri.startswith('x-sonosapi-stream'):
-                    uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
-                    meta = meta_format_radio.format(title=station[0], service=station[2])
-                    master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+            if task['station'] == 'deborah':
+                play_deborah_radio(20)
             else:
-                print "{} radio is not a preset station.".format(task['station'])
+                station = STATIONS.get(task['station'].lower())
+                if station:
+                    uri = station[1]
+                    print "uri=",uri
+                    if uri.startswith('pndrradio'):
+                        meta = meta_format_pandora.format(title=station[0], service=station[2])
+                        master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+                    elif uri.startswith('x-sonosapi-stream'):
+                        uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+                        meta = meta_format_radio.format(title=station[0], service=station[2])
+                        master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+                else:
+                    print "{} radio is not a preset station.".format(task['station'])
 
         elif action in ('play','add') and task.get('trackinfo'): 
 
