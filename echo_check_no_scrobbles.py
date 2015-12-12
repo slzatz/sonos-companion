@@ -125,10 +125,10 @@ didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:
 with open('deborah_albums') as f:
     z = f.read()
 #DEBORAH_ALBUMS = list(json.loads(z).items())
-
+z = json.loads(z)
 DEBORAH_TRACKS = []
-for x in json.loads(z):
-    DEBORAH_TRACKS.extend(zz[x])
+for x in z:
+    DEBORAH_TRACKS.extend(z[x])
 
 def play_deborah_radio(num):
 
