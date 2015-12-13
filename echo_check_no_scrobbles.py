@@ -170,6 +170,7 @@ def my_add_to_queue(uri, metadata):
     return int(qnumber)
 
 prev_title = ''
+COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
 while 1:
     
@@ -355,17 +356,30 @@ while 1:
 
                 master.play_from_queue(0)
 
-        elif action == 'pause':
-            master.pause()
-
-        elif action == 'resume':
-            master.play()
-
-        elif action == 'skip':
+        elif  action in ('pause', 'resume', 'skip'):
+            d= {'pause':'pause', 'resume':'play', 'skip':'next'}
             try:
-                master.next()
+                getattr(master, COMMON_ACTIONS[action])()
             except soco.exceptions.SoCoUPnPException as e:
-                print "Probably tried to do 'next' when not possible:", e
+                print "master.{}:".format(action), e
+
+        #elif action == 'pause':
+        #    try:
+        #        master.pause()
+        #    except soco.exceptions.SoCoUPnPException as e:
+        #        print "master.pause:", e
+
+        #elif action == 'resume':
+        #    try:
+        #        master.play()
+        #    except soco.exceptions.SoCoUPnPException as e:
+        #        print "master.play:", e
+
+        #elif action == 'skip':
+        #    try:
+        #        master.next()
+        #    except soco.exceptions.SoCoUPnPException as e:
+        #        print "Probably tried to do 'next' when not possible:", e
 
         elif action in ('quieter','louder'):
             volume = master.volume
