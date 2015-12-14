@@ -1,6 +1,12 @@
 '''
 uses boto3
 enables you to check on scrobbles
+        'location':c.location,
+        'artist':track.get('artist'),
+        'ts': int(time.time()), 
+        'title':track.get('title'),
+        'album':track.get('album'),
+        'date':track.get('date')}
 '''
 
 import boto3
@@ -17,5 +23,5 @@ result = table.query(KeyConditionExpression=Key('location').eq('nyc') & Key('ts'
 
 tracks = result['Items']
 for track in tracks:
-    print(track.get('artist'), track.get('title'))
+    print("'{artist}' - '{title}' from '{album}' played from {location}".format(**track))
 
