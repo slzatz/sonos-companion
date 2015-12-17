@@ -134,7 +134,13 @@ if __name__ == '__main__':
                         prev_title = title
                         sleep(1) 
                         scroll = True
-                    
+                else:
+
+                    hour = datetime.datetime.now().hour
+                    if hour != prev_hour:
+                        
+                        display_weather()
+                        prev_hour = hour
             sleep(.5)
 
         except KeyboardInterrupt:
