@@ -56,6 +56,9 @@ for s in speakers:
     gc = s.group.coordinator
     d[gc] = d[gc] + 1 if gc in d else 1
 
+for gc in d:
+    print "{}:{}".format(gc.player_name, d[gc])
+
 master = max(d.keys(), key=lambda k: d[k])
 print "master = ", master.player_name
 
