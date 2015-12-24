@@ -22,7 +22,6 @@ home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config
-
 import boto3
 from boto3.dynamodb.conditions import Key
 
@@ -58,7 +57,7 @@ import httplib2
 import musicbrainzngs
 
 from amazon_music_db import *
-from sqlalchemy.sql.expression import func
+#from sqlalchemy.sql.expression import func
 
 g_api_key = c.google_api_key
 
@@ -639,7 +638,7 @@ if __name__ == '__main__':
             continue
 
         try:
-            result = table.query(KeyConditionExpression=Key('location').eq('nyc'), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
+            result = table.query(KeyConditionExpression=Key('location').eq(c.location), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
 
             if result['Count']:
                 current_track = result['Items'][0]
