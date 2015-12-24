@@ -29,6 +29,10 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 scrobble_table = dynamodb.Table('scrobble_new')
 image_table = dynamodb.Table('artist_images')
 
+s3 = boto3.resource('s3')
+object = s3.Object('sonos-scrobble','location')
+location = object.get()['Body'].read()
+
 parser = argparse.ArgumentParser(description='Command line options ...')
 #default for display is args.display == False (opposite of action); on windows don't need that parameter
 parser.add_argument('-d', '--display', action='store_true', help="Use raspberry pi HDMI display and not LCD") 
@@ -46,6 +50,7 @@ with open('instagram_ids') as f:
 
 ids = list(int(d.split('#')[0]) for d in data.split() if d.split('#')[0])
 #ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
+#willie is 265048195
 #################instagram
 
 #google custom search api
@@ -676,7 +681,7 @@ if __name__ == '__main__':
             continue
 
         try:
-            result = scrobble_table.query(KeyConditionExpression=Key('location').eq(c.location), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
+            result = scrobble_table.query(KeyConditionExpression=Key('location').eq(location), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
         except KeyboardInterrupt:
             raise
         except Exception as e:
