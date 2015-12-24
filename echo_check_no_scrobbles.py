@@ -52,38 +52,53 @@ parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
+s3 = boto3.resource('s3')
+object = s3.Object('sonos-scrobble','location')
+location = object.get()['Body'].read()
+
 sqs = boto3.resource('sqs', region_name='us-east-1') 
-queue_name = 'echo_sonos_ct' if c.location=='ct' else 'echo_sonos'
+queue_name = 'echo_sonos_ct' if location=='ct' else 'echo_sonos'
 sqs_queue = sqs.get_queue_by_name(QueueName=queue_name) 
 
 cloudsearchdomain = boto3.client('cloudsearchdomain', endpoint_url=c.aws_cs_url, region_name='us-east-1')
 
 config.CACHE_ENABLED = False
 
+print "\n"
 n = 0
 while 1:
     n+=1
-    print "\nattempt "+str(n)+"\n"
-    try:
-        sp = soco.discover(timeout=5)
-        speakers = list(sp)
-    except TypeError as e:    
-        print e
-        sleep(1)       
+    print "attempt "+str(n)
+    sp = soco.discover(timeout=5)
+    if sp:
+        break
     else:
-        break 
+        sleep(1) 
 
-d = {}
-for s in speakers:
-    print s.player_name
-    gc = s.group.coordinator
-    d[gc] = d[gc] + 1 if gc in d else 1
+if args.player=='all':
+    d = {}
+    print "\nSpeakers->"
+    for s in sp:
+        print s.player_name
+        gc = s.group.coordinator
+        d[gc] = d[gc] + 1 if gc in d else 1
 
-for gc in d:
-    print "{}:{}".format(gc.player_name, d[gc])
+    print "\nGroup Coordinators->"
+    for gc in d:
+        print "{}:{}".format(gc.player_name, d[gc])
 
-master = max(d.keys(), key=lambda k: d[k])
-print "master = ", master.player_name
+    master = max(d.keys(), key=lambda k: d[k])
+
+else:
+    for s in sp:
+        if s.player_name==args.player:
+            master = s
+            break
+    else:
+        print "{} is not a speaker".format(args.player)
+        sys.exit(1)
+
+print "\nmaster = ", master.player_name
 
 print "\nprogram running ..."
 

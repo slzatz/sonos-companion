@@ -29,42 +29,55 @@ from soco import config
 import boto3 
 
 parser = argparse.ArgumentParser(description='Command line options ...')
-parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
+parser.add_argument('--player', '-p', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 scrobble_table = dynamodb.Table('scrobble_new')
 
+s3 = boto3.resource('s3')
+object = s3.Object('sonos-scrobble','location')
+location = object.get()['Body'].read()
+
 config.CACHE_ENABLED = False
 
+print "\n"
 n = 0
 while 1:
     n+=1
-    print "\nattempt "+str(n)+"\n"
-    try:
-        sp = soco.discover(timeout=5)
-        speakers = list(sp)
-    except TypeError as e:    
-        print e
-        sleep(1)       
+    print "attempt "+str(n)
+    sp = soco.discover(timeout=5)
+    if sp:
+        break
     else:
-        break 
+        sleep(1) 
 
-d = {}
-for s in speakers:
-    print s.player_name
-    gc = s.group.coordinator
-    d[gc] = d[gc] + 1 if gc in d else 1
+if args.player=='all':
+    d = {}
+    print "\nSpeakers->"
+    for s in sp:
+        print s.player_name
+        gc = s.group.coordinator
+        d[gc] = d[gc] + 1 if gc in d else 1
 
-for gc in d:
-    print "{}:{}".format(gc.player_name, d[gc])
+    print "\nGroup Coordinators->"
+    for gc in d:
+        print "{}:{}".format(gc.player_name, d[gc])
 
-master = max(d.keys(), key=lambda k: d[k])
-print "master = ", master.player_name
+    master = max(d.keys(), key=lambda k: d[k])
 
-print "\n"
+else:
+    for s in sp:
+        if s.player_name==args.player:
+            master = s
+            break
+    else:
+        print "{} is not a speaker".format(args.player)
+        sys.exit(1)
 
-print "program running ..."
+print "\nmaster = ", master.player_name
+
+print "\nprogram running ..."
 
 prev_title = ''
 
@@ -104,7 +117,7 @@ while 1:
 
         # Write the latest scrobble to dynamodb 'scrobble_new'
         data = {
-                'location':c.location,
+                'location':location,
                 'artist':track.get('artist'),
                 'ts': int(time.time()), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
                 'title':track.get('title'),
