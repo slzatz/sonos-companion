@@ -18,8 +18,9 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('scrobble_new')
 
 days = input("How many days do you want to go back? ")
+location = input("Which location ('nyc' or 'ct')? ")
 
-result = table.query(KeyConditionExpression=Key('location').eq('nyc') & Key('ts').gt(Decimal(time.time()-int(days)*86400)), ScanIndexForward=False) #by default the sort order is ascending
+result = table.query(KeyConditionExpression=Key('location').eq(location) & Key('ts').gt(Decimal(time.time()-int(days)*86400)), ScanIndexForward=False) #by default the sort order is ascending
 
 tracks = result['Items']
 for track in tracks:
