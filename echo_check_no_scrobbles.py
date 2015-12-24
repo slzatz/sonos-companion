@@ -49,7 +49,7 @@ import boto3
 import config as c
 
 parser = argparse.ArgumentParser(description='Command line options ...')
-parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
+parser.add_argument('--player', '-p', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
 s3 = boto3.resource('s3')
