@@ -17,10 +17,15 @@ from boto3.dynamodb.conditions import Key
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('scrobble_new')
 
+s3 = boto3.resource('s3')
+object = s3.Object('sonos-scrobble','location')
+location = object.get()['Body'].read()
+queue_name = 'echo_sonos_ct' if location=='ct' else 'echo_sonos'
+
 def send_sqs(**kw):
     sqs = boto3.resource('sqs', region_name='us-east-1')
     # below is the action queue; may also need storage queue or use S3, e.g., echo_sonos_history
-    queue = sqs.get_queue_by_name(QueueName='echo_sonos')
+    queue = sqs.get_queue_by_name(QueueName=queue_name)
     sqs_response = queue.send_message(MessageBody=json.dumps(kw))
 
 lcd = Adafruit_CharLCDPlate()
@@ -121,7 +126,7 @@ if __name__ == '__main__':
             continue
 
         try:
-            result = table.query(KeyConditionExpression=Key('location').eq('nyc'), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
+            result = table.query(KeyConditionExpression=Key('location').eq(location), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
 
             if result['Count']:
                 track = result['Items'][0]
