@@ -63,57 +63,26 @@ config.CACHE_ENABLED = False
 n = 0
 while 1:
     n+=1
-    print "attempt "+str(n)
+    print "\nattempt "+str(n)+"\n"
     try:
-        sp = soco.discover(timeout=20)
+        sp = soco.discover(timeout=5)
         speakers = list(sp)
-        #speakers = list(soco.discover(timeout=5))
     except TypeError as e:    
         print e
         sleep(1)       
     else:
         break 
-    
-print speakers 
 
-# appears that the property coordinator of s.group is not getting set properly and so can't use s.group.coordinator[.player_name]
-
+d = {}
 for s in speakers:
-    if s:
-        #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
-        print s.player_name
-           
-if args.player.lower() == 'all':
+    print s.player_name
+    gc = s.group.coordinator
+    d[gc] = d[gc] + 1 if gc in d else 1
 
-    for s in speakers:
-        if s.is_coordinator:
-            master = s
-            print "\nNOTE: found coordinator and master =", master.player_name
-            break
-    else:
-        master = speakers[0]
-        print "\nALERT: id not find coordinator so took speaker[0] =",master.player_name
+master = max(d.keys(), key=lambda k: d[k])
+print "master = ", master.player_name
 
-    for s in speakers:
-        if s != master:
-            s.join(master)
-    
-else:
-
-    for s in speakers:
-        if s:
-            print s.player_name
-            if s.player_name.lower() == args.player.lower():
-                master = s
-                print "The single master speaker is: ", master.player_name
-                break
-    else:
-        print "Could not find the specified speaker"
-        sys.exit()
-
-print "\n"
-
-print "program running ..."
+print "\nprogram running ..."
 
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 

@@ -40,54 +40,24 @@ config.CACHE_ENABLED = False
 n = 0
 while 1:
     n+=1
-    print "attempt "+str(n)
+    print "\nattempt "+str(n)+"\n"
     try:
-        sp = soco.discover(timeout=20)
+        sp = soco.discover(timeout=5)
         speakers = list(sp)
-        #speakers = list(soco.discover(timeout=5))
     except TypeError as e:    
         print e
         sleep(1)       
     else:
         break 
-    
-print speakers 
 
-# appears that the property coordinator of s.group is not getting set properly and so can't use s.group.coordinator[.player_name]
-
+d = {}
 for s in speakers:
-    if s:
-        #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
-        print s.player_name
-           
-if args.player.lower() == 'all':
+    print s.player_name
+    gc = s.group.coordinator
+    d[gc] = d[gc] + 1 if gc in d else 1
 
-    for s in speakers:
-        if s.is_coordinator:
-            master = s
-            print "\nNOTE: found coordinator and master =", master.player_name
-            break
-    else:
-        master = speakers[0]
-        print "\nALERT: id not find coordinator so took speaker[0] =",master.player_name
-
-    # for tracking scrobbles, no need to join the speakers
-    #for s in speakers:
-    #    if s != master:
-    #        s.join(master)
-    
-else:
-
-    for s in speakers:
-        if s:
-            print s.player_name
-            if s.player_name.lower() == args.player.lower():
-                master = s
-                print "The single master speaker is: ", master.player_name
-                break
-    else:
-        print "Could not find the specified speaker"
-        sys.exit()
+master = max(d.keys(), key=lambda k: d[k])
+print "master = ", master.player_name
 
 print "\n"
 
