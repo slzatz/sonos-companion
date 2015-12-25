@@ -1,5 +1,5 @@
 '''
-This scripts collects metadata on Amazon Music Cloud songs and place it in a aws dynamodb database amazon_music
+This script collects metadata on Amazon Music Cloud songs and place it in a aws dynamodb database amazon_music
 Presumably you have to queue all of your amazon songs
 
     get_current_track_info() =  {

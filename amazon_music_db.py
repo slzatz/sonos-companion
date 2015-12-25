@@ -88,60 +88,60 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 #if run from the command line will print out some information from the database
-if __name__ == '__main__':
-
-    rows = session.query(Song).count()
-    print "rows = ", rows
-    #image = images[random.randrange(0,L-1)]
-    print "First 10"
-    n=0
-    songs = session.query(Song) 
-    for song in songs:
-        print "id=",song.id
-        print "artist=",song.artist.encode('ascii', 'ignore')
-        print "album=",song.album.encode('ascii', 'ignore')
-        print "song title=",song.title.encode('ascii', 'ignore')
-        print "sonos/amazon uri=",song.uri.encode('ascii', 'ignore')
-        print "album art=",song.album_art.encode('ascii', 'ignore')
-        print "---------------------------------------------------------------"
-        n+=1
-        if n==10:
-            break
-            
-    print "Random 10"
-
-    print "---------------------------------------------------------------"
-    print "---------------------------------------------------------------"
-
-    for n in range(10):
-        r = random.randint(1,rows)
-        #song = session.query(Song).filter(Song.id==r).one()
-        song = session.query(Song).get(r)
-        # some songs may have been deleted so not every potential id will be valid
-        if song:
-            print "id=",song.id
-            print "artist=",song.artist.encode('ascii', 'ignore')
-            print "album=",song.album.encode('ascii', 'ignore')
-            print "song title=",song.title.encode('ascii', 'ignore')
-            print "sonos/amazon uri=",song.uri.encode('ascii', 'ignore')
-            print "album art=",song.album_art.encode('ascii', 'ignore')
-            print "---------------------------------------------------------------"
-
-    print "Get some images"
-
-    print "---------------------------------------------------------------"
-    print "---------------------------------------------------------------"
-    rows = session.query(Artist).count()
-    print "Number of artists", rows
-
-    for n in range(5):
-        r = random.randint(1, rows)
-        artist = session.query(Artist).get(r)
-        if artist:
-            print artist.name
-            for image in artist.images:
-                print image.link
-                print image.width
-                print image.height
-                print image.ok
-
+#if __name__ == '__main__':
+#
+#    rows = session.query(Song).count()
+#    print "rows = ", rows
+#    #image = images[random.randrange(0,L-1)]
+#    print "First 10"
+#    n=0
+#    songs = session.query(Song) 
+#    for song in songs:
+#        print "id=",song.id
+#        print "artist=",song.artist.encode('ascii', 'ignore')
+#        print "album=",song.album.encode('ascii', 'ignore')
+#        print "song title=",song.title.encode('ascii', 'ignore')
+#        print "sonos/amazon uri=",song.uri.encode('ascii', 'ignore')
+#        print "album art=",song.album_art.encode('ascii', 'ignore')
+#        print "---------------------------------------------------------------"
+#        n+=1
+#        if n==10:
+#            break
+#            
+#    print "Random 10"
+#
+#    print "---------------------------------------------------------------"
+#    print "---------------------------------------------------------------"
+#
+#    for n in range(10):
+#        r = random.randint(1,rows)
+#        #song = session.query(Song).filter(Song.id==r).one()
+#        song = session.query(Song).get(r)
+#        # some songs may have been deleted so not every potential id will be valid
+#        if song:
+#            print "id=",song.id
+#            print "artist=",song.artist.encode('ascii', 'ignore')
+#            print "album=",song.album.encode('ascii', 'ignore')
+#            print "song title=",song.title.encode('ascii', 'ignore')
+#            print "sonos/amazon uri=",song.uri.encode('ascii', 'ignore')
+#            print "album art=",song.album_art.encode('ascii', 'ignore')
+#            print "---------------------------------------------------------------"
+#
+#    print "Get some images"
+#
+#    print "---------------------------------------------------------------"
+#    print "---------------------------------------------------------------"
+#    rows = session.query(Artist).count()
+#    print "Number of artists", rows
+#
+#    for n in range(5):
+#        r = random.randint(1, rows)
+#        artist = session.query(Artist).get(r)
+#        if artist:
+#            print artist.name
+#            for image in artist.images:
+#                print image.link
+#                print image.width
+#                print image.height
+#                print image.ok
+#

@@ -1,5 +1,6 @@
 '''
-This scripts collects metadata on Amazon Music Cloud songs and place it in a database amazon_music.db
+THIS HAS BEEN SUPERCEDED BY get_amazon_metadata_boto3_dynamodb.py
+This scripts collects metadata on Amazon Music Cloud songs and place it in an AWS RDS database instance mylistmanager database music
 Presumably you have to queue all of your amazon songs
 
     get_current_track_info() =  {
