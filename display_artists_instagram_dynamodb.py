@@ -492,28 +492,38 @@ def get_url(artist, title):
         
     return url
 
-def get_photos(ids=None):
-    
-    payload = {'client_id':client_id}
+def get_photos(ids=None, num=40):
+
     images = []
+    d = divmod(num, 20)
+    n = d[0] + 1 if d[1] else d[0]
+    payload = {'client_id':client_id}
+
     for _id in ids:
-        try:
-            r = requests.get(instagram_base_url.format(_id), params=payload)
-            z = r.json()['data'] 
-        except Exception as e:
-            print "Exception in get_photos - request: {} related to id: {} ".format(e, _id)
-        else:
-            for d in z: 
-                try:
-                    dd = {}
-                    if d['type']=='image': #note they have a caption and the caption has text
-                        dd['url'] = d['images']['standard_resolution']['url']
-                        dd['text'] = d['caption']['text']
-                        dd['photographer'] = d['caption']['from']['full_name']
-                except Exception as e:
-                    print "Exception in get_photos - adding indiviual photo {} related to id: {} ".format(e, _id)
-                else:
-                    if dd:
+        max_id = None #need this for payload line which references max_id
+        for i in range(n):
+            payload = {'client_id':client_id, 'max_id':max_id} if i else {'client_id':client_id}
+
+            try:
+                r = requests.get(instagram_base_url.format(_id), params=payload)
+                z = r.json() 
+                data = z['data']
+                max_id = z['pagination']['next_max_id'] #"108...."
+                print "max_id =", max_id
+            except Exception as e:
+                print "Exception in get_photos - request: {} related to id: {} ".format(e, _id)
+            else:
+                for d in data: 
+                    try:
+                        if d['type']=='image': #note they have a caption and the caption has text
+                            dd = {}
+                            dd['url'] = d['images']['standard_resolution']['url']
+                            dd['url'] = dd['url'].replace('s640x640', 's1080x1080')
+                            dd['text'] = d['caption']['text']
+                            dd['photographer'] = d['caption']['from']['full_name']
+                    except Exception as e:
+                        print "Exception in get_photos - adding indiviual photo {} related to id: {} ".format(e, _id)
+                    else:
                         images.append(dd)
 
     return images
