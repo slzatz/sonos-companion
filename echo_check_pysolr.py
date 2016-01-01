@@ -224,10 +224,15 @@ while 1:
                 else:
                     print "{} radio is not a preset station.".format(task['station'])
 
-        elif action in ('play','add') and task.get('trackinfo'): 
+        #elif action in ('play','add') and task.get('trackinfo'): 
+        elif action in ('play','add') and task.get('title'):
 
+            #from echo_check2 -- trackinfo = "{} {}".format(artist, title) - so right now not distinguishing between title and artist but probably should
             #The query below only searches title and artist fields so you don't get every song on After the Gold Rush
-            s = 'artist:' + ' artist:'.join(task['trackinfo'].split()) + ' title:' + ' title:'.join(task['trackinfo'].split())
+            #s = 'artist:' + ' artist:'.join(task['trackinfo'].split()) + ' title:' + ' title:'.join(task['trackinfo'].split())
+            s = 'title:' + ' AND title:'.join(task['title'].split())
+            if task['artist']:
+                s = s + ' artist:' + ' AND artist:'.join(task['artist'].split())
             result = solr.search(s, **{'rows':1})
 
             if len(result):
@@ -265,7 +270,7 @@ while 1:
                     my_add_to_queue('', meta)
 
             else:
-                print "Could not find requested track " + task['trackinfo']
+                print "Could not find requested track " + task['title'] + ' by ' + task['artist']
 
         elif action == 'play_album' and task.get('album'): 
 
