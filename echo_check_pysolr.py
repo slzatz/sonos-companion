@@ -378,7 +378,7 @@ while 1:
             new_volume = volume - 10 if action=='quieter' else volume + 10
             
             if args.player == 'all':
-                for s in speakers:
+                for s in sp:
                     s.volume = new_volume
             else:
                 master.volume = new_volume
