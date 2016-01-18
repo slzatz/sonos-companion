@@ -2,8 +2,9 @@
 THIS IS THE CURRENTLY IN USE SCRIPT TO GET TRACK INFO AND WRITE TO A FILE
 python 3
 takes track information from tracks playing in sonos and writes them to a file
-along with file2cloudsearch was used to move rhapsody information into cloudsearch
-Could be used for rhapsody or amazon tracks
+along with file2solr was used to move sonos song information into solr
+Can be used for rhapsody or amazon music tracks but don't have didl for new
+amazon music library that includes prime
 '''
 import os
 from time import sleep
@@ -14,7 +15,6 @@ home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config
-import boto3 
 
 config.CACHE_ENABLED = False
 
@@ -23,7 +23,7 @@ while 1:
     n+=1
     print("attempt "+str(n))
     try:
-        sp = soco.discover(timeout=20)
+        sp = soco.discover(timeout=2)
         speakers = {s.player_name:s for s in sp}
     except TypeError as e:    
         print(e)
@@ -44,7 +44,7 @@ else:
 
 print('\n')
 
-file_name = input("What do you want to call the file that will have the track info for uploading to CloudSearch ?")
+file_name = input("What do you want to call the file that will have the track info for uploading to solr?")
 
 prev_title = -1
 tracks = []

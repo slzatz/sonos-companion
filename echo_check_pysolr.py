@@ -122,6 +122,10 @@ didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:up
 
 didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="RDCPI:GLBTRACK:Tra.{id_}" parentID="-1" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">''' + '''SA_RINCON1_{}</desc></item></DIDL-Lite>'''.format(c.user_id)
 
+#uri = "x-sonos-http:library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f.mp4?sid=201&flags=8224&sn=5"
+#id_ = "library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f"
+didl_library = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00032020{}" parentID="-1" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
+
 with open('deborah_albums') as f:
     z = f.read()
 #DEBORAH_ALBUMS = list(json.loads(z).items())
@@ -233,7 +237,7 @@ while 1:
             s = 'title:' + ' AND title:'.join(task['title'].split())
             if task['artist']:
                 s = s + ' artist:' + ' AND artist:'.join(task['artist'].split())
-            result = solr.search(s, **{'rows':1})
+            result = solr.search(s, **{'rows':1}) # or rows=1
 
             if len(result):
                 track = result.docs[0]
@@ -252,13 +256,19 @@ while 1:
                     ii = uri.find('.')
                     id_ = uri[i:ii]
                     meta = didl_amazon.format(id_=id_)
+                elif 'library' in uri:
+                    i = uri.find('library')
+                    ii = uri.find('.')
+                    id_ = uri[i:ii]
+                    meta = didl_library.format(id_=id_)
                 else:
                     i = uri.find('.')+1
                     ii = uri.find('.',i)
                     id_ = uri[i:ii]
                     meta = didl_rhapsody.format(id_=id_)
-                    print '---------------------------------------------------------------'
-                    print 'meta: ',meta
+
+                print 'meta: ',meta
+                print '---------------------------------------------------------------'
 
                 if action == 'play':
                     master.stop()
