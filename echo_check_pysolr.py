@@ -118,8 +118,12 @@ meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" 
 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
+#uri = "x-sonos-http:amz%3atr%3a6b5d9c09-7dbe-44bc-89e1-85ac5ed45093.mp3?sid=26&flags=8224&sn=1",
+#id_ = "amz%3atr%3a6b5d9c09-7dbe-44bc-89e1-85ac5ed45093
 didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
 
+#uri = "radea:Tra.2056353.mp3?sn=3",
+#id_ = "2056353
 didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="RDCPI:GLBTRACK:Tra.{id_}" parentID="-1" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">''' + '''SA_RINCON1_{}</desc></item></DIDL-Lite>'''.format(c.user_id)
 
 #uri = "x-sonos-http:library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f.mp4?sid=201&flags=8224&sn=5"
@@ -228,12 +232,9 @@ while 1:
                 else:
                     print "{} radio is not a preset station.".format(task['station'])
 
-        #elif action in ('play','add') and task.get('trackinfo'): 
         elif action in ('play','add') and task.get('title'):
 
-            #from echo_check2 -- trackinfo = "{} {}".format(artist, title) - so right now not distinguishing between title and artist but probably should
             #The query below only searches title and artist fields so you don't get every song on After the Gold Rush
-            #s = 'artist:' + ' artist:'.join(task['trackinfo'].split()) + ' title:' + ' title:'.join(task['trackinfo'].split())
             s = 'title:' + ' AND title:'.join(task['title'].split())
             if task['artist']:
                 s = s + ' artist:' + ' AND artist:'.join(task['artist'].split())
@@ -261,11 +262,15 @@ while 1:
                     ii = uri.find('.')
                     id_ = uri[i:ii]
                     meta = didl_library.format(id_=id_)
-                else:
+                #else:
+                elif 'radea' in uri:
                     i = uri.find('.')+1
                     ii = uri.find('.',i)
                     id_ = uri[i:ii]
                     meta = didl_rhapsody.format(id_=id_)
+                else:
+                    print 'The uri:{}, was not recognized'.format(uri)
+                    continue
 
                 print 'meta: ',meta
                 print '---------------------------------------------------------------'
@@ -306,13 +311,22 @@ while 1:
                         ii = uri.find('.')
                         id_ = uri[i:ii]
                         meta = didl_amazon.format(id_=id_)
-                    else:
+                    elif 'library' in uri:
+                        i = uri.find('library')
+                        ii = uri.find('.')
+                        id_ = uri[i:ii]
+                        meta = didl_library.format(id_=id_)
+                    elif 'radea' in uri:
                         i = uri.find('.')+1
                         ii = uri.find('.',i)
                         id_ = uri[i:ii]
                         meta = didl_rhapsody.format(id_=id_)
-                        print '---------------------------------------------------------------'
-                        print 'meta: ',meta
+                    else:
+                        print 'The uri:{}, was not recognized'.format(uri)
+                        continue
+
+                    print 'meta: ',meta
+                    print '---------------------------------------------------------------'
 
                     my_add_to_queue('', meta)
 
@@ -363,14 +377,23 @@ while 1:
                         ii = uri.find('.')
                         id_ = uri[i:ii]
                         meta = didl_amazon.format(id_=id_)
-                    else:
+                    elif 'library' in uri:
+                        i = uri.find('library')
+                        ii = uri.find('.')
+                        id_ = uri[i:ii]
+                        meta = didl_library.format(id_=id_)
+                    elif 'radea' in uri:
                         i = uri.find('.')+1
                         ii = uri.find('.',i)
                         id_ = uri[i:ii]
                         meta = didl_rhapsody.format(id_=id_)
+                    else:
+                        print 'The uri:{}, was not recognized'.format(uri)
+                        continue
 
-                    #print '---------------------------------------------------------------'
-                    #print 'meta: ',meta
+                    print 'meta: ',meta
+                    print '---------------------------------------------------------------'
+
                     my_add_to_queue('', meta)
 
                 master.play_from_queue(0)
