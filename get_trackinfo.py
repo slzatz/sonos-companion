@@ -1,10 +1,9 @@
 '''
-THIS IS THE CURRENTLY IN USE SCRIPT TO GET TRACK INFO AND WRITE TO A FILE
+THIS IS THE CURRENT SCRIPT TO GET TRACK INFO AND WRITE IT TO A FILE SO FILE2SOLR.PY CAN WRITE TO SOLR
 python 3
 takes track information from tracks playing in sonos and writes them to a file
 along with file2solr was used to move sonos song information into solr
-Can be used for rhapsody or amazon music tracks but don't have didl for new
-amazon music library that includes prime
+Can be used for Rhapsody or Amazon music tracks or the new Amazon 'library' format
 '''
 import os
 from time import sleep
@@ -46,7 +45,8 @@ print('\n')
 
 file_name = input("What do you want to call the file that will have the track info for uploading to solr?")
 
-prev_title = -1
+prev_title = ''
+prev_album = ''
 tracks = []
 
 while True:
@@ -73,9 +73,10 @@ while True:
     print("{} checking to see if track has changed".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
     
-    if prev_title != track.get('title') and track.get('artist'): 
+    if prev_title != track.get('title') and prev_album != track.get('album') and track.get('artist'): 
         
         prev_title = track.get('title') 
+        prev_album = track.get('album') 
 
         for k in track.keys():
             print("{}={}".format(k,track.get(k,'')))
