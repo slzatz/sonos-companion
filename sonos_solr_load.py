@@ -20,6 +20,7 @@ The files are named first_1000, next_1000, last_854
 from SolrClient import SolrClient
 import sys
 import json
+import requests
 from config import ec_uri 
 
 solr = SolrClient(ec_uri+':8983/solr')
@@ -51,6 +52,14 @@ while True:
     cur_documents = json.dumps(cur_documents) 
     response = solr.index_json(collection, cur_documents) 
     print(response)
-    response = solr.commit(collection, waitSearcher=False)
-    print(response)
+
+    #The commit from SolrClient is not working
+    #response = solr.commit(collection, waitSearcher=False)
+    #print(response)
+
+    # Since solr.commit didn't seem to work, substituted the below, which works
+    url = ec_uri+":8983/solr/"+collection+"/update"
+    r = requests.post(url, data={"commit":"true"})
+    print(r.text)
+
     n+=100

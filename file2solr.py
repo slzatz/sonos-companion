@@ -72,7 +72,7 @@ while True:
     #print(response)
 
     # Since solr.commit didn't seem to work, substituted the below, which works
-    url = ec_uri+":8983/solr/sonos_companion/update"
+    url = ec_uri+":8983/solr/"+collection+"/update"
     r = requests.post(url, data={"commit":"true"})
     print(r.text)
 
