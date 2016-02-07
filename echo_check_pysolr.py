@@ -234,7 +234,7 @@ while 1:
 
         elif action in ('play','add') and task.get('uri'):
             # now that sonos_echo2.py can provide the uri - this uses that capability
-            uri = track['uri']
+            uri = task['uri']
             print 'uri: ' + uri
             print "---------------------------------------------------------------"
 
