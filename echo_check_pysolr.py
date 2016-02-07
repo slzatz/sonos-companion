@@ -232,60 +232,97 @@ while 1:
                 else:
                     print "{} radio is not a preset station.".format(task['station'])
 
-        elif action in ('play','add') and task.get('title'):
+        elif action in ('play','add') and task.get('uri'):
+            # now that sonos_echo2.py can provide the uri - this uses that capability
+            uri = track['uri']
+            print 'uri: ' + uri
+            print "---------------------------------------------------------------"
 
-            #The query below only searches title and artist fields so you don't get every song on After the Gold Rush
-            s = 'title:' + ' AND title:'.join(task['title'].split())
-            if task['artist']:
-                s = s + ' artist:' + ' AND artist:'.join(task['artist'].split())
-            result = solr.search(s, **{'rows':1}) # or rows=1
+            if 'amz' in uri:
+                i = uri.find('amz')
+                ii = uri.find('.')
+                id_ = uri[i:ii]
+                meta = didl_amazon.format(id_=id_)
+            elif 'library' in uri:
+                i = uri.find('library')
+                ii = uri.find('.')
+                id_ = uri[i:ii]
+                meta = didl_library.format(id_=id_)
+            elif 'radea' in uri:
+                i = uri.find('.')+1
+                ii = uri.find('.',i)
+                id_ = uri[i:ii]
+                meta = didl_rhapsody.format(id_=id_)
+            else:
+                print 'The uri:{}, was not recognized'.format(uri)
 
-            if len(result):
-                track = result.docs[0]
-                try:
-                    print 'artist: ' + track.get('artist', 'No artist')
-                    print 'album: ' + track.get('album', 'No album')
-                    print 'song: ' + track.get('title', 'No title')
-                except Exception as e:
-                    print "Unicode error"
-                uri = track.get('uri', '')
-                print 'uri: ' + uri
-                print "---------------------------------------------------------------"
+            print 'meta: ',meta
+            print '---------------------------------------------------------------'
 
-                if 'amz' in uri:
-                    i = uri.find('amz')
-                    ii = uri.find('.')
-                    id_ = uri[i:ii]
-                    meta = didl_amazon.format(id_=id_)
-                elif 'library' in uri:
-                    i = uri.find('library')
-                    ii = uri.find('.')
-                    id_ = uri[i:ii]
-                    meta = didl_library.format(id_=id_)
-                #else:
-                elif 'radea' in uri:
-                    i = uri.find('.')+1
-                    ii = uri.find('.',i)
-                    id_ = uri[i:ii]
-                    meta = didl_rhapsody.format(id_=id_)
-                else:
-                    print 'The uri:{}, was not recognized'.format(uri)
-                    continue
-
-                print 'meta: ',meta
-                print '---------------------------------------------------------------'
-
-                if action == 'play':
-                    master.stop()
-                    master.clear_queue()
-                    my_add_to_queue('', meta)
-                    master.play_from_queue(0)
-
-                else:
-                    my_add_to_queue('', meta)
+            if action == 'play':
+                master.stop()
+                master.clear_queue()
+                my_add_to_queue('', meta)
+                master.play_from_queue(0)
 
             else:
-                print "Could not find requested track " + task['title'] + ' by ' + task['artist']
+                my_add_to_queue('', meta)
+
+        #elif action in ('play','add') and task.get('title'):
+        #    # now that sonos_echo2.py can provide the uri, this can be greatly simplified
+        #    #The query below only searches title and artist fields so you don't get every song on After the Gold Rush
+        #    s = 'title:' + ' AND title:'.join(task['title'].split())
+        #    if task['artist']:
+        #        s = s + ' artist:' + ' AND artist:'.join(task['artist'].split())
+        #        continue
+        #    result = solr.search(s, **{'rows':1}) # or rows=1
+
+        #    if len(result):
+        #        track = result.docs[0]
+        #        try:
+        #            print 'artist: ' + track.get('artist', 'No artist')
+        #            print 'album: ' + track.get('album', 'No album')
+        #            print 'song: ' + track.get('title', 'No title')
+        #        except Exception as e:
+        #            print "Unicode error"
+        #        uri = track.get('uri', '')
+        #        print 'uri: ' + uri
+        #        print "---------------------------------------------------------------"
+
+        #        if 'amz' in uri:
+        #            i = uri.find('amz')
+        #            ii = uri.find('.')
+        #            id_ = uri[i:ii]
+        #            meta = didl_amazon.format(id_=id_)
+        #        elif 'library' in uri:
+        #            i = uri.find('library')
+        #            ii = uri.find('.')
+        #            id_ = uri[i:ii]
+        #            meta = didl_library.format(id_=id_)
+        #        #else:
+        #        elif 'radea' in uri:
+        #            i = uri.find('.')+1
+        #            ii = uri.find('.',i)
+        #            id_ = uri[i:ii]
+        #            meta = didl_rhapsody.format(id_=id_)
+        #        else:
+        #            print 'The uri:{}, was not recognized'.format(uri)
+        #            continue
+
+        #        print 'meta: ',meta
+        #        print '---------------------------------------------------------------'
+
+        #        if action == 'play':
+        #            master.stop()
+        #            master.clear_queue()
+        #            my_add_to_queue('', meta)
+        #            master.play_from_queue(0)
+
+        #        else:
+        #            my_add_to_queue('', meta)
+
+        #    else:
+        #        print "Could not find requested track " + task['title'] + ' by ' + task['artist']
 
         elif action == 'play_album' and task.get('album'): 
 
