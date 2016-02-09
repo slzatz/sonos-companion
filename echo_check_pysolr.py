@@ -57,22 +57,22 @@ import soco
 from soco import config
 import boto3 
 import config as c
-import pysolr
+#import pysolr
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('--player', '-p', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
 s3 = boto3.resource('s3')
-object = s3.Object('sonos-scrobble','location')
-location = object.get()['Body'].read()
+s3object = s3.Object('sonos-scrobble','location')
+location = s3object.get()['Body'].read()
 print("The current location is {}".format(location))
 
 sqs = boto3.resource('sqs', region_name='us-east-1') 
 queue_name = 'echo_sonos_ct' if location=='ct' else 'echo_sonos'
 sqs_queue = sqs.get_queue_by_name(QueueName=queue_name) 
 
-solr = pysolr.Solr(c.ec_uri+':8983/solr/sonos_companion/', timeout=10)
+#solr = pysolr.Solr(c.ec_uri+':8983/solr/sonos_companion/', timeout=10)
     
 config.CACHE_ENABLED = False
 
