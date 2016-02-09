@@ -232,43 +232,6 @@ while 1:
                 else:
                     print "{} radio is not a preset station.".format(task['station'])
 
-        #elif action in ('play','add') and task.get('uri'):
-        #    # now that sonos_echo2.py can provide the uri - this uses that capability
-        #    uri = task['uri']
-        #    print 'uri: ' + uri
-        #    print "---------------------------------------------------------------"
-
-        #    if 'amz' in uri:
-        #        i = uri.find('amz')
-        #        ii = uri.find('.')
-        #        id_ = uri[i:ii]
-        #        meta = didl_amazon.format(id_=id_)
-        #    elif 'library' in uri:
-        #        i = uri.find('library')
-        #        ii = uri.find('.')
-        #        id_ = uri[i:ii]
-        #        meta = didl_library.format(id_=id_)
-        #    elif 'radea' in uri:
-        #        i = uri.find('.')+1
-        #        ii = uri.find('.',i)
-        #        id_ = uri[i:ii]
-        #        meta = didl_rhapsody.format(id_=id_)
-        #    else:
-        #        print 'The uri:{}, was not recognized'.format(uri)
-
-        #    print 'meta: ',meta
-        #    print '---------------------------------------------------------------'
-
-        #    if action == 'play':
-        #        master.stop()
-        #        master.clear_queue()
-        #        my_add_to_queue('', meta)
-        #        master.play_from_queue(0)
-
-        #    else:
-        #        my_add_to_queue('', meta)
-
-        #elif action == 'play_album' and task.get('uris'): 
         elif action in ('play','add') and task.get('uris'):
             if action == 'play':
                 master.stop()
@@ -303,69 +266,6 @@ while 1:
                 my_add_to_queue('', meta)
 
             if action == 'play':
-                master.play_from_queue(0)
-
-        elif action == 'shuffle' and task.get('artist') and task.get('number'):
-
-            try:
-                number = int(task['number'])
-            except ValueError as e:
-                print e
-                number = 8
-
-            s = 'artist:' + ' AND artist:'.join(task['artist'].split())
-            result = solr.search(s, **{'rows':500}) 
-
-            count = len(result)
-            print "Total track count for {} was {}".format(task['artist'], count)
-
-            if count:
-                master.stop()
-                master.clear_queue()
-                tracks = result.docs
-                k = number if number <= count else count
-                picks = []
-                for j in range(k):
-                    while 1:
-                        n = random.randint(0, count-1) if count > number else j
-                        if not n in picks:
-                            picks.append(n)
-                            break
-                    track = tracks[n]
-                    try:
-                        print 'artist: ' + track.get('artist', 'No artist')
-                        print 'album: ' + track.get('album', 'No album')
-                        print 'song: ' + track.get('title', 'No title')
-                    except Exception as e:
-                        print "Unicode error"
-                    uri = track.get('uri', '')
-                    print 'uri: ' + uri
-                    print '---------------------------------------------------------------'
-
-                    if 'amz' in uri:
-                        i = uri.find('amz')
-                        ii = uri.find('.')
-                        id_ = uri[i:ii]
-                        meta = didl_amazon.format(id_=id_)
-                    elif 'library' in uri:
-                        i = uri.find('library')
-                        ii = uri.find('.')
-                        id_ = uri[i:ii]
-                        meta = didl_library.format(id_=id_)
-                    elif 'radea' in uri:
-                        i = uri.find('.')+1
-                        ii = uri.find('.',i)
-                        id_ = uri[i:ii]
-                        meta = didl_rhapsody.format(id_=id_)
-                    else:
-                        print 'The uri:{}, was not recognized'.format(uri)
-                        continue
-
-                    print 'meta: ',meta
-                    print '---------------------------------------------------------------'
-
-                    my_add_to_queue('', meta)
-
                 master.play_from_queue(0)
 
         elif  action in ('pause', 'resume', 'skip'):
