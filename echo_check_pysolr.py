@@ -232,45 +232,48 @@ while 1:
                 else:
                     print "{} radio is not a preset station.".format(task['station'])
 
-        elif action in ('play','add') and task.get('uri'):
-            # now that sonos_echo2.py can provide the uri - this uses that capability
-            uri = task['uri']
-            print 'uri: ' + uri
-            print "---------------------------------------------------------------"
+        #elif action in ('play','add') and task.get('uri'):
+        #    # now that sonos_echo2.py can provide the uri - this uses that capability
+        #    uri = task['uri']
+        #    print 'uri: ' + uri
+        #    print "---------------------------------------------------------------"
 
-            if 'amz' in uri:
-                i = uri.find('amz')
-                ii = uri.find('.')
-                id_ = uri[i:ii]
-                meta = didl_amazon.format(id_=id_)
-            elif 'library' in uri:
-                i = uri.find('library')
-                ii = uri.find('.')
-                id_ = uri[i:ii]
-                meta = didl_library.format(id_=id_)
-            elif 'radea' in uri:
-                i = uri.find('.')+1
-                ii = uri.find('.',i)
-                id_ = uri[i:ii]
-                meta = didl_rhapsody.format(id_=id_)
-            else:
-                print 'The uri:{}, was not recognized'.format(uri)
+        #    if 'amz' in uri:
+        #        i = uri.find('amz')
+        #        ii = uri.find('.')
+        #        id_ = uri[i:ii]
+        #        meta = didl_amazon.format(id_=id_)
+        #    elif 'library' in uri:
+        #        i = uri.find('library')
+        #        ii = uri.find('.')
+        #        id_ = uri[i:ii]
+        #        meta = didl_library.format(id_=id_)
+        #    elif 'radea' in uri:
+        #        i = uri.find('.')+1
+        #        ii = uri.find('.',i)
+        #        id_ = uri[i:ii]
+        #        meta = didl_rhapsody.format(id_=id_)
+        #    else:
+        #        print 'The uri:{}, was not recognized'.format(uri)
 
-            print 'meta: ',meta
-            print '---------------------------------------------------------------'
+        #    print 'meta: ',meta
+        #    print '---------------------------------------------------------------'
 
+        #    if action == 'play':
+        #        master.stop()
+        #        master.clear_queue()
+        #        my_add_to_queue('', meta)
+        #        master.play_from_queue(0)
+
+        #    else:
+        #        my_add_to_queue('', meta)
+
+        #elif action == 'play_album' and task.get('uris'): 
+        elif action in ('play','add') and task.get('uris'):
             if action == 'play':
                 master.stop()
                 master.clear_queue()
-                my_add_to_queue('', meta)
-                master.play_from_queue(0)
 
-            else:
-                my_add_to_queue('', meta)
-
-        elif action == 'play_album' and task.get('uris'): 
-            master.stop()
-            master.clear_queue()
             for uri in task['uris']:
                 print 'uri: ' + uri
                 print "---------------------------------------------------------------"
@@ -299,7 +302,8 @@ while 1:
 
                 my_add_to_queue('', meta)
 
-            master.play_from_queue(0)
+            if action == 'play':
+                master.play_from_queue(0)
 
         elif action == 'shuffle' and task.get('artist') and task.get('number'):
 
