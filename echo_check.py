@@ -1,152 +1,170 @@
 '''
-uses boto but should probably be re-written for boto3
+created to have a python2.7 version of echo check that uses solr
+uses pysolr while the python3 version:  echo_check_solr.py uses SolrClient
+
+uses boto3
+uses dynamodb for radio stations and shuffling songs
+uses solr and pysolr, which works on python 2.7 to enable searching on tracks and artists
+
+PlayStation play {myartist} radio
+PlayStation play {myartist} pandora
+PlayStation play {myartist} station
+PlayTrack play {mytitle} by {myartist}
+AddTrack add {mytitle} by {myartist}
+Shuffle shuffle {myartist}
+WhatIsPlaying what is playing
+WhatIsPlaying what song is playing
+Skip skip
+Skip next
+PlayAlbum play album {myalbum}
+PauseResume {pauseorresume} the music
+TurnTheVolume Turn the volume {volume}
+TurnTheVolume Turn {volume} the volume
+
+current_track = master.get_current_track_info() --> {
+            u'album': 'We Walked In Song', 
+            u'artist': 'The Innocence Mission', 
+            u'title': 'My Sisters Return From Ireland', 
+            u'uri': 'pndrradio-http://audio-sv5-t3-1.pandora.com/access/5459257820921908950?version=4&lid=86206018&token=...', 
+            u'playlist_position': '3', 
+            u'duration': '0:02:45', 
+            u'position': '0:02:38', 
+            u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
+
+    >>> z = solr.search("artist:Cat AND artist:Stevens")
+    >>> z
+    <pysolr.Results object at 0x02C792F0>
+    >>> for r in z:
+    ...     print r['title'],r['album'],r['artist'],r['uri']
+
+To Do:
+- Artist shuffling could move from dynamodb to cloudsearch: result = cloudsearchdomain.search(query=task['artist'], queryOptions='{"fields":["artist"]}')
+- Could also have an Album search -> Album play album {after the gold rush|albumtitle} - could be custom slot but not sure any real benefit
+- May not need a special album search just "play ..." since I could look for word song or album remove them from search and limit search fields
 '''
+
 import os
 import time
 from time import sleep
-import datetime
 import random
 import json
 import argparse
 import sys
-import config as c
+import datetime
 home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home, 'SoCo')] + [os.path.join(home, 'pydub')] + [os.path.join(home, 'twitter')] + sys.path
+sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config
-
-import boto.sqs
-#from boto.sqs.message import Message
-#import boto3 #####################################################################################3
+import boto3 
+import config as c
+#import pysolr
 
 parser = argparse.ArgumentParser(description='Command line options ...')
-parser.add_argument('player', default='all', help="This is the name of the player you want to control or all")
+parser.add_argument('--player', '-p', default='all', help="This is the name of the player you want to control or all")
 args = parser.parse_args()
 
-conn = boto.sqs.connect_to_region(
-    "us-east-1",
-    aws_access_key_id=c.aws_access_key_id,
-    aws_secret_access_key=c.aws_secret_access_key)
+s3 = boto3.resource('s3')
+s3object = s3.Object('sonos-scrobble','location')
+location = s3object.get()['Body'].read()
+print("The current location is {}".format(location))
 
+sqs = boto3.resource('sqs', region_name='us-east-1') 
+queue_name = 'echo_sonos_ct' if location=='ct' else 'echo_sonos'
+sqs_queue = sqs.get_queue_by_name(QueueName=queue_name) 
 
-#sqs = boto3.resource('sqs') ########################################################################
-#queue = sqs.get_queue_by_name(QueueName='echo_sonos') ############################################### 
-
-from amazon_music_db import *
-from sqlalchemy.sql.expression import func
-
+#solr = pysolr.Solr(c.ec_uri+':8983/solr/sonos_companion/', timeout=10)
+    
 config.CACHE_ENABLED = False
 
+print "\n"
 n = 0
 while 1:
     n+=1
     print "attempt "+str(n)
-    try:
-        sp = soco.discover(timeout=5)
-        speakers = list(sp)
-        #speakers = list(soco.discover(timeout=5))
-    except TypeError as e:    
-        print e
-        sleep(1)       
+    sp = soco.discover(timeout=5)
+    if sp:
+        break
     else:
-        break 
-    
-print speakers 
+        sleep(1) 
 
-# appears that the property coordinator of s.group is not getting set properly and so can't use s.group.coordinator[.player_name]
-
-for s in speakers:
-    if s:
-        #print "speaker: {} - master: {}".format(s.player_name, s.group)  #s.group.coordinator.player_name)
+if args.player=='all':
+    d = {}
+    print "\nSpeakers->"
+    for s in sp:
         print s.player_name
-           
-if args.player.lower() == 'all':
+        gc = s.group.coordinator
+        d[gc] = d[gc] + 1 if gc in d else 1
 
-    for s in speakers:
-        if s.is_coordinator:
+    print "\nGroup Coordinators->"
+    for gc in d:
+        print "{}:{}".format(gc.player_name, d[gc])
+
+    master = max(d.keys(), key=lambda k: d[k])
+
+else:
+    for s in sp:
+        if s.player_name==args.player:
             master = s
-            print "\nNOTE: found coordinator and master =", master.player_name
             break
     else:
-        master = speakers[0]
-        print "\nALERT: id not find coordinator so took speaker[0] =",master.player_name
+        print "{} is not a speaker".format(args.player)
+        sys.exit(1)
 
-    for s in speakers:
-        if s != master:
-            s.join(master)
-    
-else:
+print "\nmaster = ", master.player_name
 
-    for s in speakers:
-        if s:
-            print s.player_name
-            if s.player_name.lower() == args.player.lower():
-                master = s
-                print "The single master speaker is: ", master.player_name
-                break
-    else:
-        print "Could not find the specified speaker"
-        sys.exit()
+print "\nprogram running ..."
 
-print "\n"
+meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
-print "program running ..."
+meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
-#globals
-#stations = [
-#('Add 10 to number',),
-#('WNYC-FM', 'x-sonosapi-stream:s21606?sid=254&flags=32', 'SA_RINCON65031_'), 
-#('WSHU-FM', 'x-sonosapi-stream:s22803?sid=254&flags=32', 'SA_RINCON65031_'),
-#('Neil Young Radio', 'pndrradio:52876154216080962', 'SA_RINCON3_slzatz@gmail.com'),
-#('QuickMix', 'pndrradio:52877953807377986', 'SA_RINCON3_slzatz@gmail.com'),
-#('R.E.M. Radio', 'pndrradio:637630342339192386', 'SA_RINCON3_slzatz@gmail.com'), 
-#('Nick Drake Radio', 'pndrradio:409866109213435458', 'SA_RINCON3_slzatz@gmail.com'),
-#('Dar Williams Radio', 'pndrradio:1823409579416053314', 'SA_RINCON3_slzatz@gmail.com'),
-#('Patty Griffin Radio', 'pndrradio:52876609482614338', 'SA_RINCON3_slzatz@gmail.com'),
-#('Lucinda Williams Radio', 'pndrradio:360878777387148866', 'SA_RINCON3_slzatz@gmail.com'),
-#('Kris Delmhorst Radio', 'pndrradio:610111769614181954', 'SA_RINCON3_slzatz@gmail.com'),
-#('Counting Crows Radio', 'pndrradio:1727297518525703746', 'SA_RINCON3_slzatz@gmail.com'), 
-#('Vienna Teng Radio', 'pndrradio:138764603804051010', 'SA_RINCON3_slzatz@gmail.com')]
-
-#echo = [x[0].lower() for x in stations]
-#print "echo=",echo
-#station_index = 0
-
-#meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
-
-#meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
-
+#uri = "x-sonos-http:amz%3atr%3a6b5d9c09-7dbe-44bc-89e1-85ac5ed45093.mp3?sid=26&flags=8224&sn=1",
+#id_ = "amz%3atr%3a6b5d9c09-7dbe-44bc-89e1-85ac5ed45093
 didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
 
-#def play_random_amazon():
-#    master.stop()
-#    master.clear_queue()
-#
-#    rows = session.query(Song).count()
-#
-#    for n in range(10):
-#        r = random.randrange(1,rows-1)
-#        song = session.query(Song).get(r)
-#        print song.id
-#        print song.artist
-#        print song.album
-#        print song.title
-#        print song.uri
-#        i = song.uri.find('amz')
-#        ii = song.uri.find('.')
-#        id_ = song.uri[i:ii]
-#        print id_
-#        meta = didl_amazon.format(id_=id_)
-#        my_add_to_queue('', meta)
-#        print "---------------------------------------------------------------"
-#        
-#    master.play_from_queue(0)
+#uri = "radea:Tra.2056353.mp3?sn=3",
+#id_ = "2056353
+didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="RDCPI:GLBTRACK:Tra.{id_}" parentID="-1" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">''' + '''SA_RINCON1_{}</desc></item></DIDL-Lite>'''.format(c.user_id)
+
+#uri = "x-sonos-http:library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f.mp4?sid=201&flags=8224&sn=5"
+#id_ = "library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f"
+didl_library = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00032020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
 
 with open('deborah_albums') as f:
     z = f.read()
+#DEBORAH_ALBUMS = list(json.loads(z).items())
+z = json.loads(z)
+DEBORAH_TRACKS = []
+for x in z:
+    DEBORAH_TRACKS.extend(z[x])
 
-zz = json.loads(z)
-zzz = [x for x in zz]
+def play_deborah_radio(num):
+
+    songs = []
+
+    master.stop()
+    master.clear_queue()
+
+    for x in range(num):
+        n = random.randint(0,len(DEBORAH_TRACKS)-1)
+        songs.append(DEBORAH_TRACKS[n])
+
+    for uri in songs:
+        print uri
+        i = uri.find('amz')
+        ii = uri.find('.')
+        id_ = uri[i:ii]
+        print id_
+        meta = didl_amazon.format(id_=id_)
+        my_add_to_queue('', meta)
+        print "---------------------------------------------------------------"
+
+    master.play_from_queue(0)
+
+with open('stations') as f:
+    z = f.read()
+
+STATIONS = json.loads(z)
 
 def my_add_to_queue(uri, metadata):
     response = master.avTransport.AddURIToQueue([
@@ -159,128 +177,120 @@ def my_add_to_queue(uri, metadata):
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
 
-q = conn.get_queue('echo_sonos')
+prev_title = ''
+COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
 while 1:
     
-    print time.time(), "checking"
+    print "{} checking sqs queue; {}".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), master.player_name)
+
+    # check sqs_queue for new actions to take
     try:
- #   response = client.receive_message(
- #   QueueUrl='string',
- #   AttributeNames=[
- #       'Policy'|'VisibilityTimeout'|'MaximumMessageSize'|'MessageRetentionPeriod'|'ApproximateNumberOfMessages'|'ApproximateNumberOfMessagesNotVisible'|'CreatedTimestamp'|'LastModifiedTimestamp'|'QueueArn'|'ApproximateNumberOfMessagesDelayed'|'DelaySeconds'|'ReceiveMessageWaitTimeSeconds'|'RedrivePolicy',
- #   ],
- #   MessageAttributeNames=[
- #       'string',
- #   ],
- #   MaxNumberOfMessages=1,
- #   VisibilityTimeout=100,
- #   WaitTimeSeconds=20
- # )
-        #m = q.receive_message(MaxNumberOfMessages=1, VisibilityTimeout=100, WaitTimeSeconds=20) ##########################################################
-        #body = response['Messages'][0]['Body']
-        m = q.get_messages(1, visibility_timeout=100, wait_time_seconds=20)
+        r = sqs_queue.receive_messages(MaxNumberOfMessages=1, VisibilityTimeout=0, WaitTimeSeconds=20) 
     except Exception as e:
-        print "Alexa exception: ", e
+        print "sqs receive error checking for posted actions: ", e
         continue
 
-    if m:
-        m = m[0]
-        body = m.get_body()
-        print "message =", m
-        print "body =", body
+    if r:
+        m = r[0]
+        body = m.body
+        print "sqs messge body =", body
 
         try:
-            z = json.loads(body)
+            task = json.loads(body)
         except Exception as e:
-            print "Alexa json exception: ", e
-            q.delete_message(m)
+            print "error reading the sqs message body: ", e
+            m.delete()
             continue
 
-        q.delete_message(m)
+        m.delete()
 
-        for x in z:
-            print x, z[x]
+        action = task.get('action', '')
 
-        #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(z) def f1(**kw); kw = 
-        if z.get('action') == 'deborah' and z.get('number'):
-            
-            songs = []
+        #An alternative would be to define a dictionary of actions and related functions but not particularly motivated to do that right now
+        #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(task) def f1(**kw); kw = 
 
-            master.stop()
-            master.clear_queue()
-
-            for x in range(int(z['number'])):
-                n = random.randint(0,len(zzz)-1)
-                print "album: ", zzz[n]
-                songs+=zz[zzz[n]]
-
-            for uri in songs:
-                print uri
-                i = uri.find('amz')
-                ii = uri.find('.')
-                id_ = uri[i:ii]
-                print id_
-                meta = didl_amazon.format(id_=id_)
-                my_add_to_queue('', meta)
-                print "---------------------------------------------------------------"
-
-            master.play_from_queue(0)
+        if action == 'deborah':
+            play_deborah_radio(20)         
     
-        elif z.get('action') == 'shuffle' and z.get('artist') and z.get('number'):
-            master.stop()
-            master.clear_queue()
+        elif action == 'radio' and task.get('station'):
 
-            songs = session.query(Song).filter(Song.artist==z['artist'].title()).order_by(func.random()).limit(int(z['number'])).all()
+            if task['station'].lower() == 'deborah':
+                play_deborah_radio(20)
+            else:
+                station = STATIONS.get(task['station'].lower())
+                if station:
+                    uri = station[1]
+                    print "uri=",uri
+                    if uri.startswith('pndrradio'):
+                        meta = meta_format_pandora.format(title=station[0], service=station[2])
+                        master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+                    elif uri.startswith('x-sonosapi-stream'):
+                        uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+                        meta = meta_format_radio.format(title=station[0], service=station[2])
+                        master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+                else:
+                    print "{} radio is not a preset station.".format(task['station'])
 
-            for song in songs:
-                print song.id
-                print song.artist
-                print song.album
-                print song.title
-                print song.uri
-                i = song.uri.find('amz')
-                ii = song.uri.find('.')
-                id_ = song.uri[i:ii]
-                print id_
-                meta = didl_amazon.format(id_=id_)
-                my_add_to_queue('', meta)
+        elif action in ('play','add') and task.get('uris'):
+            if action == 'play':
+                master.stop()
+                master.clear_queue()
+
+            for uri in task['uris']:
+                print 'uri: ' + uri
                 print "---------------------------------------------------------------"
 
-            master.play_from_queue(0)
+                if 'amz' in uri:
+                    i = uri.find('amz')
+                    ii = uri.find('.')
+                    id_ = uri[i:ii]
+                    meta = didl_amazon.format(id_=id_)
+                elif 'library' in uri:
+                    i = uri.find('library')
+                    ii = uri.find('.')
+                    id_ = uri[i:ii]
+                    meta = didl_library.format(id_=id_)
+                elif 'radea' in uri:
+                    i = uri.find('.')+1
+                    ii = uri.find('.',i)
+                    id_ = uri[i:ii]
+                    meta = didl_rhapsody.format(id_=id_)
+                else:
+                    print 'The uri:{}, was not recognized'.format(uri)
+                    continue
 
-        elif z.get('action') == 'skip':
-            master.next()
+                print 'meta: ',meta
+                print '---------------------------------------------------------------'
 
-        elif z.get('action') == 'quieter':
+                my_add_to_queue('', meta)
+
+            if action == 'play':
+                master.play_from_queue(0)
+
+        elif  action in ('pause', 'resume', 'skip'):
+            d= {'pause':'pause', 'resume':'play', 'skip':'next'}
+            try:
+                getattr(master, COMMON_ACTIONS[action])()
+            except soco.exceptions.SoCoUPnPException as e:
+                print "master.{}:".format(action), e
+
+        elif action in ('quieter','louder'):
             volume = master.volume
             
-            new_volume = volume - 10
+            new_volume = volume - 10 if action=='quieter' else volume + 10
             
             if args.player == 'all':
-                for s in speakers:
+                for s in sp:
                     s.volume = new_volume
             else:
                 master.volume = new_volume
 
-            print "I tried to turn down the volume"
+            print "args.player=",args.player
+            print "I tried to make the volume "+action
 
-        elif z.get('action') == 'louder':
-            volume = master.volume
-            
-            new_volume = volume + 10
-            
-            if new_volume > 75:
-                new_volume = 75
-                print "volume set to over 75 was reset to 75"
-                            
-            if args.player == 'all':
-                for s in speakers:
-                    s.volume = new_volume
-            else:
-                master.volume = new_volume
+        else:
+            print "I have no idea what you said"
 
-            print "I tried to turn up the volume"
-
-    sleep(0.3)
+    sleep(0.5)
 
