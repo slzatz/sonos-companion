@@ -189,7 +189,7 @@ def my_add_playlist_to_queue(uri, metadata):
             ('EnqueuedURI', uri), #x-rincon-cpcontainer:0006206clibrary
             ('EnqueuedURIMetaData', metadata),
             ('DesiredFirstTrackNumberEnqueued', 0),
-            ('EnqueueAsNext', 1) #0
+            ('EnqueueAsNext', 0) #0
             ])
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
@@ -287,7 +287,7 @@ while 1:
                 if not playlist:
                     my_add_to_queue('', meta)
                 else:
-                    my_add_playlist_to_queue('', meta)
+                    my_add_playlist_to_queue(uri, meta)
 
             if action == 'play':
                 master.play_from_queue(0)
