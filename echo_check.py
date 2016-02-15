@@ -262,8 +262,8 @@ while 1:
                     id_ = uri[i:ii]
                     meta = didl_amazon.format(id_=id_)
                 elif 'library_playlist' in uri:
-                    i = uri.find('library')
-                    id_ = uri[i:]
+                    i = uri.find(':')
+                    id_ = uri[i+1:]
                     meta = didl_library_playlist.format(id_=id_)
                     playlist = True
                 elif 'library' in uri:
