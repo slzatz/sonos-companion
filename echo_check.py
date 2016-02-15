@@ -181,6 +181,16 @@ def my_add_to_queue(uri, metadata):
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
 
+def my_add_playlist_to_queue(uri, metadata):
+    response = master.avTransport.AddURIToQueue([
+            ('InstanceID', 0),
+            ('EnqueuedURI', uri),
+            ('EnqueuedURIMetaData', metadata),
+            ('DesiredFirstTrackNumberEnqueued', 0),
+            ('EnqueueAsNext', 0)
+            ])
+    qnumber = response['FirstTrackNumberEnqueued']
+    return int(qnumber)
 prev_title = ''
 COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
@@ -244,7 +254,7 @@ while 1:
             for uri in task['uris']:
                 print 'uri: ' + uri
                 print "---------------------------------------------------------------"
-
+                playlist = False
                 if 'amz' in uri:
                     i = uri.find('amz')
                     ii = uri.find('.')
@@ -254,6 +264,7 @@ while 1:
                     i = uri.find('library')
                     id_ = uri[i:]
                     meta = didl_library_playlist.format(id_=id_)
+                    playlist = True
                 elif 'library' in uri:
                     i = uri.find('library')
                     ii = uri.find('.')
@@ -271,7 +282,10 @@ while 1:
                 print 'meta: ',meta
                 print '---------------------------------------------------------------'
 
-                my_add_to_queue('', meta)
+                if not playlist:
+                    my_add_to_queue('', meta)
+                else:
+                    my_add_playlist_to_queue('', meta)
 
             if action == 'play':
                 master.play_from_queue(0)
