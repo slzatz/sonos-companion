@@ -253,7 +253,7 @@ while 1:
                 elif 'library_playlist' in uri:
                     i = uri.find('library')
                     id_ = uri[i:]
-                    meta = didl_library_playlist.format(id=id_)
+                    meta = didl_library_playlist.format(id_=id_)
                 elif 'library' in uri:
                     i = uri.find('library')
                     ii = uri.find('.')
