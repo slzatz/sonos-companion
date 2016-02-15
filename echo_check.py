@@ -173,7 +173,7 @@ STATIONS = json.loads(z)
 def my_add_to_queue(uri, metadata):
     response = master.avTransport.AddURIToQueue([
             ('InstanceID', 0),
-            ('EnqueuedURI', uri),
+            ('EnqueuedURI', uri), #x-sonos-http:library ...
             ('EnqueuedURIMetaData', metadata),
             ('DesiredFirstTrackNumberEnqueued', 0),
             ('EnqueueAsNext', 1)
@@ -184,7 +184,7 @@ def my_add_to_queue(uri, metadata):
 def my_add_playlist_to_queue(uri, metadata):
     response = master.avTransport.AddURIToQueue([
             ('InstanceID', 0),
-            ('EnqueuedURI', uri),
+            ('EnqueuedURI', 'x-rincon-cpcontainer:0006206c'+uri), #x-rincon-cpcontainer:0006206clibrary
             ('EnqueuedURIMetaData', metadata),
             ('DesiredFirstTrackNumberEnqueued', 0),
             ('EnqueueAsNext', 0)
