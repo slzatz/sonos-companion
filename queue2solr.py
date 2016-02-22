@@ -1,5 +1,5 @@
 '''
-THIS IS CURRENTLY THE SCRIPT TO USE TO MOVE INFO OBTAINED BY GET_TRACKINFO.PY INTO SOLR
+THIS IS CURRENTLY THE SCRIPT TO USE TO MOVE TRACKS IN THE QUEUE INTO SOLR
 This script allows you to move data from a file to solr
 If the document already exists, the add operation will replace it. 
 get_trackinfo.py was used to get tracks out of sonos into a file
