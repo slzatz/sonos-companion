@@ -1,5 +1,6 @@
 '''
-Create a playlist by entering songs one at a time
+Create a playlist manually by entering songs one at a time
+and searching solr for the particular song
 There is also create_playlist_from_queue.py that has you put the songs on the queue
 (from a playlist or whatever) and creates a playlist from the queue by playing the queue
 '''
