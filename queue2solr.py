@@ -1,6 +1,8 @@
 '''
+02-27-2016
 THIS IS CURRENTLY THE SCRIPT TO USE TO MOVE TRACKS IN THE QUEUE INTO SOLR
 This works without having to play the tracks
+RIGHT NOW THE PROGRAM EXPECTS THAT THESE ARE ALBUMS THAT REQUIRE TRACK NUMBERS
 Note that if the solr document already exists, the add operation will replace it. 
 
 The upload format for SolrClient (python3 solr client program) is jsonifying a list of dictionaries:
@@ -49,9 +51,6 @@ else:
 
 print('\n')
 
-#Note appears possible to pick up title, album and artist
-#album = input("What is the album? ")
-#artist = input("Who is the artist? ")
 queue = master.get_queue()
 if len(queue) == 0:
     raise Exception("You must have at least one track in the queue")
@@ -72,8 +71,6 @@ for track in queue:
 solr = SolrClient(ec_uri+':8983/solr')
 collection = 'sonos_companion'
 
-#cur_documents = json.dumps(documents) 
-#response = solr.index_json(collection, cur_documents) 
 response = solr.index_json(collection, json.dumps(documents))
 print(response)
 
