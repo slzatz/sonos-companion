@@ -47,59 +47,18 @@ print('\n')
 
 file_name = input("What do you want to call the file that will have the playlist track info for uploading to s3?")
 
-prev_title = ''
-prev_album = ''
+queue = master.get_queue()
+if len(queue) == 0:
+    raise Exception("You must have at least one track in the queue")
+
 tracks = []
-
-while True:
-
-    try:
-        state = master.get_current_transport_info()['current_transport_state']
-    except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
-        print("Encountered error in state = master.get_current_transport_info(): ", e)
-        sleep(0.5)
-        continue
-
-    try:
-        # check if sonos is playing music and, if not, do nothing
-        track = master.get_current_track_info()
-    except (requests.exceptions.ConnectionError, soco.exceptions.SoCoUPnPException) as e:
-        print("Encountered error in state = master.get_current_track_info(): ", e)
-        sleep(0.5)
-        continue
-
-    if state != 'PLAYING' or 'tunein' in track.get('uri', ''):
-        sleep(0.5)
-        continue
-            
-    print("{} checking to see if track has changed".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-
-    
-    if prev_title != track.get('title') and prev_album != track.get('album') and track.get('artist'): 
-        
-        prev_title = track.get('title') 
-        prev_album = track.get('album') 
-
-        for k in track.keys():
-            print("{}={}".format(k,track.get(k,'')))
-
-        id_ = prev_album + ' ' + prev_title
-        id_ = id_.replace(' ', '_')
-        z = tracks.append((id_, track['uri']))
-
-        #media_info = master.avTransport.GetMediaInfo([('InstanceID', 0)])
-
-        #media_uri = media_info['CurrentURI']
-        #media_meta = media_info['CurrentURIMetaData']
-        #print "media_info uri=", media_uri
-        #print "media_meta=",media_meta
-
-    try:
-        master.next()
-    except:
-       break 
-
-    sleep(5)
+for track in queue:
+    title = track.title
+    album = track.album
+    #artist = track.creator
+    id_ = album + ' ' + title
+    id_ = id_.replace(' ', '_')
+    tracks.append((id_, track.resources[0].uri))
     
 with open(file_name, 'w') as f:
     f.write(json.dumps(tracks))
