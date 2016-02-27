@@ -2,7 +2,7 @@
 THIS IS THE CURRENT SCRIPT TO GET TRACK INFO AND WRITE IT TO A FILE SO FILE2SOLR.PY CAN WRITE TO SOLR
 python 3
 takes track information from tracks playing in sonos and writes them to a file
-along with file2solr was used to move sonos song information into solr
+along with file2solr is used to move Sonos song information into solr
 Can be used for Rhapsody or Amazon music tracks or the new Amazon 'library' format
 '''
 import os
