@@ -44,6 +44,7 @@ print('\n')
 
 # note that no longer actually writing a local file but this is the playlist name in s3
 file_name = input("What do you want to call the file that will have the playlist track info for uploading to s3? ")
+file_name = file_name.lower()
 
 queue = master.get_queue()
 if len(queue) == 0:
