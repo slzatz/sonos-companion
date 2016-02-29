@@ -43,8 +43,8 @@ else:
 print('\n')
 
 # note that no longer actually writing a local file but this is the playlist name in s3
-file_name = input("What do you want to call the file that will have the playlist track info for uploading to s3? ")
-file_name = file_name.lower()
+playlist_name = input("What do you want to call the playlist that will be uploaded to s3? ")
+playlist_name = playlist_name.lower()
 
 queue = master.get_queue()
 if len(queue) == 0:
@@ -60,7 +60,7 @@ for track in queue:
     tracks.append((id_, track.resources[0].uri))
     
 s3 = boto3.resource('s3')
-object = s3.Object('sonos-scrobble', 'playlists'+'/'+file_name)
+object = s3.Object('sonos-playlists', playlist_name)
 object.put(Body=json.dumps(tracks))
 
 # The code below works and writes the playlist to a local file before uploading to S3
@@ -69,4 +69,4 @@ object.put(Body=json.dumps(tracks))
 #    f.write(json.dumps(tracks))
 #
 #s3 = boto3.resource('s3')
-#s3.meta.client.upload_file(file_name, 'sonos-scrobble', 'playlists/'+file_name)
+#s3.meta.client.upload_file(file_name, 'sonos-playlists', file_name)
