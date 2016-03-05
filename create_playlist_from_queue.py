@@ -37,7 +37,7 @@ master = speakers.get(master_name)
 if master:
     print("Master speaker is: {}".format(master.player_name))
 else:
-    print("Somehow you didn't pick a master or spell it correctly (case matters")
+    print("Somehow you didn't pick a master or spell it correctly (case matters)")
     sys.exit(1)
 
 print('\n')
