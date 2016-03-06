@@ -30,7 +30,7 @@ while 1:
     n+=1
     print("attempt "+str(n))
     try:
-        sp = soco.discover(timeout=2)
+        sp = soco.discover(timeout=10)
         speakers = {s.player_name:s for s in sp}
     except TypeError as e:    
         print(e)
