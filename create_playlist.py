@@ -1,8 +1,10 @@
 '''
 Create a playlist manually by entering songs one at a time
 and searching solr for the particular song
-There is also create_playlist_from_queue.py that has you put the songs on the queue
-(from a playlist or whatever) and creates a playlist from the queue by playing the queue
+Advantage of this script is that it can add to an existing playlist
+There is also create_playlist_from_queue.py where you put the songs on the queue
+and there is a add2queue.py where you can decide after selecting songs whether
+you want to create a playlist
 '''
 from SolrClient import SolrClient
 from config import ec_uri
@@ -40,18 +42,16 @@ else:
         s = 'id:' + ' id:'.join(ids)
         print("query string = ",s)
         print('\n')
-        result = solr.query(collection, {'q':s, 'rows':25, 'fields':['title', 'artist', 'album']}) 
+        result = solr.query(collection, {'q':s, 'rows':25, 'fl':['title', 'artist', 'album']}) 
         tracks = result.docs
         count = result.get_results_count()
         print("The playlist has {} tracks as follows:\n".format(count))
         for n,track in enumerate(tracks,1):
             try:
                 print(n)
-                #print('id: ' + track['id'])
                 print('artist: ' + track['artist'])
                 print('album: ' + track['album'])
                 print('song: ' + track['title'])
-                #print('uri: ' + track['uri'])
             except Exception as e:
                 print(e)
 
@@ -59,7 +59,7 @@ try:
     while 1:
         track_title = input("\nwhat is the title of the track that you want to add to the playlist (Ctrl-C if done)? ")
         s = 'title:' + ' AND title:'.join(track_title.split())
-        result = solr.query(collection, {'q':s, 'rows':10, 'fields':['score', 'title', 'artist', 'album'], 'sort':'score desc'}) 
+        result = solr.query(collection, {'q':s, 'rows':10, 'fl':['score', 'id', 'uri', 'title', 'artist', 'album'], 'sort':'score desc'}) 
         tracks = result.docs
         count = result.get_results_count()
         if count==0:
@@ -74,7 +74,7 @@ try:
                 print('uri: ' + track['uri'])
             except Exception as e:
                 print(e)
-            print('---------------------------------------------------------------')
+            print('------------------------------------------------------------------------')
             res = input("Do you want to add that to the playlist (y or n)? ")
             if res.lower().startswith('y'):
                  playlist.append((track['id'], track['uri']))
@@ -93,7 +93,7 @@ try:
                     print('uri: ' + track['uri'])
                 except Exception as e:
                     print(e)
-                print('---------------------------------------------------------------')
+                print('------------------------------------------------------------------------')
             res = input("Which track to you want (0=None)? ")
             num = int(res)
             if num:
@@ -108,11 +108,11 @@ print('\n')
 print(playlist)
 print('\n')
 
-ids = ['"{}"'.format(x[0]) for x in playlist] #" are necessary I suspect because of non-a-z characters like (
+ids = ['"{}"'.format(x[0]) for x in playlist] #"(quotations) are necessary for solr presumably because of non-a-z characters like "("
 s = 'id:' + ' id:'.join(ids)
 print("query string = ",s)
 print('\n')
-result = solr.query(collection, {'q':s, 'rows':25, 'fields':['title', 'artist', 'album']}) 
+result = solr.query(collection, {'q':s, 'rows':25, 'fl':['title', 'artist', 'album']}) 
 tracks = result.docs
 count = result.get_results_count()
 print("The playlist has {} tracks as follows:\n".format(count))
@@ -120,18 +120,29 @@ for n,track in enumerate(tracks,1):
     try:
         print('\n')
         print(n)
-        #print('id: ' + track['id'])
         print('artist: ' + track['artist'])
         print('album: ' + track['album'])
         print('song: ' + track['title'])
-        #print('uri: ' + track['uri'])
     except Exception as e:
         print(e)
 
 res = input("Do you want to upload playlist {} to s3 (y or n) ? ".format(playlist_name))
 if res.lower().startswith('y'):
     s3 = boto3.client('s3')
-    #playlist = str(json.dumps(playlist))
-    playlist = json.dumps(playlist)
-    response = s3.put_object(Bucket='sonos-playlists', Key=playlist_name, Body=playlist)
+    response = s3.put_object(Bucket='sonos-playlists', Key=playlist_name, Body=json.dumps(playlist))
     print("response to s3 put =",response)
+
+res = input("Do you want to play playlist {} now (y or n)? ".format(playlist_name))
+if res.lower().startswith('y'):
+
+    s3 = boto3.resource('s3')
+    obj = s3.Object('sonos-scrobble','location')
+    location = obj.get()['Body'].read().decode('utf-8')
+    queue_name = 'echo_sonos_ct' if location=='ct' else 'echo_sonos'
+    print("location = ", location)
+    print("queue_name =", queue_name)
+    sqs = boto3.resource('sqs', region_name='us-east-1')
+    queue = sqs.get_queue_by_name(QueueName=queue_name)
+    uris = [x[1] for x in playlist] #" are necessary I suspect because of non-a-z characters like (
+    sqs_response = queue.send_message(MessageBody=json.dumps({'action':'play', 'uris':uris}))
+    print("Status Code =", sqs_response['ResponseMetadata']['HTTPStatusCode'])
