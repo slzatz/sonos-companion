@@ -24,6 +24,9 @@ sqs = boto3.resource('sqs', region_name='us-east-1')
 queue = sqs.get_queue_by_name(QueueName=queue_name)
 playlist = []
 
+
+res = input("If there are songs in the queue, do you want to replace or add to them(r or a)? ")
+action = 'add' if res.lower()=='a' else 'play'
 try:
     while 1:
         track_title = input("\nwhat is the title of the track that you want to add to the queue (Ctrl-C if done)? ")
@@ -73,7 +76,7 @@ except KeyboardInterrupt:
     pass
 
 uris = [x[1] for x in playlist]
-sqs_response = queue.send_message(MessageBody=json.dumps({'action':'play', 'uris':uris}))
+sqs_response = queue.send_message(MessageBody=json.dumps({'action':action, 'uris':uris}))
 print("Status Code =", sqs_response['ResponseMetadata']['HTTPStatusCode'])
 print('\n')
 
