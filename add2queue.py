@@ -50,10 +50,10 @@ if res.lower()=='a':
     if not exists:
         print("Could not bring back queue")
     else:
+        playlist = json.loads(z.decode('utf-8'))
         n = 1
         for track in json.loads(z.decode('utf-8')):
             print(n, track[0],track[1])
-            playlist.append(track)
             n+=1
 
 else:
