@@ -324,7 +324,7 @@ while 1:
                 #    print(e)
                 #print('---------------------------------------------------------------')
                 queue.append((id_, uri))
-                response = s3.put_object(Bucket='sonos-scrobble', Key='queue', Body=json.dumps(queue))
+                response = s3object.put(Body=json.dumps(queue))
                 print("response to s3 put =",response)
 
         else:
