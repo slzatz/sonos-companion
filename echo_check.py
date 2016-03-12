@@ -301,6 +301,7 @@ while 1:
 
             print "args.player=",args.player
             print "I tried to make the volume "+action
+
         elif action == 'get sonos queue':
             s3object = s3.Object('sonos-scrobble','queue')
             queue = []            
@@ -308,21 +309,9 @@ while 1:
             for track in sonos_queue:
                 title = track.title
                 album = track.album
-                #artist = track.creator #this works just not using artist for my sonos-companion playlists
                 id_ = album + ' ' + title
                 id_ = id_.replace(' ', '_')
                 uri = track.resources[0].uri
-                #try:
-                #    print('\n')
-                #    print(n)
-                #    print('id: ' + id_)
-                #    print('artist: ' + artist)
-                #    print('album: ' + album)
-                #    print('song: ' + title)
-                #    print('uri: ' + track['uri'])
-                #except Exception as e:
-                #    print(e)
-                #print('---------------------------------------------------------------')
                 queue.append((id_, uri))
 
             response = s3object.put(Body=json.dumps(queue))
