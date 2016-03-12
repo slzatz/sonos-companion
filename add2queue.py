@@ -10,6 +10,8 @@ import boto3
 import botocore
 import json
 import sys
+import os
+from time import sleep
 
 solr = SolrClient(ec_uri+':8983/solr')
 collection = 'sonos_companion'
@@ -22,11 +24,41 @@ print("location = ", location)
 print("queue_name =", queue_name)
 sqs = boto3.resource('sqs', region_name='us-east-1')
 queue = sqs.get_queue_by_name(QueueName=queue_name)
+
 playlist = []
 
-
 res = input("If there are songs in the queue, do you want to replace or add to them(r or a)? ")
-action = 'add' if res.lower()=='a' else 'play'
+
+if res.lower()=='a':
+    action = 'add'
+    s3 = boto3.resource('s3')
+    s3obj = s3.Object('sonos-scrobble', 'queue')
+
+    sqs_response = queue.send_message(MessageBody=json.dumps({'action':'get sonos queue'}))
+    sleep(2)
+
+    try:
+        z = s3obj.get()['Body'].read()
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "NoSuchKey":
+            exists = False
+        else:
+            raise e
+    else:
+        exists = True
+        
+    if not exists:
+        print("Could not bring back queue")
+    else:
+        n = 1
+        for track in json.loads(z.decode('utf-8')):
+            print(n, track[0],track[1])
+            playlist.append(track)
+            n+=1
+
+else:
+    action = 'play'
+
 try:
     while 1:
         track_title = input("\nwhat is the title of the track that you want to add to the queue (Ctrl-C if done)? ")
@@ -47,10 +79,10 @@ try:
             except Exception as e:
                 print(e)
             print('---------------------------------------------------------------')
-            res = input("Do you want to add that to the playlist (y or n)? ")
-            if res.lower().startswith('y'):
-                 playlist.append((track['id'], track['uri']))
-                 print(track['title'], "added to playlist")
+            #res = input("Do you want to add that track to the queue(y or n)? ")
+            #if res.lower().startswith('y'):
+            playlist.append((track['id'], track['uri']))
+            print(track['title'], "added to playlist")
         else:    
             print("track count =",count)
             for n,track in enumerate(tracks,1):
@@ -70,7 +102,7 @@ try:
             if num:
                  track = tracks[num-1]
                  playlist.append((track['id'], track['uri']))
-                 print(track['title'], "added to playlist")
+                 print(track['title'], "added to queue")
 
 except KeyboardInterrupt:
     pass
@@ -78,6 +110,9 @@ except KeyboardInterrupt:
 uris = [x[1] for x in playlist]
 sqs_response = queue.send_message(MessageBody=json.dumps({'action':action, 'uris':uris}))
 print("Status Code =", sqs_response['ResponseMetadata']['HTTPStatusCode'])
+if action == 'add':
+    sqs_response = queue.send_message(MessageBody=json.dumps({'action':'resume'}))
+    print("Status Code =", sqs_response['ResponseMetadata']['HTTPStatusCode'])
 print('\n')
 
 ids = ['"{}"'.format(x[0]) for x in playlist] #" are necessary because of non-a-z characters like "("
@@ -87,7 +122,7 @@ print('\n')
 result = solr.query(collection, {'q':s, 'rows':25, 'fl':['title', 'artist', 'album']}) 
 tracks = result.docs
 count = result.get_results_count()
-print("The playlist has {} tracks as follows:\n".format(count))
+print("The queue has {} tracks as follows:\n".format(count))
 for n,track in enumerate(tracks,1):
     try:
         print('\n')
@@ -97,7 +132,7 @@ for n,track in enumerate(tracks,1):
         print('song: ' + track['title'])
     except Exception as e:
         print(e)
-
+    
 print('\n')
 res = input("Do you want to create a playlist and upload to s3 (y or n) ? ")
 if res.lower().startswith('n'):
