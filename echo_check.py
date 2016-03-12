@@ -324,8 +324,9 @@ while 1:
                 #    print(e)
                 #print('---------------------------------------------------------------')
                 queue.append((id_, uri))
-                response = s3object.put(Body=json.dumps(queue))
-                print("response to s3 put =",response)
+
+            response = s3object.put(Body=json.dumps(queue))
+            print("response to s3 put =",response)
 
         else:
             print "I have no idea what you said"
