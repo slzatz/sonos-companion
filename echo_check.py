@@ -1,10 +1,7 @@
 '''
-created to have a python2.7 version of echo check that uses solr
-uses pysolr while the python3 version:  echo_check_solr.py uses SolrClient
-
+This is a python 2.7 program because thought that was easier to run on a raspberry pi
 uses boto3
 uses dynamodb for radio stations and shuffling songs
-uses solr and pysolr, which works on python 2.7 to enable searching on tracks and artists
 
 PlayStation play {myartist} radio
 PlayStation play {myartist} pandora
@@ -30,12 +27,6 @@ current_track = master.get_current_track_info() --> {
             u'duration': '0:02:45', 
             u'position': '0:02:38', 
             u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
-
-    >>> z = solr.search("artist:Cat AND artist:Stevens")
-    >>> z
-    <pysolr.Results object at 0x02C792F0>
-    >>> for r in z:
-    ...     print r['title'],r['album'],r['artist'],r['uri']
 
 To Do:
 - Artist shuffling could move from dynamodb to cloudsearch: result = cloudsearchdomain.search(query=task['artist'], queryOptions='{"fields":["artist"]}')
@@ -72,8 +63,6 @@ sqs = boto3.resource('sqs', region_name='us-east-1')
 queue_name = 'echo_sonos_ct' if location=='ct' else 'echo_sonos'
 sqs_queue = sqs.get_queue_by_name(QueueName=queue_name) 
 
-#solr = pysolr.Solr(c.ec_uri+':8983/solr/sonos_companion/', timeout=10)
-    
 config.CACHE_ENABLED = False
 
 n = 0
@@ -99,6 +88,10 @@ if master:
 else:
     print "Somehow you didn't pick a master or spell it correctly (case matters)" 
     sys.exit(1)
+
+s3_master = s3.Object('sonos-scrobble', 'master'+'/'+location)
+response = s3_master.put(Body=master.player_name)
+print("response to s3 put =",response)
 
 print "\nprogram running ..."
 
