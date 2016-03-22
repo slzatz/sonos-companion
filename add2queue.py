@@ -18,11 +18,15 @@ solr = SolrClient(ec_uri+':8983/solr')
 collection = 'sonos_companion'
 
 s3 = boto3.resource('s3')
-obj = s3.Object('sonos-scrobble','location')
-location = obj.get()['Body'].read().decode('utf-8')
+s3_location = s3.Object('sonos-scrobble','location')
+location = s3_location.get()['Body'].read().decode('utf-8')
+s3_master = s3.Object('sonos-scrobble','master/'+location)
+master = s3_master.get()['Body'].read().decode('utf-8')
 queue_name = 'echo_sonos_ct' if location=='ct' else 'echo_sonos'
-print("location = ", location)
+print("location =", location)
 print("queue_name =", queue_name)
+print("master =", master)
+
 sqs = boto3.resource('sqs', region_name='us-east-1')
 queue = sqs.get_queue_by_name(QueueName=queue_name)
 
