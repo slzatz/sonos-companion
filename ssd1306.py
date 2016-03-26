@@ -20,7 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import pyb
+from time import sleep_ms
+#import pyb
 from machine import Pin, I2C, SPI
 
 # Constants
@@ -86,11 +87,12 @@ class SSD1306(object):
     #if 'dc' in pinout:
     if 0:
       # SPI
-      rate = 16 * 1024 * 1024
-      self.spi = SPI(2, pyb.SPI.MASTER, baudrate=rate, polarity=1, phase=0)  # SCK: Y6: MOSI: Y8
-      self.dc  = Pin(pinout['dc'],  pyb.Pin.OUT_PP, pyb.Pin.PULL_DOWN)
-      self.res = Pin(pinout['res'], pyb.Pin.OUT_PP, pyb.Pin.PULL_DOWN)
-      self.offset = 0
+      #rate = 16 * 1024 * 1024
+      #self.spi = SPI(2, pyb.SPI.MASTER, baudrate=rate, polarity=1, phase=0)  # SCK: Y6: MOSI: Y8
+      #self.dc  = Pin(pinout['dc'],  pyb.Pin.OUT_PP, pyb.Pin.PULL_DOWN)
+      #self.res = Pin(pinout['res'], pyb.Pin.OUT_PP, pyb.Pin.PULL_DOWN)
+      #self.offset = 0
+      pass
     else:
       # Infer bus number from pin
       #if pinout['sda'] == 'X9':
@@ -120,8 +122,9 @@ class SSD1306(object):
       #self.i2c.send(self.cbuffer, addr=self.devid, timeout=5000)
       self.i2c.writeto(self.devid, self.cbuffer)
     else:
-      self.dc.low()
-      self.spi.send(command_byte)
+      #self.dc.low()
+      #self.spi.send(command_byte)
+      pass
 
   def invert_display(self, invert):
     self.write_command(INVERTDISPLAY if invert else NORMALDISPLAY)
@@ -138,8 +141,9 @@ class SSD1306(object):
       #self.i2c.send(self.buffer, addr=self.devid, timeout=5000)
       self.i2c.writeto(self.devid, self.buffer)
     else:
-      self.dc.high()
-      self.spi.send(self.buffer)
+      #self.dc.high()
+      #self.spi.send(self.buffer)
+      pass
 
   def set_pixel(self, x, y, state):
     index = x + (int(y / 8) * self.columns)
@@ -177,14 +181,14 @@ class SSD1306(object):
 
   def poweron(self):
     if self.offset == 1:
-      pyb.delay(10)
+      sleep_ms(10)
     else:
       self.res.high()
-      pyb.delay(1)
+      sleep_ms(1)
       self.res.low()
-      pyb.delay(10)
+      sleep_ms(10)
       self.res.high()
-      pyb.delay(10)
+      sleep_ms(10)
 
   def poweroff(self):
     self.write_command(DISPLAYOFF)
