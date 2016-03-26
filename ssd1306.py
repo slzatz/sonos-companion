@@ -108,7 +108,7 @@ class SSD1306(object):
       self.cbuffer = bytearray(2)
       self.cbuffer[0] = CTL_CMD
 
-      self.i2c = I2C(scl=Pin(4), sda=Pin(5), freq=400000)
+      self.i2c = I2C(scl=Pin(5), sda=Pin(4), freq=400000) #tried 4,5 and that did not work
 
   def clear(self):
     self.buffer = bytearray(self.offset + self.pages * self.columns)
