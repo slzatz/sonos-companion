@@ -29,7 +29,7 @@ print("master =", master)
 
 sqs = boto3.resource('sqs', region_name='us-east-1')
 queue = sqs.get_queue_by_name(QueueName=queue_name)
-
+existing_queue = []
 playlist = []
 
 res = input("If there are songs in the queue, do you want to replace or add to them(r or a)? ")
@@ -55,9 +55,9 @@ if res.lower()=='a':
     if not exists:
         print("Could not bring back queue")
     else:
-        playlist = json.loads(z.decode('utf-8'))
+        existing_queue = json.loads(z.decode('utf-8')) # you are just going to create duplicate playlists if you do this
         n = 1
-        for track in json.loads(z.decode('utf-8')):
+        for track in existing_queue:
             print(n, track[0],track[1])
             n+=1
 
@@ -161,6 +161,6 @@ else:
         sys.exit()
 
 s3 = boto3.client('s3')
-playlist = json.dumps(playlist)
+playlist = json.dumps(playlist.extend(existing_queue))
 response = s3.put_object(Bucket='sonos-playlists', Key=playlist_name, Body=playlist)
 print("response to s3 put =",response)
