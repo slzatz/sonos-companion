@@ -1,5 +1,6 @@
 # The MIT License (MIT)
-#
+# 
+# Based on Kenneth Henderick's Micropython drivers: https://github.com/khenderick/micropython-drivers
 # Copyright (c) 2014 Kenneth Henderick
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
