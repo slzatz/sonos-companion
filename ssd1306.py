@@ -21,8 +21,7 @@
 # THE SOFTWARE.
 
 from time import sleep_ms
-#import pyb
-from machine import Pin, I2C, SPI
+from machine import Pin, I2C
 
 # Constants
 DISPLAYOFF          = 0xAE
@@ -77,38 +76,18 @@ CTL_DAT = 0x40
 
 class SSD1306(object):
 
-  def __init__(self, pinout, height=32, external_vcc=True, i2c_devid=DEVID):
+  def __init__(self, height=32, external_vcc=True, i2c_devid=DEVID):
     self.external_vcc = external_vcc
     self.height       = 32 if height == 32 else 64
     self.pages        = int(self.height / 8)
     self.columns      = 128
 
-    # Infer interface type from entries in pinout{}
-    #if 'dc' in pinout:
-    if 0:
-      # SPI
-      #rate = 16 * 1024 * 1024
-      #self.spi = SPI(2, pyb.SPI.MASTER, baudrate=rate, polarity=1, phase=0)  # SCK: Y6: MOSI: Y8
-      #self.dc  = Pin(pinout['dc'],  pyb.Pin.OUT_PP, pyb.Pin.PULL_DOWN)
-      #self.res = Pin(pinout['res'], pyb.Pin.OUT_PP, pyb.Pin.PULL_DOWN)
-      #self.offset = 0
-      pass
-    else:
-      # Infer bus number from pin
-      #if pinout['sda'] == 'X9':
-      #  self.i2c = pyb.I2C(1)
-      #else:
-      #  self.i2c = pyb.I2C(2)
-      #self.i2c.init(pyb.I2C.MASTER, baudrate=400000) # 400kHz
-      self.devid = i2c_devid
-      # used to reserve an extra byte in the image buffer AND as a way to
-      # infer the interface type
-      self.offset = 1
-      # I2C command buffer
-      self.cbuffer = bytearray(2)
-      self.cbuffer[0] = CTL_CMD
+    self.devid = i2c_devid
+    self.offset = 1
+    self.cbuffer = bytearray(2)
+    self.cbuffer[0] = CTL_CMD
 
-      self.i2c = I2C(scl=Pin(5), sda=Pin(4), freq=400000) #tried 4,5 and that did not work
+    self.i2c = I2C(scl=Pin(5), sda=Pin(4), freq=400000) 
 
   def clear(self):
     self.buffer = bytearray(self.offset + self.pages * self.columns)
@@ -116,15 +95,8 @@ class SSD1306(object):
       self.buffer[0] = CTL_DAT
 
   def write_command(self, command_byte):
-    #if self.offset == 1:
-    if 1:
-      self.cbuffer[1] = command_byte
-      #self.i2c.send(self.cbuffer, addr=self.devid, timeout=5000)
-      self.i2c.writeto(self.devid, self.cbuffer)
-    else:
-      #self.dc.low()
-      #self.spi.send(command_byte)
-      pass
+    self.cbuffer[1] = command_byte
+    self.i2c.writeto(self.devid, self.cbuffer)
 
   def invert_display(self, invert):
     self.write_command(INVERTDISPLAY if invert else NORMALDISPLAY)
@@ -136,14 +108,7 @@ class SSD1306(object):
     self.write_command(PAGEADDR)
     self.write_command(0)
     self.write_command(self.pages - 1)
-    #if self.offset == 1:
-    if 1:
-      #self.i2c.send(self.buffer, addr=self.devid, timeout=5000)
-      self.i2c.writeto(self.devid, self.buffer)
-    else:
-      #self.dc.high()
-      #self.spi.send(self.buffer)
-      pass
+    self.i2c.writeto(self.devid, self.buffer)
 
   def set_pixel(self, x, y, state):
     index = x + (int(y / 8) * self.columns)
