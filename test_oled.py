@@ -30,7 +30,7 @@ from ssd1306 import SSD1306
 
 # I2C connected to Y9, Y10 (I2C bus 2)
 #  def __init__(self, pinout, height=32, external_vcc=True, i2c_devid=DEVID):
- display = SSD1306(pinout={'sda': 'Y10',
+display = SSD1306(pinout={'sda': 'Y10',
                            'scl': 'Y9'},
                    height=32,
                    external_vcc=False)
