@@ -1,4 +1,5 @@
 # Originally from https://github.com/guyc/py-gaugette/blob/master/gaugette/font5x8.py
+# Contains ASCII 32 (space) through ASCII 90 (Z)
 
 cols = 5
 rows = 8
