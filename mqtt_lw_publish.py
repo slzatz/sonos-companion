@@ -52,7 +52,7 @@ def publish(topic, payload=None, hostname=host, port=1883, client_id=""):
   print((s.recv(4096)))
   print("Publishing...")
   time.sleep(2) #10
-  s.send(mtpPub(topic, payload) #b'{"action":"quieter"}'))
+  s.send(mtpPub(topic, payload)) #b'{"action":"quieter"}'))
   print((s.recv(4096)))
   print('Disconnecting...')
   s.send(mtpDisconnect())
