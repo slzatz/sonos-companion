@@ -274,7 +274,7 @@ def on_message(client, userdata, msg):
     elif action in ('quieter','louder'):
         
         for s in sp:
-            s.volume = s.volume - 10 if action=='quieter' else volume + 10
+            s.volume = s.volume - 10 if action=='quieter' else s.volume + 10
 
         print "I tried to make the volume "+action
 
