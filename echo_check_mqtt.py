@@ -39,7 +39,6 @@ import time
 from time import sleep
 import random
 import json
-import argparse
 import sys
 import datetime
 home = os.path.split(os.getcwd())[0]
@@ -49,10 +48,6 @@ from soco import config as soco_config
 import boto3 
 import paho.mqtt.client as mqtt
 from config import ec_uri, user_id
-
-parser = argparse.ArgumentParser(description='Command line options ...')
-parser.add_argument('--player', '-p', default='all', help="This is the name of the player you want to control or all")
-args = parser.parse_args()
 
 s3 = boto3.resource('s3')
 s3object = s3.Object('sonos-scrobble','location')
@@ -74,13 +69,18 @@ while 1:
     else:
         break 
     
-for sn in speakers:
-        print "{} -- coordinator:{}".format(sn, speakers[sn].group.coordinator.player_name) 
+for s in sp:
+    print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
 
 master_name = raw_input("Which speaker do you want to be master? ")
 master = speakers.get(master_name)
 if master:
     print "Master speaker is: {}".format(master.player_name) 
+    sp = [s for s in sp if s.group.coordinator is master]
+    print "Master group:"
+    for s in sp:
+        print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
+
 else:
     print "Somehow you didn't pick a master or spell it correctly (case matters)" 
     sys.exit(1)
@@ -115,7 +115,6 @@ didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/
 
 with open('deborah_albums') as f:
     z = f.read()
-#DEBORAH_ALBUMS = list(json.loads(z).items())
 z = json.loads(z)
 DEBORAH_TRACKS = []
 for x in z:
@@ -170,6 +169,7 @@ def my_add_playlist_to_queue(uri, metadata):
             ])
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
+
 prev_title = ''
 COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
@@ -191,10 +191,7 @@ def on_message(client, userdata, msg):
         task = json.loads(body)
     except Exception as e:
         print "error reading the mqtt message body: ", e
-        #m.delete()
         return
-
-    #m.delete()
 
     action = task.get('action', '')
 
@@ -269,24 +266,16 @@ def on_message(client, userdata, msg):
             master.play_from_queue(0)
 
     elif  action in ('pause', 'resume', 'skip'):
-        #d= {'pause':'pause', 'resume':'play', 'skip':'next'}
         try:
             getattr(master, COMMON_ACTIONS[action])()
         except soco.exceptions.SoCoUPnPException as e:
             print "master.{}:".format(action), e
 
     elif action in ('quieter','louder'):
-        volume = master.volume
         
-        new_volume = volume - 10 if action=='quieter' else volume + 10
-        
-        if args.player == 'all':
-            for s in sp:
-                s.volume = new_volume
-        else:
-            master.volume = new_volume
+        for s in sp:
+            s.volume = s.volume - 10 if action=='quieter' else volume + 10
 
-        print "args.player=",args.player
         print "I tried to make the volume "+action
 
     elif action == 'get sonos queue':
