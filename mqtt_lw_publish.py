@@ -1,7 +1,7 @@
 # Borrowed from Andrew http://forum.micropython.org/viewtopic.php?t=1101#p6545
 # config will need ssid, pw, hostname,
 import network
-import lwip
+import socket
 from time import sleep
 from config import host, ssid, pw
 
@@ -45,7 +45,8 @@ def wlan_connect(essid, password):
 def publish(topic, payload=None, hostname=host, port=1883, client_id=""):
   if not wlan.isconnected():
     wlan_connect(ssid, pw) 
-  s = lwip.socket()
+  #s = lwip.socket()
+  s = socket.socket()
   print('Connecting to MQTT broker...')
   s.connect(hostname, port)
   s.send(mtpConnect(client_id))
