@@ -41,41 +41,34 @@ location = object.get()['Body'].read()
 
 config.CACHE_ENABLED = False
 
-print "\n"
 n = 0
 while 1:
     n+=1
-    print "attempt "+str(n)
-    sp = soco.discover(timeout=5)
-    if sp:
-        break
+    print "attempt "+str(n) 
+    try:
+        sp = soco.discover(timeout=2)
+        speakers = {s.player_name:s for s in sp}
+    except TypeError as e:    
+        print e 
+        sleep(1)       
     else:
-        sleep(1) 
+        break 
+    
+for s in sp:
+    print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
 
-if args.player=='all':
-    d = {}
-    print "\nSpeakers->"
+master_name = raw_input("Which speaker do you want to be master? ")
+master = speakers.get(master_name)
+if master:
+    print "Master speaker is: {}".format(master.player_name) 
+    sp = [s for s in sp if s.group.coordinator is master]
+    print "Master group:"
     for s in sp:
-        print s.player_name
-        gc = s.group.coordinator
-        d[gc] = d[gc] + 1 if gc in d else 1
-
-    print "\nGroup Coordinators->"
-    for gc in d:
-        print "{}:{}".format(gc.player_name, d[gc])
-
-    master = max(d.keys(), key=lambda k: d[k])
+        print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
 
 else:
-    for s in sp:
-        if s.player_name==args.player:
-            master = s
-            break
-    else:
-        print "{} is not a speaker".format(args.player)
-        sys.exit(1)
-
-print "\nmaster = ", master.player_name
+    print "Somehow you didn't pick a master or spell it correctly (case matters)" 
+    sys.exit(1)
 
 print "\nprogram running ..."
 
