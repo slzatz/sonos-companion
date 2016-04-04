@@ -27,6 +27,7 @@ import config as c
 import soco
 from soco import config
 import boto3 
+import requests
 
 parser = argparse.ArgumentParser(description='Command line options ...')
 parser.add_argument('--player', '-p', default='all', help="This is the name of the player you want to control or all")
@@ -125,6 +126,11 @@ while 1:
             print "Exception trying to write dynamodb scrobble table:", e
         else:
             print "{} sent successfully to dynamodb".format(json.dumps(data))
+
+        oled_data = {'artist':track.get('artist', 'No artist'), 'title':track.get('title', 'No title')}
+        url = c.ec_uri+":5000/scrobble"
+        r = requests.post(url, json=oled_data)
+        print r.text
 
     sleep(0.5)
 
