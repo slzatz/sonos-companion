@@ -15,30 +15,24 @@ To Do:
 '''
 
 import os
-import time
-from time import sleep
+from time import time, sleep
 import json
-import argparse
 import sys
 import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
-import config as c
+from config as ec_uri
 import soco
 from soco import config
 import boto3 
 import requests
 
-parser = argparse.ArgumentParser(description='Command line options ...')
-parser.add_argument('--player', '-p', default='all', help="This is the name of the player you want to control or all")
-args = parser.parse_args()
-
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 scrobble_table = dynamodb.Table('scrobble_new')
 
 s3 = boto3.resource('s3')
-object = s3.Object('sonos-scrobble','location')
-location = object.get()['Body'].read()
+s3obj = s3.Object('sonos-scrobble','location')
+location = s3obj.get()['Body'].read()
 
 config.CACHE_ENABLED = False
 
@@ -113,7 +107,7 @@ while 1:
         data = {
                 'location':location,
                 'artist':track.get('artist'),
-                'ts': int(time.time()), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
+                'ts': int(time()), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
                 'title':track.get('title'),
                 'album':track.get('album'),
                 'date':track.get('date')}
@@ -128,7 +122,7 @@ while 1:
             print "{} sent successfully to dynamodb".format(json.dumps(data))
 
         oled_data = {'artist':track.get('artist', 'No artist'), 'title':track.get('title', 'No title')}
-        url = c.ec_uri+":5000/scrobble"
+        url = ec_uri+":5000/scrobble"
         r = requests.post(url, json=oled_data)
         print r.text
 
