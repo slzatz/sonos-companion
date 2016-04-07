@@ -21,7 +21,7 @@ import sys
 import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
-from config as ec_uri
+from config import ec_uri
 import soco
 from soco import config
 import boto3 
