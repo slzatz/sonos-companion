@@ -26,6 +26,7 @@ import soco
 from soco import config
 import boto3 
 import requests
+import paho.mqtt.publish as mqtt_publish
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 scrobble_table = dynamodb.Table('scrobble_new')
@@ -33,6 +34,8 @@ scrobble_table = dynamodb.Table('scrobble_new')
 s3 = boto3.resource('s3')
 s3obj = s3.Object('sonos-scrobble','location')
 location = s3obj.get()['Body'].read()
+
+topic = 'sonos/{}/current_track'.format(location)
 
 config.CACHE_ENABLED = False
 
@@ -114,6 +117,7 @@ while 1:
                 #'scrobble':track.get('scrobble')} #it's a string although probably should be converted to a integer
 
         data = {k:v for k,v in data.items() if v} 
+        # publish to dynamo
         try:
             scrobble_table.put_item(Item=data)
         except Exception as e:
@@ -121,10 +125,14 @@ while 1:
         else:
             print "{} sent successfully to dynamodb".format(json.dumps(data))
 
+        # publish to test_scheduler flask web server
         oled_data = {'artist':track.get('artist', 'No artist'), 'title':track.get('title', 'No title')}
         url = ec_uri+":5000/scrobble"
         r = requests.post(url, json=oled_data)
         print r.text
+
+        # publish to MQTT
+    mqtt_publish.single(topic, json.dumps(data), hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
 
     sleep(0.5)
 
