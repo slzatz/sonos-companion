@@ -132,7 +132,7 @@ while 1:
         print r.text
 
         # publish to MQTT
-    mqtt_publish.single(topic, json.dumps(data), hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
+        mqtt_publish.single(topic, json.dumps(data), hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
 
     sleep(0.5)
 
