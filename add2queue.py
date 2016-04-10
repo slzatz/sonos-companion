@@ -1,9 +1,9 @@
 '''
-add tracks to the queue and optionally create a playlist
+Add tracks to the Sonos queue and optionally create a playlist
 There is also create_playlist_from_queue.py that has you put the songs on the queue
 (from a Sonos playlist or whatever) and creates a playlist from the queue 
 There is also a create_playlist.py that is similar
-Note this depends on the master that echo_check.py has selected
+Note this script will use that queue that echo_check.py or echo_check_mqtt.py has selected
 '''
 from SolrClient import SolrClient
 from config import ec_uri
