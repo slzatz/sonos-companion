@@ -26,41 +26,41 @@ from machine import Pin, I2C
 import font
 
 # Constants
-DISPLAYOFF          = 0xAE
-SETCONTRAST         = 0x81
-DISPLAYALLON_RESUME = 0xA4
-DISPLAYALLON        = 0xA5
-NORMALDISPLAY       = 0xA6
-INVERTDISPLAY       = 0xA7
-DISPLAYON           = 0xAF
-SETDISPLAYOFFSET    = 0xD3
-SETCOMPINS          = 0xDA
-SETVCOMDETECT       = 0xDB
-SETDISPLAYCLOCKDIV  = 0xD5
-SETPRECHARGE        = 0xD9
-SETMULTIPLEX        = 0xA8
-SETLOWCOLUMN        = 0x00
-SETHIGHCOLUMN       = 0x10
-SETSTARTLINE        = 0x40
-MEMORYMODE          = 0x20
-COLUMNADDR          = 0x21
-PAGEADDR            = 0x22
-COMSCANINC          = 0xC0
-COMSCANDEC          = 0xC8
-SEGREMAP            = 0xA0
-CHARGEPUMP          = 0x8D
-EXTERNALVCC         = 0x10
-SWITCHCAPVCC        = 0x20
-SETPAGEADDR         = 0xB0
-SETCOLADDR_LOW      = 0x00
-SETCOLADDR_HIGH     = 0x10
-ACTIVATE_SCROLL                      = 0x2F
-DEACTIVATE_SCROLL                    = 0x2E
-SET_VERTICAL_SCROLL_AREA             = 0xA3
-RIGHT_HORIZONTAL_SCROLL              = 0x26
-LEFT_HORIZONTAL_SCROLL               = 0x27
-VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL = 0x29
-VERTICAL_AND_LEFT_HORIZONTAL_SCROLL  = 0x2A
+DISPLAYOFF          = const(0xAE)
+SETCONTRAST         = const(0x81)
+DISPLAYALLON_RESUME = const(0xA4)
+DISPLAYALLON        = const(0xA5)
+NORMALDISPLAY       = const(0xA6)
+INVERTDISPLAY       = const(0xA7)
+DISPLAYON           = const(0xAF)
+SETDISPLAYOFFSET    = const(0xD3)
+SETCOMPINS          = const(0xDA)
+SETVCOMDETECT       = const(0xDB)
+SETDISPLAYCLOCKDIV  = const(0xD5)
+SETPRECHARGE        = const(0xD9)
+SETMULTIPLEX        = const(0xA8)
+SETLOWCOLUMN        = const(0x00)
+SETHIGHCOLUMN       = const(0x10)
+SETSTARTLINE        = const(0x40)
+MEMORYMODE          = const(0x20)
+COLUMNADDR          = const(0x21)
+PAGEADDR            = const(0x22)
+COMSCANINC          = const(0xC0)
+COMSCANDEC          = const(0xC8)
+SEGREMAP            = const(0xA0)
+CHARGEPUMP          = const(0x8D)
+EXTERNALVCC         = const(0x10)
+SWITCHCAPVCC        = const(0x20)
+SETPAGEADDR         = const(0xB0)
+SETCOLADDR_LOW      = const(0x00)
+SETCOLADDR_HIGH     = const(0x10)
+ACTIVATE_SCROLL                      = const(0x2F)
+DEACTIVATE_SCROLL                    = const(0x2E)
+SET_VERTICAL_SCROLL_AREA             = const(0xA3)
+RIGHT_HORIZONTAL_SCROLL              = const(0x26)
+LEFT_HORIZONTAL_SCROLL               = const(0x27)
+VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL = const(0x29)
+VERTICAL_AND_LEFT_HORIZONTAL_SCROLL  = const(0x2A)
 
 class SSD1306(object):
 
@@ -100,23 +100,23 @@ class SSD1306(object):
       self.buffer[1 + index] &= ~(1 << (y & 7))
 
   def init_display(self):
-    chargepump = 0x14
-    precharge  = 0xf1
-    multiplex  = 0x1f 
-    compins    = 0x02 
-    contrast   = 0xff # 0x8f if self.height == 32 else (0x9f if self.external_vcc else 0x9f)
+    #chargepump = 0x14
+    #precharge  = 0xf1
+    #multiplex  = 0x1f 
+    #compins    = 0x02 
+    #contrast   = 0xff # 0x8f if self.height == 32 else (0x9f if self.external_vcc else 0x9f)
     data = [DISPLAYOFF,
             SETDISPLAYCLOCKDIV, 0x80,
-            SETMULTIPLEX, multiplex,
+            SETMULTIPLEX, 0x1f,
             SETDISPLAYOFFSET, 0x00,
             SETSTARTLINE | 0x00,
-            CHARGEPUMP, chargepump,
+            CHARGEPUMP, 0x14,
             MEMORYMODE, 0x00,
             SEGREMAP | 0x10,
             COMSCANDEC,
-            SETCOMPINS, compins,
-            SETCONTRAST, contrast,
-            SETPRECHARGE, precharge,
+            SETCOMPINS, 0x02,
+            SETCONTRAST, 0xff,
+            SETPRECHARGE, 0xf1,
             SETVCOMDETECT, 0x40,
             DISPLAYALLON_RESUME,
             NORMALDISPLAY,
