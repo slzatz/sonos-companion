@@ -1,4 +1,6 @@
 '''
+Current script to scrobble songs playing on Sonos to mqtt broker running in AWS EC2
+
 current_track = master.get_current_track_info() --> {
             u'album': 'We Walked In Song', 
             u'artist': 'The Innocence Mission', 
@@ -70,8 +72,7 @@ else:
 
 print "\nprogram running ..."
 
-prev_title = ''
-
+title = ''
 prev_time = datetime.datetime.now()
 
 while 1:
@@ -102,37 +103,21 @@ while 1:
         print "{} {}".format(cur_time.strftime('%Y-%m-%d %H:%M:%S'), master.player_name)
         prev_time = cur_time
     
-    if prev_title != track.get('title') and track.get('artist'): 
+    #if prev_title != track.get('title') and track.get('artist'): 
+    if title != track.get('title') and 'artist' in track:
         
-        prev_title = track.get('title') 
+        title = track.get('title', "No title") 
 
-        # Write the latest scrobble to dynamodb 'scrobble_new'
-        data = {
-                'location':location,
-                'artist':track.get('artist'),
-                'ts': int(time()), # shouldn't need to truncate to an integer but getting 20 digits to left of decimal point in dynamo
-                'title':track.get('title'),
-                'album':track.get('album'),
-                'date':track.get('date')}
-                #'scrobble':track.get('scrobble')} #it's a string although probably should be converted to a integer
-
-        data = {k:v for k,v in data.items() if v} 
-        # publish to dynamo
-        try:
-            scrobble_table.put_item(Item=data)
-        except Exception as e:
-            print "Exception trying to write dynamodb scrobble table:", e
-        else:
-            print "{} sent successfully to dynamodb".format(json.dumps(data))
-
-        # publish to test_scheduler flask web server
-        oled_data = {'artist':track.get('artist', 'No artist'), 'title':track.get('title', 'No title')}
-        url = ec_uri+":5000/scrobble"
-        r = requests.post(url, json=oled_data)
-        print r.text
+        #oled_data = {'artist':track.get('artist', 'No artist'), 'title':track.get('title', 'No title')}
+        oled_data = {'artist':track['artist'], 'title':title}
 
         # publish to MQTT
-        mqtt_publish.single(topic, json.dumps(data), hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
+        try:
+            mqtt_publish.single(topic, json.dumps(oled_data), hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
+        except Exception as e:
+            print "Exception trying to publish to mqtt broker: ", e
+        else:
+            print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
 
     sleep(0.5)
 
