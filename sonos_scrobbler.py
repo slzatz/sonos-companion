@@ -10,14 +10,10 @@ current_track = master.get_current_track_info() --> {
             u'duration': '0:02:45', 
             u'position': '0:02:38', 
             u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
-To Do:
-- Artist shuffling could move from dynamodb to cloudsearch: result = cloudsearchdomain.search(query=task['artist'], queryOptions='{"fields":["artist"]}')
-- Could also have an Album search -> Album play album {after the gold rush|albumtitle} - could be custom slot but not sure any real benefit
-- May not need a special album search just "play ..." since I could look for word song or album remove them from search and limit search fields
 '''
 
 import os
-from time import time, sleep
+from time import sleep
 import json
 import sys
 import datetime
@@ -27,11 +23,7 @@ from config import ec_uri
 import soco
 from soco import config
 import boto3 
-import requests
 import paho.mqtt.publish as mqtt_publish
-
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-scrobble_table = dynamodb.Table('scrobble_new')
 
 s3 = boto3.resource('s3')
 s3obj = s3.Object('sonos-scrobble','location')
@@ -72,52 +64,53 @@ else:
 
 print "\nprogram running ..."
 
-title = ''
+prev_title = ''
 prev_time = datetime.datetime.now()
 
 while 1:
     
-    # Below is the check if the track has changed and if so it is scrobbled to dynamodb
+    # get the current state
     try:
         state = master.get_current_transport_info()['current_transport_state']
     except Exception as e:
         print "Encountered error in state = master.get_current_transport_info(): ", e
-        sleep(0.5)
-        continue
+        state = 'error'
 
-    try:
-        # check if sonos is playing music and, if not, do nothing
-        track = master.get_current_track_info()
-    except Exception as e:
-        print "Encountered error in state = master.get_current_track_info(): ", e
-        sleep(0.5)
-        continue
+    track = {}
+    # check if sonos is playing music
+    if state == 'PLAYING':
 
-    if state != 'PLAYING' or 'tunein' in track.get('uri', ''):
-        sleep(0.5)
-        continue
-            
+        try:
+            track = master.get_current_track_info()
+        except Exception as e:
+            print "Encountered error in track = master.get_current_track_info(): ", e
+
     cur_time = datetime.datetime.now()
-
-    if cur_time - prev_time > datetime.timedelta(seconds=10):
-        print "{} {}".format(cur_time.strftime('%Y-%m-%d %H:%M:%S'), master.player_name)
-        prev_time = cur_time
+    cur_title = track.get('title', '')
     
-    #if prev_title != track.get('title') and track.get('artist'): 
-    if title != track.get('title') and 'artist' in track:
+    if cur_title != prev_title:
         
-        title = track.get('title', "No title") 
+        oled_data = {'artist':track.get('artist', ''), 'title':cur_title}
 
-        #oled_data = {'artist':track.get('artist', 'No artist'), 'title':track.get('title', 'No title')}
-        oled_data = {'artist':track['artist'], 'title':title}
-
-        # publish to MQTT
+        # publish to MQTT - could require less code by using micropython mqtt client
         try:
             mqtt_publish.single(topic, json.dumps(oled_data), hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
         except Exception as e:
             print "Exception trying to publish to mqtt broker: ", e
         else:
             print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
+
+        prev_title = cur_title
+
+    elif cur_time - prev_time > datetime.timedelta(seconds=10):
+
+        try:
+            mqtt_publish.single(topic, state, hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
+        except Exception as e:
+            print "Exception trying to publish 'ping' to mqtt broker: ", e
+        
+        print "{} {}".format(cur_time.strftime('%Y-%m-%d %H:%M:%S'), master.player_name)
+        prev_time = cur_time
 
     sleep(0.5)
 
