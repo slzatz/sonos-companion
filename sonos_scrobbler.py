@@ -89,9 +89,7 @@ while 1:
     cur_title = track.get('title', '')
     
     if cur_title != prev_title:
-        
         oled_data = {'artist':track.get('artist', ''), 'title':cur_title}
-
         # publish to MQTT - could require less code by using micropython mqtt client
         try:
             mqtt_publish.single(topic, json.dumps(oled_data), hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
@@ -103,9 +101,10 @@ while 1:
         prev_title = cur_title
 
     elif cur_time - prev_time > datetime.timedelta(seconds=10):
-
+        ping_data = {'state':state, 'position':track.get('position', '')}
         try:
-            mqtt_publish.single(topic, state, hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
+            #mqtt_publish.single(topic, state, hostname=ec_uri[7:], retain=False, port=1883, keepalive=60)
+            mqtt_publish.single(topic, payload=json.dumps(ping_data), hostname=ec_uri[7:]) #, retain=False, port=1883, keepalive=60)
         except Exception as e:
             print "Exception trying to publish 'ping' to mqtt broker: ", e
         
