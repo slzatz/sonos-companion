@@ -30,6 +30,7 @@ s3obj = s3.Object('sonos-scrobble','location')
 location = s3obj.get()['Body'].read()
 
 topic = 'sonos/{}/current_track'.format(location)
+print("topic =",topic)
 
 config.CACHE_ENABLED = False
 
@@ -109,6 +110,7 @@ while 1:
             print "Exception trying to publish 'ping' to mqtt broker: ", e
         
         print "{} {}".format(cur_time.strftime('%Y-%m-%d %H:%M:%S'), master.player_name)
+        print "{} sent successfully to mqtt broker".format(json.dumps(ping_data))
         prev_time = cur_time
 
     sleep(0.5)
