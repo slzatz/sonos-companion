@@ -265,11 +265,25 @@ def on_message(client, userdata, msg):
         if action == 'play':
             master.play_from_queue(0)
 
-    elif  action in ('pause', 'resume', 'skip'):
+    elif action in ('pause', 'resume', 'skip'):
         try:
             getattr(master, COMMON_ACTIONS[action])()
         except soco.exceptions.SoCoUPnPException as e:
             print "master.{}:".format(action), e
+
+    elif action == 'play_pause':
+    
+        try:
+            state = master.get_current_transport_info()['current_transport_state']
+        except Exception as e:
+            print "Encountered error in state = master.get_current_transport_info(): ", e
+            state = 'ERROR'
+
+        # check if sonos is playing music
+        if state == 'PLAYING':
+            master.pause()
+        elif state!='ERROR':
+            master.play()
 
     elif action in ('quieter','louder'):
         
