@@ -295,7 +295,7 @@ def on_message(client, userdata, msg):
     elif action == "volume": #{"action":"volume", "level":70}
 
         level = task.get("level", 500)
-        level = int(round(level/10, -1)
+        level = int(round(level/10, -1))
 
         if level < 70:
 
