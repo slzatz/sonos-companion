@@ -292,6 +292,20 @@ def on_message(client, userdata, msg):
 
         print "I tried to make the volume "+action
 
+    elif action == "volume": #{"action":"volume", "level":70}
+
+        level = task.get("level", 500)
+        level = int(round(level/10, -1)
+
+        if level < 70:
+
+            for s in sp:
+                s.volume = level
+
+            print "I changed the volume to:", level
+        else:
+            print "Volume was too high:", level
+
     elif action == 'get sonos queue':
         s3object = s3.Object('sonos-scrobble','queue')
         queue = []            
