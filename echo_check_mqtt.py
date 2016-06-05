@@ -46,10 +46,11 @@ import boto3
 import paho.mqtt.client as mqtt
 from config import user_id, mqtt_uri
 
-s3 = boto3.resource('s3')
-s3object = s3.Object('sonos-scrobble','location')
-location = s3object.get()['Body'].read()
-print("The current location is {}".format(location))
+# Now just putting location in the config file
+#s3 = boto3.resource('s3')
+#s3object = s3.Object('sonos-scrobble','location')
+#location = s3object.get()['Body'].read()
+#print("The current location is {}".format(location))
 
 soco_config.CACHE_ENABLED = False
 
