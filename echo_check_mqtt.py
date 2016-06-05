@@ -1,7 +1,10 @@
 '''
-This is a python 2.7 program because thought that was easier to run on a raspberry pi
-uses boto3
-uses dynamodb for radio stations and shuffling songs
+This is a python 2.7 program that is usually run  on a raspberry pi
+uses boto3 for the location and need to change this.  Probably better just to have a
+local raspberry pi mqtt server and the only thing that would need to change
+is the url used by esp8266 display_volume_play_pause.py which is on local network
+
+mqtt_uri from config.py can either be ec_uri (54.173.234...) or localhost
 
 PlayStation play {myartist} radio
 PlayStation play {myartist} pandora
@@ -27,13 +30,7 @@ current_track = master.get_current_track_info() --> {
             u'duration': '0:02:45', 
             u'position': '0:02:38', 
             u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
-
-To Do:
-- Artist shuffling could move from dynamodb to cloudsearch: result = cloudsearchdomain.search(query=task['artist'], queryOptions='{"fields":["artist"]}')
-- Could also have an Album search -> Album play album {after the gold rush|albumtitle} - could be custom slot but not sure any real benefit
-- May not need a special album search just "play ..." since I could look for word song or album remove them from search and limit search fields
 '''
-
 import os
 import time
 from time import sleep
@@ -47,7 +44,7 @@ import soco
 from soco import config as soco_config
 import boto3 
 import paho.mqtt.client as mqtt
-from config import ec_uri, user_id
+from config import user_id, mqtt_uri
 
 s3 = boto3.resource('s3')
 s3object = s3.Object('sonos-scrobble','location')
@@ -327,6 +324,6 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(ec_uri[7:], 1883, 60)
+client.connect(mqtt_uri, 1883, 60)
 client.loop_forever()
 
