@@ -5,6 +5,11 @@ local raspberry pi mqtt server and the only thing that would need to change
 is the url used by esp8266 display_volume_play_pause.py which is on local network
 
 mqtt_uri from config.py can either be ec_uri (54.173.234...) or localhost
+I now think I need to run two versions of echo_check_mqtt -- a local one is fine for
+esp8266 based interactions (both volume/play/pause and display) but Amazon Echo
+needs a uri that it can reach so may need two version running.
+And note that echo_check_mqtt.py must always run locally to interact with Sonos.
+Note that probably means I could have a brief echo_check_mqtt and an esp_check_mqtt
 
 PlayStation play {myartist} radio
 PlayStation play {myartist} pandora
