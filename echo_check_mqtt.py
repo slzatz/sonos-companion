@@ -49,7 +49,7 @@ import soco
 from soco import config as soco_config
 import boto3 
 import paho.mqtt.client as mqtt
-from config import user_id, mqtt_uri, location
+from config import user_id, aws_mqtt_uri, location
 
 # Now just putting location in the config file
 s3 = boto3.resource('s3') #s3 is used elsewhere
@@ -330,6 +330,6 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(mqtt_uri, 1883, 60)
+client.connect(aws_mqtt_uri, 1883, 60)
 client.loop_forever()
 
