@@ -107,6 +107,6 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(local_mqtt_uri, 8883, 60)
+client.connect(local_mqtt_uri, 1883, 60)
 client.loop_forever()
 # could also call while 1: client.loop() sleep(1) so could do other things in loop. Not sure what timeout should be set to if we call loop "manually"
