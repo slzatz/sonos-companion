@@ -1,7 +1,7 @@
 '''
 Current script to scrobble songs playing on Sonos to mqtt broker: have used
 aws ec2 for mqtt broker but probably does make more sense to use a local
-raspberry pi -- so config.py needs to set the mqtt_uri to localhost or ec2
+raspberry pi -- so config.py needs to set the local_mqtt_uri to localhost
 uri
 
 current_track = master.get_current_track_info() --> {
@@ -22,7 +22,7 @@ import sys
 import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
-from config import mqtt_uri, location
+from config import local_mqtt_uri, location
 import soco
 from soco import config as soco_config
 #import boto3 
@@ -98,7 +98,7 @@ while 1:
         oled_data = {'artist':track.get('artist', ''), 'title':cur_title}
         # publish to MQTT - could require less code by using micropython mqtt client
         try:
-            mqtt_publish.single(topic, json.dumps(oled_data), hostname=mqtt_uri, retain=False, port=1883, keepalive=60)
+            mqtt_publish.single(topic, json.dumps(oled_data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
         except Exception as e:
             print "Exception trying to publish to mqtt broker: ", e
         else:
