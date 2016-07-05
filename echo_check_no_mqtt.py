@@ -210,11 +210,11 @@ def sonos_action(**task):
                 ii = uri.find('.')
                 id_ = uri[i:ii]
                 meta = didl_library.format(id_=id_)
-            elif 'radea' in uri:
-                i = uri.find('.')+1
-                ii = uri.find('.',i)
-                id_ = uri[i:ii]
-                meta = didl_rhapsody.format(id_=id_)
+            #elif 'radea' in uri:
+            #    i = uri.find('.')+1
+            #    ii = uri.find('.',i)
+            #    id_ = uri[i:ii]
+            #    meta = didl_rhapsody.format(id_=id_)
             else:
                 print 'The uri:{}, was not recognized'.format(uri)
                 continue
