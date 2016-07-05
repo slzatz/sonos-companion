@@ -195,12 +195,12 @@ def sonos_action(**task):
             print 'uri: ' + uri
             print "---------------------------------------------------------------"
             playlist = False
-            if 'amz' in uri:
-                i = uri.find('amz')
-                ii = uri.find('.')
-                id_ = uri[i:ii]
-                meta = didl_amazon.format(id_=id_)
-            elif 'library_playlist' in uri:
+            #if 'amz' in uri:
+            #    i = uri.find('amz')
+            #    ii = uri.find('.')
+            #    id_ = uri[i:ii]
+            #    meta = didl_amazon.format(id_=id_)
+            if 'library_playlist' in uri:
                 i = uri.find(':')
                 id_ = uri[i+1:]
                 meta = didl_library_playlist.format(id_=id_)
