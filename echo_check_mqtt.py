@@ -232,12 +232,12 @@ def on_message(client, userdata, msg):
             print 'uri: ' + uri
             print "---------------------------------------------------------------"
             playlist = False
-            if 'amz' in uri:
+            #if 'amz' in uri:
                 i = uri.find('amz')
                 ii = uri.find('.')
                 id_ = uri[i:ii]
                 meta = didl_amazon.format(id_=id_)
-            elif 'library_playlist' in uri:
+            if 'library_playlist' in uri:
                 i = uri.find(':')
                 id_ = uri[i+1:]
                 meta = didl_library_playlist.format(id_=id_)
@@ -247,7 +247,7 @@ def on_message(client, userdata, msg):
                 ii = uri.find('.')
                 id_ = uri[i:ii]
                 meta = didl_library.format(id_=id_)
-            elif 'radea' in uri:
+            #elif 'radea' in uri:
                 i = uri.find('.')+1
                 ii = uri.find('.',i)
                 id_ = uri[i:ii]
