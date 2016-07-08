@@ -50,34 +50,46 @@ else:
     sys.exit(1)
 
 print('\n')
+cont = True
+while cont:
+    queue = master.get_queue()
+    if len(queue) == 0:
+        raise Exception("You must have at least one track in the queue")
 
-queue = master.get_queue()
-if len(queue) == 0:
-    raise Exception("You must have at least one track in the queue")
+    resp = input("Do you want track numbers (or everything will be track 1 (y or n)? ")
+    if resp in ('y', 'yes'):
+        use_track_num = True
+    else:
+        use_track_num = False
 
-documents = []
-n=1
-for track in queue:
-    title = track.title
-    album = track.album
-    artist = track.creator
-    id_ = album + ' ' + title
-    id_ = id_.replace(' ', '_')
-    document = {"id":id_, "title":title, "uri":track.resources[0].uri, "album":album, "artist":artist, "track":n}
-    print(document)
-    documents.append(document)
-    n+=1
+    documents = []
+    n=1
+    for track in queue:
+        title = track.title
+        album = track.album
+        artist = track.creator
+        id_ = album + ' ' + title
+        id_ = id_.replace(' ', '_')
+        document = {"id":id_, "title":title, "uri":track.resources[0].uri, "album":album, "artist":artist, "track":n}
+        print(repr(document).encode('cp1252', errors='replace')) 
+        documents.append(document)
+        if use_track_num:
+            n+=1
 
-solr = SolrClient(ec_uri+':8983/solr')
-collection = 'sonos_companion'
+    solr = SolrClient(ec_uri+':8983/solr')
+    collection = 'sonos_companion'
 
-response = solr.index_json(collection, json.dumps(documents))
-print(response)
+    response = solr.index_json(collection, json.dumps(documents))
+    print(response)
 
-# Since solr.commit didn't seem to work, substituted the below, which works
-url = ec_uri+":8983/solr/"+collection+"/update"
-r = requests.post(url, data={"commit":"true"})
-print(r.text)
+    # Since solr.commit didn't seem to work, substituted the below, which works
+    url = ec_uri+":8983/solr/"+collection+"/update"
+    r = requests.post(url, data={"commit":"true"})
+    print(r.text)
+
+    resp = input("Do you want to continue? (y or n) ")
+    if resp not in ('y', 'yes'):
+        cont = False
 
 ######################################################################
 # The below would be if you had a lot of documents
