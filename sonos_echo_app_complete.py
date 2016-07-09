@@ -212,6 +212,7 @@ def intent_request(session, request):
         mystation = mystation.lower()
         if mystation == 'deborah':
             play_deborah_radio(20)
+            output_speech = "Deborah Radio will start playing soon."
         else:
             station = STATIONS.get(mystation)
             if station:
@@ -224,9 +225,9 @@ def intent_request(session, request):
                     uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
                     meta = meta_format_radio.format(title=station[0], service=station[2])
                     master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
-                output_speech = station + " radio will start playing soon"
+                output_speech = station[0] + " will start playing soon."
             else:
-                output_speech = "{} radio is not a preset station.".format(mystation)
+                output_speech = "{} is not a preset station.".format(mystation)
 
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
         return response
