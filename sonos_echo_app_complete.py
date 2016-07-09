@@ -132,6 +132,8 @@ def play_deborah_radio(k):
     print "Total track count for Deborah tracks was {}".format(count)
     tracks = result.docs
     uris = []
+    master.stop()
+    master.clear_queue()
     for j in range(k):
         while 1:
             n = random.randint(0, count-1)
