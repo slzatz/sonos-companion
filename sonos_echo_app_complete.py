@@ -298,8 +298,25 @@ def intent_request(session, request):
             result = solr.search(s, rows=1) #**{'rows':1})
             if len(result):
                 track = result.docs[0]
+                uri = track['uri']
                 action = 'play' if intent=="PlayTrack" else 'add'
-                mqtt_publish.single('sonos/'+location, json.dumps(dict(action=action, uris=[track['uri']])), hostname=hostname, retain=False, port=1883, keepalive=60)
+
+                print 'uri: ' + uri
+                print "---------------------------------------------------------------"
+                if 'library' in uri:
+                    i = uri.find('library')
+                    ii = uri.find('.')
+                    id_ = uri[i:ii]
+                    meta = didl_library.format(id_=id_)
+                else:
+                    print 'The uri:{}, was not recognized'.format(uri)
+
+                print 'meta: ',meta
+                print '---------------------------------------------------------------'
+
+                my_add_to_queue('', meta)
+                if action == 'play':
+                    master.play_from_queue(0)
 
                 output_speech = "I will play {} by {} from album {}".format(track['title'], track['artist'], track['album'])
                 end_session = True
@@ -354,6 +371,8 @@ def intent_request(session, request):
 
                             my_add_to_queue('', meta)
                             break
+
+                master.play_from_queue(0)
 
                 output_speech = "I will play {} songs by {}.".format(shuffle_number, artist)
                 end_session = True
