@@ -1,11 +1,6 @@
 '''
-uses mqtt - idea which may be wrong is that it produces a response faster because
-not waiting for echo_check_no_mqtt.sonos_action to return before providing response to echo 
-
-Requires three scripts:
-echo_flask_sonos.py
-echo_check_mqtt.py - needs to be running - right now checking ec2 mqtt broker
-sonos_echo_app_mqtt.py
+This single script handles echo and sonos - no mqtt
+Also requires echo_flask_sonos :
 
 Also need ngrok http 5000
 and url will look like 1234.ngrok.io/sonos
@@ -56,7 +51,6 @@ from decimal import Decimal
 import time
 import pysolr
 import requests
-import paho.mqtt.publish as mqtt_publish
 from config import ec_uri, last_fm_api_key, user_id, location
 
 home = os.path.split(os.getcwd())[0]
@@ -214,10 +208,26 @@ def intent_request(session, request):
 
     if intent ==  "PlayStation":
 
-        station = request['intent']['slots']['mystation']['value']
-        mqtt_publish.single('sonos/'+location, json.dumps(dict(action='radio', station=station)), hostname=hostname, retain=False, port=1883, keepalive=60)
+        mystation = request['intent']['slots']['mystation']['value']
+        mystation = mystation.lower()
+        if mystation == 'deborah':
+            play_deborah_radio(20)
+        else:
+            station = STATIONS.get(mystation)
+            if station:
+                uri = station[1]
+                print "uri=",uri
+                if uri.startswith('pndrradio'):
+                    meta = meta_format_pandora.format(title=station[0], service=station[2])
+                    master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+                elif uri.startswith('x-sonosapi-stream'):
+                    uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+                    meta = meta_format_radio.format(title=station[0], service=station[2])
+                    master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+                output_speech = station + " radio will start playing soon"
+            else:
+                output_speech = "{} radio is not a preset station.".format(mystation)
 
-        output_speech = station + " radio will start playing soon"
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
         return response
 
@@ -316,7 +326,8 @@ def intent_request(session, request):
 
                 my_add_to_queue('', meta)
                 if action == 'play':
-                    master.play_from_queue(0)
+                    queue = master.get_queue()
+                    master.play_from_queue(len(queue)-1)
 
                 output_speech = "I will play {} by {} from album {}".format(track['title'], track['artist'], track['album'])
                 end_session = True
@@ -386,15 +397,6 @@ def intent_request(session, request):
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
         return response
 
-    elif intent ==  "Deborah": # not in use
-
-        number = request['intent']['slots']['number']['value']
-        mqtt_publish.single('sonos/'+location, json.dumps(dict(action='deborah', number=number)), hostname=hostname, retain=False, port=1883, keepalive=60)
-
-        output_speech = "I will play " + str(number) + " of Deborah's albums"
-        response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
-        return response
-
     #elif intent == "WhatIsPlaying":
 
     #    s3 = boto3.client('s3')
@@ -462,22 +464,34 @@ def intent_request(session, request):
         return response
 
     elif intent == "AMAZON.NextIntent":
-        mqtt_publish.single('sonos/'+location, json.dumps(dict(action='skip')), hostname=hostname, retain=False, port=1883, keepalive=60)
+        try:
+            master.next()
+        except soco.exceptions.SoCoUPnPException as e:
+            print "master.{}:".format('next'), e
         response = {'outputSpeech': {'type':'PlainText','text':'skipped'},'shouldEndSession':True}
         return response
 
     elif intent == "AMAZON.PreviousIntent":
-        mqtt_publish.single('sonos/'+location, json.dumps(dict(action='previous')), hostname=hostname, retain=False, port=1883, keepalive=60)
+        try:
+            master.previous()
+        except soco.exceptions.SoCoUPnPException as e:
+            print "master.{}:".format('previous'), e
         response = {'outputSpeech': {'type':'PlainText','text':'previous'},'shouldEndSession':True}
         return response
 
     elif intent == "AMAZON.PauseIntent":
-        mqtt_publish.single('sonos/'+location, json.dumps(dict(action='pause')), hostname=hostname, retain=False, port=1883, keepalive=60)
+        try:
+            master.pause()
+        except soco.exceptions.SoCoUPnPException as e:
+            print "master.{}:".format('pause'), e
         response = {'outputSpeech': {'type':'PlainText','text':'I will pause'},'shouldEndSession':True}
         return response
 
     elif intent == "AMAZON.ResumeIntent":
-        mqtt_publish.single('sonos/'+location, json.dumps(dict(action='resume')), hostname=hostname, retain=False, port=1883, keepalive=60)
+        try:
+            master.play()
+        except soco.exceptions.SoCoUPnPException as e:
+            print "master.{}:".format('play'), e
         response = {'outputSpeech': {'type':'PlainText','text':'I will resume'},'shouldEndSession':True}
         return response
 
@@ -509,20 +523,15 @@ def intent_request(session, request):
         volume = request['intent']['slots']['volume']['value']
 
         if volume in ('increase','louder','higher','up'):
-            action = 'louder'
+            for s in sp:
+                s.volume = s.volume + 10
+            output_speech = "I will make the volume louder"
         elif volume in ('decrease', 'down','quieter','lower'):
-            action = 'quieter'
+            for s in sp:
+                s.volume = s.volume - 10
+            output_speech = "I will turn the volume down"
         else:
-            action = None
-
-        if action:
-
-            mqtt_publish.single('sonos/'+location, json.dumps(dict(action=action)), hostname=hostname, retain=False, port=1883, keepalive=60)
-
-            output_speech = "I will make the volume {}".format(action)
-
-        else:
-            output_speech = "I have no idea what you said."
+            output_speech = "I don't know what you wanted me to do with the volume"
 
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
         return response
