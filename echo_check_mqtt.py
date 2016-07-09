@@ -37,12 +37,10 @@ current_track = master.get_current_track_info() --> {
             u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
 '''
 import os
-import time
 from time import sleep
 import random
 import json
 import sys
-import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
@@ -173,7 +171,6 @@ def my_add_playlist_to_queue(uri, metadata):
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
 
-prev_title = ''
 COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
 def on_connect(client, userdata, flags, rc):
