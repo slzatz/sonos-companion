@@ -120,40 +120,48 @@ didl_library = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:u
 #for the record for An Unarmorial Age, the parentID was "00082064library%2fplaylists%2f%23library_playlists"
 didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.container.playlistContainer</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
 
-with open('deborah_albums') as f:
-    z = f.read()
-z = json.loads(z)
-DEBORAH_TRACKS = []
-for x in z:
-    DEBORAH_TRACKS.extend(z[x])
-
-def play_deborah_radio(num):
-
-    songs = []
-
-    master.stop()
-    master.clear_queue()
-
-    for x in range(num):
-        n = random.randint(0,len(DEBORAH_TRACKS)-1)
-        songs.append(DEBORAH_TRACKS[n])
-
-    for uri in songs:
-        print uri
-        i = uri.find('amz')
-        ii = uri.find('.')
-        id_ = uri[i:ii]
-        print id_
-        meta = didl_amazon.format(id_=id_)
-        my_add_to_queue('', meta)
-        print "---------------------------------------------------------------"
-
-    master.play_from_queue(0)
-
 with open('stations') as f:
     z = f.read()
 
 STATIONS = json.loads(z)
+
+def play_deborah_radio(k):
+    s = 'album:(c)'
+    result = solr.search(s, fl='uri', rows=600) 
+    count = len(result)
+    print "Total track count for Deborah tracks was {}".format(count)
+    tracks = result.docs
+    uris = []
+    for j in range(k):
+        while 1:
+            n = random.randint(0, count-1)
+            uri = tracks[n]['uri']
+            if not uri in uris:
+                uris.append(uri)
+                print 'uri: ' + uri
+                print "---------------------------------------------------------------"
+                if 'library' in uri:
+                    i = uri.find('library')
+                    ii = uri.find('.')
+                    id_ = uri[i:ii]
+                    meta = didl_library.format(id_=id_)
+                else:
+                    print 'The uri:{}, was not recognized'.format(uri)
+                    break
+
+                print 'meta: ',meta
+                print '---------------------------------------------------------------'
+
+                my_add_to_queue('', meta)
+                break
+
+    master.play_from_queue(0)
+
+    output_speech = "I will play {} songs of Deborah's.".format(k)
+    end_session = True
+
+    response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
+    return response
 
 def my_add_to_queue(uri, metadata):
     response = master.avTransport.AddURIToQueue([
