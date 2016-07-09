@@ -54,7 +54,6 @@ import time
 import pysolr
 import requests
 import paho.mqtt.publish as mqtt_publish
-#import paho.mqtt.client as mqtt #################################
 from config import ec_uri, last_fm_api_key, location
 
 #last.fm 
@@ -95,7 +94,6 @@ def intent_request(session, request):
     if intent ==  "PlayStation":
 
         station = request['intent']['slots']['mystation']['value']
-        #send_sqs(action='radio', station=station)
         mqtt_publish.single('sonos/'+location, json.dumps(dict(action='radio', station=station)), hostname=hostname, retain=False, port=1883, keepalive=60)
 
         output_speech = station + " radio will start playing soon"
@@ -115,7 +113,6 @@ def intent_request(session, request):
                 # The if t['album']==selected_album only comes into play if we retrieved more than one album
                 uris = [t['uri'] for t in tracks if t['album']==selected_album]
                 action = 'play' if intent=="PlayAlbum" else 'add'
-                #send_sqs(action=action, uris=uris)
                 mqtt_publish.single('sonos/'+location, json.dumps(dict(action=action, uris=uris)), hostname=hostname, retain=False, port=1883, keepalive=60)
                 output_speech = "I will play {} songs from {}".format(len(uris), selected_album)
                 end_session = True
@@ -147,7 +144,6 @@ def intent_request(session, request):
             if len(result):
                 track = result.docs[0]
                 action = 'play' if intent=="PlayTrack" else 'add'
-                #send_sqs(action=action, uris=[track['uri']])
                 mqtt_publish.single('sonos/'+location, json.dumps(dict(action=action, uris=[track['uri']])), hostname=hostname, retain=False, port=1883, keepalive=60)
 
                 output_speech = "I will play {} by {} from album {}".format(track['title'], track['artist'], track['album'])
@@ -184,7 +180,6 @@ def intent_request(session, request):
                             uris.append(uri)
                             break
 
-                #send_sqs(action='play', uris=uris)
                 mqtt_publish.single('sonos/'+location, json.dumps(dict(action='play', uris=uris)), hostname=hostname, retain=False, port=1883, keepalive=60)
                 output_speech = "I will play {} songs by {}.".format(shuffle_number, artist)
                 end_session = True
@@ -201,7 +196,6 @@ def intent_request(session, request):
     elif intent ==  "Deborah": # not in use
 
         number = request['intent']['slots']['number']['value']
-        #send_sqs(action='deborah', number=number)
         mqtt_publish.single('sonos/'+location, json.dumps(dict(action='deborah', number=number)), hostname=hostname, retain=False, port=1883, keepalive=60)
 
         output_speech = "I will play " + str(number) + " of Deborah's albums"
@@ -275,25 +269,21 @@ def intent_request(session, request):
         return response
 
     elif intent == "AMAZON.NextIntent":
-        #send_sqs(action='skip')
         mqtt_publish.single('sonos/'+location, json.dumps(dict(action='skip')), hostname=hostname, retain=False, port=1883, keepalive=60)
         response = {'outputSpeech': {'type':'PlainText','text':'skipped'},'shouldEndSession':True}
         return response
 
     elif intent == "AMAZON.PreviousIntent":
-        #send_sqs(action='previous')
         mqtt_publish.single('sonos/'+location, json.dumps(dict(action='previous')), hostname=hostname, retain=False, port=1883, keepalive=60)
         response = {'outputSpeech': {'type':'PlainText','text':'previous'},'shouldEndSession':True}
         return response
 
     elif intent == "AMAZON.PauseIntent":
-        #send_sqs(action='pause')
         mqtt_publish.single('sonos/'+location, json.dumps(dict(action='pause')), hostname=hostname, retain=False, port=1883, keepalive=60)
         response = {'outputSpeech': {'type':'PlainText','text':'I will pause'},'shouldEndSession':True}
         return response
 
     elif intent == "AMAZON.ResumeIntent":
-        #send_sqs(action='resume')
         mqtt_publish.single('sonos/'+location, json.dumps(dict(action='resume')), hostname=hostname, retain=False, port=1883, keepalive=60)
         response = {'outputSpeech': {'type':'PlainText','text':'I will resume'},'shouldEndSession':True}
         return response
@@ -334,7 +324,6 @@ def intent_request(session, request):
 
         if action:
 
-            #send_sqs(action=action)
             mqtt_publish.single('sonos/'+location, json.dumps(dict(action=action)), hostname=hostname, retain=False, port=1883, keepalive=60)
 
             output_speech = "I will make the volume {}".format(action)
