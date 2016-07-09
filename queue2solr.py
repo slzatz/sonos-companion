@@ -56,24 +56,32 @@ while cont:
     if len(queue) == 0:
         raise Exception("You must have at least one track in the queue")
 
-    resp = input("Do you want track numbers (or everything will be track 1 (y or n)? ")
-    if resp in ('y', 'yes'):
-        use_track_num = True
-    else:
-        use_track_num = False
+    resp = input("Is this an album (if yes will include track numbers and chance to change album title (y or n)? ")
+    is_album = True if resp in ('y', 'yes') else False
+    if is_album:
+        album_title = queue[0].album
+        print("Album title will be {}".format(album_title))
+        resp = input("Do you want to modify the album title (note if you do the songs will also exist under old album title) (y or n)? ")
+        if resp in ('y', 'yes'):
+            album_title = input("What do you want the album title to be? ")
+            print(album_title)
+            input("Is that correct (y or n)? ")
+            if resp not in ('y', 'yes'):
+                sys.exit(1)
+    print("album_title =", album_title)
 
     documents = []
     n=1
     for track in queue:
         title = track.title
-        album = track.album
+        album = album_title if is_album else track.album
         artist = track.creator
         id_ = album + ' ' + title
         id_ = id_.replace(' ', '_')
         document = {"id":id_, "title":title, "uri":track.resources[0].uri, "album":album, "artist":artist, "track":n}
         print(repr(document).encode('cp1252', errors='replace')) 
         documents.append(document)
-        if use_track_num:
+        if is_album:
             n+=1
 
     solr = SolrClient(ec_uri+':8983/solr')
