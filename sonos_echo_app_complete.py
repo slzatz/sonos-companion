@@ -410,27 +410,26 @@ def intent_request(session, request):
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
         return response
 
-    #elif intent == "WhatIsPlaying":
+    elif intent == "WhatIsPlaying":
+        try:
+            state = master.get_current_transport_info()['current_transport_state']
+        except Exception as e:
+            print "Encountered error in state = master.get_current_transport_info(): ", e
+            state = 'error'
 
-    #    s3 = boto3.client('s3')
-    #    response = s3.get_object(Bucket='sonos-scrobble', Key='location')
-    #    body = response['Body']
-    #    location = body.read()
-    #    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-    #    table = dynamodb.Table('scrobble_new')
-    #    result = table.query(KeyConditionExpression=Key('location').eq(location), ScanIndexForward=False, Limit=1) #by default the sort order is ascending
+        # check if sonos is playing music
+        if state == 'PLAYING':
+            try:
+                track = master.get_current_track_info()
+            except Exception as e:
+                print "Encountered error in track = master.get_current_track_info(): ", e
+                track = {}
+            output_speech = "The song is {}. The artist is {} and the album is {}.".format(track.get('title','No title'), track.get('artist', 'No artist'), track.get('album', 'No album'))
+        else:
+            output_speech = "Nothing appears to be playing right now, Steve"
 
-    #    if result['Count']:
-    #        track = result['Items'][0]
-    #        if track['ts'] > Decimal(time.time())-300:
-    #            output_speech = "The song is {}. The artist is {} and the album is {}.".format(track.get('title','No title'), track.get('artist', 'No artist'), track.get('album', 'No album'))
-    #        else:
-    #            output_speech = "Nothing appears to be playing right now, Steve"
-    #    else:
-    #        output_speech = "It appears that nothing has ever been scrobbled"
-
-    #    response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
-    #    return response
+        response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
+        return response
 
     elif intent == "RecentTracks":
         # right now look back is one week; note can't limit because you need all the tracks since we're doing the frequency count
