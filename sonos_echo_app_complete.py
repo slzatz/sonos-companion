@@ -352,7 +352,7 @@ def intent_request(session, request):
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
         return response
 
-    elif intent ==  "Shuffle":
+    elif intent == "Shuffle":
 
         shuffle_number = 10
 
@@ -362,6 +362,8 @@ def intent_request(session, request):
             result = solr.search(s, fl='uri', rows=500) 
             count = len(result)
             if count:
+                master.stop()
+                master.clear_queue()
                 print "Total track count for {} was {}".format(artist, count)
                 tracks = result.docs
                 k = shuffle_number if shuffle_number <= count else count
