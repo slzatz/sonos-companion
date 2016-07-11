@@ -507,29 +507,6 @@ def intent_request(session, request):
         response = {'outputSpeech': {'type':'PlainText','text':'I will resume'},'shouldEndSession':True}
         return response
 
-    #elif intent == "PauseResume":
-
-    #    pauseorresume = request['intent']['slots']['pauseorresume']['value']
-
-    #    if pauseorresume in ('pause','stop'):
-    #        action = 'pause'
-    #    elif pauseorresume in ('unpause','resume'):
-    #        action = 'resume'
-    #    else:
-    #        action = None
-
-    #    if action:
-
-    #        send_sqs(action=action)
-
-    #        output_speech = "The music will {}".format(pauseorresume)
-
-    #    else:
-    #        output_speech = "I have no idea what you said."
-
-    #    response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
-    #    return response
-
     elif intent == "TurnTheVolume":
 
         volume = request['intent']['slots']['volume']['value']
