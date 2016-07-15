@@ -331,6 +331,9 @@ def intent_request(session, request):
                     meta = didl_library.format(id_=id_)
                 else:
                     print 'The uri:{}, was not recognized'.format(uri)
+                    output_speech = "That is not a uri format that I can deal with."
+                    response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
+                    return response
 
                 print 'meta: ',meta
                 print '---------------------------------------------------------------'
