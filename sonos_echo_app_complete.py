@@ -51,6 +51,7 @@ from decimal import Decimal
 import time
 import pysolr
 import requests
+from multiprocessing.connection import Client 
 from config import ec_uri, last_fm_api_key, user_id, location
 
 home = os.path.split(os.getcwd())[0]
@@ -96,7 +97,6 @@ base_url = "http://ws.audioscrobbler.com/2.0/"
 appVersion = '1.0'
 
 solr = pysolr.Solr(ec_uri+':8983/solr/sonos_companion/', timeout=10)
-hostname=ec_uri[7:]
 
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
@@ -189,6 +189,9 @@ def my_add_playlist_to_queue(uri, metadata):
 
 COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
+address = ('localhost', 6000)
+conn = Client(address, authkey='secret password')
+
 def lambda_handler(event, context=None):
     session = event['session']
     request = event['request']
@@ -221,7 +224,9 @@ def intent_request(session, request):
         mystation = request['intent']['slots']['mystation']['value']
         mystation = mystation.lower()
         if mystation == 'deborah':
-            play_deborah_radio(20)
+            # This took too long so using multiprocessing to send to echo_check_mp.py
+            conn.send(json.dumps{'action':'deborah'})
+            #play_deborah_radio(20)
             output_speech = "Deborah Radio will start playing soon."
         else:
             station = STATIONS.get(mystation)
@@ -254,8 +259,8 @@ def intent_request(session, request):
                 tracks = sorted([t for t in result.docs],key=itemgetter('track'))
                 # The if t['album']==selected_album only comes into play if we retrieved more than one album
                 uris = [t['uri'] for t in tracks if t['album']==selected_album]
-                action = 'play' if intent=="PlayAlbum" else 'add'
-                if action == 'play':
+
+                if intent == 'PlayAlbum':
                     master.stop()
                     master.clear_queue()
 
@@ -287,7 +292,7 @@ def intent_request(session, request):
 
                     my_add_to_queue('', meta)
 
-                if action == 'play':
+                if intent == 'PlayAlbum':
                     master.play_from_queue(0)
 
                 output_speech = "I will play {} songs from {}".format(len(uris), selected_album)
@@ -320,7 +325,6 @@ def intent_request(session, request):
             if len(result):
                 track = result.docs[0]
                 uri = track['uri']
-                action = 'play' if intent=="PlayTrack" else 'add'
 
                 print 'uri: ' + uri
                 print "---------------------------------------------------------------"
@@ -339,7 +343,7 @@ def intent_request(session, request):
                 print '---------------------------------------------------------------'
 
                 my_add_to_queue('', meta)
-                if action == 'play':
+                if intent == 'PlayTrack':
                     queue = master.get_queue()
                     master.play_from_queue(len(queue)-1)
 
