@@ -225,7 +225,7 @@ def intent_request(session, request):
         mystation = mystation.lower()
         if mystation == 'deborah':
             # This took too long so using multiprocessing to send to echo_check_mp.py
-            conn.send(json.dumps{'action':'deborah'})
+            conn.send({'action':'deborah'})
             #play_deborah_radio(20)
             output_speech = "Deborah Radio will start playing soon."
         else:
