@@ -21,7 +21,7 @@ home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
-from config import location, user_id, ec_uri
+from config import user_id, solr_uri #location
 from multiprocessing.connection import Listener
 import pysolr
 
