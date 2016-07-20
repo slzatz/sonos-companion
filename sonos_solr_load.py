@@ -6,7 +6,6 @@ from SolrClient import SolrClient
 import json
 from config import ec_uri 
 solr = SolrClient(ec_uri+':8983/solr')
-from config import ec_uri 
 collection = 'sonos_companion'
 >>> result1000 = solr.query(collection, {'q':'*', 'rows':1000, 'start':0}) 
 >>> result999 = solr.query(collection, {'q':'*', 'rows':1000, 'start':999}) 
@@ -21,7 +20,8 @@ from SolrClient import SolrClient
 import sys
 import json
 import requests
-from config import ec_uri 
+#from config import ec_uri 
+ec_uri = 'http://192.168.1.171'
 
 solr = SolrClient(ec_uri+':8983/solr')
 collection = 'sonos_companion'
@@ -34,9 +34,12 @@ with open(file_name,'r') as f:
 items = json.loads(z)
 documents = []
 for item in items:
-    document = {}
-    document.update({k:item[k] for k in item if k in ('id','album')})
-    document.update({k:item[k][0] for k in item if k in ('artist','title','uri','album_art')})
+    #document = {}
+    document = {'id':item['id'].lower()}
+    #document.update({k:item[k] for k in item if k in ('id','album')})
+    # below was when an indexing format had caused certain fields to be a list of one element
+    #document.update({k:item[k][0] for k in item if k in ('artist','title','uri','album_art')})
+    document.update({k:item[k] for k in item if k in ('album','artist','title','uri')})
     documents.append(document)
 #print(documents)
 #sys.exit()
