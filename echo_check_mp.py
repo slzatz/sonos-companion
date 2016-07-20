@@ -85,7 +85,7 @@ didl_library = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:u
 #for the record for An Unarmorial Age, the parentID was "00082064library%2fplaylists%2f%23library_playlists"
 didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.container.playlistContainer</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
 
-solr = pysolr.Solr(ec_uri+':8983/solr/sonos_companion/', timeout=10)
+solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #8983 is incorporated in the ngrok url
 
 def play_deborah_radio(k):
     s = 'album:(c)'
