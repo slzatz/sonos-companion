@@ -52,7 +52,7 @@ import time
 import pysolr
 import requests
 from multiprocessing.connection import Client 
-from config import ec_uri, last_fm_api_key, user_id, location
+from config import solr_uri, last_fm_api_key, user_id #location
 
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
