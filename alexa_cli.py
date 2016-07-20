@@ -1,6 +1,11 @@
 import requests
 import sys
-from config import ngrok_url as url
+from config import ngrok_urls
+
+location = input("Where are you? (ct or nyc) ?")
+url = ngrok_urls.get(location)
+if not url:
+    sys.exit()
 
 intents = {'shuffle':'Shuffle', 'track':"PlayTrack", 'album':'PlayAlbum', 'radio':'PlayStation'}
 slots = {'shuffle':'myartist', 'radio':'mystation', 'album':'myalbum', 'track':'mytitle'}
