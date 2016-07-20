@@ -1,68 +1,48 @@
 '''
-This script reloaded solr sonos_companion from data that had been in solr but needed to be reindexed
-Problem is that the files used will already be out of date as songs will be added
-The data was removed from solr using the following at the command line
-from SolrClient import SolrClient
-import json
-from config import ec_uri 
-solr = SolrClient(ec_uri+':8983/solr')
-collection = 'sonos_companion'
->>> result1000 = solr.query(collection, {'q':'*', 'rows':1000, 'start':0}) 
->>> result999 = solr.query(collection, {'q':'*', 'rows':1000, 'start':999}) 
->>> result1998 = solr.query(collection, {'q':'*', 'rows':1000, 'start':1998}) 
-...
->>> with open('last_854', 'w') as f:
->>>     f.write(json.dumps(result1998.data['response']['docs'])) 
-The files are named first_1000, next_1000, last_854
+This script loads solr sonos_companion from data that had been in solr but needs to be moved or reindexed
+Most recently was used to move sonos db from solr on ec2 to solr on raspi
 '''
 
 from SolrClient import SolrClient
 import sys
 import json
 import requests
-#from config import ec_uri 
-ec_uri = 'http://192.168.1.171'
+from config import ec_uri # if this is run again probably not ec_uri (from uri)
+uri = 'http://192.168.1.122' #if run again this may also need to be changed (to uri)
 
-solr = SolrClient(ec_uri+':8983/solr')
+solr_old = SolrClient(ec_uri+':8983/solr')
+solr_new = SolrClient(uri+':8983/solr')
 collection = 'sonos_companion'
+start = 0
+temp = [1]
+while len(temp) > 0:
+    result = solr_old.query(collection, {'q':'*', 'rows':1000, 'start':start}) 
+    temp = result.data['response']['docs']
+    #print(repr(temp).encode('cp1252', errors='replace'))
+    start+=1000
 
-file_name = input("What file do you want to use for uploading data to solr sonos-companion?")
+    documents = []
+    for item in temp:
+        document = {'id':item['id'].lower()}
+        document.update({k:item[k] for k in item if k in ('album','artist','title','uri')})
+        documents.append(document)
+    #print(documents)
 
-with open(file_name,'r') as f:
-    z = f.read()
+    n = 0
+    while True:
+        # there are limitations in how many docs can be uploaded in a batch but it's more than 100
+        cur_documents = documents[n:n+100]
 
-items = json.loads(z)
-documents = []
-for item in items:
-    #document = {}
-    document = {'id':item['id'].lower()}
-    #document.update({k:item[k] for k in item if k in ('id','album')})
-    # below was when an indexing format had caused certain fields to be a list of one element
-    #document.update({k:item[k][0] for k in item if k in ('artist','title','uri','album_art')})
-    document.update({k:item[k] for k in item if k in ('album','artist','title','uri')})
-    documents.append(document)
-#print(documents)
-#sys.exit()
+        if not cur_documents:
+            break
 
-n = 0
-while True:
-    # there are limitations in how many docs can be uploaded in a batch but it's more than 100
-    cur_documents = documents[n:n+100]
+        cur_documents = json.dumps(cur_documents) 
+        response = solr_new.index_json(collection, cur_documents) 
+        print(response)
 
-    if not cur_documents:
-        break
+        # Since solr.commit didn't seem to work, substituted the below, which works
+        url = uri+":8983/solr/"+collection+"/update"
+        r = requests.post(url, data={"commit":"true"})
+        print(r.text)
 
-    cur_documents = json.dumps(cur_documents) 
-    response = solr.index_json(collection, cur_documents) 
-    print(response)
-
-    #The commit from SolrClient is not working
-    #response = solr.commit(collection, waitSearcher=False)
-    #print(response)
-
-    # Since solr.commit didn't seem to work, substituted the below, which works
-    url = ec_uri+":8983/solr/"+collection+"/update"
-    r = requests.post(url, data={"commit":"true"})
-    print(r.text)
-
-    n+=100
+        n+=100
