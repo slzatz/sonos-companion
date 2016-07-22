@@ -361,55 +361,54 @@ def intent_request(session, request):
 
     elif intent == "Shuffle":
 
-        shuffle_number = 10
+        #shuffle_number = 10
 
         artist = request['intent']['slots']['myartist'].get('value')
         if artist:
-            s = 'artist:' + ' AND artist:'.join(artist.split())
-            result = solr.search(s, fl='uri', rows=500) 
-            count = len(result)
-            if count:
-                master.stop()
-                master.clear_queue()
-                print "Total track count for {} was {}".format(artist, count)
-                tracks = result.docs
-                k = shuffle_number if shuffle_number <= count else count
-                uris = []
-                for j in range(k):
-                    while 1:
-                        n = random.randint(0, count-1) if count > shuffle_number else j
-                        uri = tracks[n]['uri']
-                        if not uri in uris:
-                            uris.append(uri)
-                            print 'uri: ' + uri
-                            print "---------------------------------------------------------------"
-                            if 'library_playlist' in uri:
-                                i = uri.find(':')
-                                id_ = uri[i+1:]
-                                meta = didl_library_playlist.format(id_=id_)
-                                playlist = True
-                            elif 'library' in uri:
-                                i = uri.find('library')
-                                ii = uri.find('.')
-                                id_ = uri[i:ii]
-                                meta = didl_library.format(id_=id_)
-                            else:
-                                print 'The uri:{}, was not recognized'.format(uri)
+            conn.send({'action':'shuffle', 'artist':artist})
+            if 0:
+                s = 'artist:' + ' AND artist:'.join(artist.split())
+                result = solr.search(s, fl='uri', rows=500) 
+                count = len(result)
+                if count:
+                    master.stop()
+                    master.clear_queue()
+                    print "Total track count for {} was {}".format(artist, count)
+                    tracks = result.docs
+                    k = shuffle_number if shuffle_number <= count else count
+                    uris = []
+                    for j in range(k):
+                        while 1:
+                            n = random.randint(0, count-1) if count > shuffle_number else j
+                            uri = tracks[n]['uri']
+                            if not uri in uris:
+                                uris.append(uri)
+                                print 'uri: ' + uri
+                                print "---------------------------------------------------------------"
+                                if 'library_playlist' in uri:
+                                    i = uri.find(':')
+                                    id_ = uri[i+1:]
+                                    meta = didl_library_playlist.format(id_=id_)
+                                    playlist = True
+                                elif 'library' in uri:
+                                    i = uri.find('library')
+                                    ii = uri.find('.')
+                                    id_ = uri[i:ii]
+                                    meta = didl_library.format(id_=id_)
+                                else:
+                                    print 'The uri:{}, was not recognized'.format(uri)
+                                    break
+
+                                print 'meta: ',meta
+                                print '---------------------------------------------------------------'
+
+                                my_add_to_queue('', meta)
                                 break
 
-                            print 'meta: ',meta
-                            print '---------------------------------------------------------------'
+                    master.play_from_queue(0)
 
-                            my_add_to_queue('', meta)
-                            break
-
-                master.play_from_queue(0)
-
-                output_speech = "I will play {} songs by {}.".format(shuffle_number, artist)
-                end_session = True
-            else:
-                output_speech = "The artist {} didn't have any songs.".format(artist)
-                end_session = False
+            output_speech = "I will shuffle songs by {}.".format(artist)
+            end_session = True
         else:
             output_speech = "I couldn't find the artist you were looking for. Try again."
             end_session = False
