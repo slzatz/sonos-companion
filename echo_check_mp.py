@@ -85,7 +85,36 @@ didl_library = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:u
 #for the record for An Unarmorial Age, the parentID was "00082064library%2fplaylists%2f%23library_playlists"
 didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.container.playlistContainer</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
 
+with open('stations') as f:
+    z = f.read()
+
+STATIONS = json.loads(z)
+
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #8983 is incorporated in the ngrok url
+
+def my_add_to_queue(uri, metadata):
+    response = master.avTransport.AddURIToQueue([
+            ('InstanceID', 0),
+            ('EnqueuedURI', uri), #x-sonos-http:library ...
+            ('EnqueuedURIMetaData', metadata),
+            ('DesiredFirstTrackNumberEnqueued', 0),
+            ('EnqueueAsNext', 1)
+            ])
+    qnumber = response['FirstTrackNumberEnqueued']
+    return int(qnumber)
+
+def my_add_playlist_to_queue(uri, metadata):
+    response = master.avTransport.AddURIToQueue([
+            ('InstanceID', 0),
+            ('EnqueuedURI', uri), #x-rincon-cpcontainer:0006206clibrary
+            ('EnqueuedURIMetaData', metadata),
+            ('DesiredFirstTrackNumberEnqueued', 0),
+            ('EnqueueAsNext', 0) #0
+            ])
+    qnumber = response['FirstTrackNumberEnqueued']
+    return int(qnumber)
+
+COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
 def play_deborah_radio(k):
     s = 'album:(c)'
@@ -121,34 +150,6 @@ def play_deborah_radio(k):
 
     master.play_from_queue(0)
 
-with open('stations') as f:
-    z = f.read()
-
-STATIONS = json.loads(z)
-
-def my_add_to_queue(uri, metadata):
-    response = master.avTransport.AddURIToQueue([
-            ('InstanceID', 0),
-            ('EnqueuedURI', uri), #x-sonos-http:library ...
-            ('EnqueuedURIMetaData', metadata),
-            ('DesiredFirstTrackNumberEnqueued', 0),
-            ('EnqueueAsNext', 1)
-            ])
-    qnumber = response['FirstTrackNumberEnqueued']
-    return int(qnumber)
-
-def my_add_playlist_to_queue(uri, metadata):
-    response = master.avTransport.AddURIToQueue([
-            ('InstanceID', 0),
-            ('EnqueuedURI', uri), #x-rincon-cpcontainer:0006206clibrary
-            ('EnqueuedURIMetaData', metadata),
-            ('DesiredFirstTrackNumberEnqueued', 0),
-            ('EnqueueAsNext', 0) #0
-            ])
-    qnumber = response['FirstTrackNumberEnqueued']
-    return int(qnumber)
-
-COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
 # The callback for when sonos_echo_app has to offload a task
 def on_message(task):
@@ -179,6 +180,55 @@ def on_message(task):
                     master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
             else:
                 print "{} radio is not a preset station.".format(task['station'])
+
+    elif action == 'shuffle':
+
+        shuffle_number = 10
+        artist = task.get('artist', '')
+
+        s = 'artist:' + ' AND artist:'.join(artist.split())
+        #result = solr.search(s, fl='uri', rows=500) 
+        result = solr.search(s, fl='artist,title,uri', rows=500) 
+        count = len(result)
+        if count:
+            master.stop()
+            master.clear_queue()
+            print "Total track count for {} was {}".format(artist, count)
+            tracks = result.docs
+            k = shuffle_number if shuffle_number <= count else count
+            uris = []
+            for j in range(k):
+                while 1:
+                    n = random.randint(0, count-1) if count > shuffle_number else j
+                    uri = tracks[n].get('uri', '')
+                    if uri and not uri in uris:
+                        uris.append(uri)
+                        if 'library_playlist' in uri:
+                            i = uri.find(':')
+                            id_ = uri[i+1:]
+                            meta = didl_library_playlist.format(id_=id_)
+                            playlist = True
+                        elif 'library' in uri:
+                            i = uri.find('library')
+                            ii = uri.find('.')
+                            id_ = uri[i:ii]
+                            meta = didl_library.format(id_=id_)
+                        else:
+                            print 'The uri:{}, was not recognized'.format(uri)
+                            break
+
+                        print "---------------------------------------------------------------"
+                        print "artist: ", tracks[n].get('artist', '')
+                        print "title: ", tracks[n].get('title', '')
+                        print 'uri: ' + uri
+                        print "---------------------------------------------------------------"
+                        #print 'meta: ',meta
+                        #print '---------------------------------------------------------------'
+
+                        my_add_to_queue('', meta)
+                        break
+
+            master.play_from_queue(0)
 
     elif action in ('play','add') and task.get('uris'):
         if action == 'play':
