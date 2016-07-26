@@ -14,7 +14,7 @@ from SolrClient import SolrClient
 import sys
 import json
 import requests
-from config import ec_uri
+from config import solr_uri
 import os
 from time import sleep
 import datetime
@@ -30,7 +30,7 @@ while 1:
     n+=1
     print("attempt "+str(n))
     try:
-        sp = soco.discover(timeout=10)
+        sp = soco.discover(timeout=1)
         speakers = {s.player_name:s for s in sp}
     except TypeError as e:    
         print(e)
@@ -60,15 +60,14 @@ while cont:
     is_album = True if resp in ('y', 'yes') else False
     if is_album:
         album_title = queue[0].album
-        print("Album title will be {}".format(album_title))
+        print("Album title will be {}".format(album_title).encode('cp1252', errors='ignore')) 
         resp = input("Do you want to modify the album title (note if you do the songs will also exist under old album title) (y or n)? ")
         if resp in ('y', 'yes'):
             album_title = input("What do you want the album title to be? ")
-            print(album_title)
+            print("album_title =", album_title)
             input("Is that correct (y or n)? ")
             if resp not in ('y', 'yes'):
                 sys.exit(1)
-    print("album_title =", album_title)
 
     documents = []
     n=1
@@ -78,20 +77,23 @@ while cont:
         artist = track.creator
         id_ = album + ' ' + title
         id_ = id_.replace(' ', '_')
+        id_ = id_.lower()
         document = {"id":id_, "title":title, "uri":track.resources[0].uri, "album":album, "artist":artist, "track":n}
         print(repr(document).encode('cp1252', errors='replace')) 
+        for k in document:
+            print(str(k+':'+str(document[k])).encode('cp1252', errors='ignore'))
         documents.append(document)
         if is_album:
             n+=1
 
-    solr = SolrClient(ec_uri+':8983/solr')
+    solr = SolrClient(solr_uri+'/solr')
     collection = 'sonos_companion'
 
     response = solr.index_json(collection, json.dumps(documents))
     print(response)
 
     # Since solr.commit didn't seem to work, substituted the below, which works
-    url = ec_uri+":8983/solr/"+collection+"/update"
+    url = solr_uri+"/solr/"+collection+"/update"
     r = requests.post(url, data={"commit":"true"})
     print(r.text)
 
@@ -117,7 +119,7 @@ while cont:
 #    #print(response)
 #
 #    # Since solr.commit didn't seem to work, substituted the below, which works
-#    url = ec_uri+":8983/solr/"+collection+"/update"
+#    url = solr_uri+"/solr/"+collection+"/update"
 #    r = requests.post(url, data={"commit":"true"})
 #    print(r.text)
 #
