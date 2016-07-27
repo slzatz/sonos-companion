@@ -93,26 +93,36 @@ STATIONS = json.loads(z)
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #8983 is incorporated in the ngrok url
 
 def my_add_to_queue(uri, metadata):
-    response = master.avTransport.AddURIToQueue([
-            ('InstanceID', 0),
-            ('EnqueuedURI', uri), #x-sonos-http:library ...
-            ('EnqueuedURIMetaData', metadata),
-            ('DesiredFirstTrackNumberEnqueued', 0),
-            ('EnqueueAsNext', 1)
-            ])
-    qnumber = response['FirstTrackNumberEnqueued']
-    return int(qnumber)
+    try:
+        response = master.avTransport.AddURIToQueue([
+                ('InstanceID', 0),
+                ('EnqueuedURI', uri), #x-sonos-http:library ...
+                ('EnqueuedURIMetaData', metadata),
+                ('DesiredFirstTrackNumberEnqueued', 0),
+                ('EnqueueAsNext', 1)
+                ])
+    except soco.exceptions.SoCoUPnPException as e:
+        print "my_add_to_queue exception:", e
+        return 0
+    else:
+        qnumber = response['FirstTrackNumberEnqueued']
+        return int(qnumber)
 
 def my_add_playlist_to_queue(uri, metadata):
-    response = master.avTransport.AddURIToQueue([
-            ('InstanceID', 0),
-            ('EnqueuedURI', uri), #x-rincon-cpcontainer:0006206clibrary
-            ('EnqueuedURIMetaData', metadata),
-            ('DesiredFirstTrackNumberEnqueued', 0),
-            ('EnqueueAsNext', 0) #0
-            ])
-    qnumber = response['FirstTrackNumberEnqueued']
-    return int(qnumber)
+    try:
+        response = master.avTransport.AddURIToQueue([
+                ('InstanceID', 0),
+                ('EnqueuedURI', uri), #x-rincon-cpcontainer:0006206clibrary
+                ('EnqueuedURIMetaData', metadata),
+                ('DesiredFirstTrackNumberEnqueued', 0),
+                ('EnqueueAsNext', 0) #0
+                ])
+    except soco.exceptions.SoCoUPnPException as e:
+        print "my_add_to_queue exception:", e
+        return 0
+    else:
+        qnumber = response['FirstTrackNumberEnqueued']
+        return int(qnumber)
 
 COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
 
@@ -187,7 +197,6 @@ def on_message(task):
         artist = task.get('artist', '')
 
         s = 'artist:' + ' AND artist:'.join(artist.split())
-        #result = solr.search(s, fl='uri', rows=500) 
         result = solr.search(s, fl='artist,title,uri', rows=500) 
         count = len(result)
         if count:
@@ -222,8 +231,6 @@ def on_message(task):
                         print "title: ", tracks[n].get('title', '')
                         print 'uri: ' + uri
                         print "---------------------------------------------------------------"
-                        #print 'meta: ',meta
-                        #print '---------------------------------------------------------------'
 
                         my_add_to_queue('', meta)
                         break
@@ -266,6 +273,7 @@ def on_message(task):
             master.play_from_queue(0)
 
     elif action in ('pause', 'resume', 'skip'):
+
         try:
             getattr(master, COMMON_ACTIONS[action])()
         except soco.exceptions.SoCoUPnPException as e:
@@ -305,22 +313,6 @@ def on_message(task):
             print "I changed the volume to:", level
         else:
             print "Volume was too high:", level
-
-    #elif action == 'get sonos queue':
-    #    s3object = s3.Object('sonos-scrobble','queue')
-    #    queue = []            
-    #    sonos_queue = master.get_queue()
-    #    for track in sonos_queue:
-    #        title = track.title
-    #        album = track.album
-    #        id_ = album + ' ' + title
-    #        id_ = id_.replace(' ', '_')
-    #        uri = track.resources[0].uri
-    #        queue.append((id_, uri))
-
-    #    response = s3object.put(Body=json.dumps(queue))
-    #    print("response to s3 put =",response)
-
     else:
         print "I have no idea what you said"
 
