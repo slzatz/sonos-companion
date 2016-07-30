@@ -338,7 +338,7 @@ def intent_request(session, request):
 
         if artist1 and artist2:
             conn.send({'action':'mix', 'artists':[artist1, artist2]})##########################
-            output_speech = "I will try to mix songs by {}.".format(artist)
+            output_speech = "I will try to mix songs by {} and {}.".format(artist1,artist2)
             end_session = True
         else:
             output_speech = "I couldn't find the artists you were looking for. Try again."
