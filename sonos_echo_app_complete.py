@@ -308,7 +308,8 @@ def intent_request(session, request):
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
         return response
 
-    elif intent == "PlayTrack" or intent == "AddTrack":
+    #elif intent == "PlayTrack" or intent == "AddTrack":
+    elif intent in ("PlayTrack", "AddTrack"):
         # title must be present; artist is optional
 
         artist = request['intent']['slots']['myartist'].get('value', '')
@@ -343,11 +344,15 @@ def intent_request(session, request):
                 print '---------------------------------------------------------------'
 
                 my_add_to_queue('', meta)
+
                 if intent == 'PlayTrack':
                     queue = master.get_queue()
                     master.play_from_queue(len(queue)-1)
+                    action = 'play'
+                else:
+                    action = 'add'
 
-                output_speech = "I will play {} by {} from album {}".format(track['title'], track['artist'], track['album'])
+                output_speech = "I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album'])
                 end_session = True
             else:
                 output_speech = "I couldn't find the song {} by {}. Try again.".format(title,artist)
