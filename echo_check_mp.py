@@ -256,28 +256,29 @@ def on_message(task):
                 tracks = result.docs
                 k = shuffle_number if shuffle_number <= count else count
                 uris = []
+                print "---------------------------------------------------------------"
                 for j in range(k):
                     while 1:
                         n = random.randint(0, count-1) if count > shuffle_number else j
                         uri = tracks[n].get('uri', '')
                         if uri and not uri in uris:
                             uris.append(uri)
-                            print "---------------------------------------------------------------"
+
+                            print "artist: ", tracks[n].get('artist', '')
+                            print "title: ", tracks[n].get('title', '')
+                            print 'uri: ' + uri
+
                             if 'library' in uri:
                                 i = uri.find('library')
                                 ii = uri.find('.')
                                 id_ = uri[i:ii]
                                 meta = didl_library.format(id_=id_)
                                 metas[x].append(meta)
+                                print "---------------------------------------------------------------"
+                                break
                             else:
                                 print '********The uri:{}, was not recognized**********'.format(uri)
-
-                            print "artist: ", tracks[n].get('artist', '')
-                            print "title: ", tracks[n].get('title', '')
-                            print 'uri: ' + uri
-                            print "---------------------------------------------------------------"
-
-                            break
+                                print "---------------------------------------------------------------"
 
         iters = [iter(y) for y in metas]
         metas = list(it.next() for it in itertools.cycle(iters))
