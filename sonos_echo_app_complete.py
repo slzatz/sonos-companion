@@ -125,46 +125,6 @@ with open('stations') as f:
 
 STATIONS = json.loads(z)
 
-def play_deborah_radio(k):
-    s = 'album:(c)'
-    result = solr.search(s, fl='uri', rows=600) 
-    count = len(result)
-    print "Total track count for Deborah tracks was {}".format(count)
-    tracks = result.docs
-    uris = []
-    master.stop()
-    master.clear_queue()
-    for j in range(k):
-        while 1:
-            n = random.randint(0, count-1)
-            uri = tracks[n]['uri']
-            if not uri in uris:
-                uris.append(uri)
-                print 'uri: ' + uri
-                print "---------------------------------------------------------------"
-                if 'library' in uri:
-                    i = uri.find('library')
-                    ii = uri.find('.')
-                    id_ = uri[i:ii]
-                    meta = didl_library.format(id_=id_)
-                else:
-                    print 'The uri:{}, was not recognized'.format(uri)
-                    break
-
-                print 'meta: ',meta
-                print '---------------------------------------------------------------'
-
-                my_add_to_queue('', meta)
-                break
-
-    master.play_from_queue(0)
-
-    output_speech = "I will play {} songs of Deborah's.".format(k)
-    end_session = True
-
-    response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
-    return response
-
 def my_add_to_queue(uri, metadata):
     response = master.avTransport.AddURIToQueue([
             ('InstanceID', 0),
@@ -226,7 +186,6 @@ def intent_request(session, request):
         if mystation == 'deborah':
             # This took too long so using multiprocessing to send to echo_check_mp.py
             conn.send({'action':'deborah'})
-            #play_deborah_radio(20)
             output_speech = "Deborah Radio will start playing soon."
         else:
             station = STATIONS.get(mystation)
@@ -278,11 +237,6 @@ def intent_request(session, request):
                         ii = uri.find('.')
                         id_ = uri[i:ii]
                         meta = didl_library.format(id_=id_)
-                    #elif 'radea' in uri:
-                    #    i = uri.find('.')+1
-                    #    ii = uri.find('.',i)
-                    #    id_ = uri[i:ii]
-                    #    meta = didl_rhapsody.format(id_=id_)
                     else:
                         print 'The uri:{}, was not recognized'.format(uri)
                         continue
@@ -308,7 +262,6 @@ def intent_request(session, request):
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
         return response
 
-    #elif intent == "PlayTrack" or intent == "AddTrack":
     elif intent in ("PlayTrack", "AddTrack"):
         # title must be present; artist is optional
 
@@ -366,56 +319,29 @@ def intent_request(session, request):
 
     elif intent == "Shuffle":
 
-        #shuffle_number = 10
-
         artist = request['intent']['slots']['myartist'].get('value')
         if artist:
             conn.send({'action':'shuffle', 'artist':artist})
-            if 0:
-                s = 'artist:' + ' AND artist:'.join(artist.split())
-                result = solr.search(s, fl='uri', rows=500) 
-                count = len(result)
-                if count:
-                    master.stop()
-                    master.clear_queue()
-                    print "Total track count for {} was {}".format(artist, count)
-                    tracks = result.docs
-                    k = shuffle_number if shuffle_number <= count else count
-                    uris = []
-                    for j in range(k):
-                        while 1:
-                            n = random.randint(0, count-1) if count > shuffle_number else j
-                            uri = tracks[n]['uri']
-                            if not uri in uris:
-                                uris.append(uri)
-                                print 'uri: ' + uri
-                                print "---------------------------------------------------------------"
-                                if 'library_playlist' in uri:
-                                    i = uri.find(':')
-                                    id_ = uri[i+1:]
-                                    meta = didl_library_playlist.format(id_=id_)
-                                    playlist = True
-                                elif 'library' in uri:
-                                    i = uri.find('library')
-                                    ii = uri.find('.')
-                                    id_ = uri[i:ii]
-                                    meta = didl_library.format(id_=id_)
-                                else:
-                                    print 'The uri:{}, was not recognized'.format(uri)
-                                    break
-
-                                print 'meta: ',meta
-                                print '---------------------------------------------------------------'
-
-                                my_add_to_queue('', meta)
-                                break
-
-                    master.play_from_queue(0)
-
             output_speech = "I will shuffle songs by {}.".format(artist)
             end_session = True
         else:
             output_speech = "I couldn't find the artist you were looking for. Try again."
+            end_session = False
+
+        response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
+        return response
+
+    elif intent == "Mix":
+
+        artist1 = request['intent']['slots']['myartist1'].get('value')
+        artist2 = request['intent']['slots']['myartist2'].get('value')
+
+        if artist1 and artist2:
+            conn.send({'action':'mix', 'artists':[artist1, artist2]})##########################
+            output_speech = "I will try to mix songs by {}.".format(artist)
+            end_session = True
+        else:
+            output_speech = "I couldn't find the artists you were looking for. Try again."
             end_session = False
 
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
