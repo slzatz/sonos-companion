@@ -16,6 +16,7 @@ import os
 from time import sleep
 import random
 import json
+import itertools
 import sys
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
@@ -236,6 +237,53 @@ def on_message(task):
                         break
 
             master.play_from_queue(0)
+
+    elif action == 'mix':
+
+        shuffle_number = 5
+        artists = task.get('artists', '')
+
+        metas = []
+        for x,artist in enumerate(artists):
+            metas.append([])
+            s = 'artist:' + ' AND artist:'.join(artist.split())
+            result = solr.search(s, fl='artist,title,uri', rows=500) 
+            count = len(result)
+            if count:
+                master.stop()
+                master.clear_queue()
+                print "Total track count for {} was {}".format(artist, count)
+                tracks = result.docs
+                k = shuffle_number if shuffle_number <= count else count
+                uris = []
+                for j in range(k):
+                    while 1:
+                        n = random.randint(0, count-1) if count > shuffle_number else j
+                        uri = tracks[n].get('uri', '')
+                        if uri and not uri in uris:
+                            uris.append(uri)
+                            print "---------------------------------------------------------------"
+                            if 'library' in uri:
+                                i = uri.find('library')
+                                ii = uri.find('.')
+                                id_ = uri[i:ii]
+                                meta = didl_library.format(id_=id_)
+                                metas[x].append(meta)
+                            else:
+                                print '********The uri:{}, was not recognized**********'.format(uri)
+
+                            print "artist: ", tracks[n].get('artist', '')
+                            print "title: ", tracks[n].get('title', '')
+                            print 'uri: ' + uri
+                            print "---------------------------------------------------------------"
+
+                            break
+
+        iters = [iter(y) for y in metas]
+        metas = list(it.next() for it in itertools.cycle(iters))
+        for meta in metas:
+            my_add_to_queue('', meta)
+        master.play_from_queue(0)
 
     elif action in ('play','add') and task.get('uris'):
         if action == 'play':
