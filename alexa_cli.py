@@ -17,7 +17,7 @@ url = ngrok_urls.get(location)
 if not url:
     sys.exit()
 
-slots = {'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum'], 'PlayTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[]}
+slots = {'Mix':['myartist1','myartist2'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[]}
 
 while 1:
     try:
@@ -41,6 +41,14 @@ while 1:
             intent = 'Shuffle'
             words.remove('shuffle')
             values = [" ".join(words)]
+        elif 'mix' in words:
+            intent = 'Mix'
+            words.remove('mix')
+            words = " ".join(words)
+            if 'and' in words:
+                values = words.split('and')
+            else:
+                values = [words,"neil young"]
         elif 'radio' in words:
             intent = 'PlayStation'
             words.remove('radio')
@@ -50,16 +58,23 @@ while 1:
             words.remove('album')
             values = [" ".join(words)]
         else:
+            if 'add' in words:
+                intent = 'AddTrack'
+                words.remove('add')
+            else:
+                intent = 'PlayTrack'
+
             if 'by' in words:
-                indx = words.index('by')
-                value0 = " ".join(words[:indx])
-                value1 = " ".join(words[indx+1:])
+                words = " ".join(words)
+                value0,value1 = words.split('by')
+                #indx = words.index('by')
+                #value0 = " ".join(words[:indx])
+                #value1 = " ".join(words[indx+1:])
             else:
                 value0 = " ".join(words)
                 value1 = ''
 
             values = [value0,value1]
-            intent = 'PlayTrack'
 
         #print("intent = {}".format(intent).encode('cp1252', errors='ignore'))
 
