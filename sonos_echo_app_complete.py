@@ -213,9 +213,13 @@ def intent_request(session, request):
         if album:
             s = 'album:' + ' AND album:'.join(album.split())
             result = solr.search(s, fl='score,track,uri,album', sort='score desc', rows=25) #**{'rows':25}) #only brings back actual matches but 25 seems like max for most albums
-            if  result.docs:
-                selected_album = result.docs[0]['album']
-                tracks = sorted([t for t in result.docs],key=itemgetter('track'))
+            tracks = results.docs
+            if  tracks:
+                selected_album = tracks[0]['album']
+                try:
+                    tracks = sorted([t for t in tracks],key=itemgetter('track'))
+                except KeyError:
+                    pass
                 # The if t['album']==selected_album only comes into play if we retrieved more than one album
                 uris = [t['uri'] for t in tracks if t['album']==selected_album]
 
