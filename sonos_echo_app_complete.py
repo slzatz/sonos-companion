@@ -213,7 +213,7 @@ def intent_request(session, request):
         if album:
             s = 'album:' + ' AND album:'.join(album.split())
             result = solr.search(s, fl='score,track,uri,album', sort='score desc', rows=25) #**{'rows':25}) #only brings back actual matches but 25 seems like max for most albums
-            tracks = results.docs
+            tracks = result.docs
             if  tracks:
                 selected_album = tracks[0]['album']
                 try:
