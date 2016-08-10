@@ -24,7 +24,9 @@ while len(temp) > 0:
     documents = []
     for item in temp:
         document = {'id':item['id'].lower()}
-        document.update({k:item[k] for k in item if k in ('album','artist','title','uri')})
+        # apparently ran the first time to transfer to raspi without track in the list
+        # the reason so few tracks actually have a track number (I did a few starting 08072016)
+        document.update({k:item[k] for k in item if k in ('album','artist','title','uri','track')})
         documents.append(document)
     #print(documents)
 
