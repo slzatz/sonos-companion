@@ -351,6 +351,19 @@ def intent_request(session, request):
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
         return response
 
+    elif intent == "Queue":
+        queue = master.get_queue()
+
+        if len(queue) == 0:
+            output_speech = "There is nothing in the queue"
+        else:
+            output_speech = ""
+            for track in queue:
+                output_speech+="{} from {} by {}, ".format(track.title, track.album, track.creator)
+
+        response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
+        return response
+
     elif intent == "WhatIsPlaying":
         try:
             state = master.get_current_transport_info()['current_transport_state']
