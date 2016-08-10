@@ -351,7 +351,7 @@ def intent_request(session, request):
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
         return response
 
-    elif intent == "Queue":
+    elif intent == "ShowQueue":
         queue = master.get_queue()
 
         if len(queue) == 0:
@@ -362,6 +362,15 @@ def intent_request(session, request):
                 output_speech+="{} from {} by {}, ".format(track.title, track.album, track.creator)
 
         response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
+        return response
+
+    elif intent == "ClearQueue":
+        try:
+            master.clear_queue()
+        except Exception as e:
+            print "Encountered exception when trying to clear the queue:",e
+
+        response = {'outputSpeech': {'type':'PlainText','text':"I'll try to clear the queue"},'shouldEndSession':True}
         return response
 
     elif intent == "WhatIsPlaying":
