@@ -12,7 +12,7 @@ import requests
 import sys
 from config import ngrok_urls
 
-location = input("Where are you? (ct or nyc) ?")
+location = input("Where are you(ct or nyc)? ")
 url = ngrok_urls.get(location)
 if not url:
     sys.exit()
@@ -48,9 +48,10 @@ while 1:
         elif 'mix' in words:
             intent = 'Mix'
             words.remove('mix')
-            words = " ".join(words)
             if 'and' in words:
-                values = words.split('and')
+                words = " ".join(words)
+            if ' and ' in words:
+                values = words.split(' and ')
             else:
                 values = [words,"neil young"]
         elif 'radio' in words:
@@ -70,15 +71,13 @@ while 1:
 
             if 'by' in words:
                 words = " ".join(words)
-                value0,value1 = words.split('by')
+                values = words.split(' by ')
                 #indx = words.index('by')
                 #value0 = " ".join(words[:indx])
                 #value1 = " ".join(words[indx+1:])
             else:
-                value0 = " ".join(words)
-                value1 = ''
-
-            values = [value0,value1]
+                value = " ".join(words)
+                values = [value,'']
 
         #print("intent = {}".format(intent).encode('cp1252', errors='ignore'))
 
