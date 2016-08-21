@@ -11,7 +11,7 @@ it is set on Alexa configuration page
 Generic program to use Flask to be the https echo endpoint
 '''
 import json
-from sonos_echo_app import lambda_handler
+from sonos_echo_app_complete import lambda_handler
 from flask import Flask, request
 
 app = Flask(__name__)
