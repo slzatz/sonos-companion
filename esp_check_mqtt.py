@@ -101,6 +101,16 @@ def on_message(client, userdata, msg):
         else:
             print "Volume was too high:", level
 
+    elif action == "wnyc":
+        
+        meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
+
+        station = ["WNYC-FM", "x-sonosapi-stream:s21606?sid=254&flags=32", "SA_RINCON65031_"] 
+        uri = station[1]
+        uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+        meta = meta_format_radio.format(title=station[0], service=station[2])
+        master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+
     else:
         print "I have no idea what you said"
 
