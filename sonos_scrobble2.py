@@ -25,13 +25,8 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 from config import local_mqtt_uri, location
 import soco
 from soco import config as soco_config
-#import boto3 
 import paho.mqtt.publish as mqtt_publish
 
-# Now just putting location in the config file
-#s3 = boto3.resource('s3')
-#s3obj = s3.Object('sonos-scrobble','location')
-#location = s3obj.get()['Body'].read()
 print("The current location is {}".format(location))
 
 topic = 'sonos/{}/current_track'.format(location)
