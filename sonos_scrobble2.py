@@ -92,7 +92,7 @@ while 1:
             except Exception as e:
                 print "Exception trying to publish to mqtt broker: ", e
             else:
-                print "volume {} sent successfully to mqtt broker".format(volume)
+                print "volume {} sent successfully to mqtt broker".format(cur_volume)
 
             prev_volume = cur_volume
         ######################################################################
