@@ -32,6 +32,9 @@ print("The current location is {}".format(location))
 topic = 'sonos/{}/current_track'.format(location)
 print("topic =",topic)
 
+topic2 = 'sonos/{}/volume'.format(location)
+print("topic2 =",topic2)
+
 soco_config.CACHE_ENABLED = False
 
 n = 0
@@ -80,26 +83,36 @@ while 1:
     track = {}
     # check if sonos is playing music
     if state == 'PLAYING':
+        ######################################################################
+        volume = master.volume 
+        try:
+            mqtt_publish.single(topic2, volume, hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+        except Exception as e:
+            print "Exception trying to publish to mqtt broker: ", e
+        else:
+            print "volume {} sent successfully to mqtt broker".format(volume)
+
+        ######################################################################
 
         try:
             track = master.get_current_track_info()
         except Exception as e:
             print "Encountered error in track = master.get_current_track_info(): ", e
+            continue
 
-    #cur_time = datetime.datetime.now()
-    cur_title = track.get('title', '')
-    
-    if cur_title != prev_title:
-        oled_data = {'artist':track.get('artist', ''), 'title':cur_title}
-        # publish to MQTT - could require less code by using micropython mqtt client
-        try:
-            mqtt_publish.single(topic, json.dumps(oled_data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-        except Exception as e:
-            print "Exception trying to publish to mqtt broker: ", e
-        else:
-            print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
+        cur_title = track.get('title', '')
+        
+        if cur_title != prev_title:
+            oled_data = {'artist':track.get('artist', ''), 'title':cur_title}
+            # publish to MQTT - could require less code by using micropython mqtt client
+            try:
+                mqtt_publish.single(topic, json.dumps(oled_data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+            except Exception as e:
+                print "Exception trying to publish to mqtt broker: ", e
+            else:
+                print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
 
-        prev_title = cur_title
+            prev_title = cur_title
 
     sleep(0.5)
 
