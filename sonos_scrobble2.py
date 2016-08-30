@@ -69,7 +69,7 @@ else:
 print "\nprogram running ..."
 
 prev_title = ''
-prev_time = datetime.datetime.now()
+prev_volume = -1
 
 while 1:
     
@@ -84,14 +84,17 @@ while 1:
     # check if sonos is playing music
     if state == 'PLAYING':
         ######################################################################
-        volume = master.volume 
-        try:
-            mqtt_publish.single(topic2, volume, hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-        except Exception as e:
-            print "Exception trying to publish to mqtt broker: ", e
-        else:
-            print "volume {} sent successfully to mqtt broker".format(volume)
+        cur_volume = master.volume
+        
+        if cur_volume != prev_volume:
+            try:
+                mqtt_publish.single(topic2, cur_volume, hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+            except Exception as e:
+                print "Exception trying to publish to mqtt broker: ", e
+            else:
+                print "volume {} sent successfully to mqtt broker".format(volume)
 
+            prev_volume = cur_volume
         ######################################################################
 
         try:
