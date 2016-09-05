@@ -47,7 +47,7 @@ while True:
                 break
 
         tides = []
-        for i in (n,n+1):
+        for i in range(n,len(data)):
             tide = data[i]
             t = datetime.datetime.fromtimestamp(tide['dt'])
             delta = t-datetime.datetime.now()
