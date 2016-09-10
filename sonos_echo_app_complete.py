@@ -207,11 +207,18 @@ def intent_request(session, request):
         return response
 
     elif intent ==  "PlayAlbum" or intent == "AddAlbum":
+        # album must be present; artist is optional
 
         album = request['intent']['slots']['myalbum'].get('value', '')
+        artist = request['intent']['slots']['myartist'].get('value', '')
         print "album =",album
+        print "artist=",artist
+
         if album:
             s = 'album:' + ' AND album:'.join(album.split())
+            if artist:
+                s = s + ' artist:' + ' AND artist:'.join(artist.split())
+
             result = solr.search(s, fl='score,track,uri,album', sort='score desc', rows=25) #**{'rows':25}) #only brings back actual matches but 25 seems like max for most albums
             tracks = result.docs
             if  tracks:
@@ -269,8 +276,8 @@ def intent_request(session, request):
     elif intent in ("PlayTrack", "AddTrack"):
         # title must be present; artist is optional
 
-        artist = request['intent']['slots']['myartist'].get('value', '')
         title = request['intent']['slots']['mytitle'].get('value', '')
+        artist = request['intent']['slots']['myartist'].get('value', '')
         print "artist =",artist
         print "title =",title
 
