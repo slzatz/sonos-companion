@@ -273,7 +273,7 @@ while 1:
     print time()
     artist = trackinfo['artist']
     print "Artist =",artist 
-    if artist is None:
+    if artist is None or artist == "":
         continue
 
     if prev_artist != artist:
@@ -311,7 +311,11 @@ while 1:
     img.transform(resize = "{}x{}".format(w,h))
     img = img.convert('bmp')
     f = StringIO()
-    img.save(f)
+    try:
+        img.save(f)
+    except wand.exceptions.OptionError as e:
+        print "Problem saving image:",e
+        continue
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
     f.close()
