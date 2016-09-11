@@ -117,5 +117,19 @@ while 1:
 
             prev_title = cur_title
 
+    else:
+        cur_title = ''
+        if cur_title != prev_title:
+            oled_data = {'artist':'', 'title':''}
+            # publish to MQTT - could require less code by using micropython mqtt client
+            try:
+                mqtt_publish.single(topic, json.dumps(oled_data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+            except Exception as e:
+                print "Exception trying to publish to mqtt broker: ", e
+            else:
+                print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
+
+                prev_title = cur_title
+
     sleep(0.5)
 
