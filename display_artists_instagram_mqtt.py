@@ -122,17 +122,15 @@ def display_image(image):
 
     try:
         response = requests.get(image['url'])
-    except Exception as detail:
-        print "response = requests.get(url) generated exception:", detail
-        print "changed image status to False"
-        img = wand.image.Image(filename = "test.bmp")
-    else:
+    except Exception as e:
+        print "response = requests.get(url) generated exception:", e
+        return
 
-        try:
-            img = wand.image.Image(file=StringIO(response.content))
-        except Exception as detail:
-            img = wand.image.Image(filename = "test.bmp")
-            print ("img = wand.image.Image(file=StringIO(response.content)) generated exception:", detail)
+    try:
+        img = wand.image.Image(file=StringIO(response.content))
+    except Exception as e:
+        print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
+        return
 
     size = "{}x{}".format(w,h)
     img.transform(resize = size)
@@ -144,7 +142,6 @@ def display_image(image):
     f.close()
     img_rect = img.get_rect()
     center = ((w-img_rect.width)/2, 0)
-    #f.close() 12072015
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 28)
@@ -198,16 +195,6 @@ def get_artist_images(name):
 
     for data in z['items']:
         
-        #data = {
-        #    'artist':name,
-        #    'link':i['link'],
-        #    'width':i['image']['width'],
-        #    'height':i['image']['height']}
-
-        #data = {k:v for k,v in data.items() if v} 
-        #images.append(i['link'])
-
-        #image_table.put_item(Item=data)
         image=Image()
         image.link = data['link']
         image.width = data['image']['width']
@@ -221,19 +208,6 @@ def get_artist_images(name):
     print "images = ", images
     return images 
 
-if __name__ == '__main__':
-    
-    images = get_photos(ids)
-    L = len(images)
-    print "Number of images = {}".format(L)
-    if images:
-        image = images[random.randrange(0,L-1)]
-        display_image(image)
-
-    prev_artist = "No artist"  #this is None so if the song title is the empty string, it's not equal
-    track_strings = []
-    track = {}
-
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
     body = msg.payload
@@ -245,11 +219,12 @@ def on_message(client, userdata, msg):
         print "error reading the mqtt message body: ", e
         return
 
+    print "The python object from mqtt is:",z
     artist = z.get("artist")
     track_title = z.get("title", "")
 
-    print "artist =",artist
-    print "track_title =",track_title
+    print "on_message:artist =",artist
+    print "on_message:track_title =",track_title
     trackinfo.update({"artist":artist, "track_title":track_title})
 
 client = mqtt.Client()
@@ -257,8 +232,16 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.connect(local_mqtt_uri, 1883, 60)
 #client.loop_forever()
+    
+images = get_photos(ids)
+L = len(images)
+print "Number of images = {}".format(L)
+if images:
+    image = images[random.randrange(0,L-1)]
+    display_image(image)
 
-prev_artist = ''
+prev_artist = "No artist"  #this is None so if the song title is the empty string, it's not equal
+
 while 1:
    # pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
@@ -272,8 +255,14 @@ while 1:
     client.loop()
     print time()
     artist = trackinfo['artist']
+    track = trackinfo['track_title']
     print "Artist =",artist 
+    print "Track =",track 
     if artist is None or artist == "":
+        if images:
+            image = images[random.randrange(0,L-1)]
+            display_image(image)
+            sleep(10)
         continue
 
     if prev_artist != artist:
@@ -329,7 +318,7 @@ while 1:
     screen.fill((0,0,0))
     screen.blit(img, center)      
 
-    line = artist
+    line = "{} - {}".format(artist,track)
 
     font = pygame.font.SysFont('Sans', 14)
     font.set_bold(True)
