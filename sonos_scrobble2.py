@@ -70,20 +70,21 @@ print "\nprogram running ..."
 
 prev_title = ''
 prev_volume = -1
+track = {}
 
 while 1:
     
-    # get the current state
+    # get the current state to see if Sonos is actually playing
     try:
         state = master.get_current_transport_info()['current_transport_state']
     except Exception as e:
         print "Encountered error in state = master.get_current_transport_info(): ", e
-        state = 'error'
+        state = 'ERROR'
 
-    track = {}
     # check if sonos is playing music
     if state == 'PLAYING':
-        ######################################################################
+
+        # get volume for neopixel display
         cur_volume = master.volume
         
         if cur_volume != prev_volume:
@@ -95,41 +96,29 @@ while 1:
                 print "volume {} sent successfully to mqtt broker".format(cur_volume)
 
             prev_volume = cur_volume
-        ######################################################################
 
+        # get track info to see if track has changed
         try:
             track = master.get_current_track_info()
         except Exception as e:
             print "Encountered error in track = master.get_current_track_info(): ", e
             continue
 
-        cur_title = track.get('title', '')
-        
-        if cur_title != prev_title:
-            oled_data = {'artist':track.get('artist', ''), 'title':cur_title}
-            # publish to MQTT - could require less code by using micropython mqtt client
-            try:
-                mqtt_publish.single(topic, json.dumps(oled_data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-            except Exception as e:
-                print "Exception trying to publish to mqtt broker: ", e
-            else:
-                print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
+    cur_title = track.get('title', '')
+    
+    if cur_title != prev_title:
 
-            prev_title = cur_title
+        oled_data = {'artist':track.get('artist', ''), 'title':cur_title}
+        # publish to MQTT - could require less code by using micropython mqtt client
+        try:
+            mqtt_publish.single(topic, json.dumps(oled_data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+        except Exception as e:
+            print "Exception trying to publish to mqtt broker: ", e
+        else:
+            print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
 
-    else:
-        cur_title = ''
-        if cur_title != prev_title:
-            oled_data = {'artist':'', 'title':''}
-            # publish to MQTT - could require less code by using micropython mqtt client
-            try:
-                mqtt_publish.single(topic, json.dumps(oled_data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-            except Exception as e:
-                print "Exception trying to publish to mqtt broker: ", e
-            else:
-                print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
+        prev_title = cur_title
 
-                prev_title = cur_title
 
     sleep(0.5)
 
