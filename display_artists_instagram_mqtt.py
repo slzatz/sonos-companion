@@ -19,7 +19,7 @@ from amazon_music_db import *
 instagram_base_url =  "https://api.instagram.com/v1/users/{}/media/recent/"
 
 with open('location') as f:
-    location = f.read()
+    location = f.read().strip()
 topic = "sonos/{}/current_track".format(location)
 mqtt_uri = mqtt_uris[location]
 
