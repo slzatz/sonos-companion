@@ -9,17 +9,19 @@ import textwrap
 import sys
 from cStringIO import StringIO
 import wand.image
-from config import location, local_mqtt_uris, google_api_key, instagram_client_id, instagram_access_token 
+from config import mqtt_uris, google_api_key, instagram_client_id, instagram_access_token 
 import json
 import paho.mqtt.client as mqtt
 from amazon_music_db import *
 
-instagram_base_url =  "https://api.instagram.com/v1/users/{}/media/recent/"
-topic = "sonos/{}/current_track".format(location)
-local_mqtt_uri = local_mqtt_uris[location]
-
 #https://api.instagram.com/v1/users/search?q=brahmino&access_token=2.........
 #ids = 4616106 Jason Peterson; 17789355 JR; 986542 Tyson Wheatley; 230625139 Nick Schade; 3399664 Zak Shelhamer; 6156112 Scott Rankin; 1607304 Laura Pritchet; janske 24078; 277810 Richard Koci Hernandez; 1918184 Simone Bramante; 197656340 Michael Christoper Brown; 200147864 David Maialetti; 4769265 eelco roos  # can't do this anymore - can only show instagrammers who've accepted by app (willie and me)
+instagram_base_url =  "https://api.instagram.com/v1/users/{}/media/recent/"
+
+with open('location') as f:
+    location = f.read()
+topic = "sonos/{}/current_track".format(location)
+mqtt_uri = mqtt_uris[location]
 
 with open('instagram_ids') as f:
     data = f.read()
@@ -230,7 +232,7 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(local_mqtt_uri, 1883, 60)
+client.connect(mqtt_uri, 1883, 60)
 #client.loop_forever()
     
 images = get_photos(ids)
