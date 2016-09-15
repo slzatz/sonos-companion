@@ -243,6 +243,7 @@ if images:
     display_image(image)
 
 prev_artist = "No artist"  #this is None so if the song title is the empty string, it's not equal
+t1 = time()
 
 while 1:
    # pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
@@ -255,16 +256,20 @@ while 1:
         sys.exit(0)
 
     client.loop()
-    print time()
+
+    cur_time = time()
+
     artist = trackinfo['artist']
     track = trackinfo['track_title']
-    print "Artist =",artist 
-    print "Track =",track 
+    #print "Artist =",artist 
+    #print "Track =",track 
     if artist is None or artist == "":
         if images:
-            image = images[random.randrange(0,L-1)]
-            display_image(image)
-            sleep(10)
+            if cur_time - t1 > 15:
+                image = images[random.randrange(0,L-1)]
+                display_image(image)
+                t1 = time()
+        sleep(1)
         continue
 
     if prev_artist != artist:
@@ -277,8 +282,14 @@ while 1:
             if not z:
                 print "Could not find images for {}".format(artist)
                 continue
+        t1 = 0
+
+    if cur_time - t1 < 15:
+        continue
 
     x = z[random.randrange(0,len(z)-1)]
+    t1 = time()
+    print t1
     print x.link
     if not x.ok:
          print "The link isn't OK. ",x.link
@@ -334,4 +345,4 @@ while 1:
 
     pygame.display.flip()
 
-    sleep(4)
+    sleep(1)
