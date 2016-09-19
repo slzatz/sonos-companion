@@ -138,7 +138,13 @@ def display_image(image):
     img.transform(resize = size)
     img = img.convert('bmp')
     f = StringIO()
-    img.save(f)
+
+    try:
+        img.save(f)
+    except Exception as e:
+        print "image.save(f) with error:", e
+        return
+
     f.seek(0)
     img = pygame.image.load(f).convert()
     f.close()
@@ -298,16 +304,27 @@ while 1:
         response = requests.get(x.link)
     except Exception as e:
         print "response = requests.get(url) generated exception: ", e
-        x.ok = False
-        session.commit()
+        try:
+            x.ok = False
+            session.commit()
+            print "ok was set to False for", x.link
+        except Exception as e:
+            print "x.ok = False - error:", e
+
         continue
     else:     
         try:
             img = wand.image.Image(file=StringIO(response.content))
         except Exception as e:
             print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", x.link, "Exception:", e
-            x.ok = False
-            session.commit()
+
+            try:
+                x.ok = False
+                session.commit()
+                print "ok was set to False for", x.link
+            except Exception as e:
+                print "x.ok = False - error:", e
+
             continue
 
     img.transform(resize = "{}x{}".format(w,h))
