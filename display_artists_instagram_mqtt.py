@@ -282,7 +282,11 @@ while 1:
 
         prev_artist = artist
 
-        z = session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower()).all()
+        try:
+            z = session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower()).all()
+        except Exception as e:
+            print "...filter(func.loser(Artist.name)==artist.lower() error:", e
+            z = None
         if not z:
             z = get_artist_images(artist)
             if not z:
