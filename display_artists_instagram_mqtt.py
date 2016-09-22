@@ -285,6 +285,8 @@ while 1:
 
         prev_artist = artist
 
+        print "about to query image database for artist", artist
+
         try:
             z = session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower()).all()
         except Exception as e:
