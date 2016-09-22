@@ -198,6 +198,9 @@ def get_artist_images(name):
         a.name = name
         session.add(a)
         session.commit()
+    except Exception as e:
+        print "a = session.query(Artist).filter(func.lower.. error:", e 
+        return []
 
     images = []
 
