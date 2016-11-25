@@ -178,27 +178,19 @@ while 1:
     
     if cur_title != prev_title:
 
-        oled_data = {'artist':track.get('artist', ''), 'title':cur_title}
+        data = {'artist':track.get('artist', ''), 'title':cur_title}
+        lyrics = get_lyrics(track.get('artist'), cur_title)
+        if lyrics:
+            data['lyrics'] = lyrics
         # publish to MQTT - could require less code by using micropython mqtt client
         try:
-            mqtt_publish.single(topic, json.dumps(oled_data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+            mqtt_publish.single(topic, json.dumps(data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
         except Exception as e:
             print "Exception trying to publish to mqtt broker: ", e
         else:
-            print "{} sent successfully to mqtt broker".format(json.dumps(oled_data))
-
-        lyrics = get_lyrics(track.get('artist'), cur_title)
-        if lyrics:
-
-            try:
-                mqtt_publish.single(topic3, json.dumps(lyrics), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-            except Exception as e:
-                print "Exception trying to publish to mqtt broker: ", e
-            else:
-                print '{} ..."] sent successfully to mqtt broker'.format(json.dumps(lyrics)[:25])
+            print "{} sent successfully to mqtt broker".format(json.dumps(data))
 
         prev_title = cur_title
-
 
     sleep(0.5)
 
