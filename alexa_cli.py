@@ -17,7 +17,7 @@ url = ngrok_urls.get(location)
 if not url:
     sys.exit()
 
-slots = {'Mix':['myartist1','myartist2'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'ShowQueue':[],'ClearQueue':[]}
+slots = {'Mix':['myartist1','myartist2'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'ShowQueue':[],'ClearQueue':[]}
 
 while 1:
     try:
@@ -61,7 +61,16 @@ while 1:
         elif 'album' in words:
             intent = 'PlayAlbum'
             words.remove('album')
-            values = [" ".join(words)]
+            if 'by' in words:
+                words = " ".join(words)
+                values = words.split(' by ')
+                #indx = words.index('by')
+                #value0 = " ".join(words[:indx])
+                #value1 = " ".join(words[indx+1:])
+            else:
+                value = " ".join(words)
+                values = [value,'']
+            #values = [" ".join(words)]
         else:
             if 'add' in words:
                 intent = 'AddTrack'
