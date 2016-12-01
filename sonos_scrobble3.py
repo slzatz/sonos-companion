@@ -181,7 +181,7 @@ while 1:
         data = {'artist':track.get('artist', ''), 'title':cur_title}
         lyrics = get_lyrics(track.get('artist'), cur_title)
         if lyrics:
-            data['lyrics'] = lyrics[:10]
+            data['lyrics'] = lyrics
         # publish to MQTT - could require less code by using micropython mqtt client
         try:
             mqtt_publish.single(topic, json.dumps(data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
