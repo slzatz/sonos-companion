@@ -13,9 +13,11 @@ from config import mqtt_uris, google_api_key, instagram_client_id, instagram_acc
 import json
 import paho.mqtt.client as mqtt
 from amazon_music_db import *
+from apiclient import discovery #google custom search api
+import httplib2 #needed by the google custom search engine module apiclient
 
 #https://api.instagram.com/v1/users/search?q=brahmino&access_token=2.........
-#ids = 4616106 Jason Peterson; 17789355 JR; 986542 Tyson Wheatley; 230625139 Nick Schade; 3399664 Zak Shelhamer; 6156112 Scott Rankin; 1607304 Laura Pritchet; janske 24078; 277810 Richard Koci Hernandez; 1918184 Simone Bramante; 197656340 Michael Christoper Brown; 200147864 David Maialetti; 4769265 eelco roos  # can't do this anymore - can only show instagrammers who've accepted by app (willie and me)
+#can only show instagrammers who've accepted by app (willie and me)  willie is 265048195
 instagram_base_url =  "https://api.instagram.com/v1/users/{}/media/recent/"
 
 with open('location') as f:
@@ -28,15 +30,7 @@ with open('instagram_ids') as f:
 
 ids = list(int(d.split('#')[0]) for d in data.split() if d.split('#')[0])
 #ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
-#willie is 265048195
 
-#google custom search api
-from apiclient import discovery
-
-# needed by the google custom search engine module apiclient
-import httplib2
-
-#wrapper = textwrap.TextWrapper(width=42, replace_whitespace=False) # may be able to be a little longer than 40
 wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  #instagram
 
 # Environment varialbes for pygame
@@ -74,9 +68,7 @@ trackinfo = {"artist":None, "track_title":None}
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
-    # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
-    # client.subscribe("$SYS/#")
+    # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
     client.subscribe(topic)
 
 print "\n"
@@ -242,7 +234,7 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(mqtt_uri, 1883, 60)
-#client.loop_forever()
+#not calling client.loop_forever() but explicitly calling client.loop() below
     
 images = get_photos(ids)
 L = len(images)
@@ -255,7 +247,7 @@ prev_artist = "No artist"  #this is None so if the song title is the empty strin
 t1 = time()
 
 while 1:
-   # pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
+    #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
     
     if event.type == pygame.NOEVENT:
@@ -353,10 +345,6 @@ while 1:
     f.close()
     img_rect = img.get_rect()
     center = ((w-img_rect.width)/2, 0)
-    #img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
-
-    #font = pygame.font.SysFont('Sans', 16)
-    #font.set_bold(True)
     
     screen.fill((0,0,0))
     screen.blit(img, center)      
