@@ -1,17 +1,19 @@
 '''
 This script loads solr sonos_companion from data that had been in solr but needs to be moved or reindexed
-Most recently was used to move sonos db from solr on ec2 to solr on raspi
+Most recently was used to move sonos db from solr on ec2 to solr on raspi and then used to move it back
 '''
 
 from SolrClient import SolrClient
 import sys
 import json
 import requests
-from config import ec_uri # if this is run again probably not ec_uri (from uri)
-uri = 'http://192.168.1.122' #if run again this may also need to be changed (to uri)
+from config import ec_uri, solr_uri # if this is run again probably not ec_uri (from uri)
+#uri = 'http://192.168.1.122' #if run again this may also need to be changed (to uri)
 
-solr_old = SolrClient(ec_uri+':8983/solr')
-solr_new = SolrClient(uri+':8983/solr')
+solr_new = SolrClient(ec_uri+':8983/solr')
+solr_old = SolrClient(solr_uri+'/solr')
+#solr_old = SolrClient(ec_uri+':8983/solr')
+#solr_new = SolrClient(uri+':8983/solr')
 collection = 'sonos_companion'
 start = 0
 temp = [1]
@@ -23,10 +25,11 @@ while len(temp) > 0:
 
     documents = []
     for item in temp:
-        document = {'id':item['id'].lower()}
+        #document = {'id':item['id'].lower()}
         # apparently ran the first time to transfer to raspi without track in the list
         # the reason so few tracks actually have a track number (I did a few starting 08072016)
-        document.update({k:item[k] for k in item if k in ('album','artist','title','uri','track')})
+        #document.update({k:item[k] for k in item if k in ('id','album','artist','title','uri','track')})
+        document = {k:item[k] for k in item if k in ('id','album','artist','title','uri','track')}
         documents.append(document)
     #print(documents)
 
@@ -43,7 +46,7 @@ while len(temp) > 0:
         print(response)
 
         # Since solr.commit didn't seem to work, substituted the below, which works
-        url = uri+":8983/solr/"+collection+"/update"
+        url = ec_uri+":8983/solr/"+collection+"/update"
         r = requests.post(url, data={"commit":"true"})
         print(r.text)
 
