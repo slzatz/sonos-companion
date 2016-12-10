@@ -292,6 +292,7 @@ while 1:
         except Exception as e:
             print "...filter(func.loser(Artist.name)==artist.lower() error:", e
             z = None
+
         if not z:
             z = get_artist_images(artist)
             if not z:
@@ -300,6 +301,9 @@ while 1:
         t1 = 0
 
     if cur_time - t1 < 15:
+        continue
+
+    if not z:
         continue
 
     x = z[random.randrange(0,len(z)-1)]
