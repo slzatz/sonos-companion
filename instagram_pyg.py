@@ -1,14 +1,15 @@
+'''
+Displays instagram photos but now someone has to sign up explicitly
+'''
+
 from __future__ import division
 from __future__ import print_function
-#from __future__ import unicode_literals
-#from future_builtins import *
 
 import requests
 from cStringIO import StringIO
 from time import sleep
 import platform
 import sys
-#import json
 import pygame
 from pygame.locals import USEREVENT
 import os
@@ -24,8 +25,25 @@ args = parser.parse_args()
 wrapper = textwrap.TextWrapper(width=100, replace_whitespace=False)  
 
 #instagram
+#scope=likes+comments #somehow need to request token with that scope
+#GET/users/self/media/liked #may be a way around getting non-user images
 base_url = "https://api.instagram.com/v1/users/{}/media/recent/"
+#base_url = "https://api.instagram.com/v1/users/self/media/liked" #?access_token=ACCESS-TOKEN
+# client_id below does not seem to be needed anymore (? if it was ever needed)
 client_id = "8372f43ffb4b4bbbbd054871d6561668"
+# used http://instagram.pixelunion.net/ to get the token below which is for slzatz
+#ACCESS_TOKEN  = "278917377.8372f43.840404ed087b47f2b932f7f5bff6805c" #new
+ACCESS_TOKEN = "278917377.1677ed0.25a8e74c12b7429d8fcc2ff6d0d9cc56"
+ACCESS_TOKEN = "278917377.8372f43.840404ed087b47f2b932f7f5bff6805c" #public content + likes
+#https://api.instagram.com/oauth/authorize/?client_id=8372f43ffb4b4bbbbd054871d6561668&redirect_uri=https://sites.google.com/site/slzatz/&response_type=code&scope=public_content
+code = "74c34267c74c4090b38b747a86a1bcd4" #older
+code = "2b32ffd40e0744938081c04ca6867308" #newer
+
+#curl -F 'client_id=8372f43ffb4b4bbbbd054871d6561668' -F 'client_secret=4b384200a61a453885403955f182e6c6' -F 'grant_type=authorization_code' -F 'redirect_uri=https://sites.google.com/site/slzatz/' -F 'code=2b32ffd40e0744938081c04ca6867308' https://api.instagram.com/oauth/access_token
+#
+#
+#slzatz@ip-172-31-55-95:~$ curl -F 'client_id=8372f43ffb4b4bbbbd054871d6561668' -F 'client_secret=4b384200a61a453885403955f182e6c6' -F 'grant_type=authorization_code' -F 'redirect_uri=https://sites.google.com/site/slzatz/' -F 'code=2b32ffd40e0744938081c04ca6867308' https://api.instagram.com/oauth/access_token
+#{"access_token": "278917377.8372f43.840404ed087b47f2b932f7f5bff6805c", "user": {"username": "slzatz", "bio": "", "website": "", "profile_picture": "https://scontent.cdninstagram.com/t51.2885-19/11313773_803810133073111_434329045_a.jpg", "full_name": "slzatz", "id": "278917377"}}slzatz@ip-172-31-55-95:~$
 
 #https://api.instagram.com/v1/users/search?q=brahmino&access_token=278917377.8372f43.33d3f65330834b9fa6126d30283b660e
 #ids = 4616106 Jason Peterson; 17789355 JR; 986542 Tyson Wheatley; 230625139 Nick Schade; 3399664 Zak Shelhamer; 6156112 Scott Rankin; 1607304 Laura Pritchet; janske 24078; 277810 Richard Koci Hernandez; 1918184 Simone Bramante; 197656340 Michael Christoper Brown; 200147864 David Maialetti; 4769265 eelco roos 
@@ -76,19 +94,22 @@ def get_photos(ids=None, num=args.image_number):
     images = []
     d = divmod(num, 20)
     n = d[0] + 1 if d[1] else d[0]
-    payload = {'client_id':client_id}
+    #payload = {'client_id':client_id}
 
     for _id in ids:
         max_id = None #need this for payload line which references max_id
         for i in range(n):
             payload = {'client_id':client_id, 'max_id':max_id} if i else {'client_id':client_id}
+            payload = {}
+            payload.update({'access_token': ACCESS_TOKEN})
+            #payload = {'access_token': "278917377.8372f43.840404ed087b47f2b932f7f5bff6805c"}
 
             try:
                 r = requests.get(base_url.format(_id), params=payload)
                 z = r.json()['data'] 
                 zz = r.json()['pagination']
-                max_id = zz['next_max_id'] #"108...."
-                print(max_id)
+                #max_id = zz['next_max_id'] #"108...."
+                #print(max_id)
             except Exception as e:
                 print("Exception in get_photos - request: {} related to id: {} ".format(e, _id))
             else:
@@ -164,7 +185,7 @@ def display_image(image):
 
     pygame.display.flip()
 
-    sleep(10)
+    sleep(1)
     screen.fill((0,0,0)) 
     img.set_alpha(255)
     #screen.blit(img, (0,0))      
@@ -234,7 +255,7 @@ if __name__ == '__main__':
     images = get_photos(ids)
     L = len(images)
     print("Number of images = {}".format(L))
-    pygame.time.set_timer(SHOWNEWIMAGE, 20000)
+    pygame.time.set_timer(SHOWNEWIMAGE, 8000)
     pause = False
     pygame.event.post(pygame.event.Event(SHOWNEWIMAGE))
     while 1:
