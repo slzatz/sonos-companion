@@ -340,8 +340,10 @@ while 1:
         z0 = z[:]
     x = z0.pop()
 
-    t1 = time()
-    print t1
+    # moved farther down so time only moves forward on a good image
+    #t1 = time()
+    #print t1
+
     print x.link
     if not x.ok:
          print "The link isn't OK. ",x.link
@@ -380,6 +382,10 @@ while 1:
         print "img.transfrom or img.convert error:", e
 
         continue
+
+    # moved from above so time only reset when there is really a new image
+    t1 = time()
+    print t1
 
     f = StringIO()
     try:
