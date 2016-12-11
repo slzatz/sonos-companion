@@ -184,6 +184,8 @@ def get_artist_images(name):
 
     try:
         a = session.query(Artist).filter(func.lower(Artist.name)==name.lower()).one()
+        print "artist name =",a.name
+        print "artist id =",a.id
     except NoResultFound:
         print "Don't have that name in db so created it"
         a = Artist()
