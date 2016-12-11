@@ -184,7 +184,7 @@ def get_artist_images(name):
 
     try:
         a = session.query(Artist).filter(func.lower(Artist.name)==name.lower()).one()
-    except NoResultFound as e:
+    except NoResultFound:
         print "Don't have that name in db so created it"
         a = Artist()
         a.name = name
@@ -286,8 +286,18 @@ while 1:
             if not z:
                 print "Could not find images for {}".format(artist)
                 continue
+        except Exception as e:
+            print "error trying to find artist:", e
+            continue
         else:
             z = a.images
+
+        if len(z) < 8:
+            print "fewer than 8 images so getting new set of images for artist"
+            z = get_artist_images(artist)
+            if not z:
+                print "Could not find images for {}".format(artist)
+                continue
 
         random.shuffle(z)
         z0 = z[:]       
