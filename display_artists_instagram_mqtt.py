@@ -280,21 +280,35 @@ while 1:
         print "about to query image database for artist", artist
 
         try:
-            z = session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower()).all()
-            random.shuffle(z)
-            z0 = z[:]
-        except Exception as e:
-            print "session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower() error:", e
-            z = None
-
-        if not z:
+            a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
+        except NoResultFound:
             z = get_artist_images(artist)
             if not z:
                 print "Could not find images for {}".format(artist)
                 continue
+        else:
+            z = a.images
 
-            random.shuffle(z)
-            z0 = z[:]
+        random.shuffle(z)
+        z0 = z[:]       
+            
+        # The below worked fine but just didn't seem as ORM-Pythonic
+        #try:
+        #    z = session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower()).all()
+        #    random.shuffle(z)
+        #    z0 = z[:]
+        #except Exception as e:
+        #    print "session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower() error:", e
+        #    z = None
+
+        #if not z:
+        #    z = get_artist_images(artist)
+        #    if not z:
+        #        print "Could not find images for {}".format(artist)
+        #        continue
+
+        #    random.shuffle(z)
+        #    z0 = z[:]
 
         t1 = 0
 
