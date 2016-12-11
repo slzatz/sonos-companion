@@ -196,6 +196,11 @@ def get_artist_images(name):
         print "a = session.query(Artist).filter(func.lower.. error:", e 
         return []
 
+    for image in a.images:
+        print image.link, image.width, image.height,image.ok
+        session.delete(image)
+    session.commit()    
+
     images = []
 
     for data in z['items']:
