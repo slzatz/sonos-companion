@@ -184,8 +184,6 @@ def get_artist_images(name):
 
     try:
         a = session.query(Artist).filter(func.lower(Artist.name)==name.lower()).one()
-        print "artist name =",a.name
-        print "artist id =",a.id
     except NoResultFound:
         print "Don't have that name in db so created it"
         a = Artist()
@@ -197,6 +195,7 @@ def get_artist_images(name):
         return []
 
     for image in a.images:
+        # with change in cascade don on 12-11-2016 may be possible to do a.images = [];session.commit()
         print image.link, image.width, image.height,image.ok
         session.delete(image)
     session.commit()    
@@ -299,7 +298,7 @@ while 1:
         else:
             z = a.images
 
-        if len(z) < 8:
+        if len([i for i in z if i.ok]) < 8:
             print "fewer than 8 images so getting new set of images for artist"
             z = get_artist_images(artist)
             if not z:
