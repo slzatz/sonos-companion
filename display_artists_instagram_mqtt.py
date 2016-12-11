@@ -281,8 +281,10 @@ while 1:
 
         try:
             z = session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower()).all()
+            random.shuffle(z)
+            z0 = z[:]
         except Exception as e:
-            print "...filter(func.loser(Artist.name)==artist.lower() error:", e
+            print "session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower() error:", e
             z = None
 
         if not z:
@@ -290,6 +292,10 @@ while 1:
             if not z:
                 print "Could not find images for {}".format(artist)
                 continue
+
+            random.shuffle(z)
+            z0 = z[:]
+
         t1 = 0
 
     if cur_time - t1 < 15:
@@ -298,7 +304,11 @@ while 1:
     if not z:
         continue
 
-    x = z[random.randrange(0,len(z)-1)]
+    #x = z[random.randrange(0,len(z)-1)]
+    if not z0:
+        z0 = z[:]
+    x = z0.pop()
+
     t1 = time()
     print t1
     print x.link
