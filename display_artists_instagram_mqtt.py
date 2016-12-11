@@ -306,7 +306,7 @@ while 1:
                 print "Could not find images for {}".format(artist)
                 continue
 
-        random.shuffle(z)
+        #random.shuffle(z) - messes up things if you have to update an image with image.ok = False
         z0 = z[:]       
             
         # The below worked fine but just didn't seem as ORM-Pythonic
@@ -352,7 +352,6 @@ while 1:
         print "response = requests.get(url) generated exception: ", e
         try:
             x.ok = False
-            x.artist_id = a.id
             session.commit()
             print "ok was set to False for", x.link
         except Exception as e:
