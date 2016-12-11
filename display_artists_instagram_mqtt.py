@@ -328,18 +328,25 @@ while 1:
                 session.commit()
                 print "ok was set to False for", x.link
             except Exception as e:
-                print "x.ok = False - error:", e
+                print "x.ok set to false error:", e
 
             continue
 
-    img.transform(resize = "{}x{}".format(w,h))
-    img = img.convert('bmp')
+    try:
+        img.transform(resize = "{}x{}".format(w,h))
+        img = img.convert('bmp')
+    except Exception as e:
+        print "img.transfrom or img.convert error:", e
+
+        continue
+
     f = StringIO()
     try:
         img.save(f)
     except wand.exceptions.OptionError as e:
         print "Problem saving image:",e
         continue
+
     f.seek(0)
     img = pygame.image.load(f, 'bmp').convert()
     f.close()
