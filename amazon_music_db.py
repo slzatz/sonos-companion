@@ -33,6 +33,8 @@ class Artist(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
     
+    images = relationship("Image", backref='artist') #, cascade="all, delete, delete-orphan")
+
     def __repr__(self):
         return "<artist={}>".format(self.name)
 
@@ -45,8 +47,8 @@ class Image(Base):
     height = Column(Integer)
     ok = Column(Boolean, default=True)
     
-    artist = relationship("Artist", backref=backref('images')) 
-   
+    #artist = relationship("Artist", backref=backref('images')) 
+
     def __repr__(self):
         return "<artist_id={}; link={}; ({},{})>".format(self.artist_id, self.link, self.width, self.height)
 
