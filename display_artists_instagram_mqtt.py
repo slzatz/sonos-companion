@@ -352,6 +352,7 @@ while 1:
         print "response = requests.get(url) generated exception: ", e
         try:
             x.ok = False
+            x.artist_id = a.id
             session.commit()
             print "ok was set to False for", x.link
         except Exception as e:
