@@ -19,11 +19,11 @@ sys.path = [sqla_dir] + sys.path
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
-from sqlalchemy.sql import func #select, join, and_
+from sqlalchemy.sql import func, and_ #select, join, and_
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm.exc import NoResultFound
 
-__all__ = ['Artist', 'Image', 'session', 'IntegrityError',  'OperationalError', 'NoResultFound', 'func'] 
+__all__ = ['Artist', 'Image', 'session', 'IntegrityError',  'OperationalError', 'NoResultFound', 'func', 'engine', 'and_'] 
 # might also  need 'Base', 'conn', 'select', 'join', 'and_', 'create_engine', 'sessionmaker', 'engine'
 
 Base = declarative_base()
@@ -33,7 +33,7 @@ class Artist(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
     
-    images = relationship("Image", backref='artist') #, cascade="all, delete, delete-orphan")
+    images = relationship("Image", backref='artist') #, cascade="all, delete", delete-orphan")
 
     def __repr__(self):
         return "<artist={}>".format(self.name)
