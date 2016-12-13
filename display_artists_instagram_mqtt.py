@@ -194,11 +194,16 @@ def get_artist_images(name):
         print "a = session.query(Artist).filter(func.lower.. error:", e 
         return []
 
-    for image in a.images:
-        # with change in cascade don on 12-11-2016 may be possible to do a.images = [];session.commit()
-        print image.link, image.width, image.height,image.ok
-        session.delete(image)
-    session.commit()    
+    # must delete images before you can add new whole new set of images
+    session.query(Image).filter_by(artist_id=a.id).delete()
+    session.commit()
+
+    # the below works and deletes the images one at a time
+    #for image in a.images:
+    #    # with change in cascade don on 12-11-2016 may be possible to do a.images = [];session.commit()
+    #    print image.link, image.width, image.height,image.ok
+    #    session.delete(image)
+    #session.commit()    
 
     images = []
 
