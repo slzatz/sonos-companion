@@ -12,7 +12,7 @@ import wand.image
 from config import mqtt_uris, google_api_key, instagram_client_id, instagram_access_token 
 import json
 import paho.mqtt.client as mqtt
-from amazon_music_db import *
+from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 
@@ -385,6 +385,13 @@ while 1:
     except Exception as e:
         print "img.transfrom or img.convert error:", e
 
+        try:
+            x.ok = False
+            session.commit()
+            print "ok was set to False for", x.link
+        except Exception as e:
+            print "x.ok set to false error:", e
+
         continue
 
     # moved from above so time only reset when there is really a new image
@@ -396,6 +403,14 @@ while 1:
         img.save(f)
     except wand.exceptions.OptionError as e:
         print "Problem saving image:",e
+
+        try:
+            x.ok = False
+            session.commit()
+            print "ok was set to False for", x.link
+        except Exception as e:
+            print "x.ok set to false error:", e
+
         continue
 
     f.seek(0)
