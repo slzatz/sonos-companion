@@ -16,7 +16,7 @@ import random
 import wand.image
 import textwrap
 #from artist_images_db import *
-from amazon_music_db import *
+from artist_images_db import *
 import lxml.html
 
 wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  
