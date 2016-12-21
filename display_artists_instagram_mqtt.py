@@ -198,17 +198,9 @@ def get_artist_images(name):
     session.query(Image).filter_by(artist_id=a.id).delete()
     session.commit()
 
-    # the below works and deletes the images one at a time
-    #for image in a.images:
-    #    # with change in cascade don on 12-11-2016 may be possible to do a.images = [];session.commit()
-    #    print image.link, image.width, image.height,image.ok
-    #    session.delete(image)
-    #session.commit()    
-
     images = []
 
     for data in z['items']:
-        
         image=Image()
         image.link = data['link']
         image.width = data['image']['width']
@@ -251,8 +243,9 @@ images = get_photos(ids)
 L = len(images)
 print "Number of images = {}".format(L)
 if images:
-    image = images[random.randrange(0,L-1)]
-    display_image(image)
+    #image = images[random.randrange(0,L-1)]
+    #display_image(image)
+    display_image(random.choice(images))
 
 prev_artist = "No artist"  #this is None so if the song title is the empty string, it's not equal
 t1 = time()
@@ -313,24 +306,6 @@ while 1:
         #random.shuffle(z) - messes up things if you have to update an image with image.ok = False
         z0 = z[:]       
             
-        # The below worked fine but just didn't seem as ORM-Pythonic
-        #try:
-        #    z = session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower()).all()
-        #    random.shuffle(z)
-        #    z0 = z[:]
-        #except Exception as e:
-        #    print "session.query(Image).join(Artist).filter(func.lower(Artist.name)==artist.lower() error:", e
-        #    z = None
-
-        #if not z:
-        #    z = get_artist_images(artist)
-        #    if not z:
-        #        print "Could not find images for {}".format(artist)
-        #        continue
-
-        #    random.shuffle(z)
-        #    z0 = z[:]
-
         t1 = 0
 
     if cur_time - t1 < 15:
@@ -339,14 +314,9 @@ while 1:
     if not z:
         continue
 
-    #x = z[random.randrange(0,len(z)-1)]
     if not z0:
         z0 = z[:]
     x = z0.pop()
-
-    # moved farther down so time only moves forward on a good image
-    #t1 = time()
-    #print t1
 
     print x.link
     if not x.ok:
@@ -394,7 +364,6 @@ while 1:
 
         continue
 
-    # moved from above so time only reset when there is really a new image
     t1 = time()
     print t1
 
