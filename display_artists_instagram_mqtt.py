@@ -311,6 +311,10 @@ while 1:
     if cur_time - t1 < 15:
         continue
 
+    alive = session.query(session.query(Artist).exists()).all()
+    if alive[0][0]:
+        print "database connection alive"
+
     if not z:
         continue
 
