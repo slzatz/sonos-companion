@@ -37,7 +37,7 @@ wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  #instagram
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
 elif platform.system() == "Linux":
-    os.environ['SDL_VIDEODRIVER'] = 'x11' #note: this works if you launch x (startx) and run terminal requires keyboard/mouse
+    os.environ['SDL_VIDEODRIVER'] = 'x11' 
     os.environ['SDL_VIDEO_CENTERED'] = '1'
 else:
     sys.exit("Currently unsupported hardware/OS")
@@ -46,7 +46,7 @@ else:
 r = pygame.init()
 print "pygame init",r
 
-if platform.machine() == 'armv6l': 
+if platform.machine()[:3] == 'arm': 
     pygame.mouse.set_visible(False)
 
 if platform.system() == 'Windows':
@@ -249,6 +249,7 @@ if images:
 
 prev_artist = "No artist"  #this is None so if the song title is the empty string, it's not equal
 t1 = time()
+nn = 0
 
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
@@ -271,8 +272,9 @@ while 1:
     if artist is None or artist == "":
         if images:
             if cur_time - t1 > 15:
-                image = images[random.randrange(0,L-1)]
-                display_image(image)
+                #image = images[random.randrange(0,L-1)]
+                #display_image(image)
+                display_image(random.choice(images))
                 t1 = time()
         sleep(1)
         continue
@@ -280,6 +282,7 @@ while 1:
     if prev_artist != artist:
 
         prev_artist = artist
+        nn = 0
 
         print "about to query image database for artist", artist
 
@@ -311,6 +314,11 @@ while 1:
     if cur_time - t1 < 15:
         continue
 
+    # could also try
+    #conn = engine.connect() # presumably this could be done once at the start of the script
+    #z = conn.execute("SELECT 1")
+    #z.fetchall()
+    #[(1,)]
     alive = session.query(session.query(Artist).exists()).all()
     if alive[0][0]:
         print "database connection alive"
@@ -321,6 +329,12 @@ while 1:
     if not z0:
         z0 = z[:]
     x = z0.pop()
+
+    nn+=1
+    # Don't want to keep displaying same artist forever and at some point links seem to go bad
+    if nn > 24:
+        trackinfo['artist'] = None
+
 
     print x.link
     if not x.ok:
