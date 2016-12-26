@@ -186,6 +186,7 @@ try:
             threaded=False,
             use_reloader=False,
             use_debugger=True,
+            ASK_VERIFY_REQUESTS = False, #for flask ask
             host='0.0.0.0'
             )
 finally:
