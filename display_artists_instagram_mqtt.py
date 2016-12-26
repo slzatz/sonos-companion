@@ -138,7 +138,13 @@ def display_image(image):
         return
 
     f.seek(0)
-    img = pygame.image.load(f).convert()
+
+    try:
+        img = pygame.image.load(f).convert()
+    except pygame.error as e:
+        print e
+        return
+
     f.close()
     img_rect = img.get_rect()
     center = ((w-img_rect.width)/2, 0)
