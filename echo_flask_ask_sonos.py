@@ -27,6 +27,7 @@ import pysolr
 from config import solr_uri, user_id #,last_fm_api_key, user_id
 
 app = Flask(__name__)
+app.config['ASK_VERIFY_REQUESTS'] = False
 ask = Ask(app, '/sonos')
 
 home = os.path.split(os.getcwd())[0]
@@ -116,7 +117,7 @@ def my_add_to_queue(uri, metadata):
     qnumber = response['FirstTrackNumberEnqueued']
     return int(qnumber)
 
-@ask.intent('PlayAlbum')
+@ask.intent('PlayAlbum', mapping={'album':'myalbum', 'artist':'myartist'})
 def play_album(album, artist):
     # album must be present; artist is optional
 
@@ -186,7 +187,6 @@ try:
             threaded=False,
             use_reloader=False,
             use_debugger=True,
-            ASK_VERIFY_REQUESTS = False, #for flask ask
             host='0.0.0.0'
             )
 finally:
