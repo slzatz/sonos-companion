@@ -13,28 +13,29 @@ Generic program to use Flask to be the https echo endpoint
 from flask import Flask, request
 from flask_ask import Ask, statement
 import json
-#from sonos_echo_app_complete import lambda_handler
-from time import sleep
+from time import time, sleep
 import sys
 import os
 #import random
 from operator import itemgetter 
 #from decimal import Decimal
-#import time
 import pysolr
 #import requests
-#from multiprocessing.connection import Client 
+from multiprocessing.connection import Client 
 from config import solr_uri, user_id #,last_fm_api_key, user_id
-
-app = Flask(__name__)
-app.config['ASK_VERIFY_REQUESTS'] = False
-ask = Ask(app, '/sonos')
 
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
 soco_config.CACHE_ENABLED = False
+
+app = Flask(__name__)
+app.config['ASK_VERIFY_REQUESTS'] = False
+ask = Ask(app, '/sonos')
+
+address = ('localhost', 6000)
+conn = Client(address, authkey='secret password')
 
 n = 0
 while 1:
@@ -140,33 +141,36 @@ def play_album(album, artist):
             # The if t['album']==selected_album only comes into play if we retrieved more than one album
             uris = [t['uri'] for t in tracks if t['album']==selected_album]
 
-            master.stop()
-            master.clear_queue()
+            conn.send({'action':'play', 'uris':uris})
 
-            for uri in uris:
-                print 'uri: ' + uri
-                print "---------------------------------------------------------------"
-                playlist = False
-                if 'library_playlist' in uri:
-                    i = uri.find(':')
-                    id_ = uri[i+1:]
-                    meta = didl_library_playlist.format(id_=id_)
-                    playlist = True
-                elif 'library' in uri:
-                    i = uri.find('library')
-                    ii = uri.find('.')
-                    id_ = uri[i:ii]
-                    meta = didl_library.format(id_=id_)
-                else:
-                    print 'The uri:{}, was not recognized'.format(uri)
-                    continue
+            ######################################################################
+            #master.stop()
+            #master.clear_queue()
 
-                print 'meta: ',meta
-                print '---------------------------------------------------------------'
+            #for uri in uris:
+            #    print 'uri: ' + uri
+            #    print "---------------------------------------------------------------"
+            #    playlist = False
+            #    if 'library_playlist' in uri:
+            #        i = uri.find(':')
+            #        id_ = uri[i+1:]
+            #        meta = didl_library_playlist.format(id_=id_)
+            #        playlist = True
+            #    elif 'library' in uri:
+            #        i = uri.find('library')
+            #        ii = uri.find('.')
+            #        id_ = uri[i:ii]
+            #        meta = didl_library.format(id_=id_)
+            #    else:
+            #        print 'The uri:{}, was not recognized'.format(uri)
+            #        continue
 
-                my_add_to_queue('', meta)
+            #    print 'meta: ',meta
+            #    print '---------------------------------------------------------------'
 
-            master.play_from_queue(0)
+            #    my_add_to_queue('', meta)
+
+            #master.play_from_queue(0)
 
             output_speech = "Using Flask Ask, I will play {} songs from {}".format(len(uris), selected_album)
             #end_session = True
