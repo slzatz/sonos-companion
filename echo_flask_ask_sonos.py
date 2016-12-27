@@ -176,7 +176,7 @@ def shuffle(artist):
 
     return statement(output_speech)
 
-@ask.intent('Mix', mapping={'artist1':'myartist1', 'artist2':'myartist2'})
+@ask.intent('Mix', mapping={'artist1':'myartista', 'artist2':'myartistb'})
 def mix(artist1, artist2):
     uris = []
     for artist in (artist1, artist2):
@@ -189,7 +189,7 @@ def mix(artist1, artist2):
                 tracks = result.docs
                 k = 5 if count >= 5 else count
                 selected_tracks = random.sample(tracks, k)
-                uris = uris.append([t.get('uri') for t in selected_tracks])
+                uris.append([t.get('uri') for t in selected_tracks])
             else:
                 output_speech = "I couldn't find any tracks for {}".format(artist)
                 return statement(output_speech)
@@ -221,38 +221,12 @@ def play_track(title, artist):
 
             conn.send({'action':'play', 'uris':[uri]})
 
-            print 'uri: ' + uri
-            print "---------------------------------------------------------------"
-            #if 'library' in uri:
-            #    i = uri.find('library')
-            #    ii = uri.find('.')
-            #    id_ = uri[i:ii]
-            #    meta = didl_library.format(id_=id_)
-            #else:
-            #    print 'The uri:{}, was not recognized'.format(uri)
-            #    output_speech = "That is not a uri format that I can deal with."
-            #    #response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
-            #    return statement(output_speech)
-
-            #print 'meta: ',meta
-            #print '---------------------------------------------------------------'
-
-            #my_add_to_queue('', meta)
-
-            #queue = master.get_queue()
-            #master.play_from_queue(len(queue)-1)
-            #action = 'play'
-
-            output_speech = "I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album'])
-            #end_session = True
+            output_speech = "I will play {} by {} from album {}".format(track['title'], track['artist'], track['album'])
         else:
             output_speech = "I couldn't find the song {} by {}.".format(title,artist)
-            #end_session = False
     else:
         output_speech = "I couldn't find the song."
-        #end_session = False
 
-    #response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
     return statement(output_speech)
 
 try:
