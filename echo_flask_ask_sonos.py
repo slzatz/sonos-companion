@@ -9,14 +9,17 @@ Also need ngrok http 5000
 and url will look like 1234.ngrok.io/sonos
 it is set on Alexa configuration page
 Generic program to use Flask to be the https echo endpoint
+random.sample(population, k)
 '''
+
 from flask import Flask, request
 from flask_ask import Ask, statement
 import json
 from time import time, sleep
+import itertools
 import sys
 import os
-#import random
+import random
 from operator import itemgetter 
 #from decimal import Decimal
 import pysolr
@@ -143,43 +146,110 @@ def play_album(album, artist):
 
             conn.send({'action':'play', 'uris':uris})
 
-            ######################################################################
-            #master.stop()
-            #master.clear_queue()
-
-            #for uri in uris:
-            #    print 'uri: ' + uri
-            #    print "---------------------------------------------------------------"
-            #    playlist = False
-            #    if 'library_playlist' in uri:
-            #        i = uri.find(':')
-            #        id_ = uri[i+1:]
-            #        meta = didl_library_playlist.format(id_=id_)
-            #        playlist = True
-            #    elif 'library' in uri:
-            #        i = uri.find('library')
-            #        ii = uri.find('.')
-            #        id_ = uri[i:ii]
-            #        meta = didl_library.format(id_=id_)
-            #    else:
-            #        print 'The uri:{}, was not recognized'.format(uri)
-            #        continue
-
-            #    print 'meta: ',meta
-            #    print '---------------------------------------------------------------'
-
-            #    my_add_to_queue('', meta)
-
-            #master.play_from_queue(0)
-
             output_speech = "Using Flask Ask, I will play {} songs from {}".format(len(uris), selected_album)
-            #end_session = True
         else:
-            output_speech = "I couldn't find any songs from album {}. Try again.".format(album)
-            #end_session = False
+            output_speech = "I couldn't find any songs from album {}.".format(album)
 
     else:
-        output_speech = "I couldn't even find the album. Try again."
+        output_speech = "I couldn't even find the album."
+
+    return statement(output_speech)
+
+@ask.intent('Shuffle', mapping={'artist':'myartist'})
+def shuffle(artist):
+    if artist:
+        s = 'artist:' + ' AND artist:'.join(artist.split())
+        result = solr.search(s, fl='artist,title,uri', rows=500) 
+        count = len(result)
+        if count:
+            print "Total track count for {} was {}".format(artist, count)
+            tracks = result.docs
+            k = 10 if count >= 10 else count
+            selected_tracks = random.sample(tracks, k)
+            uris = [t.get('uri') for t in selected_tracks]
+            conn.send({'action':'play', 'uris':uris})
+            output_speech = "I will shuffle songs by {}.".format(artist)
+        else:
+            output_speech = "I couldn't find any tracks for {}".format(artist)
+    else:
+        output_speech = "I couldn't find the artist you were looking for."
+
+    return statement(output_speech)
+
+@ask.intent('Mix', mapping={'artist1':'myartist1', 'artist2':'myartist2'})
+def mix(artist1, artist2):
+    uris = []
+    for artist in (artist1, artist2):
+        if artist:
+            s = 'artist:' + ' AND artist:'.join(artist.split())
+            result = solr.search(s, fl='artist,title,uri', rows=500) 
+            count = len(result)
+            if count:
+                print "Total track count for {} was {}".format(artist, count)
+                tracks = result.docs
+                k = 5 if count >= 5 else count
+                selected_tracks = random.sample(tracks, k)
+                uris = uris.append([t.get('uri') for t in selected_tracks])
+            else:
+                output_speech = "I couldn't find any tracks for {}".format(artist)
+                return statement(output_speech)
+        else:
+            output_speech = "I couldn't find one or both of the artists you were looking for."
+            return statement(output_speech)
+
+    iters = [iter(y) for y in uris]
+    uris = list(it.next() for it in itertools.cycle(iters))
+    conn.send({'action':'play', 'uris':uris})
+    output_speech = "I will shuffle mix songs by {} and {}.".format(artist1, artist2)
+    return statement(output_speech)
+
+@ask.intent('PlayTrack', mapping={'title':'mytitle', 'artist':'myartist'})
+def play_track(title, artist):
+    # title must be present; artist is optional
+    print "artist =",artist
+    print "title =",title
+
+    if title:
+        s = 'title:' + ' AND title:'.join(title.split())
+        if artist:
+            s = s + ' artist:' + ' AND artist:'.join(artist.split())
+
+        result = solr.search(s, rows=1) #**{'rows':1})
+        if len(result):
+            track = result.docs[0]
+            uri = track['uri']
+
+            conn.send({'action':'play', 'uris':[uri]})
+
+            print 'uri: ' + uri
+            print "---------------------------------------------------------------"
+            #if 'library' in uri:
+            #    i = uri.find('library')
+            #    ii = uri.find('.')
+            #    id_ = uri[i:ii]
+            #    meta = didl_library.format(id_=id_)
+            #else:
+            #    print 'The uri:{}, was not recognized'.format(uri)
+            #    output_speech = "That is not a uri format that I can deal with."
+            #    #response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':True}
+            #    return statement(output_speech)
+
+            #print 'meta: ',meta
+            #print '---------------------------------------------------------------'
+
+            #my_add_to_queue('', meta)
+
+            #queue = master.get_queue()
+            #master.play_from_queue(len(queue)-1)
+            #action = 'play'
+
+            output_speech = "I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album'])
+            #end_session = True
+        else:
+            output_speech = "I couldn't find the song {} by {}.".format(title,artist)
+            #end_session = False
+    else:
+        output_speech = "I couldn't find the song."
         #end_session = False
 
     #response = {'outputSpeech': {'type':'PlainText','text':output_speech},'shouldEndSession':end_session}
