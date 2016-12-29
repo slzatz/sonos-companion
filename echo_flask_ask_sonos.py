@@ -1,37 +1,20 @@
 '''
-No mqtt
-Requires three scripts:
-echo_flask_sonos.py
-echo_check_no_mqtt.py
-sonos_echo_app.py
-
+The script uses the flask extension flask-ask, which was written specifically for python-
+based Alexa apps.
+Uses flask_ask_mp.py to do the actual interactions with Sonos
 Also need ngrok http 5000
 and url will look like 1234.ngrok.io/sonos
-it is set on Alexa configuration page
-Generic program to use Flask to be the https echo endpoint
-random.sample(population, k)
+I do have a lambda program but it is just to really proxy to the right raspi
 '''
 
-from flask import Flask, request
+from flask import Flask #, request
 from flask_ask import Ask, statement
-import json
-from time import time, sleep
 import itertools
-import sys
-import os
 import random
 from operator import itemgetter 
-#from decimal import Decimal
 import pysolr
-#import requests
 from multiprocessing.connection import Client 
-from config import solr_uri, user_id #,last_fm_api_key, user_id
-
-home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home, 'SoCo')] + sys.path
-import soco
-from soco import config as soco_config
-soco_config.CACHE_ENABLED = False
+from config import solr_uri #, user_id #,last_fm_api_key, user_id
 
 app = Flask(__name__)
 app.config['ASK_VERIFY_REQUESTS'] = False
@@ -40,86 +23,26 @@ ask = Ask(app, '/sonos')
 address = ('localhost', 6000)
 conn = Client(address, authkey='secret password')
 
-n = 0
-while 1:
-    n+=1
-    print "attempt "+str(n) 
-    try:
-        sp = soco.discover(timeout=2)
-        speakers = {s.player_name:s for s in sp}
-    except TypeError as e:    
-        print e 
-        sleep(1)       
-    else:
-        break 
-    
-for s in sp:
-    print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
-
-master_name = raw_input("Which speaker do you want to be master? ")
-master = speakers.get(master_name)
-if master:
-    print "Master speaker is: {}".format(master.player_name) 
-    sp = [s for s in sp if s.group.coordinator is master]
-    print "Master group:"
-    for s in sp:
-        print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
-
-else:
-    print "Somehow you didn't pick a master or spell it correctly (case matters)" 
-    sys.exit(1)
-
-print "\nConnected to Sonos\n"
-
-#last.fm 
-base_url = "http://ws.audioscrobbler.com/2.0/"
-
-appVersion = '1.0'
-
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #port 8983 is incorporated in the ngrok url
 
-meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
+def get_track(artist, title):    
+    # title must be present; artist is optional
+    print "artist =",artist
+    print "title =",title
 
-meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
+    if not title:
+        return statement("I couldn't find the song.")
 
-#uri = "x-sonos-http:amz%3atr%3a6b5d9c09-7dbe-44bc-89e1-85ac5ed45093.mp3?sid=26&flags=8224&sn=1",
-#id_ = "amz%3atr%3a6b5d9c09-7dbe-44bc-89e1-85ac5ed45093
-didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
+    s = 'title:' + ' AND title:'.join(title.split())
+    if artist:
+        s = s + ' artist:' + ' AND artist:'.join(artist.split())
 
-#uri = "radea:Tra.2056353.mp3?sn=3",
-#id_ = "2056353
-didl_rhapsody = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="RDCPI:GLBTRACK:Tra.{id_}" parentID="-1" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">''' + '''SA_RINCON1_{}</desc></item></DIDL-Lite>'''.format(user_id)
+    result = solr.search(s, rows=1) #**{'rows':1})
+    if not len(result):
+        return 
 
-#uri = "x-sonos-http:library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f.mp4?sid=201&flags=8224&sn=5"
-#id_ = "library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f"
-didl_library = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00032020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
-
-#uri = "x-rincon-cpcontainer:0006206clibrary%2fplaylists%2f7c7704e9-04b6-431a-afe6-c5db44cb77f1%2f%23library_playlist"
-#id_ = "0006206clibrary%2fplaylists%2f7c7704e9-04b6-431a-afe6-c5db44cb77f1%2f%23library_playlist"
-#for playlists metadata does not need to include any value for title or parent but unlike tracks, you do need to pass the uri to add_playlist_to_queue
-#for the record for An Unarmorial Age, the parentID was "00082064library%2fplaylists%2f%23library_playlists"
-didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.container.playlistContainer</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
-
-with open('stations') as f:
-    z = f.read()
-
-STATIONS = json.loads(z)
-
-#@ask.intent('HelloIntent')
-#def hello(firstname):
-#    text = render_template('hello', firstname=firstname)
-#    return statement(text).simple_card('Hello', text)
-
-def my_add_to_queue(uri, metadata):
-    response = master.avTransport.AddURIToQueue([
-            ('InstanceID', 0),
-            ('EnqueuedURI', uri), #x-sonos-http:library ...
-            ('EnqueuedURIMetaData', metadata),
-            ('DesiredFirstTrackNumberEnqueued', 0),
-            ('EnqueueAsNext', 1)
-            ])
-    qnumber = response['FirstTrackNumberEnqueued']
-    return int(qnumber)
+    track = result.docs[0]
+    return track['uri']
 
 @ask.intent('PlayAlbum', mapping={'album':'myalbum', 'artist':'myartist'})
 def play_album(album, artist):
@@ -157,24 +80,22 @@ def play_album(album, artist):
 
 @ask.intent('Shuffle', mapping={'artist':'myartist'})
 def shuffle(artist):
-    if artist:
-        s = 'artist:' + ' AND artist:'.join(artist.split())
-        result = solr.search(s, fl='artist,title,uri', rows=500) 
-        count = len(result)
-        if count:
-            print "Total track count for {} was {}".format(artist, count)
-            tracks = result.docs
-            k = 10 if count >= 10 else count
-            selected_tracks = random.sample(tracks, k)
-            uris = [t.get('uri') for t in selected_tracks]
-            conn.send({'action':'play', 'uris':uris})
-            output_speech = "I will shuffle songs by {}.".format(artist)
-        else:
-            output_speech = "I couldn't find any tracks for {}".format(artist)
-    else:
-        output_speech = "I couldn't find the artist you were looking for."
+    if not artist:
+        return statement("I couldn't find the artist you were looking for.  Sorry.")
 
-    return statement(output_speech)
+    s = 'artist:' + ' AND artist:'.join(artist.split())
+    result = solr.search(s, fl='artist,title,uri', rows=500) 
+    count = len(result)
+    if not count:
+        return statement("I couldn't find any tracks for {}".format(artist))
+
+    print "Total track count for {} was {}".format(artist, count)
+    tracks = result.docs
+    k = 10 if count >= 10 else count
+    selected_tracks = random.sample(tracks, k)
+    uris = [t.get('uri') for t in selected_tracks]
+    conn.send({'action':'play', 'uris':uris})
+    return statement("I will shuffle songs by {}.".format(artist))
 
 @ask.intent('Mix', mapping={'artist1':'myartista', 'artist2':'myartistb'})
 def mix(artist1, artist2):
@@ -209,25 +130,30 @@ def play_track(title, artist):
     print "artist =",artist
     print "title =",title
 
-    if title:
-        s = 'title:' + ' AND title:'.join(title.split())
-        if artist:
-            s = s + ' artist:' + ' AND artist:'.join(artist.split())
+    if not title:
+        return statement("I couldn't find the song.")
 
-        result = solr.search(s, rows=1) #**{'rows':1})
-        if len(result):
-            track = result.docs[0]
-            uri = track['uri']
+    s = 'title:' + ' AND title:'.join(title.split())
+    if artist:
+        s = s + ' artist:' + ' AND artist:'.join(artist.split())
 
-            conn.send({'action':'play', 'uris':[uri]})
+    result = solr.search(s, rows=1) #**{'rows':1})
+    if not len(result):
+        return statement("I couldn't find the song {} by {}.".format(title,artist))
 
-            output_speech = "I will play {} by {} from album {}".format(track['title'], track['artist'], track['album'])
-        else:
-            output_speech = "I couldn't find the song {} by {}.".format(title,artist)
-    else:
-        output_speech = "I couldn't find the song."
+    track = result.docs[0]
+    uri = track['uri']
+    conn.send({'action':'play', 'uris':[uri]})
+    return statement("I will play {} by {} from album {}".format(track['title'], track['artist'], track['album']))
 
-    return statement(output_speech)
+@ask.intent('AddTrack', mapping={'title':'mytitle', 'artist':'myartist'})
+def add_track(title, artist):
+    uri = get_track(title, artist)
+    if not uri:
+        return statement("I couldn't find the song {} by {}.".format(title,artist))
+
+    conn.send({'action':'add', 'uris':[uri]})
+    return statement("I will add {} by {} from album {}".format(track['title'], track['artist'], track['album']))
 
 try:
     app.run(debug=True,
