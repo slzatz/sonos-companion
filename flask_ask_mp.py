@@ -16,7 +16,6 @@ import os
 from time import sleep
 import random
 import json
-import itertools
 import sys
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
@@ -162,13 +161,10 @@ def play_deborah_radio(k):
     master.play_from_queue(0)
 
 
-# The callback for when sonos_echo_app has to offload a task
+# The callback when echo_flask_ask_sonos.py sends a message
 def on_message(task):
     print task
     action = task.get('action', '')
-
-    #An alternative would be to define a dictionary of actions and related functions 
-    #d = {'deborah':f1, 'shuffle':f2, 'louder':f3 ...} d.get('deborah')(task) def f1(**kw); kw = 
 
     if action == 'deborah':
         play_deborah_radio(20)         
@@ -191,100 +187,6 @@ def on_message(task):
                     master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
             else:
                 print "{} radio is not a preset station.".format(task['station'])
-
-    elif action == 'shuffle':
-
-        shuffle_number = 10
-        artist = task.get('artist', '')
-
-        s = 'artist:' + ' AND artist:'.join(artist.split())
-        result = solr.search(s, fl='artist,title,uri', rows=500) 
-        count = len(result)
-        if count:
-            master.stop()
-            master.clear_queue()
-            print "Total track count for {} was {}".format(artist, count)
-            tracks = result.docs
-            k = shuffle_number if shuffle_number <= count else count
-            uris = []
-            for j in range(k):
-                while 1:
-                    n = random.randint(0, count-1) if count > shuffle_number else j
-                    uri = tracks[n].get('uri', '')
-                    if uri and not uri in uris:
-                        uris.append(uri)
-                        if 'library_playlist' in uri:
-                            i = uri.find(':')
-                            id_ = uri[i+1:]
-                            meta = didl_library_playlist.format(id_=id_)
-                            playlist = True
-                        elif 'library' in uri:
-                            i = uri.find('library')
-                            ii = uri.find('.')
-                            id_ = uri[i:ii]
-                            meta = didl_library.format(id_=id_)
-                        else:
-                            print 'The uri:{}, was not recognized'.format(uri)
-                            break
-
-                        print "---------------------------------------------------------------"
-                        print "artist: ", tracks[n].get('artist', '')
-                        print "title: ", tracks[n].get('title', '')
-                        print 'uri: ' + uri
-                        print "---------------------------------------------------------------"
-
-                        my_add_to_queue('', meta)
-                        break
-
-            master.play_from_queue(0)
-
-    elif action == 'mix':
-
-        shuffle_number = 5
-        artists = task.get('artists', '')
-
-        metas = []
-        for x,artist in enumerate(artists):
-            metas.append([])
-            s = 'artist:' + ' AND artist:'.join(artist.split())
-            result = solr.search(s, fl='artist,title,uri', rows=500) 
-            count = len(result)
-            if count:
-                master.stop()
-                master.clear_queue()
-                print "Total track count for {} was {}".format(artist, count)
-                tracks = result.docs
-                k = shuffle_number if shuffle_number <= count else count
-                uris = []
-                print "---------------------------------------------------------------"
-                for j in range(k):
-                    while 1:
-                        n = random.randint(0, count-1) if count > shuffle_number else j
-                        uri = tracks[n].get('uri', '')
-                        if uri and not uri in uris:
-                            uris.append(uri)
-
-                            print "artist: ", tracks[n].get('artist', '')
-                            print "title: ", tracks[n].get('title', '')
-                            print 'uri: ' + uri
-
-                            if 'library' in uri:
-                                i = uri.find('library')
-                                ii = uri.find('.')
-                                id_ = uri[i:ii]
-                                meta = didl_library.format(id_=id_)
-                                metas[x].append(meta)
-                                print "---------------------------------------------------------------"
-                                break
-                            else:
-                                print '********The uri:{}, was not recognized**********'.format(uri)
-                                print "---------------------------------------------------------------"
-
-        iters = [iter(y) for y in metas]
-        metas = list(it.next() for it in itertools.cycle(iters))
-        for meta in metas:
-            my_add_to_queue('', meta)
-        master.play_from_queue(0)
 
     elif action in ('play','add') and task.get('uris'):
         if action == 'play':
@@ -372,3 +274,5 @@ while True:
     except KeyboardInterrupt:
         listener.close()
         sys.exit()
+
+    sleep(0.5)
