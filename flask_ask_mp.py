@@ -12,6 +12,7 @@ current_track = master.get_current_track_info() --> {
             u'position': '0:02:38', 
             u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
 '''
+
 import os
 from time import sleep
 import random
@@ -33,7 +34,7 @@ while 1:
     print "attempt "+str(n) 
     try:
         sp = soco.discover(timeout=2)
-        speakers = {s.player_name:s for s in sp}
+        sp_names = {s.player_name:s for s in sp}
     except TypeError as e:    
         print e 
         sleep(1)       
@@ -44,12 +45,12 @@ for s in sp:
     print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
 
 master_name = raw_input("Which speaker do you want to be master? ")
-master = speakers.get(master_name)
+master = sp_names.get(master_name)
 if master:
     print "Master speaker is: {}".format(master.player_name) 
-    sp = [s for s in sp if s.group.coordinator is master]
+    m_group = [s for s in sp if s.group.coordinator is master]
     print "Master group:"
-    for s in sp:
+    for s in m_group:
         print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
 
 else:
@@ -160,7 +161,6 @@ def play_deborah_radio(k):
 
     master.play_from_queue(0)
 
-
 # The callback when echo_flask_ask_sonos.py sends a message
 def on_message(task):
     print task
@@ -189,6 +189,7 @@ def on_message(task):
                 print "{} radio is not a preset station.".format(task['station'])
 
     elif action in ('play','add') and task.get('uris'):
+
         if action == 'play':
             master.stop()
             master.clear_queue()
@@ -230,40 +231,13 @@ def on_message(task):
         except soco.exceptions.SoCoUPnPException as e:
             print "master.{}:".format(action), e
 
-    #elif action == 'play_pause':
-    #
-    #    try:
-    #        state = master.get_current_transport_info()['current_transport_state']
-    #    except Exception as e:
-    #        print "Encountered error in state = master.get_current_transport_info(): ", e
-    #        state = 'ERROR'
-
-    #    # check if sonos is playing music
-    #    if state == 'PLAYING':
-    #        master.pause()
-    #    elif state!='ERROR':
-    #        master.play()
-
     elif action in ('quieter','louder'):
         
-        for s in sp:
+        for s in m_group:
             s.volume = s.volume - 10 if action=='quieter' else s.volume + 10
 
         print "I tried to make the volume "+action
 
-    elif action == "volume": #{"action":"volume", "level":70}
-
-        level = task.get("level", 500)
-        level = int(round(level/10, -1))
-
-        if level < 70:
-
-            for s in sp:
-                s.volume = level
-
-            print "I changed the volume to:", level
-        else:
-            print "Volume was too high:", level
     else:
         print "I have no idea what you said"
 
