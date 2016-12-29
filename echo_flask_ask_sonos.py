@@ -99,6 +99,7 @@ def shuffle(artist):
 
 @ask.intent('Mix', mapping={'artist1':'myartista', 'artist2':'myartistb'})
 def mix(artist1, artist2):
+    print "artist1, artist2 = ",artist1,artist2
     uris = []
     for artist in (artist1, artist2):
         if artist:
