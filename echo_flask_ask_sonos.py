@@ -156,6 +156,32 @@ def add_track(title, artist):
     conn.send({'action':'add', 'uris':[uri]})
     return statement("I will add {} by {} from album {}".format(track['title'], track['artist'], track['album']))
 
+@ask.intent('AMAZON.ResumeIntent')
+def resume():
+    conn.send({'action':'resume'})
+    return statement("I will resume what was playing.")
+
+@ask.intent('AMAZON.PauseIntent')
+def pause():
+    conn.send({'action':'pause'})
+    return statement("I will pause what was playing.")
+
+@ask.intent('AMAZON.NextIntent')
+def next():
+    conn.send({'action':'next'})
+    return statement("I will skip to the next track.")
+
+@ask.intent('TurntTheVolume')
+def turn_the_volume(volume):
+    if volume in ('increase','louder','higher','up'):
+        conn.send({'action':'louder'})
+        return statement("I will turn the volume up.")
+    elif volume in ('decrease', 'down','quieter','lower'):
+        conn.send({'action':'quieter'})
+        return statement("I will turn the volume down.")
+    else:
+        return statement("I don't know what you asked me to do to the volume."
+
 try:
     app.run(debug=True,
             port=5000,
