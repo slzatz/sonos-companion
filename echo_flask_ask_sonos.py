@@ -171,7 +171,7 @@ def next():
     conn.send({'action':'next'})
     return statement("I will skip to the next track.")
 
-@ask.intent('TurntTheVolume')
+@ask.intent('TurnTheVolume')
 def turn_the_volume(volume):
     if volume in ('increase','louder','higher','up'):
         conn.send({'action':'louder'})
