@@ -124,7 +124,7 @@ def my_add_playlist_to_queue(uri, metadata):
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
 
-COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'skip':'next'}
+COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'next':'next'}
 
 def play_deborah_radio(k):
     s = 'album:(c)'
@@ -230,19 +230,19 @@ def on_message(task):
         except soco.exceptions.SoCoUPnPException as e:
             print "master.{}:".format(action), e
 
-    elif action == 'play_pause':
-    
-        try:
-            state = master.get_current_transport_info()['current_transport_state']
-        except Exception as e:
-            print "Encountered error in state = master.get_current_transport_info(): ", e
-            state = 'ERROR'
+    #elif action == 'play_pause':
+    #
+    #    try:
+    #        state = master.get_current_transport_info()['current_transport_state']
+    #    except Exception as e:
+    #        print "Encountered error in state = master.get_current_transport_info(): ", e
+    #        state = 'ERROR'
 
-        # check if sonos is playing music
-        if state == 'PLAYING':
-            master.pause()
-        elif state!='ERROR':
-            master.play()
+    #    # check if sonos is playing music
+    #    if state == 'PLAYING':
+    #        master.pause()
+    #    elif state!='ERROR':
+    #        master.play()
 
     elif action in ('quieter','louder'):
         
