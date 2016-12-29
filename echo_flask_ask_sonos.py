@@ -30,9 +30,6 @@ def get_track(artist, title):
     print "artist =",artist
     print "title =",title
 
-    if not title:
-        return statement("I couldn't find the song.")
-
     s = 'title:' + ' AND title:'.join(title.split())
     if artist:
         s = s + ' artist:' + ' AND artist:'.join(artist.split())
@@ -125,14 +122,16 @@ def mix(artist1, artist2):
     output_speech = "I will shuffle mix songs by {} and {}.".format(artist1, artist2)
     return statement(output_speech)
 
+#note the decorator will set add to None when accessed via URL but not when called directly by add_track
 @ask.intent('PlayTrack', mapping={'title':'mytitle', 'artist':'myartist'})
-def play_track(title, artist):
+def play_track(title, artist, add): #note the decorator will set add to None
     # title must be present; artist is optional
     print "artist =",artist
     print "title =",title
+    print "add =", add
 
     if not title:
-        return statement("I couldn't find the song.")
+        return statement("I couldn't find the track.")
 
     s = 'title:' + ' AND title:'.join(title.split())
     if artist:
@@ -140,21 +139,18 @@ def play_track(title, artist):
 
     result = solr.search(s, rows=1) #**{'rows':1})
     if not len(result):
-        return statement("I couldn't find the song {} by {}.".format(title,artist))
+        return statement("I couldn't find the track {} by {}.".format(title,artist))
 
     track = result.docs[0]
     uri = track['uri']
-    conn.send({'action':'play', 'uris':[uri]})
-    return statement("I will play {} by {} from album {}".format(track['title'], track['artist'], track['album']))
+    action = 'add' if add else 'play'
+    conn.send({'action':action, 'uris':[uri]})
+    return statement("I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album']))
 
 @ask.intent('AddTrack', mapping={'title':'mytitle', 'artist':'myartist'})
 def add_track(title, artist):
-    uri = get_track(title, artist)
-    if not uri:
-        return statement("I couldn't find the song {} by {}.".format(title,artist))
-
-    conn.send({'action':'add', 'uris':[uri]})
-    return statement("I will add {} by {} from album {}".format(track['title'], track['artist'], track['album']))
+    r = play_track(title, artist, True)
+    return r
 
 @ask.intent('AMAZON.ResumeIntent')
 def resume():
