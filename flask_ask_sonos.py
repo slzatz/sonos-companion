@@ -1,10 +1,10 @@
 '''
 The script uses the flask extension flask-ask, which was written specifically for python-
 based Alexa apps.
-Uses flask_ask_mp.py to do the actual interactions with Sonos
+Uses flask_ask_zmq.py to do the actual interactions with Sonos
 Also need ngrok http 5000
 and url will look like 1234.ngrok.io/sonos
-I do have a lambda program but it is just to really proxy to the right raspi
+There is a lambda python program that just directs the alexa interaction to the right raspberry pi
 '''
 
 from flask import Flask #, request
@@ -79,7 +79,7 @@ def shuffle(artist):
     k = 10 if count >= 10 else count
     selected_tracks = random.sample(tracks, k)
     uris = [t.get('uri') for t in selected_tracks]
-    socket.send_json({'action':'play', 'uris':uris})
+    socket.send_json({'action':'play', 'add':False, 'uris':uris})
     msg = socket.recv()
     print "Shuffle return msg from zmq:", msg
     return statement("I will shuffle songs by {}.".format(artist))
@@ -108,7 +108,7 @@ def mix(artist1, artist2):
 
     iters = [iter(y) for y in uris]
     uris = list(it.next() for it in itertools.cycle(iters))
-    socket.send_json({'action':'play', 'uris':uris})
+    socket.send_json({'action':'play', 'add':False, 'uris':uris})
     msg = socket.recv()
     print "Mix return msg from zmq:", msg
     output_speech = "I will shuffle mix songs by {} and {}.".format(artist1, artist2)
@@ -135,8 +135,6 @@ def play_track(title, artist, add): #note the decorator will set add to None
 
     track = result.docs[0]
     uri = track['uri']
-    #action = 'add' if add else 'play'
-    #socket.send_json({'action':action, 'uris':[uri]})
     socket.send_json({'action':'play', 'add':add, 'uris':[uri]})
     msg = socket.recv()
     print "PlayTrack return msg from zmq:", msg
@@ -150,21 +148,21 @@ def add_track(title, artist):
 
 @ask.intent('AMAZON.ResumeIntent')
 def resume():
-    socket.send_json({'action':'resume'})
+    socket.send_json({'action':'playback', 'category':'play'})
     msg = socket.recv()
     print "Resume return msg from zmq:", msg
     return statement("I will resume what was playing.")
 
 @ask.intent('AMAZON.PauseIntent')
 def pause():
-    socket.send_json({'action':'pause'})
+    socket.send_json({'action':'playback', 'category':'pause'})
     msg = socket.recv()
     print "Pause return msg from zmq:", msg
     return statement("I will pause what was playing.")
 
 @ask.intent('AMAZON.NextIntent')
 def next():
-    socket.send_json({'action':'next'})
+    socket.send_json({'action':'playback', 'category':'next'})
     msg = socket.recv()
     print "Next return msg from zmq:", msg
     return statement("I will skip to the next track.")
@@ -172,12 +170,12 @@ def next():
 @ask.intent('TurnTheVolume')
 def turn_the_volume(volume):
     if volume in ('increase','louder','higher','up'):
-        socket.send_json({'action':'louder'})
+        socket.send_json({'action':'volume', 'direction':'louder'})
         msg = socket.recv()
         print "Volume return msg from zmq:", msg
         return statement("I will turn the volume up.")
     elif volume in ('decrease', 'down','quieter','lower'):
-        socket.send_json({'action':'quieter'})
+        socket.send_json({'action':'volume', 'direction':'quieter'})
         msg = socket.recv()
         print "Volume return msg from zmq:", msg
         return statement("I will turn the volume down.")

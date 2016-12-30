@@ -125,7 +125,7 @@ def my_add_playlist_to_queue(uri, metadata):
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
 
-COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'next':'next'}
+#COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'next':'next'}
 
 def play_deborah_radio(k):
     s = 'album:(c)'
@@ -161,7 +161,7 @@ def play_deborah_radio(k):
 
     master.play_from_queue(0)
 
-# The callback when echo_flask_ask_sonos.py sends a message
+# Mostly got rid of on_message and need to finish the work
 def on_message(task):
     print "in on message", task
     action = task.get('action', '')
@@ -188,83 +188,45 @@ def on_message(task):
             else:
                 print "{} radio is not a preset station.".format(task['station'])
 
-    elif action in ('play','add') and task.get('uris'):
-
-        if action == 'play':
-            master.stop()
-            master.clear_queue()
-
-        for uri in task['uris']:
-            print 'uri: ' + uri
-            print "---------------------------------------------------------------"
-            playlist = False
-            if 'library_playlist' in uri:
-                i = uri.find(':')
-                id_ = uri[i+1:]
-                meta = didl_library_playlist.format(id_=id_)
-                playlist = True
-            elif 'library' in uri:
-                i = uri.find('library')
-                ii = uri.find('.')
-                id_ = uri[i:ii]
-                meta = didl_library.format(id_=id_)
-            else:
-                print 'The uri:{}, was not recognized'.format(uri)
-                continue
-
-            print 'meta: ',meta
-            print '---------------------------------------------------------------'
-
-            if not playlist:
-                my_add_to_queue('', meta)
-            else:
-                # unlike adding a track to the queue, you need the uri
-                my_add_playlist_to_queue(uri, meta)
-
-        if action == 'play':
-            master.play_from_queue(0)
-
-    elif action in ('pause', 'resume', 'skip'):
-
-        try:
-            getattr(master, COMMON_ACTIONS[action])()
-        except soco.exceptions.SoCoUPnPException as e:
-            print "master.{}:".format(action), e
-
-    elif action in ('quieter','louder'):
-        
-        for s in m_group:
-            s.volume = s.volume - 10 if action=='quieter' else s.volume + 10
-
-        print "I tried to make the volume "+action
-
-    # At the moment this can't work because echo_flask_ask_sonos.py can't provide the response
-    # ahead of this code
-    elif action == "whatisplaying":
-        try:
-            state = master.get_current_transport_info()['current_transport_state']
-        except Exception as e:
-            print "Encountered error in state = master.get_current_transport_info(): ", e
-            state = 'error'
-
-        # check if sonos is playing music
-        if state == 'PLAYING':
-            try:
-                track = master.get_current_track_info()
-            except Exception as e:
-                print "Encountered error in track = master.get_current_track_info(): ", e
-                track = {}
-            output_speech = "The song is {}. The artist is {} and the album is {}.".format(track.get('title','No title'), track.get('artist', 'No artist'), track.get('album', 'No album'))
-        else:
-            output_speech = "Nothing appears to be playing right now, Steve"
-
-        socket.send(output_speech)
-
     else:
         print "I have no idea what you said"
 
 ################################################################################
-def play(add=False, uris=None):
+# the 'action' functions
+def whatisplaying():
+    try:
+        state = master.get_current_transport_info()['current_transport_state']
+    except Exception as e:
+        print "Encountered error in state = master.get_current_transport_info(): ", e
+        state = 'error'
+
+    # check if sonos is playing something
+    if state == 'PLAYING':
+        try:
+            track = master.get_current_track_info()
+        except Exception as e:
+            print "Encountered error in track = master.get_current_track_info(): ", e
+            output_speech = "I encountered an error trying to get current track info."
+        else:
+            output_speech = "The song is {}. The artist is {} and the album is {}.".format(track.get('title','No title'), track.get('artist', 'No artist'), track.get('album', 'No album'))
+    else:
+        output_speech = "Nothing appears to be playing right now, Steve"
+
+    socket.send(output_speech)
+
+def volume(direction)
+    for s in m_group:
+        s.volume = s.volume - 10 if direction=='quieter' else s.volume + 10
+
+    print "I tried to make the volume "+direction
+
+def playback(category):
+    try:
+        getattr(master, COMMON_ACTIONS[action])()
+    except soco.exceptions.SoCoUPnPException as e:
+        print "master.{}:".format(action), e
+
+def play(add, uris):
     if not add:
         master.stop()
         master.clear_queue()
@@ -299,7 +261,7 @@ def play(add=False, uris=None):
     if not add:
         master.play_from_queue(0)
 ##################################################################################
-actions = {'play':play} ###################################################
+actions = {'play':play, 'volume':volume, 'playback':playback, 'whatisplaying':whatisplaying} ###################################################
 while True:
     try:
         print 'waiting for message'
@@ -307,17 +269,17 @@ while True:
         print msg
         ################################################################################
         # note that flask_ask_sonos will need to be changed to send {'action':'play', 'add':True, 'uris':uris} 
-        if msg.get('action') in ('play','add'):
+        if msg.get('action') in ('play', 'playback', 'volume', 'whatisplaying'):
             print "used function"
-            print "Sending OK from play"
-            socket.send('OK')
+            if msg.get('action') != 'whatisplaying':
+                print "Sending OK from the function section"
+                socket.send('OK')
             action = msg.pop('action')
             actions[action](**msg)
         ################################################################################
         else:
-            if msg.get('action') != 'whatisplaying':
-                print "Sending OK"
-                socket.send('OK')
+            print "Sending OK"
+            socket.send('OK')
             on_message(msg)
     except KeyboardInterrupt:
         sys.exit()
