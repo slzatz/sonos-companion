@@ -27,22 +27,6 @@ socket.connect('tcp://127.0.0.1:5554')
 
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #port 8983 is incorporated in the ngrok url
 
-def get_track(artist, title):    
-    # title must be present; artist is optional
-    print "artist =",artist
-    print "title =",title
-
-    s = 'title:' + ' AND title:'.join(title.split())
-    if artist:
-        s = s + ' artist:' + ' AND artist:'.join(artist.split())
-
-    result = solr.search(s, rows=1) #**{'rows':1})
-    if not len(result):
-        return 
-
-    track = result.docs[0]
-    return track['uri']
-
 @ask.intent('PlayAlbum', mapping={'album':'myalbum', 'artist':'myartist'})
 def play_album(album, artist):
     # album must be present; artist is optional
@@ -67,6 +51,8 @@ def play_album(album, artist):
             uris = [t['uri'] for t in tracks if t['album']==selected_album]
 
             socket.send_json({'action':'play', 'uris':uris})
+            msg = socket.recv()
+            print "PlayAlbum return msg from zmq:", msg
 
             output_speech = "Using Flask Ask, I will play {} songs from {}".format(len(uris), selected_album)
         else:
@@ -94,6 +80,8 @@ def shuffle(artist):
     selected_tracks = random.sample(tracks, k)
     uris = [t.get('uri') for t in selected_tracks]
     socket.send_json({'action':'play', 'uris':uris})
+    msg = socket.recv()
+    print "Shuffle return msg from zmq:", msg
     return statement("I will shuffle songs by {}.".format(artist))
 
 @ask.intent('Mix', mapping={'artist1':'myartista', 'artist2':'myartistb'})
@@ -121,6 +109,8 @@ def mix(artist1, artist2):
     iters = [iter(y) for y in uris]
     uris = list(it.next() for it in itertools.cycle(iters))
     socket.send_json({'action':'play', 'uris':uris})
+    msg = socket.recv()
+    print "Mix return msg from zmq:", msg
     output_speech = "I will shuffle mix songs by {} and {}.".format(artist1, artist2)
     return statement(output_speech)
 
@@ -148,7 +138,7 @@ def play_track(title, artist, add): #note the decorator will set add to None
     action = 'add' if add else 'play'
     socket.send_json({'action':action, 'uris':[uri]})
     msg = socket.recv()
-    print "PlayTrack", msg
+    print "PlayTrack return msg from zmq:", msg
     return statement("I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album']))
 
 @ask.intent('AddTrack', mapping={'title':'mytitle', 'artist':'myartist'})
@@ -159,25 +149,35 @@ def add_track(title, artist):
 @ask.intent('AMAZON.ResumeIntent')
 def resume():
     socket.send_json({'action':'resume'})
+    msg = socket.recv()
+    print "Resume return msg from zmq:", msg
     return statement("I will resume what was playing.")
 
 @ask.intent('AMAZON.PauseIntent')
 def pause():
     socket.send_json({'action':'pause'})
+    msg = socket.recv()
+    print "Pause return msg from zmq:", msg
     return statement("I will pause what was playing.")
 
 @ask.intent('AMAZON.NextIntent')
 def next():
     socket.send_json({'action':'next'})
+    msg = socket.recv()
+    print "Next return msg from zmq:", msg
     return statement("I will skip to the next track.")
 
 @ask.intent('TurnTheVolume')
 def turn_the_volume(volume):
     if volume in ('increase','louder','higher','up'):
         socket.send_json({'action':'louder'})
+        msg = socket.recv()
+        print "Volume return msg from zmq:", msg
         return statement("I will turn the volume up.")
     elif volume in ('decrease', 'down','quieter','lower'):
         socket.send_json({'action':'quieter'})
+        msg = socket.recv()
+        print "Volume return msg from zmq:", msg
         return statement("I will turn the volume down.")
     else:
         return statement("I don't know what you asked me to do to the volume.")
@@ -186,7 +186,7 @@ def turn_the_volume(volume):
 def whatisplaying():
     socket.send_json({'action':'whatisplaying'})
     msg = socket.recv()
-    print "WhatIsPlaying", msg
+    print "WhatIsPlaying return msg from zmq:", msg
     return statement(msg)
 
 try:

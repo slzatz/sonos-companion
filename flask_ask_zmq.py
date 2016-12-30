@@ -268,8 +268,6 @@ while True:
         print 'waiting for message'
         msg = socket.recv_json()
         print msg
-        print msg.get('action')
-        print msg.get('action') == 'whatisplaying'
         if msg.get('action') != 'whatisplaying':
             print "Sending OK"
             socket.send('OK')
