@@ -140,6 +140,7 @@ def play_track(title, artist, add): #note the decorator will set add to None
     socket.send_json({'action':'play', 'add':add, 'uris':[uri]})
     msg = socket.recv()
     print "PlayTrack return msg from zmq:", msg
+    action = 'add' if add else 'play'
     return statement("I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album']))
 
 @ask.intent('AddTrack', mapping={'title':'mytitle', 'artist':'myartist'})

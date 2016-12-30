@@ -299,7 +299,7 @@ def play(add=False, uris=None):
     if not add:
         master.play_from_queue(0)
 ##################################################################################
-actions = {'play':play, 'pause':pause} ###################################################
+actions = {'play':play} ###################################################
 while True:
     try:
         print 'waiting for message'
@@ -308,6 +308,9 @@ while True:
         ################################################################################
         # note that flask_ask_sonos will need to be changed to send {'action':'play', 'add':True, 'uris':uris} 
         if msg.get('action') in ('play','add'):
+            print "used function"
+            print "Sending OK from play"
+            socket.send('OK')
             action = msg.pop('action')
             actions[action](**msg)
         ################################################################################
