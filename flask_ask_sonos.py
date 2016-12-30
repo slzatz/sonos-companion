@@ -135,8 +135,9 @@ def play_track(title, artist, add): #note the decorator will set add to None
 
     track = result.docs[0]
     uri = track['uri']
-    action = 'add' if add else 'play'
-    socket.send_json({'action':action, 'uris':[uri]})
+    #action = 'add' if add else 'play'
+    #socket.send_json({'action':action, 'uris':[uri]})
+    socket.send_json({'action':'play', 'add':add, 'uris':[uri]})
     msg = socket.recv()
     print "PlayTrack return msg from zmq:", msg
     return statement("I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album']))

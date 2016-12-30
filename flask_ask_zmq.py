@@ -263,15 +263,59 @@ def on_message(task):
     else:
         print "I have no idea what you said"
 
+################################################################################
+def play(add=False, uris=None):
+    if not add:
+        master.stop()
+        master.clear_queue()
+
+    for uri in uris:
+        print 'uri: ' + uri
+        print "---------------------------------------------------------------"
+        playlist = False
+        if 'library_playlist' in uri:
+            i = uri.find(':')
+            id_ = uri[i+1:]
+            meta = didl_library_playlist.format(id_=id_)
+            playlist = True
+        elif 'library' in uri:
+            i = uri.find('library')
+            ii = uri.find('.')
+            id_ = uri[i:ii]
+            meta = didl_library.format(id_=id_)
+        else:
+            print 'The uri:{}, was not recognized'.format(uri)
+            continue
+
+        print 'meta: ',meta
+        print '---------------------------------------------------------------'
+
+        if not playlist:
+            my_add_to_queue('', meta)
+        else:
+            # unlike adding a track to the queue, you need the uri
+            my_add_playlist_to_queue(uri, meta)
+
+    if not add:
+        master.play_from_queue(0)
+##################################################################################
+actions = {'play':play, 'pause':pause} ###################################################
 while True:
     try:
         print 'waiting for message'
         msg = socket.recv_json()
         print msg
-        if msg.get('action') != 'whatisplaying':
-            print "Sending OK"
-            socket.send('OK')
-        on_message(msg)
+        ################################################################################
+        # note that flask_ask_sonos will need to be changed to send {'action':'play', 'add':True, 'uris':uris} 
+        if msg.get('action') in ('play','add'):
+            action = msg.pop('action')
+            actions[action](**msg)
+        ################################################################################
+        else:
+            if msg.get('action') != 'whatisplaying':
+                print "Sending OK"
+                socket.send('OK')
+            on_message(msg)
     except KeyboardInterrupt:
         sys.exit()
 
