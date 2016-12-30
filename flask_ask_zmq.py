@@ -214,7 +214,7 @@ def whatisplaying():
 
     socket.send(output_speech)
 
-def volume(direction)
+def volume(direction):
     for s in m_group:
         s.volume = s.volume - 10 if direction=='quieter' else s.volume + 10
 
@@ -261,7 +261,11 @@ def play(add, uris):
     if not add:
         master.play_from_queue(0)
 ##################################################################################
-actions = {'play':play, 'volume':volume, 'playback':playback, 'whatisplaying':whatisplaying} ###################################################
+#actions = {'play':play, 'volume':volume, 'playback':playback, 'whatisplaying':whatisplaying} ###################################################
+#print "locals =",locals()
+#print "globals =",globals()
+print locals()['whatisplaying']
+print globals()['whatisplaying']
 while True:
     try:
         print 'waiting for message'
