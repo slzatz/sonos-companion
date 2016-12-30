@@ -22,7 +22,8 @@ ask = Ask(app, '/sonos')
 
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
-socket.connect('tcp://127.0.0.1:5555')
+#socket.connect('tcp://127.0.0.1:5555')
+socket.connect('tcp://127.0.0.1:5554')
 
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #port 8983 is incorporated in the ngrok url
 
@@ -146,6 +147,8 @@ def play_track(title, artist, add): #note the decorator will set add to None
     uri = track['uri']
     action = 'add' if add else 'play'
     socket.send_json({'action':action, 'uris':[uri]})
+    msg = socket.recv()
+    print "PlayTrack", msg
     return statement("I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album']))
 
 @ask.intent('AddTrack', mapping={'title':'mytitle', 'artist':'myartist'})
@@ -183,6 +186,7 @@ def turn_the_volume(volume):
 def whatisplaying():
     socket.send_json({'action':'whatisplaying'})
     msg = socket.recv()
+    print "WhatIsPlaying", msg
     return statement(msg)
 
 try:

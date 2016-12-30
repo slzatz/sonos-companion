@@ -61,9 +61,8 @@ print "\nprogram running ..."
 
 context = zmq.Context()
 socket = context.socket(zmq.REP)
-socket.bind('tcp://127.0.0.1:5555')
-
-print 'connection accepted from', listener.last_accepted
+#socket.bind('tcp://127.0.0.1:5555')
+socket.bind('tcp://127.0.0.1:5554')
 
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
@@ -164,7 +163,7 @@ def play_deborah_radio(k):
 
 # The callback when echo_flask_ask_sonos.py sends a message
 def on_message(task):
-    print task
+    print "in on message", task
     action = task.get('action', '')
 
     if action == 'deborah':
@@ -269,6 +268,11 @@ while True:
         print 'waiting for message'
         msg = socket.recv_json()
         print msg
+        print msg.get('action')
+        print msg.get('action') == 'whatisplaying'
+        if msg.get('action') != 'whatisplaying':
+            print "Sending OK"
+            socket.send('OK')
         on_message(msg)
     except KeyboardInterrupt:
         sys.exit()
