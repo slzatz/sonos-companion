@@ -17,7 +17,7 @@ url = ngrok_urls.get(location)
 if not url:
     sys.exit()
 
-slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'ShowQueue':[],'ClearQueue':[]}
+slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'ShowQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[]}
 
 while 1:
     try:
@@ -41,6 +41,10 @@ while 1:
             intent = 'ShowQueue'
         elif 'clear' in words:
             intent = 'ClearQueue'
+        elif 'what' in words:
+            intent = 'WhatIsPlaying'
+        elif 'recent' in words:
+            intent = 'RecentTracks'
         elif 'shuffle' in words:
             intent = 'Shuffle'
             words.remove('shuffle')
@@ -54,9 +58,12 @@ while 1:
                 values = words.split(' and ')
             else:
                 values = [words,"neil young"]
-        elif 'radio' in words:
+        elif 'radio' in words or 'station' in words:
             intent = 'PlayStation'
-            words.remove('radio')
+            if 'radio' in words:
+                words.remove('radio')
+            if 'station' in words:
+                words.remove('station')
             values = [" ".join(words)]
         elif 'album' in words:
             intent = 'PlayAlbum'
