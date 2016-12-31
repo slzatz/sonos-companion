@@ -22,9 +22,8 @@ home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
-from config import user_id, solr_uri, last_fm_api_key #location
+from config import user_id, last_fm_api_key 
 import zmq
-import pysolr
 import requests
 
 soco_config.CACHE_ENABLED = False
@@ -95,8 +94,6 @@ with open('stations') as f:
 
 STATIONS = json.loads(z)
 
-solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #8983 is incorporated in the ngrok url
-
 def my_add_to_queue(uri, metadata):
     try:
         response = master.avTransport.AddURIToQueue([
@@ -128,40 +125,6 @@ def my_add_playlist_to_queue(uri, metadata):
     else:
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
-
-def play_deborah_radio(k):
-    s = 'album:(c)'
-    result = solr.search(s, fl='uri', rows=600) 
-    count = len(result)
-    print "Total track count for Deborah tracks was {}".format(count)
-    tracks = result.docs
-    uris = []
-    master.stop()
-    master.clear_queue()
-    for j in range(k):
-        while 1:
-            n = random.randint(0, count-1)
-            uri = tracks[n]['uri']
-            if not uri in uris:
-                uris.append(uri)
-                print 'uri: ' + uri
-                print "---------------------------------------------------------------"
-                if 'library' in uri:
-                    i = uri.find('library')
-                    ii = uri.find('.')
-                    id_ = uri[i:ii]
-                    meta = didl_library.format(id_=id_)
-                else:
-                    print 'The uri:{}, was not recognized'.format(uri)
-                    break
-
-                print 'meta: ',meta
-                print '---------------------------------------------------------------'
-
-                my_add_to_queue('', meta)
-                break
-
-    master.play_from_queue(0)
 
 # the 'action' functions
 def what_is_playing():
@@ -288,7 +251,7 @@ def play_station(station):
             meta = meta_format_radio.format(title=station[0], service=station[2])
             master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
 
-actions = {'play':play, 'volume':volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station} ###################################################
+actions = {'play':play, 'volume':volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station} 
 while True:
     try:
         print 'waiting for message'
