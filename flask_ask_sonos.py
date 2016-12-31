@@ -183,8 +183,8 @@ def turn_the_volume(volume):
         return statement("I don't know what you asked me to do to the volume.")
 
 @ask.intent('WhatIsPlaying')
-def whatisplaying():
-    socket.send_json({'action':'whatisplaying'})
+def what_is_playing():
+    socket.send_json({'action':'what_is_playing'})
     msg = socket.recv()
     print "WhatIsPlaying return msg from zmq:", msg
     return statement(msg)
@@ -196,7 +196,24 @@ def recent_tracks():
     print "RecentTracks return msg from zmq:", msg
     return statement(msg)
 
-#@ask.intent('PlayStation')
+@ask.intent('PlayStation', mapping={'station':'mystation'})
+def play_station(station):
+    if station.lower()=='deborah':
+        s = 'album:(c)'
+        result = solr.search(s, fl='uri', rows=600) 
+        count = len(result)
+        print "Total track count for Deborah tracks was {}".format(count)
+        tracks = result.docs
+        selected_tracks = random.sample(tracks, 20) # randomly decided to pick 20 songs
+        uris = [t.get('uri') for t in selected_tracks]
+        socket.send_json({'action':'play', 'add':False, 'uris':uris})
+    else:
+        socket.send_json({'action':'play_station', 'station':station})
+
+    msg = socket.recv()
+    print "PlayStation({}) return msg from zmq:".format(station), msg
+    return statement("I will try to play station {}.".format(station))
+        
 try:
     app.run(debug=True,
             port=5000,

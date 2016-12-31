@@ -129,8 +129,6 @@ def my_add_playlist_to_queue(uri, metadata):
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
 
-#COMMON_ACTIONS = {'pause':'pause', 'resume':'play', 'next':'next'}
-
 def play_deborah_radio(k):
     s = 'album:(c)'
     result = solr.search(s, fl='uri', rows=600) 
@@ -165,39 +163,8 @@ def play_deborah_radio(k):
 
     master.play_from_queue(0)
 
-# Mostly got rid of on_message and need to finish the work
-def on_message(task):
-    print "in on message", task
-    action = task.get('action', '')
-
-    if action == 'deborah':
-        play_deborah_radio(20)         
-
-    elif action == 'radio' and task.get('station'):
-
-        if task['station'].lower() == 'deborah':
-            play_deborah_radio(20)
-        else:
-            station = STATIONS.get(task['station'].lower())
-            if station:
-                uri = station[1]
-                print "uri=",uri
-                if uri.startswith('pndrradio'):
-                    meta = meta_format_pandora.format(title=station[0], service=station[2])
-                    master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
-                elif uri.startswith('x-sonosapi-stream'):
-                    uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
-                    meta = meta_format_radio.format(title=station[0], service=station[2])
-                    master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
-            else:
-                print "{} radio is not a preset station.".format(task['station'])
-
-    else:
-        print "I have no idea what you said"
-
-################################################################################
 # the 'action' functions
-def whatisplaying():
+def what_is_playing():
     try:
         state = master.get_current_transport_info()['current_transport_state']
     except Exception as e:
@@ -307,29 +274,31 @@ def recent_tracks():
         output_speech = "I could  not retrieve recently played tracks or there aren't any."
 
     socket.send(output_speech)
-##################################################################################
-actions = {'play':play, 'volume':volume, 'playback':playback, 'whatisplaying':whatisplaying, 'recent_tracks':recent_tracks} ###################################################
-#print "locals =",locals()
-#print "globals =",globals()
+
+def play_station(station):
+    station = STATIONS.get(station.lower())
+    if station:
+        uri = station[1]
+        print "radio station uri=",uri
+        if uri.startswith('pndrradio'):
+            meta = meta_format_pandora.format(title=station[0], service=station[2])
+            master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+        elif uri.startswith('x-sonosapi-stream'):
+            uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
+            meta = meta_format_radio.format(title=station[0], service=station[2])
+            master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
+
+actions = {'play':play, 'volume':volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station} ###################################################
 while True:
     try:
         print 'waiting for message'
         msg = socket.recv_json()
         print msg
-        ################################################################################
-        # note that flask_ask_sonos will need to be changed to send {'action':'play', 'add':True, 'uris':uris} 
-        if msg.get('action') in ('play', 'playback', 'volume', 'whatisplaying', 'recent_tracks'):
-            print "used function"
-            if msg.get('action') not in ('whatisplaying', 'recent_tracks'):
-                print "Sending OK from the function section"
-                socket.send('OK')
-            action = msg.pop('action')
-            actions[action](**msg)
-        ################################################################################
-        else:
-            print "Sending OK"
+        action = msg.pop('action')
+        # what_is_playing and recent_tracks have to do processing and return a response to flask_ask_sonos.py
+        if action not in ('what_is_playing', 'recent_tracks'):
             socket.send('OK')
-            on_message(msg)
+        actions[action](**msg) #could use locals() or eval and do away with actions but actions lets you see the list of actions
     except KeyboardInterrupt:
         sys.exit()
 
