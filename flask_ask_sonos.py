@@ -190,6 +190,7 @@ def whatisplaying():
     return statement(msg)
 
 @ask.intent('RecentTracks')
+def recent_tracks():
     socket.send_json({'action':'recent_tracks'})
     msg = socket.recv()
     print "RecentTracks return msg from zmq:", msg

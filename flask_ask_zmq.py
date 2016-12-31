@@ -265,7 +265,7 @@ def play(add, uris):
     if not add:
         master.play_from_queue(0)
 
-def recenttracks():
+def recent_tracks():
     # right now look back is one week; note can't limit because you need all the tracks since we're doing the frequency count
     payload = {'method':'user.getRecentTracks', 'user':'slzatz', 'format':'json', 'api_key':last_fm_api_key, 'from':int(time())-604800} #, 'limit':10}
     
@@ -286,7 +286,7 @@ def recenttracks():
         current_album = ''
         output_speech = "During the last week you listened to the following tracks"
         # if you wanted to limit the number of tracks that were reported on, could do it here
-        for album_track,count in a[10]: #[:10]
+        for album_track,count in a[:10]: #[:10]
             album,track = album_track.split('_')
             if current_album == album:
                 line = ", {} ".format(track)
@@ -318,9 +318,9 @@ while True:
         print msg
         ################################################################################
         # note that flask_ask_sonos will need to be changed to send {'action':'play', 'add':True, 'uris':uris} 
-        if msg.get('action') in ('play', 'playback', 'volume', 'whatisplaying'):
+        if msg.get('action') in ('play', 'playback', 'volume', 'whatisplaying', 'recent_tracks'):
             print "used function"
-            if msg.get('action') != 'whatisplaying':
+            if msg.get('action') not in ('whatisplaying', 'recent_tracks'):
                 print "Sending OK from the function section"
                 socket.send('OK')
             action = msg.pop('action')
