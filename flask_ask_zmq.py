@@ -14,7 +14,7 @@ current_track = master.get_current_track_info() --> {
 '''
 
 import os
-from time import sleep
+from time import time, sleep
 import random
 import json
 import sys
@@ -22,11 +22,15 @@ home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
-from config import user_id, solr_uri #location
+from config import user_id, solr_uri, last_fm_api_key #location
 import zmq
 import pysolr
+import requests
 
 soco_config.CACHE_ENABLED = False
+
+#last.fm 
+base_url = "http://ws.audioscrobbler.com/2.0/"
 
 n = 0
 while 1:
@@ -260,12 +264,53 @@ def play(add, uris):
 
     if not add:
         master.play_from_queue(0)
+
+def recenttracks():
+    # right now look back is one week; note can't limit because you need all the tracks since we're doing the frequency count
+    payload = {'method':'user.getRecentTracks', 'user':'slzatz', 'format':'json', 'api_key':last_fm_api_key, 'from':int(time())-604800} #, 'limit':10}
+    
+    try:
+        r = requests.get(base_url, params=payload)
+        z = r.json()['recenttracks']['track']
+    except Exception as e:
+        print "Exception in get_scrobble_info: ", e
+        z = []
+
+    if z:
+        dic = {}
+        for d in z:
+            dic[d['album']['#text']+'_'+d['name']] = dic.get(d['album']['#text']+'_'+d['name'],0) + 1
+
+        a = sorted(dic.items(), key=lambda x:(x[1],x[0]), reverse=True) 
+
+        current_album = ''
+        output_speech = "During the last week you listened to the following tracks"
+        # if you wanted to limit the number of tracks that were reported on, could do it here
+        for album_track,count in a[10]: #[:10]
+            album,track = album_track.split('_')
+            if current_album == album:
+                line = ", {} ".format(track)
+            else:
+                line = ". From {}, {} ".format(album,track)
+                current_album = album
+            
+            if count==1:
+                count_phrase = ""
+            elif count==2:
+                count_phrase = "twice"
+            else:
+                count_phrase = str(count)+" times"
+
+            output_speech += line + count_phrase
+
+    else:
+        output_speech = "I could  not retrieve recently played tracks or there aren't any."
+
+    socket.send(output_speech)
 ##################################################################################
-#actions = {'play':play, 'volume':volume, 'playback':playback, 'whatisplaying':whatisplaying} ###################################################
+actions = {'play':play, 'volume':volume, 'playback':playback, 'whatisplaying':whatisplaying, 'recent_tracks':recent_tracks} ###################################################
 #print "locals =",locals()
 #print "globals =",globals()
-print locals()['whatisplaying']
-print globals()['whatisplaying']
 while True:
     try:
         print 'waiting for message'

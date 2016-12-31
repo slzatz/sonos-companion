@@ -189,6 +189,13 @@ def whatisplaying():
     print "WhatIsPlaying return msg from zmq:", msg
     return statement(msg)
 
+@ask.intent('RecentTracks')
+    socket.send_json({'action':'recent_tracks'})
+    msg = socket.recv()
+    print "RecentTracks return msg from zmq:", msg
+    return statement(msg)
+
+#@ask.intent('PlayStation')
 try:
     app.run(debug=True,
             port=5000,
