@@ -148,21 +148,21 @@ def add_track(title, artist):
 
 @ask.intent('AMAZON.ResumeIntent')
 def resume():
-    socket.send_json({'action':'playback', 'category':'play'})
+    socket.send_json({'action':'playback', 'type_':'play'})
     msg = socket.recv()
     print "Resume return msg from zmq:", msg
     return statement("I will resume what was playing.")
 
 @ask.intent('AMAZON.PauseIntent')
 def pause():
-    socket.send_json({'action':'playback', 'category':'pause'})
+    socket.send_json({'action':'playback', 'type_':'pause'})
     msg = socket.recv()
     print "Pause return msg from zmq:", msg
     return statement("I will pause what was playing.")
 
 @ask.intent('AMAZON.NextIntent')
 def next():
-    socket.send_json({'action':'playback', 'category':'next'})
+    socket.send_json({'action':'playback', 'type_':'next'})
     msg = socket.recv()
     print "Next return msg from zmq:", msg
     return statement("I will skip to the next track.")

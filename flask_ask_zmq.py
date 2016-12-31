@@ -154,11 +154,11 @@ def volume(direction):
 
     print "I tried to make the volume "+direction
 
-def playback(category):
+def playback(type_):
     try:
-        getattr(master, COMMON_ACTIONS[action])()
+        getattr(master, type_)()
     except soco.exceptions.SoCoUPnPException as e:
-        print "master.{}:".format(action), e
+        print "master.{}:".format(type_), e
 
 def play(add, uris):
     if not add:
