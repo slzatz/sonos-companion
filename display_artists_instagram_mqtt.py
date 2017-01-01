@@ -17,7 +17,6 @@ from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 
 #https://api.instagram.com/v1/users/search?q=brahmino&access_token=2.........
-#can only show instagrammers who've accepted by app (willie and me)  willie is 265048195
 instagram_base_url =  "https://api.instagram.com/v1/users/{}/media/recent/"
 
 with open('location') as f:
@@ -28,8 +27,8 @@ mqtt_uri = mqtt_uris[location]
 with open('instagram_ids') as f:
     data = f.read()
 
+#can only show instagrammers who've accepted by app (willie and me)  willie is 265048195
 ids = list(int(d.split('#')[0]) for d in data.split() if d.split('#')[0])
-#ids = [4616106, 17789355, 986542, 230625139, 3399664, 6156112, 1607304, 24078, 277810, 1918184, 197656340, 200147864, 4769265] 
 
 wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  #instagram
 
@@ -147,7 +146,7 @@ def display_image(image):
 
     f.close()
     img_rect = img.get_rect()
-    center = ((w-img_rect.width)/2, 0)
+    pos = ((w-img_rect.width)/2, 0)
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 28)
@@ -156,7 +155,7 @@ def display_image(image):
     text = font.render("Photographer: "+image.get('photographer', 'No photographer'), True, (255, 0, 0))
 
     screen.fill((0,0,0)) 
-    screen.blit(img, center)      
+    screen.blit(img, pos)      
     screen.blit(text, (0,0))
     
     txt = image.get('text', 'No title')
@@ -178,7 +177,7 @@ def display_image(image):
     sleep(3)
     screen.fill((0,0,0)) 
     img.set_alpha(255)
-    screen.blit(img, center)      
+    screen.blit(img, pos)      
     pygame.display.flip()
 
 def get_artist_images(name):
@@ -234,10 +233,11 @@ def on_message(client, userdata, msg):
     print "The python object from mqtt is:",z
     artist = z.get("artist")
     track_title = z.get("title", "")
+    lyrics = z.get("lyrics", "")
 
     print "on_message:artist =",artist
     print "on_message:track_title =",track_title
-    trackinfo.update({"artist":artist, "track_title":track_title})
+    trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
 
 client = mqtt.Client()
 client.on_connect = on_connect
@@ -249,8 +249,6 @@ images = get_photos(ids)
 L = len(images)
 print "Number of images = {}".format(L)
 if images:
-    #image = images[random.randrange(0,L-1)]
-    #display_image(image)
     display_image(random.choice(images))
 
 prev_artist = "No artist"  #this is None so if the song title is the empty string, it's not equal
@@ -278,8 +276,6 @@ while 1:
     if artist is None or artist == "":
         if images:
             if cur_time - t1 > 15:
-                #image = images[random.randrange(0,L-1)]
-                #display_image(image)
                 display_image(random.choice(images))
                 t1 = time()
         sleep(1)
@@ -320,7 +316,7 @@ while 1:
     if cur_time - t1 < 15:
         continue
 
-    # could also try
+    # note that alive below is just pinging the database -- could also try
     #conn = engine.connect() # presumably this could be done once at the start of the script
     #z = conn.execute("SELECT 1")
     #z.fetchall()
@@ -374,7 +370,13 @@ while 1:
             continue
 
     try:
-        img.transform(resize = "{}x{}".format(w,h))
+        ww = img.width
+        hh = img.height
+        sq = ww if ww <= hh else hh
+        #crop(left, top, right, bottom)
+        t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
+        img.crop(*t)
+        img.resize(700,700)
         img = img.convert('bmp')
     except Exception as e:
         print "img.transfrom or img.convert error:", e
@@ -410,10 +412,13 @@ while 1:
     img = pygame.image.load(f, 'bmp').convert()
     f.close()
     img_rect = img.get_rect()
-    center = ((w-img_rect.width)/2, 0)
+
+    print "img_rect =", img_rect
+    pos = (300,0)
+    print "pos =", pos
     
     screen.fill((0,0,0))
-    screen.blit(img, center)      
+    screen.blit(img, pos)      
 
     line = "{} - {}".format(artist,track)
 
@@ -426,6 +431,18 @@ while 1:
      
     screen.blit(zzz, (0,h-16))
     screen.blit(text, (0,h-16))
+
+    print "drawing lyrics"
+    font = pygame.font.SysFont('Sans', 16)
+    n = 10
+    for line in trackinfo['lyrics']:
+        try:
+            text = font.render(line, True, (255, 0, 0))
+        except UnicodeError as e:
+            print "UnicodeError in text lines: ", e
+        else:
+            screen.blit(text, (0,n))
+            n+=20
 
     pygame.display.flip()
 
