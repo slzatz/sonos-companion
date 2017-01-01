@@ -376,7 +376,8 @@ while 1:
         #crop(left, top, right, bottom)
         t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
         img.crop(*t)
-        img.resize(700,700)
+        #img.resize(700,700)
+        img.resize(h,h)
         img = img.convert('bmp')
     except Exception as e:
         print "img.transfrom or img.convert error:", e
@@ -414,7 +415,7 @@ while 1:
     img_rect = img.get_rect()
 
     print "img_rect =", img_rect
-    pos = (300,0)
+    pos = (400,0) # 300 for windows
     print "pos =", pos
     
     screen.fill((0,0,0))
