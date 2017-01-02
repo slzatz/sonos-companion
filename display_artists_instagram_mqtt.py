@@ -29,8 +29,6 @@ with open('instagram_ids') as f:
 #can only show instagrammers who've accepted by app (willie and me)  willie is 265048195
 ids = list(int(d.split('#')[0]) for d in data.split() if d.split('#')[0])
 
-wrapper = textwrap.TextWrapper(width=72, replace_whitespace=False)  #instagram
-
 # Environment varialbes for pygame
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
@@ -149,20 +147,19 @@ def display_image(image):
     f.close()
     img_rect = img.get_rect()
     pos = ((screen_width-img_rect.width)/2, 0)
-    img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
+    #img.set_alpha(75) # the lower the number the more faded - previous interation faded the photo for a few seconds
 
     font = pygame.font.SysFont('Sans', 28)
     font.set_bold(True)
 
-    text = font.render("Photographer: "+image.get('photographer', 'No photographer'), True, (255, 0, 0))
+    text = font.render(image.get('photographer', 'unknown'), True, (255, 0, 0))
 
     screen.fill((0,0,0)) 
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
     
     txt = image.get('text', 'No title')
-    txt = wrapper.fill(txt)
-    lines = txt.split('\n')
+    lines = textwrap.wrap(txt, 60)
     font = pygame.font.SysFont('Sans', 16)
     n = 36
     for line in lines:
@@ -174,12 +171,6 @@ def display_image(image):
             screen.blit(text, (0,n))
             n+=24
 
-    pygame.display.flip()
-
-    sleep(3)
-    screen.fill((0,0,0)) 
-    img.set_alpha(255)
-    screen.blit(img, pos)      
     pygame.display.flip()
 
 def get_artist_images(name):
@@ -253,22 +244,24 @@ print "Number of images = {}".format(L)
 if images:
     display_image(random.choice(images))
 
-prev_artist = "No artist"  #this is None so if the song title is the empty string, it's not equal
+prev_artist_track = "Nothing"  
 t1 = time()
-nn = 0
+nn = 0 # measures the number of times in a row we've displayed the same artist so it doesn't go on endlessly
 
 def draw_lyrics(lyrics, x_coord):
     print "drawing lyrics"
     font = pygame.font.SysFont('Sans', 16)
     n = 10
-    for line in lyrics:
-        try:
-            text = font.render(line.strip(), True, (255, 0, 0))
-        except UnicodeError as e:
-            print "UnicodeError in text lines: ", e
-        else:
-            screen.blit(text, (x_coord,n))
-            n+=20
+    for lyric in lyrics:
+        lines = textwrap.wrap(lyric, 60)
+        for line in lines:
+            try:
+                text = font.render(line.strip(), True, (255, 0, 0))
+            except UnicodeError as e:
+                print "UnicodeError in text lines: ", e
+            else:
+                screen.blit(text, (x_coord,n))
+                n+=20
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
@@ -285,8 +278,6 @@ while 1:
 
     artist = trackinfo['artist']
     track = trackinfo['track_title']
-    #print "Artist =",artist 
-    #print "Track =",track 
     if artist is None or artist == "":
         if images:
             if cur_time - t1 > 15:
@@ -295,7 +286,7 @@ while 1:
         sleep(1)
         continue
     artist_track = "{} - {}".format(artist,track)
-    ######################################
+
     if prev_artist_track != artist_track:
 
         prev_artist_track = artist_track
@@ -334,11 +325,6 @@ while 1:
 
         screen.fill((0,0,0))
 
-        #below not necessary to create black background for artist-track
-        #surface = pygame.Surface((screen_width,20)) 
-        #surface.fill((0,0,0))
-        #screen.blit(surface, (0,screen_height-16))
-
         screen.blit(text, (0,screen_height-16))
 
         draw_lyrics(trackinfo['lyrics'][:47],0)
@@ -369,7 +355,7 @@ while 1:
 
     nn+=1
     # Don't want to keep displaying same artist forever and at some point links seem to go bad
-    if nn > 24:
+    if nn > 50:
         trackinfo['artist'] = None
 
 
@@ -411,7 +397,6 @@ while 1:
         #crop(left, top, right, bottom)
         t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
         img.crop(*t)
-        #img.resize(700,700)
         img.resize(screen_height,screen_height)
         img = img.convert('bmp')
     except Exception as e:
