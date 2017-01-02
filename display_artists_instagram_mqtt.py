@@ -255,6 +255,18 @@ prev_artist = "No artist"  #this is None so if the song title is the empty strin
 t1 = time()
 nn = 0
 
+def draw_lyrics(lyrics, x_coord):
+    print "drawing lyrics"
+    font = pygame.font.SysFont('Sans', 16)
+    n = 10
+    for line in lyrics:
+        try:
+            text = font.render(line, True, (255, 0, 0))
+        except UnicodeError as e:
+            print "UnicodeError in text lines: ", e
+        else:
+            screen.blit(text, (x_coord,n))
+            n+=20
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
@@ -434,17 +446,19 @@ while 1:
     screen.blit(surface, (0,h-16))
     screen.blit(text, (0,h-16))
 
-    print "drawing lyrics"
-    font = pygame.font.SysFont('Sans', 16)
-    n = 10
-    for line in trackinfo['lyrics']:
-        try:
-            text = font.render(line, True, (255, 0, 0))
-        except UnicodeError as e:
-            print "UnicodeError in text lines: ", e
-        else:
-            screen.blit(text, (0,n))
-            n+=20
+    #print "drawing lyrics"
+    #font = pygame.font.SysFont('Sans', 16)
+    #n = 10
+    #for line in trackinfo['lyrics']:
+    #    try:
+    #        text = font.render(line, True, (255, 0, 0))
+    #    except UnicodeError as e:
+    #        print "UnicodeError in text lines: ", e
+    #    else:
+    #        screen.blit(text, (0,n))
+    #        n+=20
+    draw_lyrics(trackinfo['lyrics'][:47],0)
+    draw_lyrics(trackinfo['lyrics'][47:],1600)
 
     pygame.display.flip()
 
