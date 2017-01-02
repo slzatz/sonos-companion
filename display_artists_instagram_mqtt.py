@@ -244,7 +244,7 @@ print "Number of photos = {}".format(L)
 if photos:
     display_photo(random.choice(photos))
 
-prev_artist_track = "Nothing"  
+prev_artist_track = None
 t1 = time()
 nn = 0 # measures the number of times in a row we've displayed the same artist so it doesn't go on endlessly
 
@@ -278,13 +278,15 @@ while 1:
 
     artist = trackinfo['artist']
     track = trackinfo['track_title']
-    if artist is None or artist == "":
+
+    if not artist:
         if photos:
             if cur_time - t1 > 15:
                 display_photo(random.choice(photos))
                 t1 = time()
         sleep(1)
         continue
+
     artist_track = "{} - {}".format(artist,track)
 
     if prev_artist_track != artist_track:
@@ -354,11 +356,10 @@ while 1:
     x = images0.pop()
 
     nn+=1
-    # Don't want to keep displaying same artist forever and at some point links seem to go bad
-    if nn > 50:
+    # if sonos no longer playing then artist images would be stuck on last artist without this
+    if nn > 25:
         trackinfo['artist'] = None
-        nn = 0
-
+        prev_artist_track = None
 
     print x.link
     if not x.ok:
