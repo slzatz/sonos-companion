@@ -1,7 +1,6 @@
 import platform
 import os
 import pygame
-import txtlib # may still use this for weather, lyrics, bio
 from time import time, sleep
 import random
 import requests
@@ -56,10 +55,11 @@ else:
 screen = pygame.display.set_mode((w, h))
 screen.fill((0,0,0))
 
-text = txtlib.Text((w, h), 'freesans', font_size=30)
-text.text = "Sonos-Companion TFT Edition"
-text.update()
-screen.blit(text.area, (0,0))
+font = pygame.font.SysFont('Sans', 30)
+font.set_bold(True)
+text = font.render("Sonos-Companion", True, (0,0,0))
+screen.fill((255,255,255)) 
+screen.blit(text, (0,0))
 pygame.display.flip()
 
 trackinfo = {"artist":None, "track_title":None}
@@ -76,7 +76,7 @@ print "program running ..."
 
 def get_photos(ids=None, num=40):
 
-    images = []
+    photos = []
     d = divmod(num, 20)
     n = d[0] + 1 if d[1] else d[0]
 
@@ -107,9 +107,9 @@ def get_photos(ids=None, num=40):
                     except Exception as e:
                         print("Exception in get_photos - adding indiviual photo {} related to id: {} ".format(e, _id))
                     else:
-                        images.append(dd)
+                        photos.append(dd)
 
-    return images
+    return photos
 
 def display_image(image):
 
@@ -162,15 +162,15 @@ def display_image(image):
     txt = wrapper.fill(txt)
     lines = txt.split('\n')
     font = pygame.font.SysFont('Sans', 16)
-    z = 36
+    n = 36
     for line in lines:
         try:
             text = font.render(line, True, (255, 0, 0))
         except UnicodeError as e:
             print "UnicodeError in text lines: ", e
         else:
-            screen.blit(text, (0,z))
-            z+=24
+            screen.blit(text, (0,n))
+            n+=24
 
     pygame.display.flip()
 
@@ -291,25 +291,25 @@ while 1:
         try:
             a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
         except NoResultFound:
-            z = get_artist_images(artist)
-            if not z:
+            images = get_artist_images(artist)
+            if not images:
                 print "Could not find images for {}".format(artist)
                 continue
         except Exception as e:
             print "error trying to find artist:", e
             continue
         else:
-            z = a.images
+            images = a.images
 
-        if len([i for i in z if i.ok]) < 8:
+        if len([i for i in images if i.ok]) < 8:
             print "fewer than 8 images so getting new set of images for artist"
-            z = get_artist_images(artist)
-            if not z:
+            images = get_artist_images(artist)
+            if not images:
                 print "Could not find images for {}".format(artist)
                 continue
 
-        #random.shuffle(z) - messes up things if you have to update an image with image.ok = False
-        z0 = z[:]       
+        #random.shuffle(images) - messes up things if you have to update an image with image.ok = False
+        images0 = images[:]       
             
         t1 = 0
 
@@ -325,12 +325,12 @@ while 1:
     if alive[0][0]:
         print "database connection alive"
 
-    if not z:
+    if not images:
         continue
 
-    if not z0:
-        z0 = z[:]
-    x = z0.pop()
+    if not images0:
+        images0 = images[:]
+    x = images0.pop()
 
     nn+=1
     # Don't want to keep displaying same artist forever and at some point links seem to go bad
@@ -415,7 +415,8 @@ while 1:
     img_rect = img.get_rect()
 
     print "img_rect =", img_rect
-    pos = (400,0) # 300 for windows
+    # 400 seems to give enough room for lyrics - used 300 when doing 1000 x 700 on windows
+    pos = (400,0)
     print "pos =", pos
     
     screen.fill((0,0,0))
@@ -427,10 +428,10 @@ while 1:
     font.set_bold(True)
     text = font.render(line, True, (255,0,0))
 
-    zzz = pygame.Surface((w,20)) 
-    zzz.fill((0,0,0))
+    surface = pygame.Surface((w,20)) 
+    surface.fill((0,0,0))
      
-    screen.blit(zzz, (0,h-16))
+    screen.blit(surface, (0,h-16))
     screen.blit(text, (0,h-16))
 
     print "drawing lyrics"
