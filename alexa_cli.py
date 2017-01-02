@@ -17,7 +17,7 @@ url = ngrok_urls.get(location)
 if not url:
     sys.exit()
 
-slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'ShowQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[]}
+slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'AMAZON.NextIntent':[], 'ShowQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[]}
 
 while 1:
     try:
@@ -37,6 +37,8 @@ while 1:
             intent = 'AMAZON.PauseIntent'
         elif 'resume' in words:
             intent = 'AMAZON.ResumeIntent'
+        elif 'next' in words or 'skip' in words:
+            intent = 'AMAZON.NextIntent'
         elif 'show' in words:
             intent = 'ShowQueue'
         elif 'clear' in words:
