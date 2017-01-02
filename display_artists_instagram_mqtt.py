@@ -261,7 +261,7 @@ def draw_lyrics(lyrics, x_coord):
     n = 10
     for line in lyrics:
         try:
-            text = font.render(line, True, (255, 0, 0))
+            text = font.render(line.strip(), True, (255, 0, 0))
         except UnicodeError as e:
             print "UnicodeError in text lines: ", e
         else:
@@ -427,8 +427,8 @@ while 1:
     img_rect = img.get_rect()
 
     print "img_rect =", img_rect
-    # 400 seems to give enough room for lyrics - used 300 when doing 1000 x 700 on windows
-    pos = (400,0)
+    # 4300 seems to give enough room for lyrics on a standard monintor - used 300 when doing 1000 x 700 in a  window on Windows
+    pos = (430,0)
     print "pos =", pos
     
     screen.fill((0,0,0))
@@ -458,7 +458,7 @@ while 1:
     #        screen.blit(text, (0,n))
     #        n+=20
     draw_lyrics(trackinfo['lyrics'][:47],0)
-    draw_lyrics(trackinfo['lyrics'][47:],1600)
+    draw_lyrics(trackinfo['lyrics'][47:],1450)
 
     pygame.display.flip()
 
