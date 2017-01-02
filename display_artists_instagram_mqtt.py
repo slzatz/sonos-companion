@@ -111,10 +111,10 @@ def get_photos(ids=None, num=40):
 
     return photos
 
-def display_image(image):
+def display_photo(photo):
 
     try:
-        response = requests.get(image['url'])
+        response = requests.get(photo['url'])
     except Exception as e:
         print "response = requests.get(url) generated exception:", e
         return
@@ -152,13 +152,13 @@ def display_image(image):
     font = pygame.font.SysFont('Sans', 28)
     font.set_bold(True)
 
-    text = font.render(image.get('photographer', 'unknown'), True, (255, 0, 0))
+    text = font.render(photo.get('photographer', 'unknown'), True, (255, 0, 0))
 
     screen.fill((0,0,0)) 
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
     
-    txt = image.get('text', 'No title')
+    txt = photo.get('text', 'No title')
     lines = textwrap.wrap(txt, 60)
     font = pygame.font.SysFont('Sans', 16)
     n = 36
@@ -238,11 +238,11 @@ client.on_message = on_message
 client.connect(mqtt_uri, 1883, 60)
 #not calling client.loop_forever() but explicitly calling client.loop() below
     
-images = get_photos(ids)
-L = len(images)
-print "Number of images = {}".format(L)
-if images:
-    display_image(random.choice(images))
+photos = get_photos(ids)
+L = len(photos)
+print "Number of photos = {}".format(L)
+if photos:
+    display_photo(random.choice(photos))
 
 prev_artist_track = "Nothing"  
 t1 = time()
@@ -279,9 +279,9 @@ while 1:
     artist = trackinfo['artist']
     track = trackinfo['track_title']
     if artist is None or artist == "":
-        if images:
+        if photos:
             if cur_time - t1 > 15:
-                display_image(random.choice(images))
+                display_photo(random.choice(photos))
                 t1 = time()
         sleep(1)
         continue
@@ -357,6 +357,7 @@ while 1:
     # Don't want to keep displaying same artist forever and at some point links seem to go bad
     if nn > 50:
         trackinfo['artist'] = None
+        nn = 0
 
 
     print x.link
