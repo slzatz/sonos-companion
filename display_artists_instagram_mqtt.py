@@ -48,11 +48,13 @@ if platform.machine()[:3] == 'arm':
     pygame.mouse.set_visible(False)
 
 if platform.system() == 'Windows':
-    w,h = 1000,700
+    screen_width, screen_height = 1000,700
 else:
-    w, h = pygame.display.Info().current_w, pygame.display.Info().current_h
+    screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
 
-screen = pygame.display.set_mode((w, h))
+print "screen width =", screen_width, "; screen height =", screen_height
+
+screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
 
 font = pygame.font.SysFont('Sans', 30)
@@ -125,7 +127,7 @@ def display_image(image):
         print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
         return
 
-    size = "{}x{}".format(w,h)
+    size = "{}x{}".format(screen_width,screen_height)
     img.transform(resize = size)
     img = img.convert('bmp')
     f = StringIO()
@@ -146,7 +148,7 @@ def display_image(image):
 
     f.close()
     img_rect = img.get_rect()
-    pos = ((w-img_rect.width)/2, 0)
+    pos = ((screen_width-img_rect.width)/2, 0)
     img.set_alpha(75) # the lower the number the more faded - 75 seems too faded; try 100
 
     font = pygame.font.SysFont('Sans', 28)
@@ -292,10 +294,11 @@ while 1:
                 t1 = time()
         sleep(1)
         continue
+    artist_track = "{} - {}".format(artist,track)
+    ######################################
+    if prev_artist_track != artist_track:
 
-    if prev_artist != artist:
-
-        prev_artist = artist
+        prev_artist_track = artist_track
         nn = 0
 
         print "about to query image database for artist", artist
@@ -322,6 +325,26 @@ while 1:
 
         #random.shuffle(images) - messes up things if you have to update an image with image.ok = False
         images0 = images[:]       
+
+        #line = "{} - {}".format(artist,track)
+
+        font = pygame.font.SysFont('Sans', 14)
+        font.set_bold(True)
+        text = font.render(artist_track, True, (255,0,0))
+
+        screen.fill((0,0,0))
+
+        #below not necessary to create black background for artist-track
+        #surface = pygame.Surface((screen_width,20)) 
+        #surface.fill((0,0,0))
+        #screen.blit(surface, (0,screen_height-16))
+
+        screen.blit(text, (0,screen_height-16))
+
+        draw_lyrics(trackinfo['lyrics'][:47],0)
+        draw_lyrics(trackinfo['lyrics'][47:],1450)
+
+        pygame.display.flip()
             
         t1 = 0
 
@@ -389,7 +412,7 @@ while 1:
         t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
         img.crop(*t)
         #img.resize(700,700)
-        img.resize(h,h)
+        img.resize(screen_height,screen_height)
         img = img.convert('bmp')
     except Exception as e:
         print "img.transfrom or img.convert error:", e
@@ -427,39 +450,11 @@ while 1:
     img_rect = img.get_rect()
 
     print "img_rect =", img_rect
-    # 4300 seems to give enough room for lyrics on a standard monintor - used 300 when doing 1000 x 700 in a  window on Windows
+    # 430 seems to give enough room for lyrics on a standard monintor - used 300 when doing 1000 x 700 in a  window on Windows
     pos = (430,0)
     print "pos =", pos
     
-    screen.fill((0,0,0))
     screen.blit(img, pos)      
-
-    line = "{} - {}".format(artist,track)
-
-    font = pygame.font.SysFont('Sans', 14)
-    font.set_bold(True)
-    text = font.render(line, True, (255,0,0))
-
-    surface = pygame.Surface((w,20)) 
-    surface.fill((0,0,0))
-     
-    screen.blit(surface, (0,h-16))
-    screen.blit(text, (0,h-16))
-
-    #print "drawing lyrics"
-    #font = pygame.font.SysFont('Sans', 16)
-    #n = 10
-    #for line in trackinfo['lyrics']:
-    #    try:
-    #        text = font.render(line, True, (255, 0, 0))
-    #    except UnicodeError as e:
-    #        print "UnicodeError in text lines: ", e
-    #    else:
-    #        screen.blit(text, (0,n))
-    #        n+=20
-    draw_lyrics(trackinfo['lyrics'][:47],0)
-    draw_lyrics(trackinfo['lyrics'][47:],1450)
-
     pygame.display.flip()
 
     sleep(1)
