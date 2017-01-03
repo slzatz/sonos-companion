@@ -20,6 +20,7 @@ instagram_base_url =  "https://api.instagram.com/v1/users/{}/media/recent/"
 
 with open('location') as f:
     location = f.read().strip()
+
 topic = "sonos/{}/current_track".format(location)
 mqtt_uri = mqtt_uris[location]
 
@@ -126,7 +127,9 @@ def display_photo(photo):
         return
 
     size = "{}x{}".format(screen_width,screen_height)
-    img.transform(resize = size)
+    #img.transform(resize = size)
+    # resize should take the image and enlarge it without cropping so given dimensions of instagram photos will fill vertical but not horizontal
+    img.resize(screen_height,screen_height)
     img = img.convert('bmp')
     f = StringIO()
 
@@ -399,6 +402,7 @@ while 1:
         #crop(left, top, right, bottom)
         t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
         img.crop(*t)
+        # resize should take the image and enlarge it without cropping so will fill vertical but leave space for lyrics
         img.resize(screen_height,screen_height)
         img = img.convert('bmp')
     except Exception as e:
