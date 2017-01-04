@@ -251,7 +251,26 @@ def play_station(station):
             meta = meta_format_radio.format(title=station[0], service=station[2])
             master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
 
-actions = {'play':play, 'volume':volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station} 
+def list_queue():
+    queue = master.get_queue()
+
+    if len(queue) == 0:
+        output_speech = "There is nothing in the queue"
+    else:
+        output_speech = ""
+        for track in queue[:10]: # just pulling first 10
+            output_speech+="{} from {} by {}, ".format(track.title, track.album, track.creator)
+
+    socket.send(output_speech)
+
+def clear_queue():
+    try:
+        master.clear_queue()
+    except Exception as e:
+        print "Encountered exception when trying to clear the queue:",e
+
+actions = {'play':play, 'volume':volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue', list_queue, 'clear_queue':clear_queue} 
+
 while True:
     try:
         print 'waiting for message'
@@ -259,7 +278,7 @@ while True:
         print msg
         action = msg.pop('action')
         # what_is_playing and recent_tracks have to do processing and return a response to flask_ask_sonos.py
-        if action not in ('what_is_playing', 'recent_tracks'):
+        if action not in ('what_is_playing', 'recent_tracks', 'list_queue'):
             socket.send('OK')
         actions[action](**msg) #could use locals() or eval and do away with actions but actions lets you see the list of actions
     except KeyboardInterrupt:

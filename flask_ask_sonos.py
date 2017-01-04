@@ -214,6 +214,20 @@ def play_station(station):
     print "PlayStation({}) return msg from zmq:".format(station), msg
     return statement("I will try to play station {}.".format(station))
         
+@ask.intent('ListQueue')
+def list_queue():
+    socket.send_json({'action':'list_queue'})
+    msg = socket.recv()
+    print "ListQueue return msg from zmq:", msg
+    return statement(msg)
+
+@ask.intent('ClearQueue')
+def clear_queue():
+    socket.send_json({'action':'clear_queue'})
+    msg = socket.recv()
+    print "ClearQueue return msg from zmq:", msg
+    return statement(msg)
+
 try:
     app.run(debug=True,
             port=5000,

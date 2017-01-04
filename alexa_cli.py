@@ -1,11 +1,23 @@
 '''
-Below is the relationship between words entered at the command line and Amazon Intents (similar to Alexa mapping)
+This script can be run from anywhere.  It gets to the local sonos network via ngrok URLs.  So, for example,
+you can see what is playing at any given moment in either NYC or CT by just typing "what."
+
+Below are the keywords that can be entered at the command line that are mapped to Amazon Intents 
+in flask_ask_sonos.py, which in turn calls flask_ask_zmq.py via zmq.
+
 louder,quieter->TurnTheVolume
-album->PlayAlbum, 
-pause->AMAZON.PauseIntent, 
-resume->AMAZON.ResumeIntent, 
-shuffle->Shuffle,
+album->PlayAlbum 
+pause->AMAZON.PauseIntent 
+resume->AMAZON.ResumeIntent
+next->AMAZON.NextIntent
+shuffle->Shuffle
 radio->PlayStation
+what->WhatIsPlaying
+list or show->ListQueue
+clear->ClearQueue
+mix {a} and {b}->Mix
+add {a}->AddTrack
+recent->RecentTracks
 everything else assumed to be the title of a track -> PlayTrack
 '''
 import requests
@@ -17,7 +29,7 @@ url = ngrok_urls.get(location)
 if not url:
     sys.exit()
 
-slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'AMAZON.NextIntent':[], 'ShowQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[]}
+slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'AMAZON.NextIntent':[], 'ListQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[]}
 
 while 1:
     try:
@@ -39,8 +51,8 @@ while 1:
             intent = 'AMAZON.ResumeIntent'
         elif 'next' in words or 'skip' in words:
             intent = 'AMAZON.NextIntent'
-        elif 'show' in words:
-            intent = 'ShowQueue'
+        elif 'show' in words or 'list' in words:
+            intent = 'ListQueue'
         elif 'clear' in words:
             intent = 'ClearQueue'
         elif 'what' in words:
