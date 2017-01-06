@@ -23,6 +23,7 @@ with open('location') as f:
 
 topic = "sonos/{}/current_track".format(location)
 mqtt_uri = mqtt_uris[location]
+print "mqtt_uri =",mqtt_uri
 
 with open('instagram_ids') as f:
     data = f.read()
@@ -126,7 +127,7 @@ def display_photo(photo):
         print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
         return
 
-    size = "{}x{}".format(screen_width,screen_height)
+    #size = "{}x{}".format(screen_width,screen_height)
     #img.transform(resize = size)
     # resize should take the image and enlarge it without cropping so given dimensions of instagram photos will fill vertical but not horizontal
     img.resize(screen_height,screen_height)
@@ -282,6 +283,15 @@ while 1:
     artist = trackinfo['artist']
     track = trackinfo['track_title']
 
+    # note that alive below is just pinging the database -- could also try
+    #conn = engine.connect() # presumably this could be done once at the start of the script
+    #z = conn.execute("SELECT 1")
+    #z.fetchall()
+    #[(1,)]
+    alive = session.query(session.query(Artist).exists()).all()
+    if alive[0][0]:
+        print "database connection alive"
+
     if not artist:
         if photos:
             if cur_time - t1 > 15:
@@ -347,9 +357,9 @@ while 1:
     #z = conn.execute("SELECT 1")
     #z.fetchall()
     #[(1,)]
-    alive = session.query(session.query(Artist).exists()).all()
-    if alive[0][0]:
-        print "database connection alive"
+    #alive = session.query(session.query(Artist).exists()).all()
+    #if alive[0][0]:
+    #    print "database connection alive"
 
     if not images:
         continue
