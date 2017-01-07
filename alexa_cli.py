@@ -118,8 +118,9 @@ while 1:
             #print("value = {}".format(values[i]).encode('cp1252', errors='ignore'))
 
         data = {'session':{}, 'request':{'type':'IntentRequest', 'intent':{'slots':slot_dict, 'name':intent}}}
-        print("data= {}".format(data).encode('cp1252', errors='ignore'))
+        #print("data= {}".format(data).encode('cp1252', errors='ignore'))
         r = requests.post(url, json=data)
-        print(r.text)
+        #print(r.text)
+        print("-->", r.json()['response']['outputSpeech']['text'])
     except KeyboardInterrupt:
         sys.exit()
