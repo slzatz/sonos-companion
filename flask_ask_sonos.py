@@ -50,7 +50,7 @@ def play_album(album, artist):
             # The if t['album']==selected_album only comes into play if we retrieved more than one album
             uris = [t['uri'] for t in tracks if t['album']==selected_album]
 
-            socket.send_json({'action':'play', 'uris':uris})
+            socket.send_json({'action':'play', 'add':False, 'uris':uris})
             msg = socket.recv()
             print "PlayAlbum return msg from zmq:", msg
 
