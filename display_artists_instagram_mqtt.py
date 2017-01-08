@@ -269,6 +269,8 @@ def draw_lyrics(lyrics, x_coord):
             else:
                 screen.blit(text, (x_coord,n))
                 n+=20
+
+num_photos_shown = 0
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
@@ -289,11 +291,15 @@ while 1:
     if not artist:
         if photos:
             if cur_time - t1 > 15:
-                display_photo(random.choice(photos))
+                photo = random.choice(photos)
+                print "Next photo is:", photo.get('photographer', ''), photo.get('text','')
+                display_photo(photo)
+                #display_photo(random.choice(photos))
+                num_photos_shown+=1
 
                 alive = session.query(session.query(Artist).exists()).all()
                 if alive[0][0]:
-                    print "database connection alive"
+                    print cur_time, "database connection alive", num_photos_shown
 
                 t1 = time()
         sleep(1)
