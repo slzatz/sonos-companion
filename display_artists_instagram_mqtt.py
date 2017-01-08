@@ -41,8 +41,11 @@ else:
     sys.exit("Currently unsupported hardware/OS")
 
 # Should be (6,0) if pygame inits correctly
-r = pygame.init()
-print "pygame init",r
+#r = pygame.init()
+#print "pygame init",r
+#below just initiating the modules that are needed instead of all with pygame.init()
+pygame.font.init()
+pygame.display.init()
 
 if platform.machine()[:3] == 'arm': 
     pygame.mouse.set_visible(False)
@@ -283,19 +286,15 @@ while 1:
     artist = trackinfo['artist']
     track = trackinfo['track_title']
 
-    # note that alive below is just pinging the database -- could also try
-    #conn = engine.connect() # presumably this could be done once at the start of the script
-    #z = conn.execute("SELECT 1")
-    #z.fetchall()
-    #[(1,)]
-    alive = session.query(session.query(Artist).exists()).all()
-    if alive[0][0]:
-        print "database connection alive"
-
     if not artist:
         if photos:
             if cur_time - t1 > 15:
                 display_photo(random.choice(photos))
+
+                alive = session.query(session.query(Artist).exists()).all()
+                if alive[0][0]:
+                    print "database connection alive"
+
                 t1 = time()
         sleep(1)
         continue
@@ -357,9 +356,9 @@ while 1:
     #z = conn.execute("SELECT 1")
     #z.fetchall()
     #[(1,)]
-    #alive = session.query(session.query(Artist).exists()).all()
-    #if alive[0][0]:
-    #    print "database connection alive"
+    alive = session.query(session.query(Artist).exists()).all()
+    if alive[0][0]:
+        print "database connection alive"
 
     if not images:
         continue
