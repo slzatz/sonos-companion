@@ -193,7 +193,10 @@ def play(add, uris):
             my_add_playlist_to_queue(uri, meta)
 
     if not add:
-        master.play_from_queue(0)
+        try:
+            master.play_from_queue(0)
+        except soco.exceptions.SoCoUPnPException as e:
+            print "master.play_from_queue exception:", e
 
 def recent_tracks():
     # right now look back is one week; note can't limit because you need all the tracks since we're doing the frequency count
