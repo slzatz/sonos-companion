@@ -117,7 +117,7 @@ def get_photos(ids=None, num=40):
     return photos
 
 def display_photo(photo):
-
+    print "at the very beginning of display_photo:", photo.get('photographer', ''), photo.get('text','')
     try:
         response = requests.get(photo['url'])
     except Exception as e:
