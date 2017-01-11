@@ -167,6 +167,20 @@ def next():
     print "Next return msg from zmq:", msg
     return statement("I will skip to the next track.")
 
+@ask.intent('Mute')
+def mute():
+    socket.send_json({'action':'mute', 'bool_':True})
+    msg = socket.recv()
+    print "Mute return msg from zmq:", msg
+    return statement("I will mute the sound.")
+
+@ask.intent('Mute')
+def mute(bool_):
+    socket.send_json({'action':'mute', 'bool_':False})
+    msg = socket.recv()
+    print "UnMute return msg from zmq:", msg
+    return statement("I will unmute the sound.")
+
 @ask.intent('TurnTheVolume')
 def turn_the_volume(volume):
     if volume in ('increase','louder','higher','up'):

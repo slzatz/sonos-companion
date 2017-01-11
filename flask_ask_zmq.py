@@ -152,7 +152,9 @@ def volume(direction):
     for s in m_group:
         s.volume = s.volume - 10 if direction=='quieter' else s.volume + 10
 
-    print "I tried to make the volume "+direction
+def mute(bool_):
+    for s in m_group:
+        s.mute = bool__
 
 def playback(type_):
     try:
@@ -272,7 +274,7 @@ def clear_queue():
     except Exception as e:
         print "Encountered exception when trying to clear the queue:",e
 
-actions = {'play':play, 'volume':volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue': list_queue, 'clear_queue':clear_queue} 
+actions = {'play':play, 'volume':volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue': list_queue, 'clear_queue':clear_queue, 'mute':mute} 
 
 while True:
     try:

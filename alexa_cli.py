@@ -59,6 +59,10 @@ while 1:
             intent = 'WhatIsPlaying'
         elif 'recent' in words:
             intent = 'RecentTracks'
+        elif 'mute' in words:
+            intent = 'Mute'
+        elif 'un mute' in words or 'un-mute' in words or 'unmute' in words:
+            intent = 'UnMute'
         elif 'shuffle' in words:
             intent = 'Shuffle'
             words.remove('shuffle')
