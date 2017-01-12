@@ -154,7 +154,7 @@ def volume(direction):
 
 def mute(bool_):
     for s in m_group:
-        s.mute = bool__
+        s.mute = bool_
 
 def playback(type_):
     try:
