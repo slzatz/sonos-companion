@@ -29,7 +29,7 @@ url = ngrok_urls.get(location)
 if not url:
     sys.exit()
 
-slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'AMAZON.NextIntent':[], 'ListQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[]}
+slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'AMAZON.NextIntent':[], 'ListQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[], 'Mute':[], 'UnMute':[]}
 
 while 1:
     try:
