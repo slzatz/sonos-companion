@@ -174,8 +174,8 @@ def mute():
     print "Mute return msg from zmq:", msg
     return statement("I will mute the sound.")
 
-@ask.intent('Mute')
-def mute(bool_):
+@ask.intent('UnMute')
+def unmute(bool_):
     socket.send_json({'action':'mute', 'bool_':False})
     msg = socket.recv()
     print "UnMute return msg from zmq:", msg
