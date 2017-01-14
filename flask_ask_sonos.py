@@ -196,7 +196,7 @@ def turn_volume(volume):
     else:
         return statement("I don't know what you asked me to do to the volume.")
 
-@ask.intent('SetVolume')
+@ask.intent('SetVolume', convert={'level':int})
 def set_volume(level):
     if level > 0 and level < 70: 
         socket.send_json({'action':'set_volume', 'level':level})
