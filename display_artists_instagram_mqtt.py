@@ -56,7 +56,9 @@ else:
     screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
 
 print "screen width =", screen_width, "; screen height =", screen_height
-
+print "Can't execute line below without a control-c"
+# Note suggestion from https://www.raspberrypi.org/forums/viewtopic.php?f=32&t=22306 is sys.exit(0)
+# might be necessary and I would put a try except around the while loop but haven't done that
 screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
 
