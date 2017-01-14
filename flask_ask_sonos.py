@@ -181,20 +181,30 @@ def unmute(bool_):
     print "UnMute return msg from zmq:", msg
     return statement("I will unmute the sound.")
 
-@ask.intent('TurnTheVolume')
-def turn_the_volume(volume):
+@ask.intent('TurnVolume')
+def turn_volume(volume):
     if volume in ('increase','louder','higher','up'):
-        socket.send_json({'action':'volume', 'direction':'louder'})
+        socket.send_json({'action':'turn_volume', 'direction':'louder'})
         msg = socket.recv()
         print "Volume return msg from zmq:", msg
         return statement("I will turn the volume up.")
     elif volume in ('decrease', 'down','quieter','lower'):
-        socket.send_json({'action':'volume', 'direction':'quieter'})
+        socket.send_json({'action':'turn_volume', 'direction':'quieter'})
         msg = socket.recv()
         print "Volume return msg from zmq:", msg
         return statement("I will turn the volume down.")
     else:
         return statement("I don't know what you asked me to do to the volume.")
+
+@ask.intent('SetVolume')
+def set_volume(level):
+    if level > 0 and level < 70: 
+        socket.send_json({'action':'set_volume', 'level':level})
+        msg = socket.recv()
+        print "SetVolume return msg from zmq:", msg
+        return statement("I will set the volume to {}.".format(level))
+    else:
+        return statement("{} is not in the range zero to seventy".format(level))
 
 @ask.intent('WhatIsPlaying')
 def what_is_playing():

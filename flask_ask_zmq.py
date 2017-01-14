@@ -148,9 +148,13 @@ def what_is_playing():
 
     socket.send(output_speech)
 
-def volume(direction):
+def turn_volume(volume):
     for s in m_group:
         s.volume = s.volume - 10 if direction=='quieter' else s.volume + 10
+
+def set_volume(level):
+    for s in m_group:
+        s.volume = level
 
 def mute(bool_):
     for s in m_group:
@@ -274,7 +278,7 @@ def clear_queue():
     except Exception as e:
         print "Encountered exception when trying to clear the queue:",e
 
-actions = {'play':play, 'volume':volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue': list_queue, 'clear_queue':clear_queue, 'mute':mute} 
+actions = {'play':play, 'turn_volume':turn_volume, 'set_volume':set_volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue': list_queue, 'clear_queue':clear_queue, 'mute':mute} 
 
 while True:
     try:
@@ -285,7 +289,8 @@ while True:
         # what_is_playing and recent_tracks have to do processing and return a response to flask_ask_sonos.py
         if action not in ('what_is_playing', 'recent_tracks', 'list_queue'):
             socket.send('OK')
-        actions[action](**msg) #could use locals() or eval and do away with actions but actions lets you see the list of actions
+        #actions[action](**msg) #could use locals() or eval and do away with actions but actions lets you see the list of actions
+        eval(action)(**msg) #trying with eval
     except KeyboardInterrupt:
         sys.exit()
 

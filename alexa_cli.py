@@ -29,7 +29,7 @@ url = ngrok_urls.get(location)
 if not url:
     sys.exit()
 
-slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnTheVolume':['volume'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'AMAZON.NextIntent':[], 'ListQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[], 'Mute':[], 'UnMute':[]}
+slots = {'Mix':['myartista','myartistb'], 'Shuffle':['myartist'], 'PlayStation':['mystation'], 'PlayAlbum':['myalbum', 'myartist'], 'PlayTrack':['mytitle', 'myartist'], 'AddTrack':['mytitle', 'myartist'], 'TurnVolume':['volume'], 'SetVolume':['level'], 'AMAZON.ResumeIntent':[], 'AMAZON.PauseIntent':[], 'AMAZON.NextIntent':[], 'ListQueue':[],'ClearQueue':[], 'WhatIsPlaying':[], 'RecentTracks':[], 'Mute':[], 'UnMute':[]}
 
 while 1:
     try:
@@ -40,11 +40,14 @@ while 1:
             words.remove('play')
 
         if 'louder' in words:
-            intent = 'TurnTheVolume'
+            intent = 'TurnVolume'
             values = ['up']
         elif 'quieter' in words:
-            intent = 'TurnTheVolume'
+            intent = 'TurnVolume'
             values = ['down']
+        elif 'set' in words:
+            intent = 'SetVolume'
+            values = [int([i for i in words if i.isdigit()][0])]
         elif 'pause' in words:
             intent = 'AMAZON.PauseIntent'
         elif 'resume' in words:
