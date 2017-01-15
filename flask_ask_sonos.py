@@ -184,12 +184,12 @@ def unmute(bool_):
 @ask.intent('TurnVolume')
 def turn_volume(volume):
     if volume in ('increase','louder','higher','up'):
-        socket.send_json({'action':'turn_volume', 'direction':'louder'})
+        socket.send_json({'action':'turn_volume', 'volume':'louder'})
         msg = socket.recv()
         print "Volume return msg from zmq:", msg
         return statement("I will turn the volume up.")
     elif volume in ('decrease', 'down','quieter','lower'):
-        socket.send_json({'action':'turn_volume', 'direction':'quieter'})
+        socket.send_json({'action':'turn_volume', 'volume':'quieter'})
         msg = socket.recv()
         print "Volume return msg from zmq:", msg
         return statement("I will turn the volume down.")
