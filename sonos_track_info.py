@@ -22,7 +22,7 @@ import sys
 import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
-from config import local_mqtt_uri, location
+from config import local_mqtt_uri, location, mqtt_uris
 import soco
 from soco import config as soco_config
 import paho.mqtt.publish as mqtt_publish
@@ -38,8 +38,10 @@ print("topic =",topic)
 topic2 = 'sonos/{}/volume'.format(location)
 print("topic2 =",topic2)
 
-topic3 = 'sonos/{}/lyrics'.format(location)
-print("topic3 =",topic3)
+aws_host = mqtt_uris['other']
+
+#topic3 = 'sonos/{}/lyrics'.format(location)
+#print("topic3 =",topic3)
 
 soco_config.CACHE_ENABLED = False
 
@@ -183,8 +185,10 @@ while 1:
         if lyrics:
             data['lyrics'] = lyrics
         # publish to MQTT - could require less code by using micropython mqtt client
+        data2 = {'header':'Track Info', 'text':[data['artist'], cur_title], 'pos':4}
         try:
             mqtt_publish.single(topic, json.dumps(data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+            mqtt_publish.single('esp_tft', json.dumps(data2), hostname=aws_host, retain=False, port=1883, keepalive=60)
         except Exception as e:
             print "Exception trying to publish to mqtt broker: ", e
         else:
