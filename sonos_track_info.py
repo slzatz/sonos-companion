@@ -185,7 +185,7 @@ while 1:
         if lyrics:
             data['lyrics'] = lyrics
         # publish to MQTT - could require less code by using micropython mqtt client
-        data2 = {'header':'Track Info', 'text':[data['artist'], cur_title], 'pos':4}
+        data2 = {'header':'Track Info', 'text':[data['artist'], cur_title], 'pos':2}
         try:
             mqtt_publish.single(topic, json.dumps(data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
             mqtt_publish.single('esp_tft', json.dumps(data2), hostname=aws_host, retain=False, port=1883, keepalive=60)
