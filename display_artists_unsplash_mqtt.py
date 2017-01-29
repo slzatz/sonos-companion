@@ -6,6 +6,7 @@ The information being broadcast by esp_tft_mqtt.py
 '''
 import platform
 import os
+import argparse
 import pygame
 from time import time, sleep
 import random
@@ -20,9 +21,10 @@ import paho.mqtt.client as mqtt
 from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
-#from pyunsplash import PyUnsplash 
 
-#pu = PyUnsplash(unsplash_api_key)
+parser = argparse.ArgumentParser()
+parser.add_argument("-s", "--search", help="unsplash search term; if not present will do curated list")
+args = parser.parse_args()
 
 with open('location') as f:
     location = f.read().strip()
@@ -82,37 +84,32 @@ print "\n"
 print "program running ..."
 
 def get_photos():
-    #cp = pu.photos(type='curated', per_page=15) # this works to retrieve curated photos
-    #cp = pu.search("photos", query="ducks", per_page=25)
-    #return [{'url':photo.links['download'], 'photographer':photo.body['user']['name'], 'text':''}  for photo in cp.entries]
-    #r = requests.get('http://api.unsplash.com/photos/curated', params={'client_id':unsplash_api_key, 'per_page':25})
-    #z = r.json()
-    r = requests.get('http://api.unsplash.com/search/photos', params={'client_id':unsplash_api_key, 'per_page':25, 'query':'duck'})
-    z = r.json()['results']
+    if args.search:
+        r = requests.get('http://api.unsplash.com/search/photos', params={'client_id':unsplash_api_key, 'per_page':25, 'query':args.search})
+        z = r.json()['results']
+    else:
+        r = requests.get('http://api.unsplash.com/photos/curated', params={'client_id':unsplash_api_key, 'per_page':25})
+        z = r.json()
     return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
 
 def display_photo(photo):
-    print "at the very beginning of display_photo:", photo.get('photographer', ''), photo.get('text','')
+    print "at the very beginning of display_photo:", photo.get('photographer', '')
     try:
         response = requests.get(photo['url'])
     except Exception as e:
         print "response = requests.get(url) generated exception:", e
         return
-
+    print "retrieved photo and now about to manipulate it"
     try:
         img = wand.image.Image(file=StringIO(response.content))
     except Exception as e:
         print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
         if "Insufficient memory" in e:
-            sys.exit("Insufficient memory -- line 128")
+            sys.exit("Insufficient memory -- line 97")
         else:
             return
 
-    #size = "{}x{}".format(screen_width,screen_height)
-    #img.transform(resize = size)
-    # resize should take the image and enlarge it without cropping so given dimensions of instagram photos will fill vertical but not horizontal
     #img.resize(screen_height,screen_height)
-    #img.resize(screen_width, screen_width)
     img.transform(resize="{}x{}>".format(screen_width, screen_height))
     img = img.convert('bmp')
     f = StringIO()
@@ -145,7 +142,7 @@ def display_photo(photo):
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
     
-    txt = photo.get('text', 'No title')
+    txt = photo.get('text', '')
     lines = textwrap.wrap(txt, 60)
     font = pygame.font.SysFont('Sans', 16)
     n = 36
