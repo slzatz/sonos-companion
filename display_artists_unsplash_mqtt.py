@@ -20,9 +20,9 @@ import paho.mqtt.client as mqtt
 from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
-from pyunsplash import PyUnsplash 
+#from pyunsplash import PyUnsplash 
 
-pu = PyUnsplash(unsplash_api_key)
+#pu = PyUnsplash(unsplash_api_key)
 
 with open('location') as f:
     location = f.read().strip()
@@ -82,8 +82,14 @@ print "\n"
 print "program running ..."
 
 def get_photos():
-    cp = pu.photos(type='curated', per_page=15)
-    return [{'url':photo.links['download'], 'photographer':'photographer', 'text':'text'}  for photo in cp.entries]
+    #cp = pu.photos(type='curated', per_page=15) # this works to retrieve curated photos
+    #cp = pu.search("photos", query="ducks", per_page=25)
+    #return [{'url':photo.links['download'], 'photographer':photo.body['user']['name'], 'text':''}  for photo in cp.entries]
+    #r = requests.get('http://api.unsplash.com/photos/curated', params={'client_id':unsplash_api_key, 'per_page':25})
+    #z = r.json()
+    r = requests.get('http://api.unsplash.com/search/photos', params={'client_id':unsplash_api_key, 'per_page':25, 'query':'duck'})
+    z = r.json()['results']
+    return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
 
 def display_photo(photo):
     print "at the very beginning of display_photo:", photo.get('photographer', ''), photo.get('text','')
@@ -105,7 +111,9 @@ def display_photo(photo):
     #size = "{}x{}".format(screen_width,screen_height)
     #img.transform(resize = size)
     # resize should take the image and enlarge it without cropping so given dimensions of instagram photos will fill vertical but not horizontal
-    img.resize(screen_height,screen_height)
+    #img.resize(screen_height,screen_height)
+    #img.resize(screen_width, screen_width)
+    img.transform(resize="{}x{}>".format(screen_width, screen_height))
     img = img.convert('bmp')
     f = StringIO()
 
