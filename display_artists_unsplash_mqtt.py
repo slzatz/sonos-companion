@@ -112,6 +112,7 @@ def display_photo(photo):
 
     #img.resize(screen_height,screen_height)
     img.transform(resize="{}x{}>".format(screen_width, screen_height))
+    print "img transformed (resized) successfully"
     img = img.convert('bmp')
     f = StringIO()
 
