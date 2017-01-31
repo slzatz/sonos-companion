@@ -24,6 +24,7 @@ tide_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
 
 def news():
+    #pos = 1
     #https://newsapi.org/v1/articles?source=techcrunch&apiKey=...
     uri = 'https://newsapi.org/v1/articles'
     source = 'the-wall-street-journal'
@@ -39,11 +40,12 @@ def news():
 
     z = r.json()
     article = z['articles'][0]['title']
-    print(article)
+    #print(article)
     data = {"header":"Top WSJ Article","text":[article], "pos":1}
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 def weather():
+    # pos = 0
     # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
     # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
     
@@ -113,6 +115,7 @@ def tides():
     mqtt_publish.single('esp_tft', json.dumps(data1), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 def stock_quote():
+    #pos = 2
     uri = "https://query.yahooapis.com/v1/public/yql" 
     payload = {'q':'select * from yahoo.finance.quotes where symbol in ("WBMD")', "format":"json", "env":"store://datatables.org/alltableswithkeys"}
     r = requests.get(uri, params=payload)
@@ -121,11 +124,13 @@ def stock_quote():
     quote = z['query']['results']['quote']
     results = "{} {} {} {}".format(quote['LastTradePriceOnly'], quote['ChangeinPercent'], quote['EBITDA'], quote['MarketCapitalization']) 
     print(results)
-    data = {"header":"WebMD Stock Quote", "text":[results], "pos":1}
+    data = {"header":"WebMD Stock Quote", "text":[results], "pos":2}
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 schedule.every(30).minutes.do(weather)
-#schedule.every(30).minutes.do(news)
+sleep(5)
+schedule.every(30).minutes.do(news)
+sleep(5)
 #schedule.every(30).minutes.do(tides)
 schedule.every(30).minutes.do(stock_quote)
 
