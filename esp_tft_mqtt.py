@@ -60,7 +60,12 @@ def weather():
         print("Exception in weather", e)
         return
     
-    forecast = r.json()['forecast']['txt_forecast']['forecastday']
+    z = r.json()
+    if not 'forecast' in z:
+        print("'forecast' not in result of weather request")
+        return
+
+    forecast = z['forecast']['txt_forecast']['forecastday']
     #f0 = forecast[0]['title'] + ': ' + forecast[0]['fcttext']
     #f1 = forecast[1]['title'] + ': ' + forecast[1]['fcttext']
     #f2 = forecast[2]['title'] + ': ' + forecast[2]['fcttext']
