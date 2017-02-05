@@ -93,13 +93,13 @@ def get_photos():
     return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
 
 def display_photo(photo):
-    print "at the very beginning of display_photo:", photo.get('photographer', '')
+
     try:
         response = requests.get(photo['url'])
     except Exception as e:
         print "response = requests.get(url) generated exception:", e
         return
-    print "retrieved photo and now about to manipulate it"
+
     try:
         img = wand.image.Image(file=StringIO(response.content))
     except Exception as e:
@@ -108,18 +108,14 @@ def display_photo(photo):
             sys.exit("Insufficient memory -- line 104")
         else:
             return
-    print "was able to create a wand.image.Image(...)"
 
-    #img.resize(screen_height,screen_height)
     img.transform(resize="{}x{}>".format(screen_width, screen_height))
-    print "img transformed (resized) successfully"
-    # wonder if below should be converted_img = and then delete img
     conv_img = img.convert('bmp')
     # need to close image or there is a memory leak
     # could do: with img.convert('bmp') as converted; converted.save(f)
     img.close()
-    f = StringIO()
 
+    f = StringIO()
     try:
         conv_img.save(f)
     except Exception as e:
@@ -131,8 +127,6 @@ def display_photo(photo):
 
     f.seek(0)
 
-    # would think unnecessary since using img below but who knows
-
     try:
         img = pygame.image.load(f).convert()
     except pygame.error as e:
@@ -142,7 +136,6 @@ def display_photo(photo):
     f.close()
     img_rect = img.get_rect()
     pos = ((screen_width-img_rect.width)/2, 0)
-    #img.set_alpha(75) # the lower the number the more faded - previous interation faded the photo for a few seconds
 
     font = pygame.font.SysFont('Sans', 28)
     font.set_bold(True)
@@ -283,7 +276,6 @@ while 1:
                 photo = random.choice(photos)
                 print "Next photo is:", photo.get('photographer', ''), photo.get('text','')
                 display_photo(photo)
-                #display_photo(random.choice(photos))
                 num_photos_shown+=1
 
                 alive = session.query(session.query(Artist).exists()).all()
@@ -408,7 +400,8 @@ while 1:
         img.crop(*t)
         # resize should take the image and enlarge it without cropping so will fill vertical but leave space for lyrics
         img.resize(screen_height,screen_height)
-        img = img.convert('bmp')
+        conv_img = img.convert('bmp')
+        img.close()
     except Exception as e:
         print "img.transfrom or img.convert error:", e
 
@@ -426,7 +419,8 @@ while 1:
 
     f = StringIO()
     try:
-        img.save(f)
+        conv_img.save(f)
+        conv_img.close()
     except wand.exceptions.OptionError as e:
         print "Problem saving image:",e
 
