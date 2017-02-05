@@ -114,19 +114,24 @@ def display_photo(photo):
     img.transform(resize="{}x{}>".format(screen_width, screen_height))
     print "img transformed (resized) successfully"
     # wonder if below should be converted_img = and then delete img
-    img = img.convert('bmp')
+    conv_img = img.convert('bmp')
+    # need to close image or there is a memory leak
+    # could do: with img.convert('bmp') as converted; converted.save(f)
+    img.close()
     f = StringIO()
 
     try:
-        img.save(f)
+        conv_img.save(f)
     except Exception as e:
         print "image.save(f) with error:", e
         return
 
+    # need to close image or there is a memory leak - could do with ... (see above)
+    conv_img.close()
+
     f.seek(0)
 
     # would think unnecessary since using img below but who knows
-    del img
 
     try:
         img = pygame.image.load(f).convert()
