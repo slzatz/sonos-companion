@@ -113,6 +113,7 @@ def display_photo(photo):
     #img.resize(screen_height,screen_height)
     img.transform(resize="{}x{}>".format(screen_width, screen_height))
     print "img transformed (resized) successfully"
+    # wonder if below should be converted_img = and then delete img
     img = img.convert('bmp')
     f = StringIO()
 
@@ -123,6 +124,9 @@ def display_photo(photo):
         return
 
     f.seek(0)
+
+    # would think unnecessary since using img below but who knows
+    del img
 
     try:
         img = pygame.image.load(f).convert()
