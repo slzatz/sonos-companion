@@ -23,7 +23,8 @@ from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--search", help="unsplash search term; if not present will do curated list")
+parser.add_argument("-s", "--search", help="unsplash search term; if neither search not name present will do curated list")
+parser.add_argument("-n", "--name", help="unsplash user name; if neither search nor name present will do curated list")
 args = parser.parse_args()
 
 with open('location') as f:
@@ -85,10 +86,13 @@ print "program running ..."
 
 def get_photos():
     if args.search:
-        r = requests.get('http://api.unsplash.com/search/photos', params={'client_id':unsplash_api_key, 'per_page':25, 'query':args.search})
+        r = requests.get('http://api.unsplash.com/search/photos', params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search})
         z = r.json()['results']
+    elif args.name:
+        r = requests.get('http://api.unsplash.com/users/{}/photos'.format(args.name), params={'client_id':unsplash_api_key, 'per_page':40})
+        z = r.json()
     else:
-        r = requests.get('http://api.unsplash.com/photos/curated', params={'client_id':unsplash_api_key, 'per_page':25})
+        r = requests.get('http://api.unsplash.com/photos/curated', params={'client_id':unsplash_api_key, 'per_page':40})
         z = r.json()
     return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
 
