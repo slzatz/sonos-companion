@@ -104,7 +104,7 @@ def display_photo(photo):
         img = wand.image.Image(file=StringIO(response.content))
     except Exception as e:
         print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
-        if "Insufficient memory" in e:
+        if "Insufficient memory" in repr(e):
             sys.exit("Insufficient memory -- line 104")
         else:
             return
