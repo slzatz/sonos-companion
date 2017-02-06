@@ -34,6 +34,8 @@ topic = "sonos/{}/current_track".format(location)
 mqtt_uri = mqtt_uris[location]
 print "mqtt_uri =",mqtt_uri
 
+unsplash_uri = 'https://api.unsplash.com/'
+
 # Environment varialbes for pygame
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
@@ -86,13 +88,13 @@ print "program running ..."
 
 def get_photos():
     if args.search:
-        r = requests.get('http://api.unsplash.com/search/photos', params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search})
+        r = requests.get('{}search/photos'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search})
         z = r.json()['results']
     elif args.name:
-        r = requests.get('http://api.unsplash.com/users/{}/photos'.format(args.name), params={'client_id':unsplash_api_key, 'per_page':40})
+        r = requests.get('{}users/{}/photos'.format(unsplash_uri, args.name), params={'client_id':unsplash_api_key, 'per_page':40})
         z = r.json()
     else:
-        r = requests.get('http://api.unsplash.com/photos/curated', params={'client_id':unsplash_api_key, 'per_page':40})
+        r = requests.get('{}photos/curated'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40})
         z = r.json()
     return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
 
