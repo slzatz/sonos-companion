@@ -25,6 +25,7 @@ import httplib2 #needed by the google custom search engine module apiclient
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--search", help="unsplash search term; if neither search not name present will do curated list")
 parser.add_argument("-n", "--name", help="unsplash user name; if neither search nor name present will do curated list")
+parser.add_argument("-w", "--window", action='store_true', help="use -w if you want a small window instead of full screen")
 args = parser.parse_args()
 
 with open('location') as f:
@@ -55,7 +56,8 @@ pygame.display.init()
 if platform.machine()[:3] == 'arm': 
     pygame.mouse.set_visible(False)
 
-if platform.system() == 'Windows':
+#if platform.system() == 'Windows':
+if args.window:
     screen_width, screen_height = 1000,700
 else:
     screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
