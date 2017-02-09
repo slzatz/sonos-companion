@@ -126,7 +126,11 @@ def stock_quote():
     r = requests.get(uri, params=payload)
     z = r.json()
     #print(z)
-    quote = z['query']['results']['quote']
+    try:
+        quote = z['query']['results']['quote']
+    except Exception as e:
+        print("Exception in WebMD stock quote:", e)
+        return
     results = "{} {} {} {}".format(quote['LastTradePriceOnly'], quote['ChangeinPercent'], quote['EBITDA'], quote['MarketCapitalization']) 
     print(results)
     data = {"header":"WebMD Stock Quote", "text":[results], "pos":2}
