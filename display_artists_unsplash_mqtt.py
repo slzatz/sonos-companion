@@ -25,7 +25,7 @@ import textwrap
 import sys
 from cStringIO import StringIO
 import wand.image
-from config import mqtt_uris, google_api_key, unsplash_api_key 
+from config import mqtt_uris, google_api_key, unsplash_api_key, aws_mqtt_uri 
 import json
 import paho.mqtt.client as mqtt
 from artist_images_db import *
@@ -43,7 +43,8 @@ with open('location') as f:
 
 sonos_topic = "sonos/{}/current_track".format(location)
 info_topic = "esp_tft"
-mqtt_uri = mqtt_uris[location]
+#mqtt_uri = mqtt_uris[location]
+mqtt_uri = aws_mqtt_uri
 print "mqtt_uri =",mqtt_uri
 
 unsplash_uri = 'https://api.unsplash.com/'
