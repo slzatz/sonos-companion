@@ -3,6 +3,16 @@ This is the current script that runs on a raspberry pi or on Windows to display
 lyrics and artists pictures to accompany what is playing on Sonos
 This script could also be the basis for using a large screen to display
 The information being broadcast by esp_tft_mqtt.py
+Next photo is: Michael Hacker
+1486671741.8 database connection alive 2
+esp_tft {"header": "Weather", "text": ["Thursday Night: Some clouds this evening will give way to mainly clear skies overnight. Low 18F. Winds WNW at 10 to 20 mph.", "Friday: Mostly
+sunny skies. High around 30F. Winds W at 10 to 15 mph."], "pos": 0}
+mqtt messge body = {"header": "Weather", "text": ["Thursday Night: Some clouds this evening will give way to mainly clear skies overnight. Low 18F. Winds WNW at 10 to 20 mph.", "Frid
+ay: Mostly sunny skies. High around 30F. Winds W at 10 to 15 mph."], "pos": 0}
+esp_tft {"header": "Top WSJ Article", "text": ["Trump Lashes Out as Senator, Others Recount Court Nominee\u2019s Criticism"], "pos": 1}
+mqtt messge body = {"header": "Top WSJ Article", "text": ["Trump Lashes Out as Senator, Others Recount Court Nominee\u2019s Criticism"], "pos": 1}
+esp_tft {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
+mqtt messge body = {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
 '''
 import platform
 import os
@@ -31,7 +41,8 @@ args = parser.parse_args()
 with open('location') as f:
     location = f.read().strip()
 
-topic = "sonos/{}/current_track".format(location)
+sonos_topic = "sonos/{}/current_track".format(location)
+info_topic = "esp_tft"
 mqtt_uri = mqtt_uris[location]
 print "mqtt_uri =",mqtt_uri
 
@@ -68,7 +79,10 @@ print "Can't execute line below without a control-c"
 # might be necessary and I would put a try except around the while loop but haven't done that
 screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
-
+erase_rect = pygame.Surface((screen_width,screen_height-70))
+erase_rect.fill((0,0,0))
+text_rect = pygame.Surface((screen_width,70))
+text_rect.fill((0,0,0))
 font = pygame.font.SysFont('Sans', 30)
 font.set_bold(True)
 text = font.render("Sonos-Companion", True, (0,0,0))
@@ -82,7 +96,8 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
-    client.subscribe(topic)
+    #client.subscribe(topic)
+    client.subscribe([(sonos_topic, 0), (info_topic, 0)])
 
 print "\n"
 
@@ -117,7 +132,7 @@ def display_photo(photo):
         else:
             return
 
-    img.transform(resize="{}x{}>".format(screen_width, screen_height))
+    img.transform(resize="{}x{}>".format(screen_width, screen_height-70))
     conv_img = img.convert('bmp')
     # need to close image or there is a memory leak
     # could do: with img.convert('bmp') as converted; converted.save(f)
@@ -150,7 +165,8 @@ def display_photo(photo):
 
     text = font.render(photo.get('photographer', 'unknown'), True, (255, 0, 0))
 
-    screen.fill((0,0,0)) 
+    screen.blit(erase_rect, (0,0))
+    #screen.fill((0,0,0)) 
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
     
@@ -209,14 +225,32 @@ def get_artist_images(name):
     return images 
 
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
+    topic = msg.topic
     body = msg.payload
-    print "mqtt messge body =", body
+    print(topic+": "+str(body))
 
     try:
         z = json.loads(body)
     except Exception as e:
         print "error reading the mqtt message body: ", e
+        return
+
+    if topic==info_topic and z.get('header')=='Weather':
+        screen.blit(text_rect, (0,screen_height-70))
+        font = pygame.font.SysFont('Sans', 18)
+        n = screen_height - 70
+        for text in z.get('text',''): 
+            lines = textwrap.wrap(text, 150)
+            for line in lines:
+                try:
+                    text = font.render(line.strip(), True, (255, 0, 0))
+                except UnicodeError as e:
+                    print "UnicodeError in text lines: ", e
+                else:
+                    screen.blit(text, (0,n))
+                    n+=20
+
+        pygame.display.flip()
         return
 
     print "The python object from mqtt is:",z
@@ -261,6 +295,8 @@ def draw_lyrics(lyrics, x_coord):
                 n+=20
 
 num_photos_shown = 0
+screen.fill((0,0,0)) 
+pygame.display.flip()
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
@@ -282,7 +318,7 @@ while 1:
         if photos:
             if cur_time - t1 > 15:
                 photo = random.choice(photos)
-                print "Next photo is:", photo.get('photographer', ''), photo.get('text','')
+                print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
                 display_photo(photo)
                 num_photos_shown+=1
 
