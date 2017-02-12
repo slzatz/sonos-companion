@@ -33,8 +33,9 @@ from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--search", help="unsplash search term; if neither search not name present will do curated list")
-parser.add_argument("-n", "--name", help="unsplash user name; if neither search nor name present will do curated list")
+parser.add_argument("-s", "--search", help="unsplash search term; if no command line switches defaults to curated list")
+parser.add_argument("-n", "--name", help="unsplash user name; if no command line switches defaults to curated list")
+parser.add_argument("-c", "--collection", help="unsplash collection id; if no command line switches defaults to curated list")
 parser.add_argument("-w", "--window", action='store_true', help="use -w if you want a small window instead of full screen")
 args = parser.parse_args()
 
@@ -110,6 +111,9 @@ def get_photos():
         z = r.json()['results']
     elif args.name:
         r = requests.get('{}users/{}/photos'.format(unsplash_uri, args.name), params={'client_id':unsplash_api_key, 'per_page':40})
+        z = r.json()
+    elif args.collection:
+        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, args.collection), params={'client_id':unsplash_api_key, 'per_page':40})
         z = r.json()
     else:
         r = requests.get('{}photos/curated'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40})
