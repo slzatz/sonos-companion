@@ -6,7 +6,7 @@ pos is the position on the tft screen and is 0, 1, 2 etc
 Information may be tides, stock prices, news, weather
 The mqtt message is picked up by the esp8266 + feather tft
 The script is esp_display_info.py
-
+Schedule.every().hour.at(':00').do(job)
 https://www.worldtides.info/api?extremes&lat=41.117597&lon=-73.407897&key=a417...
 Documentation at https://www.worldtides.info/apidocs
 
@@ -39,9 +39,13 @@ def news():
         return
 
     z = r.json()
-    article = z['articles'][0]['title']
-    #print(article)
-    data = {"header":"Top WSJ Article","text":[article], "pos":1}
+    #article = z['articles'][0]['title']
+    articles = [x['title'] for x in z['articles']]
+    print(datetime.datetime.now())
+    #print(article.encode('ascii', 'ignore'))
+    print(repr(articles).encode('ascii', 'ignore'))
+    #data = {"header":"Top WSJ Article","text":[article], "pos":1} #expects a list
+    data = {"header":"Top WSJ Article","text":articles, "pos":1} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 def weather():
@@ -75,10 +79,9 @@ def weather():
     text = []
     for n in reports:
        text.append(forecast[n]['title'] + ': ' + forecast[n]['fcttext'])
-
-    print(text)
+    print(datetime.datetime.now())
+    print(repr(text).encode('ascii', 'ignore'))
     data = {"header":"Weather", "text":text, "pos":0}
-    #print("data =",data)
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 def tides():
@@ -97,7 +100,7 @@ def tides():
 
     z = r.json()
     data = z['extremes']
-    #print("Tide data =", data)
+    #print("Tide data =", data.encode('ascii', 'ignore'))
 
     tides = []
     for n,x in enumerate(data):
@@ -132,18 +135,25 @@ def stock_quote():
         print("Exception in WebMD stock quote:", e)
         return
     results = "{} {} {} {}".format(quote['LastTradePriceOnly'], quote['ChangeinPercent'], quote['EBITDA'], quote['MarketCapitalization']) 
-    print(results)
-    data = {"header":"WebMD Stock Quote", "text":[results], "pos":2}
+    print(datetime.datetime.now())
+    print(results.encode('ascii', 'ignore'))
+    data = {"header":"WebMD Stock Quote", "text":[results], "pos":2} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
-schedule.every(30).minutes.do(weather)
+#schedule.every(30).minutes.do(weather)
+schedule.every().hour.at(':30').do(weather)
+schedule.every().hour.at(':00').do(weather)
 sleep(5)
-schedule.every(30).minutes.do(news)
+schedule.every().hour.at(':20').do(news)
+schedule.every().hour.at(':50').do(news)
+#schedule.every(30).minutes.do(news)
 sleep(5)
 #schedule.every(30).minutes.do(tides)
-schedule.every(30).minutes.do(stock_quote)
+#schedule.every(30).minutes.do(stock_quote)
+schedule.every().hour.at(':10').do(stock_quote)
+schedule.every().hour.at(':40').do(stock_quote)
 
-schedule.run_all()
+#schedule.run_all()
 
 while True:
     schedule.run_pending()
