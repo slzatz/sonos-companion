@@ -240,7 +240,7 @@ def on_message(client, userdata, msg):
         print "error reading the mqtt message body: ", e
         return
 
-    if topic==info_topic and z.get('header')=='Weather':
+    if topic==info_topic:
         screen.blit(text_rect, (0,screen_height-70))
         font = pygame.font.SysFont('Sans', 18)
         n = screen_height - 70
