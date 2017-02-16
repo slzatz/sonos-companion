@@ -248,7 +248,7 @@ def on_message(client, userdata, msg):
         font = pygame.font.SysFont('Sans', 18)
         n = screen_height - 70
         for text in z.get('text',''): 
-            lines = textwrap.wrap(text, 85)
+            lines = textwrap.wrap(text, 75)
             for line in lines:
                 try:
                     text = font.render(line.strip(), True, (255, 0, 0))
