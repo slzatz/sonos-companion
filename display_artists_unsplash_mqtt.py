@@ -35,7 +35,7 @@ import httplib2 #needed by the google custom search engine module apiclient
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--search", help="unsplash search term; if no command line switches defaults to curated list")
 parser.add_argument("-n", "--name", help="unsplash user name; if no command line switches defaults to curated list")
-parser.add_argument("-c", "--collection", help="unsplash collection id; if no command line switches defaults to curated list")
+parser.add_argument("-c", "--collection", help="unsplash collection id: celestial=543026, dark=162326 and my nature=525677")
 parser.add_argument("-w", "--window", action='store_true', help="use -w if you want a small window instead of full screen")
 args = parser.parse_args()
 
@@ -83,7 +83,8 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
 erase_rect = pygame.Surface((screen_width,screen_height-70))
 erase_rect.fill((0,0,0))
-text_rect = pygame.Surface((screen_width,70))
+#text_rect = pygame.Surface((screen_width,70))
+text_rect = pygame.Surface((500,70))
 text_rect.fill((0,0,0))
 font = pygame.font.SysFont('Sans', 30)
 font.set_bold(True)
@@ -241,18 +242,20 @@ def on_message(client, userdata, msg):
         return
 
     if topic==info_topic:
-        screen.blit(text_rect, (0,screen_height-70))
+        pos = z.get('pos',0)
+        #screen.blit(text_rect, (0,screen_height-70))
+        screen.blit(text_rect, (pos*625,screen_height-70))
         font = pygame.font.SysFont('Sans', 18)
         n = screen_height - 70
         for text in z.get('text',''): 
-            lines = textwrap.wrap(text, 150)
+            lines = textwrap.wrap(text, 85)
             for line in lines:
                 try:
                     text = font.render(line.strip(), True, (255, 0, 0))
                 except UnicodeError as e:
                     print "UnicodeError in text lines: ", e
                 else:
-                    screen.blit(text, (0,n))
+                    screen.blit(text, (5+pos*625,n))
                     n+=20
 
         pygame.display.flip()
