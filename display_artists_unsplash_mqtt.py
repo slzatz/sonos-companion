@@ -84,7 +84,7 @@ screen.fill((0,0,0))
 erase_rect = pygame.Surface((screen_width,screen_height-70))
 erase_rect.fill((0,0,0))
 #text_rect = pygame.Surface((screen_width,70))
-text_rect = pygame.Surface((500,70))
+text_rect = pygame.Surface((625,70))
 text_rect.fill((0,0,0))
 font = pygame.font.SysFont('Sans', 30)
 font.set_bold(True)
@@ -175,6 +175,8 @@ def display_photo(photo):
     #screen.fill((0,0,0)) 
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
+
+    img = None ##########################################
     
     txt = photo.get('text', '')
     lines = textwrap.wrap(txt, 60)
@@ -244,7 +246,7 @@ def on_message(client, userdata, msg):
     if topic==info_topic:
         pos = z.get('pos',0)
         #screen.blit(text_rect, (0,screen_height-70))
-        screen.blit(text_rect, (pos*625,screen_height-70))
+        screen.blit(text_rect, (5+pos*625,screen_height-70))
         font = pygame.font.SysFont('Sans', 18)
         n = screen_height - 70
         for text in z.get('text',''): 
