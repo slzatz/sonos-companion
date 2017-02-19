@@ -231,8 +231,10 @@ def get_artist_images(name):
             
     print "images = ", images
     return images 
-positions = [(50,50), (300,300), (500,900), (700,700)]
-erase = [80,250,20]
+
+positions = [(50,50), (300,300), (500,800), (700,900)]
+erase = [100,250,40,40]
+
 def on_message(client, userdata, msg):
     topic = msg.topic
     body = msg.payload
@@ -246,13 +248,10 @@ def on_message(client, userdata, msg):
 
     if topic==info_topic:
         pos = z.get('pos',0)
-        #screen.blit(text_rect, (0,screen_height-70))
-        #screen.blit(text_rect, (5+pos*625,screen_height-70))
         text_rect = pygame.Surface((625,erase[pos]))
         text_rect.fill((0,0,0))
         screen.blit(text_rect, positions[pos])
         font = pygame.font.SysFont('Sans', 18)
-        #n = screen_height - 70
         text = font.render(z.get('header', 'no source'), True, (255, 0, 0))
         screen.blit(text, (positions[pos][0],positions[pos][1]))
         n = 20
@@ -311,9 +310,10 @@ def draw_lyrics(lyrics, x_coord):
                 screen.blit(text, (x_coord,n))
                 n+=20
 
-num_photos_shown = 0
 screen.fill((0,0,0)) 
 pygame.display.flip()
+
+num_photos_shown = 0
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
@@ -333,9 +333,7 @@ while 1:
 
     if not artist:
         if photos:
-            if cur_time - t1 > 15:
-                if num_photos_shown > 0:
-                    continue
+            if cur_time - t1 > 900:
                 photo = random.choice(photos)
                 print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
                 display_photo(photo)
