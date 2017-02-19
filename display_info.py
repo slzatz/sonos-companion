@@ -313,7 +313,12 @@ def draw_lyrics(lyrics, x_coord):
 screen.fill((0,0,0)) 
 pygame.display.flip()
 
-num_photos_shown = 0
+if photos:
+    photo = random.choice(photos)
+    print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
+    display_photo(photo)
+
+num_photos_shown = 1
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
