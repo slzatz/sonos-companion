@@ -1,4 +1,5 @@
 '''
+python3
 This script gathers information about things like weather and tides using Web apis
 and then sends that information in an mqtt message with topic "esp_tft" 
 The format is {"header":"Tides", "text":"The next high tide is ...", "pos":2}
@@ -12,6 +13,7 @@ Documentation at https://www.worldtides.info/apidocs
 
 '''
 from operator import itemgetter
+from itertools import cycle
 import requests
 import datetime
 import paho.mqtt.publish as mqtt_publish
@@ -22,16 +24,17 @@ from config import tide_key, news_key, aws_mqtt_uri as aws_host
 
 tide_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
+sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica']
+source = cycle(sources)
 
 def news():
     #pos = 1
     #https://newsapi.org/v1/articles?source=techcrunch&apiKey=...
-    uri = 'https://newsapi.org/v1/articles'
-    source = 'the-wall-street-journal'
-    payload = {"apiKey":news_key, "source":source, "sortBy":"top"}
+    #source = 'the-wall-street-journal'
+    payload = {"apiKey":news_key, "source":next(source), "sortBy":"top"}
 
     try:
-        r = requests.get('https://newsapi.org/v1/articles', params=payload)
+        r = requests.get(news_uri, params=payload)
 
     #except requests.exceptions.ConnectionError as e:
     except Exception as e:
@@ -39,13 +42,10 @@ def news():
         return
 
     z = r.json()
-    #article = z['articles'][0]['title']
     articles = [x['title'] for x in z['articles']]
     print(datetime.datetime.now())
-    #print(article.encode('ascii', 'ignore'))
     print(repr(articles).encode('ascii', 'ignore'))
-    #data = {"header":"Top WSJ Article","text":[article], "pos":1} #expects a list
-    data = {"header":"Top WSJ Article","text":articles, "pos":1} #expects a list
+    data = {"header":z.get('source', 'no source'),"text":articles, "pos":1} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 def weather():
