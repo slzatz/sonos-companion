@@ -176,7 +176,7 @@ def display_photo(photo):
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
 
-    img = None ##########################################
+    #img = None # This did not help memory issue
     
     txt = photo.get('text', '')
     lines = textwrap.wrap(txt, 60)
