@@ -252,8 +252,10 @@ def on_message(client, userdata, msg):
         text_rect.fill((0,0,0))
         screen.blit(text_rect, positions[pos])
         font = pygame.font.SysFont('Sans', 18)
-        text = font.render(z.get('header', 'no source'), True, (255, 0, 0))
+        font.set_bold(True)
+        text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, (255, 0, 0))
         screen.blit(text, (positions[pos][0],positions[pos][1]))
+        font.set_bold(False)
         n = 20
         for text in z.get('text',''): 
             lines = textwrap.wrap(text, 75)
