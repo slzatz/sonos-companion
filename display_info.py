@@ -232,8 +232,8 @@ def get_artist_images(name):
     print "images = ", images
     return images 
 
-positions = [(50,50), (300,300), (500,800), (700,900)]
-erase = [100,250,40,40]
+positions = [(50,50), (300,300), (500,800), (700,900)] # position of text rectangle
+erase = [100,250,46,46] # vertical number of pixels that need to be erased
 
 def on_message(client, userdata, msg):
     topic = msg.topic
@@ -250,11 +250,12 @@ def on_message(client, userdata, msg):
         pos = z.get('pos',0)
         text_rect = pygame.Surface((625,erase[pos]))
         text_rect.fill((0,0,0))
+        pygame.draw.rect(text_rect, (255,0,0), text_rect.get_rect(), 3)
         screen.blit(text_rect, positions[pos])
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
         text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, (255, 0, 0))
-        screen.blit(text, (positions[pos][0],positions[pos][1]))
+        screen.blit(text, (positions[pos][0]+5,positions[pos][1]+5)) #Room for the line to go around text
         font.set_bold(False)
         n = 20
         for text in z.get('text',''): 
@@ -265,7 +266,7 @@ def on_message(client, userdata, msg):
                 except UnicodeError as e:
                     print "UnicodeError in text lines: ", e
                 else:
-                    screen.blit(text, (positions[pos][0],positions[pos][1]+n))
+                    screen.blit(text, (positions[pos][0]+5,positions[pos][1]+n+5))
                     n+=20
 
         pygame.display.flip()
