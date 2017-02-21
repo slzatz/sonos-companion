@@ -262,7 +262,7 @@ def on_message(client, userdata, msg):
             lines = textwrap.wrap(text, 75)
             for line in lines:
 
-                if n-20 > erase[pos]:
+                if n+20 > erase[pos]:
                     break
 
                 try:
