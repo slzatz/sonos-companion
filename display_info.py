@@ -261,6 +261,10 @@ def on_message(client, userdata, msg):
         for text in z.get('text',''): 
             lines = textwrap.wrap(text, 75)
             for line in lines:
+
+                if n-20 > erase[pos]:
+                    break
+
                 try:
                     text = font.render(line.strip(), True, (255, 0, 0))
                 except UnicodeError as e:
@@ -341,7 +345,7 @@ while 1:
 
     if not artist:
         if photos:
-            if cur_time - t1 > 900:
+            if cur_time - t1 > 3600: # picture flips each hour
                 photo = random.choice(photos)
                 print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
                 display_photo(photo)
