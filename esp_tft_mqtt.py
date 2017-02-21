@@ -142,7 +142,11 @@ def stock_quote():
 
 #schedule.every(30).minutes.do(weather)
 schedule.every().hour.at(':03').do(weather)
+schedule.every().hour.at(':13').do(weather)
+schedule.every().hour.at(':23').do(weather)
 schedule.every().hour.at(':33').do(weather)
+schedule.every().hour.at(':43').do(weather)
+schedule.every().hour.at(':53').do(weather)
 #sleep(5)
 schedule.every().hour.at(':05').do(news)
 schedule.every().hour.at(':15').do(news)
