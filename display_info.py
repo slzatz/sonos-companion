@@ -233,8 +233,8 @@ def get_artist_images(name):
     return images 
 
 # weather:0, news:1, stock quote:2, nothing:3
-positions = [(50,50), (300,300), (500,800), (700,900)] # position of text rectangle
-height = [140,250,46,46] # vertical number of pixels that need to be erased
+positions = [(50,50), (300,300), (500,600), (700,900)] # position of text rectangle
+height = [140,250,52,52] # vertical number of pixels that need to be erased
 
 def on_message(client, userdata, msg):
     topic = msg.topic
@@ -249,7 +249,7 @@ def on_message(client, userdata, msg):
 
     if topic==info_topic:
         pos = z.get('pos',0)
-        text_rect = pygame.Surface((625,height[pos]))
+        text_rect = pygame.Surface((635,height[pos]))
         text_rect.fill((0,0,0))
         pygame.draw.rect(text_rect, (255,0,0), text_rect.get_rect(), 3)
         screen.blit(text_rect, positions[pos])
