@@ -233,7 +233,7 @@ def get_artist_images(name):
     return images 
 
 # weather:0, news:1, stock quote:2, nothing:3
-positions = [(50,50), (300,300), (500,600), (700,900)] # position of text rectangle
+positions = [(50,50), (300,300), (500,660), (700,900)] # position of text rectangle
 height = [140,250,52,52] # vertical number of pixels that need to be erased
 
 def on_message(client, userdata, msg):
