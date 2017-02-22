@@ -232,8 +232,9 @@ def get_artist_images(name):
     print "images = ", images
     return images 
 
+# weather:0, news:1, stock quote:2, nothing:3
 positions = [(50,50), (300,300), (500,800), (700,900)] # position of text rectangle
-erase = [100,250,46,46] # vertical number of pixels that need to be erased
+height = [140,250,46,46] # vertical number of pixels that need to be erased
 
 def on_message(client, userdata, msg):
     topic = msg.topic
@@ -248,7 +249,7 @@ def on_message(client, userdata, msg):
 
     if topic==info_topic:
         pos = z.get('pos',0)
-        text_rect = pygame.Surface((625,erase[pos]))
+        text_rect = pygame.Surface((625,height[pos]))
         text_rect.fill((0,0,0))
         pygame.draw.rect(text_rect, (255,0,0), text_rect.get_rect(), 3)
         screen.blit(text_rect, positions[pos])
@@ -262,7 +263,7 @@ def on_message(client, userdata, msg):
             lines = textwrap.wrap(text, 75)
             for line in lines:
 
-                if n+20 > erase[pos]:
+                if n+20 > height[pos]:
                     break
 
                 try:
@@ -299,7 +300,6 @@ if photos:
     display_photo(random.choice(photos))
 
 prev_artist_track = None
-t1 = time()
 nn = 0 # measures the number of times in a row we've displayed the same artist so it doesn't go on endlessly
 
 def draw_lyrics(lyrics, x_coord):
@@ -326,6 +326,7 @@ if photos:
     display_photo(photo)
 
 num_photos_shown = 1
+t1 = t0 = time()
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
@@ -340,6 +341,12 @@ while 1:
 
     cur_time = time()
 
+    if cur_time - t0 > 300:
+        alive = session.query(session.query(Artist).exists()).all()
+        if alive[0][0]:
+            print cur_time, "database connection alive", num_photos_shown
+            t0 = time()
+
     artist = trackinfo['artist']
     track = trackinfo['track_title']
 
@@ -351,9 +358,9 @@ while 1:
                 display_photo(photo)
                 num_photos_shown+=1
 
-                alive = session.query(session.query(Artist).exists()).all()
-                if alive[0][0]:
-                    print cur_time, "database connection alive", num_photos_shown
+                #alive = session.query(session.query(Artist).exists()).all()
+                #if alive[0][0]:
+                #    print cur_time, "database connection alive", num_photos_shown
 
                 t1 = time()
         sleep(1)
@@ -416,9 +423,9 @@ while 1:
     #z = conn.execute("SELECT 1")
     #z.fetchall()
     #[(1,)]
-    alive = session.query(session.query(Artist).exists()).all()
-    if alive[0][0]:
-        print "database connection alive"
+    #alive = session.query(session.query(Artist).exists()).all()
+    #if alive[0][0]:
+    #    print "database connection alive"
 
     if not images:
         continue
