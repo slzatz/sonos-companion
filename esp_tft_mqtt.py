@@ -24,7 +24,7 @@ from config import tide_key, news_key, aws_mqtt_uri as aws_host
 
 tide_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
-sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica']
+sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica', 'reddit-r-all']
 source = cycle(sources)
 
 def news():
