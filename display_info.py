@@ -81,7 +81,7 @@ print "Can't execute line below without a control-c"
 # might be necessary and I would put a try except around the while loop but haven't done that
 screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
-erase_rect = pygame.Surface((screen_width,screen_height-70))
+erase_rect = pygame.Surface((screen_width,screen_height))
 erase_rect.fill((0,0,0))
 #text_rect = pygame.Surface((screen_width,70))
 #text_rect = pygame.Surface((625,70))
@@ -138,7 +138,8 @@ def display_photo(photo):
         else:
             return
 
-    img.transform(resize="{}x{}>".format(screen_width, screen_height-70))
+    #img.transform(resize="{}x{}>".format(screen_width, screen_height-70))
+    img.transform(resize="{}x{}>".format(screen_width, screen_height))
     conv_img = img.convert('bmp')
     # need to close image or there is a memory leak
     # could do: with img.convert('bmp') as converted; converted.save(f)
@@ -249,7 +250,7 @@ def on_message(client, userdata, msg):
 
     if topic==info_topic:
         pos = z.get('pos',0)
-        text_rect = pygame.Surface((635,height[pos]))
+        text_rect = pygame.Surface((650,height[pos]))
         text_rect.fill((0,0,0))
         pygame.draw.rect(text_rect, (255,0,0), text_rect.get_rect(), 3)
         screen.blit(text_rect, positions[pos])
