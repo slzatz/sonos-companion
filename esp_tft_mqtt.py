@@ -12,6 +12,10 @@ https://www.worldtides.info/api?extremes&lat=41.117597&lon=-73.407897&key=a417..
 Documentation at https://www.worldtides.info/apidocs
 
 '''
+import os
+import sys
+home = os.path.split(os.getcwd())[0]
+sys.path = [os.path.join(home, 'twitter')] + sys.path
 from operator import itemgetter
 from itertools import cycle
 import requests
@@ -20,12 +24,23 @@ import paho.mqtt.publish as mqtt_publish
 import json
 import schedule
 from time import time,sleep
-from config import tide_key, news_key, aws_mqtt_uri as aws_host
+import twitter
+from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET
 
 tide_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
 sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica', 'reddit-r-all']
 source = cycle(sources)
+
+twit = twitter.Twitter(auth=twitter.OAuth(slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET))
+
+def twitter_feed():
+    z = twit.statuses.home_timeline()
+    tweets = ["{} - {}".format(x['user']['screen_name'],x['text'].split('https')[0]) for x in z] #could just use ['user']['name']
+    print(datetime.datetime.now())
+    print(repr(tweets).encode('ascii', 'ignore'))
+    data = {"header":"twitter", "text":tweets, "pos":1} #expects a list
+    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 def news():
     #pos = 1
@@ -147,24 +162,27 @@ schedule.every().hour.at(':23').do(weather)
 schedule.every().hour.at(':33').do(weather)
 schedule.every().hour.at(':43').do(weather)
 schedule.every().hour.at(':53').do(weather)
-#sleep(5)
+
 schedule.every().hour.at(':05').do(news)
 schedule.every().hour.at(':15').do(news)
 schedule.every().hour.at(':25').do(news)
 schedule.every().hour.at(':35').do(news)
 schedule.every().hour.at(':45').do(news)
 schedule.every().hour.at(':55').do(news)
-#schedule.every(30).minutes.do(news)
-#sleep(5)
-#schedule.every(30).minutes.do(tides)
-#schedule.every(30).minutes.do(stock_quote)
-schedule.every().hour.at(':00').do(stock_quote)
-schedule.every().hour.at(':10').do(stock_quote)
-schedule.every().hour.at(':20').do(stock_quote)
-schedule.every().hour.at(':30').do(stock_quote)
-schedule.every().hour.at(':40').do(stock_quote)
-schedule.every().hour.at(':50').do(stock_quote)
 
+schedule.every().hour.at(':02').do(stock_quote)
+schedule.every().hour.at(':12').do(stock_quote)
+schedule.every().hour.at(':22').do(stock_quote)
+schedule.every().hour.at(':32').do(stock_quote)
+schedule.every().hour.at(':42').do(stock_quote)
+schedule.every().hour.at(':52').do(stock_quote)
+
+schedule.every().hour.at(':00').do(twitter_feed)
+schedule.every().hour.at(':10').do(twitter_feed)
+schedule.every().hour.at(':20').do(twitter_feed)
+schedule.every().hour.at(':30').do(twitter_feed)
+schedule.every().hour.at(':40').do(twitter_feed)
+schedule.every().hour.at(':50').do(twitter_feed)
 #schedule.run_all()
 
 while True:
