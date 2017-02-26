@@ -82,11 +82,18 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
 blank_surface = pygame.Surface((screen_width,screen_height))
 blank_surface.fill((0,0,0))
-clean_screen = pygame.Surface((screen_width, screen_height))
+screen_image = pygame.Surface((screen_width, screen_height))
 positions = [(50,50), (300,300), (500,660), (700,900)] # position of text rectangle
 rectangles = [(650,140), (650,250), (400,52), (400,52)] # vertical number of pixels that need to be erased
-subsurfaces = []
+image_subsurfaces = []
 
+text_surfaces = []
+for p in range(4):
+    text_surface = pygame.Surface(rectangles[p])
+    text_surface.fill((0,0,0))
+    text_surface.set_alpha(125)
+    text_surfaces.append(text_surface)
+    
 font = pygame.font.SysFont('Sans', 30)
 font.set_bold(True)
 text = font.render("Sonos-Companion", True, (0,0,0))
@@ -176,16 +183,21 @@ def display_photo(photo):
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
 
-    clean_screen.blit(screen, (0,0))
-    subs0 = clean_screen.subsurface(pygame.Rect(positions[0], rectangles[0]))
-    subs1 = clean_screen.subsurface(pygame.Rect(positions[1], rectangles[1]))
-    subs2 = clean_screen.subsurface(pygame.Rect(positions[2], rectangles[2]))
-
-    #subsurfaces.clear() # only 3.3 and above
-    del subsurfaces[:]
-    subsurfaces.extend([subs0, subs1, subs2]) 
+    #screen_image.blit(screen, (0,0))
+    ##image_subsurfaces.clear() # only 3.3 and above
+    #del image_subsurfaces[:]
+    #for i in range(4):
+    #    subsurface = screen_image.subsurface(pygame.Rect(positions[i], rectangles[i]))
+    #    image_subsurfaces.append(subsurface)
 
     pygame.display.flip()
+
+    screen_image.blit(screen, (0,0))
+    #image_subsurfaces.clear() # only 3.3 and above
+    del image_subsurfaces[:]
+    for i in range(4):
+        subsurface = screen_image.subsurface(pygame.Rect(positions[i], rectangles[i]))
+        image_subsurfaces.append(subsurface)
 
 def get_artist_images(name):
 
@@ -242,13 +254,13 @@ def on_message(client, userdata, msg):
             return
         pos = z.get('pos',0)
 
-        screen.blit(subsurfaces[pos], positions[pos])
+        screen.blit(image_subsurfaces[pos], positions[pos])
 
-        text_surface = pygame.Surface(rectangles[pos])
-        text_surface.fill((0,0,0))
-        text_surface.set_alpha(150)
-        pygame.draw.rect(text_surface, (255,0,0), text_surface.get_rect(), 3)
-        screen.blit(text_surface, positions[pos])
+        #text_surface = pygame.Surface(rectangles[pos])
+        #text_surface.fill((0,0,0))
+        #text_surface.set_alpha(150)
+        pygame.draw.rect(text_surfaces[pos], (255,0,0), text_surfaces[pos].get_rect(), 3)
+        screen.blit(text_surfaces[pos], positions[pos])
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
         text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, (255, 0, 0))
