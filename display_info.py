@@ -44,7 +44,6 @@ with open('location') as f:
 
 sonos_topic = "sonos/{}/current_track".format(location)
 info_topic = "esp_tft"
-#mqtt_uri = mqtt_uris[location]
 mqtt_uri = aws_mqtt_uri
 print "mqtt_uri =",mqtt_uri
 
@@ -81,11 +80,13 @@ print "Can't execute line below without a control-c"
 # might be necessary and I would put a try except around the while loop but haven't done that
 screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
-erase_rect = pygame.Surface((screen_width,screen_height))
-erase_rect.fill((0,0,0))
-#text_rect = pygame.Surface((screen_width,70))
-#text_rect = pygame.Surface((625,70))
-#text_rect.fill((0,0,0))
+blank_surface = pygame.Surface((screen_width,screen_height))
+blank_surface.fill((0,0,0))
+clean_screen = pygame.Surface((screen_width, screen_height))
+positions = [(50,50), (300,300), (500,660), (700,900)] # position of text rectangle
+rectangles = [(650,140), (650,250), (400,52), (400,52)] # vertical number of pixels that need to be erased
+subsurfaces = []
+
 font = pygame.font.SysFont('Sans', 30)
 font.set_bold(True)
 text = font.render("Sonos-Companion", True, (0,0,0))
@@ -138,7 +139,6 @@ def display_photo(photo):
         else:
             return
 
-    #img.transform(resize="{}x{}>".format(screen_width, screen_height-70))
     img.transform(resize="{}x{}>".format(screen_width, screen_height))
     conv_img = img.convert('bmp')
     # need to close image or there is a memory leak
@@ -172,25 +172,18 @@ def display_photo(photo):
 
     text = font.render(photo.get('photographer', 'unknown'), True, (255, 0, 0))
 
-    screen.blit(erase_rect, (0,0))
-    #screen.fill((0,0,0)) 
+    screen.blit(blank_surface, (0,0))
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
 
-    img = None ##########################################
-    
-    txt = photo.get('text', '')
-    lines = textwrap.wrap(txt, 60)
-    font = pygame.font.SysFont('Sans', 16)
-    n = 36
-    for line in lines:
-        try:
-            text = font.render(line, True, (255, 0, 0))
-        except UnicodeError as e:
-            print "UnicodeError in text lines: ", e
-        else:
-            screen.blit(text, (0,n))
-            n+=24
+    clean_screen.blit(screen, (0,0))
+    subs0 = clean_screen.subsurface(pygame.Rect(positions[0], rectangles[0]))
+    subs1 = clean_screen.subsurface(pygame.Rect(positions[1], rectangles[1]))
+    subs2 = clean_screen.subsurface(pygame.Rect(positions[2], rectangles[2]))
+
+    #subsurfaces.clear() # only 3.3 and above
+    del subsurfaces[:]
+    subsurfaces.extend([subs0, subs1, subs2]) 
 
     pygame.display.flip()
 
@@ -233,10 +226,6 @@ def get_artist_images(name):
     print "images = ", images
     return images 
 
-# weather:0, news:1, stock quote:2, nothing:3
-positions = [(50,50), (300,300), (500,660), (700,900)] # position of text rectangle
-height = [140,250,52,52] # vertical number of pixels that need to be erased
-
 def on_message(client, userdata, msg):
     topic = msg.topic
     body = msg.payload
@@ -249,11 +238,17 @@ def on_message(client, userdata, msg):
         return
 
     if topic==info_topic:
+        if trackinfo['artist']:
+            return
         pos = z.get('pos',0)
-        text_rect = pygame.Surface((650,height[pos]))
-        text_rect.fill((0,0,0))
-        pygame.draw.rect(text_rect, (255,0,0), text_rect.get_rect(), 3)
-        screen.blit(text_rect, positions[pos])
+
+        screen.blit(subsurfaces[pos], positions[pos])
+
+        text_surface = pygame.Surface(rectangles[pos])
+        text_surface.fill((0,0,0))
+        text_surface.set_alpha(150)
+        pygame.draw.rect(text_surface, (255,0,0), text_surface.get_rect(), 3)
+        screen.blit(text_surface, positions[pos])
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
         text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, (255, 0, 0))
@@ -264,7 +259,7 @@ def on_message(client, userdata, msg):
             lines = textwrap.wrap(text, 75)
             for line in lines:
 
-                if n+20 > height[pos]:
+                if n+20 > rectangles[pos][1]:
                     break
 
                 try:
@@ -359,10 +354,6 @@ while 1:
                 display_photo(photo)
                 num_photos_shown+=1
 
-                #alive = session.query(session.query(Artist).exists()).all()
-                #if alive[0][0]:
-                #    print cur_time, "database connection alive", num_photos_shown
-
                 t1 = time()
         sleep(1)
         continue
@@ -399,8 +390,6 @@ while 1:
         #random.shuffle(images) - messes up things if you have to update an image with image.ok = False
         images0 = images[:]       
 
-        #line = "{} - {}".format(artist,track)
-
         font = pygame.font.SysFont('Sans', 14)
         font.set_bold(True)
         text = font.render(artist_track, True, (255,0,0))
@@ -418,15 +407,6 @@ while 1:
 
     if cur_time - t1 < 15:
         continue
-
-    # note that alive below is just pinging the database -- could also try
-    #conn = engine.connect() # presumably this could be done once at the start of the script
-    #z = conn.execute("SELECT 1")
-    #z.fetchall()
-    #[(1,)]
-    #alive = session.query(session.query(Artist).exists()).all()
-    #if alive[0][0]:
-    #    print "database connection alive"
 
     if not images:
         continue
