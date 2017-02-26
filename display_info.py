@@ -1,18 +1,12 @@
 '''
 This is the current script that runs on a raspberry pi or on Windows to display
-lyrics and artists pictures to accompany what is playing on Sonos
-This script could also be the basis for using a large screen to display
-The information being broadcast by esp_tft_mqtt.py
-Next photo is: Michael Hacker
-1486671741.8 database connection alive 2
-esp_tft {"header": "Weather", "text": ["Thursday Night: Some clouds this evening will give way to mainly clear skies overnight. Low 18F. Winds WNW at 10 to 20 mph.", "Friday: Mostly
-sunny skies. High around 30F. Winds W at 10 to 15 mph."], "pos": 0}
-mqtt messge body = {"header": "Weather", "text": ["Thursday Night: Some clouds this evening will give way to mainly clear skies overnight. Low 18F. Winds WNW at 10 to 20 mph.", "Frid
-ay: Mostly sunny skies. High around 30F. Winds W at 10 to 15 mph."], "pos": 0}
-esp_tft {"header": "Top WSJ Article", "text": ["Trump Lashes Out as Senator, Others Recount Court Nominee\u2019s Criticism"], "pos": 1}
-mqtt messge body = {"header": "Top WSJ Article", "text": ["Trump Lashes Out as Senator, Others Recount Court Nominee\u2019s Criticism"], "pos": 1}
-esp_tft {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
-mqtt messge body = {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
+pictures from unsplash, artists' images when music is playing and weather, news, twitter, stock prices, etc.
+It displays lyrics and artists pictures to accompany what is playing on Sonos
+The news, stocks, twitter, etc information being broadcast by esp_tft_mqtt.py
+esp_tft_mqtt.py message: {"header": "Weather", "text": ["Thursday Night: Some clouds this evening will give way to mainly clear skies overnight. 
+Low 18F. Winds WNW at 10 to 20 mph.", "Friday: Mostly sunny skies. High around 30F. Winds W at 10 to 15 mph."], "pos": 0}
+esp_tft_mqtt.py message: {"header": "Top WSJ Article", "text": ["Trump Lashes Out as Senator, Others Recount Court Nominee\u2019s Criticism"], "pos": 1}
+esp_tft_mqtt.py message: {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
 '''
 import platform
 import os
@@ -82,11 +76,14 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
 blank_surface = pygame.Surface((screen_width,screen_height))
 blank_surface.fill((0,0,0))
+# screen_image will hold the "pure" image before text boxes are drawn on it
 screen_image = pygame.Surface((screen_width, screen_height))
-positions = [(50,50), (300,300), (500,660), (700,900)] # position of text rectangle
-rectangles = [(650,140), (650,250), (400,52), (400,52)] # vertical number of pixels that need to be erased
-image_subsurfaces = []
 
+positions = [(50,50), (300,300), (500,660), (700,900)] # position of the text rectangles
+rectangles = [(665,140), (665,250), (400,52), (400,52)] # dimensions of the text rectangles
+image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
+
+# the text from weather, news, etc gets written on these surfaces
 text_surfaces = []
 for p in range(4):
     text_surface = pygame.Surface(rectangles[p])
@@ -183,15 +180,10 @@ def display_photo(photo):
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
 
-    #screen_image.blit(screen, (0,0))
-    ##image_subsurfaces.clear() # only 3.3 and above
-    #del image_subsurfaces[:]
-    #for i in range(4):
-    #    subsurface = screen_image.subsurface(pygame.Rect(positions[i], rectangles[i]))
-    #    image_subsurfaces.append(subsurface)
-
     pygame.display.flip()
 
+    # Blit current image before any text has been written on it into screen_image and
+    # then create the subsurfaces that can be used to "patch" the impact of the text boxes
     screen_image.blit(screen, (0,0))
     #image_subsurfaces.clear() # only 3.3 and above
     del image_subsurfaces[:]
@@ -255,10 +247,6 @@ def on_message(client, userdata, msg):
         pos = z.get('pos',0)
 
         screen.blit(image_subsurfaces[pos], positions[pos])
-
-        #text_surface = pygame.Surface(rectangles[pos])
-        #text_surface.fill((0,0,0))
-        #text_surface.set_alpha(150)
         pygame.draw.rect(text_surfaces[pos], (255,0,0), text_surfaces[pos].get_rect(), 3)
         screen.blit(text_surfaces[pos], positions[pos])
         font = pygame.font.SysFont('Sans', 18)
