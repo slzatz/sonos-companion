@@ -80,7 +80,7 @@ blank_surface.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 positions = [(50,50), (300,300), (500,660), (700,900)] # position of the text rectangles
-rectangles = [(665,140), (665,250), (400,52), (400,52)] # dimensions of the text rectangles
+rectangles = [(665,150), (665,250), (400,52), (400,52)] # dimensions of the text rectangles
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 
 # the text from weather, news, etc gets written on these surfaces
@@ -230,6 +230,106 @@ def get_artist_images(name):
     print "images = ", images
     return images 
 
+def display_artist_image(x):
+
+    print x.link
+    if not x.ok:
+         print "The link isn't OK. ",x.link
+         return
+    try:
+        response = requests.get(x.link)
+    except Exception as e:
+        print "response = requests.get(url) generated exception: ", e
+        try:
+            x.ok = False
+            session.commit()
+            print "ok was set to False for", x.link
+        except Exception as e:
+            print "x.ok = False - error:", e
+
+        return
+    else:     
+        try:
+            img = wand.image.Image(file=StringIO(response.content))
+        except Exception as e:
+            print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", x.link, "Exception:", e
+
+            try:
+                x.ok = False
+                session.commit()
+                print "ok was set to False for", x.link
+            except Exception as e:
+                print "x.ok set to false error:", e
+
+            return
+
+    try:
+        ww = img.width
+        hh = img.height
+        sq = ww if ww <= hh else hh
+        #crop(left, top, right, bottom)
+        t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
+        img.crop(*t)
+        # resize should take the image and enlarge it without cropping so will fill vertical but leave space for lyrics
+        img.resize(screen_height,screen_height)
+        conv_img = img.convert('bmp')
+        img.close()
+    except Exception as e:
+        print "img.transfrom or img.convert error:", e
+
+        try:
+            x.ok = False
+            session.commit()
+            print "ok was set to False for", x.link
+        except Exception as e:
+            print "x.ok set to false error:", e
+
+        return
+
+    f = StringIO()
+    try:
+        conv_img.save(f)
+        conv_img.close()
+    except wand.exceptions.OptionError as e:
+        print "Problem saving image:",e
+
+        try:
+            x.ok = False
+            session.commit()
+            print "ok was set to False for", x.link
+        except Exception as e:
+            print "x.ok set to false error:", e
+
+        return
+
+    f.seek(0)
+    img = pygame.image.load(f, 'bmp').convert()
+    f.close()
+    img_rect = img.get_rect()
+
+    print "img_rect =", img_rect
+    # 430 seems to give enough room for lyrics on a standard monintor - used 300 when doing 1000 x 700 in a  window on Windows
+    pos = (430,0)
+    print "pos =", pos
+    
+    screen.blit(img, pos)      
+    pygame.display.flip()
+
+def draw_lyrics(lyrics, x_coord):
+    print "drawing lyrics"
+    font = pygame.font.SysFont('Sans', 16)
+    n = 10
+    for lyric in lyrics:
+        lines = textwrap.wrap(lyric, 60)
+        for line in lines:
+            try:
+                text = font.render(line.strip(), True, (255, 0, 0))
+            except UnicodeError as e:
+                print "UnicodeError in text lines: ", e
+            else:
+                screen.blit(text, (x_coord,n))
+                n+=20
+
 def on_message(client, userdata, msg):
     topic = msg.topic
     body = msg.payload
@@ -292,34 +392,20 @@ photos = get_photos()
 
 L = len(photos)
 print "Number of photos = {}".format(L)
-if photos:
-    display_photo(random.choice(photos))
+if not photos:
+    sys.exit("No photos")
+
+display_photo(random.choice(photos))
 
 prev_artist_track = None
 nn = 0 # measures the number of times in a row we've displayed the same artist so it doesn't go on endlessly
 
-def draw_lyrics(lyrics, x_coord):
-    print "drawing lyrics"
-    font = pygame.font.SysFont('Sans', 16)
-    n = 10
-    for lyric in lyrics:
-        lines = textwrap.wrap(lyric, 60)
-        for line in lines:
-            try:
-                text = font.render(line.strip(), True, (255, 0, 0))
-            except UnicodeError as e:
-                print "UnicodeError in text lines: ", e
-            else:
-                screen.blit(text, (x_coord,n))
-                n+=20
-
 screen.fill((0,0,0)) 
 pygame.display.flip()
 
-if photos:
-    photo = random.choice(photos)
-    print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
-    display_photo(photo)
+photo = random.choice(photos)
+print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
+display_photo(photo)
 
 num_photos_shown = 1
 t1 = t0 = time()
@@ -347,14 +433,13 @@ while 1:
     track = trackinfo['track_title']
 
     if not artist:
-        if photos:
-            if cur_time - t1 > 3600: # picture flips each hour
-                photo = random.choice(photos)
-                print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
-                display_photo(photo)
-                num_photos_shown+=1
+        if cur_time - t1 > 3600: # picture flips each hour
+            photo = random.choice(photos)
+            print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
+            display_photo(photo)
+            num_photos_shown+=1
 
-                t1 = time()
+            t1 = time()
         sleep(1)
         continue
 
@@ -413,7 +498,9 @@ while 1:
 
     if not images0:
         images0 = images[:]
+
     x = images0.pop()
+    display_artist_image(x)
 
     nn+=1
     # if sonos no longer playing then artist images would be stuck on last artist without this
@@ -421,90 +508,8 @@ while 1:
         trackinfo['artist'] = None
         prev_artist_track = None
 
-    print x.link
-    if not x.ok:
-         print "The link isn't OK. ",x.link
-         continue
-    try:
-        response = requests.get(x.link)
-    except Exception as e:
-        print "response = requests.get(url) generated exception: ", e
-        try:
-            x.ok = False
-            session.commit()
-            print "ok was set to False for", x.link
-        except Exception as e:
-            print "x.ok = False - error:", e
-
-        continue
-    else:     
-        try:
-            img = wand.image.Image(file=StringIO(response.content))
-        except Exception as e:
-            print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", x.link, "Exception:", e
-
-            try:
-                x.ok = False
-                session.commit()
-                print "ok was set to False for", x.link
-            except Exception as e:
-                print "x.ok set to false error:", e
-
-            continue
-
-    try:
-        ww = img.width
-        hh = img.height
-        sq = ww if ww <= hh else hh
-        #crop(left, top, right, bottom)
-        t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
-        img.crop(*t)
-        # resize should take the image and enlarge it without cropping so will fill vertical but leave space for lyrics
-        img.resize(screen_height,screen_height)
-        conv_img = img.convert('bmp')
-        img.close()
-    except Exception as e:
-        print "img.transfrom or img.convert error:", e
-
-        try:
-            x.ok = False
-            session.commit()
-            print "ok was set to False for", x.link
-        except Exception as e:
-            print "x.ok set to false error:", e
-
-        continue
 
     t1 = time()
     print t1
-
-    f = StringIO()
-    try:
-        conv_img.save(f)
-        conv_img.close()
-    except wand.exceptions.OptionError as e:
-        print "Problem saving image:",e
-
-        try:
-            x.ok = False
-            session.commit()
-            print "ok was set to False for", x.link
-        except Exception as e:
-            print "x.ok set to false error:", e
-
-        continue
-
-    f.seek(0)
-    img = pygame.image.load(f, 'bmp').convert()
-    f.close()
-    img_rect = img.get_rect()
-
-    print "img_rect =", img_rect
-    # 430 seems to give enough room for lyrics on a standard monintor - used 300 when doing 1000 x 700 in a  window on Windows
-    pos = (430,0)
-    print "pos =", pos
-    
-    screen.blit(img, pos)      
-    pygame.display.flip()
 
     sleep(1)
