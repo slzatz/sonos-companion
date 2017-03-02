@@ -19,7 +19,7 @@ import textwrap
 import sys
 from cStringIO import StringIO
 import wand.image
-from config import mqtt_uris, google_api_key, unsplash_api_key, aws_mqtt_uri 
+from config import google_api_key, unsplash_api_key, aws_mqtt_uri 
 import json
 import paho.mqtt.client as mqtt
 from artist_images_db import *
@@ -80,7 +80,7 @@ blank_surface.fill((0,0,0))
 # screen_image will hold the "pure" image before text boxes are drawn on it
 screen_image = pygame.Surface((screen_width, screen_height))
 
-positions = [(50,50), (300,300), (500,660), (700,900)] # position of the text rectangles
+positions = [(1920,1080), (1920,1080), (1920,1080), (1920,1080)] # will be determined randomly but initially off screen
 rectangles = [(665,150), (665,250), (400,52), (400,52)] # dimensions of the text rectangles
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 
@@ -192,9 +192,11 @@ def display_photo(photo):
 
     # if boxes can more (say randomly) this could be the initial code to set things going
     # and then would need to have similar code in on_message 
+    #for i in range(4):
+    #    subsurface = screen_image.subsurface(pygame.Rect(positions[i], rectangles[i]))
+    #    image_subsurfaces.append(subsurface)
     for i in range(4):
-        subsurface = screen_image.subsurface(pygame.Rect(positions[i], rectangles[i]))
-        image_subsurfaces.append(subsurface)
+        image_subsurfaces.append(None)
 
 def get_artist_images(name):
 
@@ -354,18 +356,32 @@ def on_message(client, userdata, msg):
             return
         pos = z.get('pos',0)
 
-        ################### this is where based on topic you would
-        # generate a new random position and erase the old random position
-
-        # this blit is "patching" the changes created by the text box and restoring the image
-        screen.blit(image_subsurfaces[pos], positions[pos])
+        # this blit is "patching" the changes created by the text box that is being updated
+        if image_subsurfaces[pos]:
+            screen.blit(image_subsurfaces[pos], positions[pos])
         
-        #positions[pos] = new position # how about only the x value has some randomness
-        #random.randint(50,500)
-        positions[pos] = (randint(50,500), positions[pos][1])
-        subsurface = screen_image.subsurface(pygame.Rect(positions[pos], rectangles[pos]))
+        # deleting the current pos in positions list because don't want it in zip
+        del positions[pos]
+        # need a temp rectangles to delete current position to do the collision test
+        temp_rectangles = rectangles[:]
+        del temp_rectangles[pos]
+
+        while 1:
+            position = (randint(50,1200), randint(50,750))
+            rect = pygame.Rect((position, rectangles[pos]))    
+            idx = rect.collidelist(zip(positions,temp_rectangles))
+            if idx == -1:
+                print "No collision"
+                positions.insert(pos, position)
+                break
+            else:
+                print "collision"
+                print "idx = ", idx
+                
+
+        subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) # note subsurface(pygame.Rect(positions[pos], rectangles[pos])) also works
+
         image_subsurfaces[pos] = subsurface
-        # idx = r.collidelist(self._renderers)
         pygame.draw.rect(text_surfaces[pos], (255,0,0), text_surfaces[pos].get_rect(), 3)
         screen.blit(text_surfaces[pos], positions[pos])
         font = pygame.font.SysFont('Sans', 18)
@@ -526,6 +542,10 @@ while 1:
     if nn > 25:
         trackinfo['artist'] = None
         prev_artist_track = None
+        photo = random.choice(photos)
+        print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
+        display_photo(photo)
+        num_photos_shown+=1
 
 
     t1 = time()
