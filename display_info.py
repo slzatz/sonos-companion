@@ -25,6 +25,7 @@ import paho.mqtt.client as mqtt
 from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
+from random import randint
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--search", help="unsplash search term; if no command line switches defaults to curated list")
@@ -122,7 +123,8 @@ def get_photos():
         r = requests.get('{}collections/{}/photos'.format(unsplash_uri, args.collection), params={'client_id':unsplash_api_key, 'per_page':40})
         z = r.json()
     else:
-        r = requests.get('{}photos/curated'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40})
+        #r = requests.get('{}photos/curated'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40})
+        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, '543026'), params={'client_id':unsplash_api_key, 'per_page':40})
         z = r.json()
     return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
 
@@ -187,6 +189,9 @@ def display_photo(photo):
     screen_image.blit(screen, (0,0))
     #image_subsurfaces.clear() # only 3.3 and above
     del image_subsurfaces[:]
+
+    # if boxes can more (say randomly) this could be the initial code to set things going
+    # and then would need to have similar code in on_message 
     for i in range(4):
         subsurface = screen_image.subsurface(pygame.Rect(positions[i], rectangles[i]))
         image_subsurfaces.append(subsurface)
@@ -342,11 +347,25 @@ def on_message(client, userdata, msg):
         return
 
     if topic==info_topic:
+
+        # below means that if there is an active track don't post weather/news/twitter/stock price
+        # message boxes
         if trackinfo['artist']:
             return
         pos = z.get('pos',0)
 
+        ################### this is where based on topic you would
+        # generate a new random position and erase the old random position
+
+        # this blit is "patching" the changes created by the text box and restoring the image
         screen.blit(image_subsurfaces[pos], positions[pos])
+        
+        #positions[pos] = new position # how about only the x value has some randomness
+        #random.randint(50,500)
+        positions[pos] = (randint(50,500), positions[pos][1])
+        subsurface = screen_image.subsurface(pygame.Rect(positions[pos], rectangles[pos]))
+        image_subsurfaces[pos] = subsurface
+        # idx = r.collidelist(self._renderers)
         pygame.draw.rect(text_surfaces[pos], (255,0,0), text_surfaces[pos].get_rect(), 3)
         screen.blit(text_surfaces[pos], positions[pos])
         font = pygame.font.SysFont('Sans', 18)
