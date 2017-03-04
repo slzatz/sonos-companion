@@ -2,7 +2,8 @@
 This is the current script that runs on a raspberry pi or on Windows to display
 pictures from unsplash, artists' images when music is playing and weather, news, twitter, stock prices, etc.
 It displays lyrics and artists pictures to accompany what is playing on Sonos
-The news, stocks, twitter, etc information being broadcast by esp_tft_mqtt.py
+The news, stocks, twitter, etc information being broadcast by esp_tft_mqtt.py currently running on AWS
+track_info.py is also broadcasting track and artist
 esp_tft_mqtt.py message: {"header": "Weather", "text": ["Thursday Night: Some clouds this evening will give way to mainly clear skies overnight. 
 Low 18F. Winds WNW at 10 to 20 mph.", "Friday: Mostly sunny skies. High around 30F. Winds W at 10 to 15 mph."], "pos": 0}
 esp_tft_mqtt.py message: {"header": "Top WSJ Article", "text": ["Trump Lashes Out as Senator, Others Recount Court Nominee\u2019s Criticism"], "pos": 1}
@@ -26,9 +27,10 @@ from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from random import randint
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--search", help="unsplash search term; if no command line switches defaults to curated list")
+parser.add_argument("-s", "--search", help="unsplash search term; if no command line switches defaults to celestial - 543026")
 parser.add_argument("-n", "--name", help="unsplash user name; if no command line switches defaults to curated list")
 parser.add_argument("-c", "--collection", help="unsplash collection id: celestial=543026, dark=162326 and my nature=525677")
 parser.add_argument("-w", "--window", action='store_true', help="use -w if you want a small window instead of full screen")
@@ -39,9 +41,6 @@ with open('location') as f:
 
 sonos_topic = "sonos/{}/current_track".format(location)
 info_topic = "esp_tft"
-mqtt_uri = aws_mqtt_uri
-print "mqtt_uri =",mqtt_uri
-
 unsplash_uri = 'https://api.unsplash.com/'
 
 # Environment varialbes for pygame
@@ -56,6 +55,7 @@ else:
 # Should be (6,0) if pygame inits correctly
 #r = pygame.init()
 #print "pygame init",r
+
 #below just initiating the modules that are needed instead of all with pygame.init()
 pygame.font.init()
 pygame.display.init()
@@ -105,7 +105,6 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
-    #client.subscribe(topic)
     client.subscribe([(sonos_topic, 0), (info_topic, 0)])
 
 print "\n"
@@ -113,6 +112,7 @@ print "\n"
 print "program running ..."
 
 def get_photos():
+
     if args.search:
         r = requests.get('{}search/photos'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search})
         z = r.json()['results']
@@ -126,6 +126,7 @@ def get_photos():
         #r = requests.get('{}photos/curated'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40})
         r = requests.get('{}collections/{}/photos'.format(unsplash_uri, '543026'), params={'client_id':unsplash_api_key, 'per_page':40})
         z = r.json()
+
     return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
 
 def display_photo(photo):
@@ -187,14 +188,11 @@ def display_photo(photo):
     # Blit current image before any text has been written on it into screen_image and
     # then create the subsurfaces that can be used to "patch" the impact of the text boxes
     screen_image.blit(screen, (0,0))
+
+    # when a new background image is displayed then delete the subsurfaces
     #image_subsurfaces.clear() # only 3.3 and above
     del image_subsurfaces[:]
 
-    # if boxes can more (say randomly) this could be the initial code to set things going
-    # and then would need to have similar code in on_message 
-    #for i in range(4):
-    #    subsurface = screen_image.subsurface(pygame.Rect(positions[i], rectangles[i]))
-    #    image_subsurfaces.append(subsurface)
     for i in range(4):
         image_subsurfaces.append(None)
 
@@ -350,26 +348,28 @@ def on_message(client, userdata, msg):
 
     if topic==info_topic:
 
-        # below means that if there is an active track don't post weather/news/twitter/stock price
+        # if there is an active track don't post weather/news/twitter/stock price
         # message boxes
         if trackinfo['artist']:
             return
+
         pos = z.get('pos',0)
 
         # this blit is "patching" the changes created by the text box that is being updated
         if image_subsurfaces[pos]:
             screen.blit(image_subsurfaces[pos], positions[pos])
         
-        # deleting the current pos in positions list because don't want it in zip
+        # deleting the current pos in positions list because don't want it when testing collisions
         del positions[pos]
-        # need a temp rectangles to delete current position to do the collision test
-        temp_rectangles = rectangles[:]
-        del temp_rectangles[pos]
+        # need a temp_rectangles to delete current position to do the collision test
+        #temp_rectangles = rectangles[:]
+        #del temp_rectangles[pos]
 
         while 1:
             position = (randint(50,1200), randint(50,750))
             rect = pygame.Rect((position, rectangles[pos]))    
-            idx = rect.collidelist(zip(positions,temp_rectangles))
+            #idx = rect.collidelist(zip(positions,temp_rectangles))
+            idx = rect.collidelist(zip(positions, [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
             if idx == -1:
                 print "No collision"
                 positions.insert(pos, position)
@@ -389,6 +389,12 @@ def on_message(client, userdata, msg):
         text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, (255, 0, 0))
         screen.blit(text, (positions[pos][0]+5,positions[pos][1]+5)) #Room for the line to go around text
         font.set_bold(False)
+        t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
+        t = t[1:] if t[0] == '0' else t
+        t = t[:-2] + t[-2:].lower()
+        #text = font.render(t.strftime("%I:%M:%S %p"), True, (255, 0, 0))
+        text = font.render(t, True, (255, 0, 0))
+        screen.blit(text, (positions[pos][0]+rectangles[pos][0]-text.get_rect().width-5,positions[pos][1]+5)) 
         n = 20
         for text in z.get('text',''): 
             lines = textwrap.wrap(text, 75)
@@ -420,7 +426,7 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(mqtt_uri, 1883, 60)
+client.connect(aws_mqtt_uri, 1883, 60)
 #not calling client.loop_forever() but explicitly calling client.loop() below
     
 photos = get_photos()
