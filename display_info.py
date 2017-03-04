@@ -366,7 +366,7 @@ def on_message(client, userdata, msg):
         #del temp_rectangles[pos]
 
         while 1:
-            position = (randint(50,1200), randint(50,750))
+            position = (randint(50,screen_width-rectangles[pos][0]-50), randint(50,screen_height-rectangles[pos][1]-50))
             rect = pygame.Rect((position, rectangles[pos]))    
             #idx = rect.collidelist(zip(positions,temp_rectangles))
             idx = rect.collidelist(zip(positions, [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
