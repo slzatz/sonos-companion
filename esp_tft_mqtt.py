@@ -15,7 +15,8 @@ Documentation at https://www.worldtides.info/apidocs
 import os
 import sys
 home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home, 'twitter')] + sys.path
+#sys.path = [os.path.join(home, 'twitter')] + sys.path
+sys.path =  sys.path + [os.path.join(home,'sqlalchemy','lib')] + [os.path.join(home, 'twitter')] + [os.path.join(home, 'mylistmanager3')]  ############################################
 from operator import itemgetter
 from itertools import cycle
 import requests
@@ -26,6 +27,7 @@ import schedule
 from time import time,sleep
 import twitter
 from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET
+from lmdb_p import * ######################################################################
 
 tide_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
@@ -33,6 +35,8 @@ sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-yo
 source = cycle(sources)
 
 twit = twitter.Twitter(auth=twitter.OAuth(slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET))
+
+session = remote_session
 
 def twitter_feed():
     z = twit.statuses.home_timeline()
@@ -155,6 +159,17 @@ def stock_quote():
     data = {"header":"WebMD Stock Quote", "text":[results], "pos":2} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
+
+def todo():
+    #tasks0 = session.query(Task).filter(and_(Task.completed == None, Task.modified > (datetime.now() - timedelta(days=2))))
+    tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
+
+    #z = list(j.id for j in scheduler.get_jobs())
+    #tasks3 = session.query(Task).filter(Task.id.in_(z))
+
+    data = {"header":"To Do", "text":[task.title for task in tasks], "pos":3} #expects a list
+    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+
 #schedule.every(30).minutes.do(weather)
 schedule.every().hour.at(':03').do(weather)
 schedule.every().hour.at(':13').do(weather)
@@ -183,6 +198,13 @@ schedule.every().hour.at(':20').do(twitter_feed)
 schedule.every().hour.at(':30').do(twitter_feed)
 schedule.every().hour.at(':40').do(twitter_feed)
 schedule.every().hour.at(':50').do(twitter_feed)
+
+schedule.every().hour.at(':01').do(todo)
+schedule.every().hour.at(':11').do(todo)
+schedule.every().hour.at(':21').do(todo)
+schedule.every().hour.at(':31').do(todo)
+schedule.every().hour.at(':41').do(todo)
+schedule.every().hour.at(':51').do(todo)
 #schedule.run_all()
 
 while True:

@@ -81,7 +81,7 @@ blank_surface.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 positions = [(1920,1080), (1920,1080), (1920,1080), (1920,1080)] # will be determined randomly but initially off screen
-rectangles = [(665,150), (665,250), (400,52), (400,52)] # dimensions of the text rectangles
+rectangles = [(665,150), (665,250), (400,52), (665,250)] # dimensions of the text rectangles
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 
 # the text from weather, news, etc gets written on these surfaces
