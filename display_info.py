@@ -92,6 +92,12 @@ for p in range(4):
     text_surface.set_alpha(125)
     text_surfaces.append(text_surface)
     
+#bullet_surface = pygame.Surface((9,9))
+#pygame.draw.circle(bullet_surface, (255,0,0), (3,3), 4)
+
+bullet_surface = pygame.Surface((6,6))
+pygame.draw.rect(bullet_surface, (255,0,0), ((0,0), (6,6)))
+
 font = pygame.font.SysFont('Sans', 30)
 font.set_bold(True)
 text = font.render("Sonos-Companion", True, (0,0,0))
@@ -397,7 +403,10 @@ def on_message(client, userdata, msg):
         screen.blit(text, (positions[pos][0]+rectangles[pos][0]-text.get_rect().width-5,positions[pos][1]+5)) 
         n = 20
         for text in z.get('text',''): 
+            if n+20 > rectangles[pos][1]:
+                break
             lines = textwrap.wrap(text, 75)
+            screen.blit(bullet_surface, (positions[pos][0]+4, positions[pos][1]+n+13))
             for line in lines:
 
                 if n+20 > rectangles[pos][1]:
@@ -408,7 +417,7 @@ def on_message(client, userdata, msg):
                 except UnicodeError as e:
                     print "UnicodeError in text lines: ", e
                 else:
-                    screen.blit(text, (positions[pos][0]+5,positions[pos][1]+n+5))
+                    screen.blit(text, (positions[pos][0]+14,positions[pos][1]+n+5))
                     n+=20
 
         pygame.display.flip()
