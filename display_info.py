@@ -80,10 +80,11 @@ blank_surface.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 positions = [(1920,1080), (1920,1080), (1920,1080), (1920,1080)] # will be determined randomly but initially off screen
-rectangles = [(665,150), (665,250), (400,52), (665,250)] # future - hold the dimensions of the text rectangles for patching purposes
+rectangles = [(0,0), (0,0), (0,0), (0,0)] # future - hold the dimensions of the text rectangles for patching purposes
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0)]
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 max_height = 250
+max_width = 650 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to max_width
 
 bullet_surface = pygame.Surface((5,5))
 
@@ -357,7 +358,7 @@ def on_message(client, userdata, msg):
         del positions[pos]
 
         while 1:
-            position = (randint(50,screen_width-rectangles[pos][0]-50), randint(50,screen_height-rectangles[pos][1]-50))
+            position = (randint(50,screen_width-max_width-10), randint(50,screen_height-max_height-10))
             rect = pygame.Rect((position, rectangles[pos]))    
             idx = rect.collidelist(zip(positions, [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
             if idx == -1:
@@ -380,14 +381,15 @@ def on_message(client, userdata, msg):
         foo.blit(text, (5,5)) 
 
         font.set_bold(False)
-        t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
-        t = t[1:] if t[0] == '0' else t
-        t = t[:-2] + t[-2:].lower()
-        text = font.render(t, True, color)
+        #t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
+        #t = t[1:] if t[0] == '0' else t
+        #t = t[:-2] + t[-2:].lower()
+        #text = font.render(t, True, color)
 
-        # blitting the time to upper right corner of text box
-        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) ######################################################################
+        ## blitting the time to upper right corner of text box
+        #foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) ######################################################################
 
+        line_widths = []
         n = 20
         for text in z.get('text',''): 
             if n+20 > max_height:
@@ -406,15 +408,38 @@ def on_message(client, userdata, msg):
                     print "UnicodeError in text lines: ", e
                 else:
                     foo.blit(text, (14,n+5))
+                    line_widths.append(text.get_rect().width)
                     n+=20
 
         # calculate the size of foo and then draw box and crop foo
-        rectangles[pos] = (rectangles[pos][0],n+12)
+        #rectangles[pos] = (rectangles[pos][0],n+12)
+        max_line = max(line_widths)
+        if max_line>650:
+            max_line = 650
+        rectangles[pos] = (max_line+8,n+12)
         pygame.draw.rect(foo, color, ((0,0), rectangles[pos]), 3)
+
+        # put time in upper right of box
+        t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
+        t = t[1:] if t[0] == '0' else t
+        t = t[:-2] + t[-2:].lower()
+        text = font.render(t, True, color)
+        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) ######################################################################
+
+        # blitting the time to upper right corner of text box
+        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) ######################################################################
         screen.blit(foo, positions[pos], ((0,0), rectangles[pos]))
         pygame.display.flip()
 
-        subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) # note subsurface(pygame.Rect(positions[pos], rectangles[pos])) also works
+        try:
+            subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) # note subsurface(pygame.Rect(positions[pos], rectangles[pos])) also works
+        except ValueError:
+            print "pos =", pos
+            print "screen_image.get_rect() =", screen_image.get_rect()
+            print "positions[pos] =", positions[pos]
+            print "rectangles[pos] =", rectangles[pos]
+            sys.exit("subsurface problem")
+
         image_subsurfaces[pos] = subsurface
 
         return
