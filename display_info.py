@@ -84,7 +84,7 @@ rectangles = [(0,0), (0,0), (0,0), (0,0)] # future - hold the dimensions of the 
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0)]
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 max_height = 250
-max_width = 650 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to max_width
+max_width = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to max_width
 
 bullet_surface = pygame.Surface((5,5))
 
@@ -354,21 +354,6 @@ def on_message(client, userdata, msg):
         if image_subsurfaces[pos]:
             screen.blit(image_subsurfaces[pos], positions[pos])
         
-        # deleting the current pos in positions list because don't want it when testing collisions
-        del positions[pos]
-
-        while 1:
-            position = (randint(50,screen_width-max_width-10), randint(50,screen_height-max_height-10))
-            rect = pygame.Rect((position, rectangles[pos]))    
-            idx = rect.collidelist(zip(positions, [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
-            if idx == -1:
-                print "No collision"
-                positions.insert(pos, position)
-                break
-            else:
-                print "collision"
-                print "idx = ", idx
-                
         #foo is an arbitrary surface
         foo = pygame.Surface((800,800))
         foo.fill((0,0,0))
@@ -381,13 +366,6 @@ def on_message(client, userdata, msg):
         foo.blit(text, (5,5)) 
 
         font.set_bold(False)
-        #t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
-        #t = t[1:] if t[0] == '0' else t
-        #t = t[:-2] + t[-2:].lower()
-        #text = font.render(t, True, color)
-
-        ## blitting the time to upper right corner of text box
-        #foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) ######################################################################
 
         line_widths = []
         n = 20
@@ -411,12 +389,11 @@ def on_message(client, userdata, msg):
                     line_widths.append(text.get_rect().width)
                     n+=20
 
-        # calculate the size of foo and then draw box and crop foo
-        #rectangles[pos] = (rectangles[pos][0],n+12)
+        # determine the size of the rectangle for foo and its line border
         max_line = max(line_widths)
-        if max_line>650:
-            max_line = 650
-        rectangles[pos] = (max_line+8,n+12)
+        if max_line > max_width:
+            max_line = max_width
+        rectangles[pos] = (max_line+18,n+12)
         pygame.draw.rect(foo, color, ((0,0), rectangles[pos]), 3)
 
         # put time in upper right of box
@@ -424,10 +401,23 @@ def on_message(client, userdata, msg):
         t = t[1:] if t[0] == '0' else t
         t = t[:-2] + t[-2:].lower()
         text = font.render(t, True, color)
-        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) ######################################################################
+        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) 
 
         # blitting the time to upper right corner of text box
-        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) ######################################################################
+        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) 
+
+        while 1:
+            position = (randint(50,screen_width-max_width-20), randint(50,screen_height-max_height-20))
+            rect = pygame.Rect((position, rectangles[pos]))    
+            idx = rect.collidelist(zip([positions[j] for j in range(len(rectangles)) if j!=pos], [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
+            if idx == -1:
+                print "No collision"
+                positions[pos] = position
+                break
+            else:
+                print "collision"
+                print "idx = ", idx
+
         screen.blit(foo, positions[pos], ((0,0), rectangles[pos]))
         pygame.display.flip()
 
