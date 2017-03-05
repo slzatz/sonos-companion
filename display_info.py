@@ -63,7 +63,6 @@ pygame.display.init()
 if platform.machine()[:3] == 'arm': 
     pygame.mouse.set_visible(False)
 
-#if platform.system() == 'Windows':
 if args.window:
     screen_width, screen_height = 1000,700
 else:
@@ -81,23 +80,12 @@ blank_surface.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 positions = [(1920,1080), (1920,1080), (1920,1080), (1920,1080)] # will be determined randomly but initially off screen
-rectangles = [(665,150), (665,250), (400,52), (665,250)] # dimensions of the text rectangles
+rectangles = [(665,150), (665,250), (400,52), (665,250)] # future - hold the dimensions of the text rectangles for patching purposes
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0)]
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
+max_height = 250
 
-# the text from weather, news, etc gets written on these surfaces
-text_surfaces = []
-for p in range(4):
-    text_surface = pygame.Surface(rectangles[p])
-    text_surface.fill((0,0,0))
-    text_surface.set_alpha(125)
-    text_surfaces.append(text_surface)
-    
-#bullet_surface = pygame.Surface((9,9))
-#pygame.draw.circle(bullet_surface, (255,0,0), (3,3), 4)
-
-bullet_surface = pygame.Surface((6,6))
-#pygame.draw.rect(bullet_surface, (255,0,0), ((0,0), (6,6)))
+bullet_surface = pygame.Surface((5,5))
 
 font = pygame.font.SysFont('Sans', 30)
 font.set_bold(True)
@@ -279,7 +267,6 @@ def display_artist_image(x):
         ww = img.width
         hh = img.height
         sq = ww if ww <= hh else hh
-        #crop(left, top, right, bottom)
         t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
         img.crop(*t)
         # resize should take the image and enlarge it without cropping so will fill vertical but leave space for lyrics
@@ -355,8 +342,7 @@ def on_message(client, userdata, msg):
 
     if topic==info_topic:
 
-        # if there is an active track don't post weather/news/twitter/stock price
-        # message boxes
+        # if there is an active track don't post weather/news/twitter/stock price message boxes
         if trackinfo['artist']:
             return
 
@@ -369,14 +355,10 @@ def on_message(client, userdata, msg):
         
         # deleting the current pos in positions list because don't want it when testing collisions
         del positions[pos]
-        # need a temp_rectangles to delete current position to do the collision test
-        #temp_rectangles = rectangles[:]
-        #del temp_rectangles[pos]
 
         while 1:
             position = (randint(50,screen_width-rectangles[pos][0]-50), randint(50,screen_height-rectangles[pos][1]-50))
             rect = pygame.Rect((position, rectangles[pos]))    
-            #idx = rect.collidelist(zip(positions,temp_rectangles))
             idx = rect.collidelist(zip(positions, [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
             if idx == -1:
                 print "No collision"
@@ -386,33 +368,36 @@ def on_message(client, userdata, msg):
                 print "collision"
                 print "idx = ", idx
                 
+        #foo is an arbitrary surface
+        foo = pygame.Surface((800,800))
+        foo.fill((0,0,0))
+        foo.set_alpha(125)
 
-        subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) # note subsurface(pygame.Rect(positions[pos], rectangles[pos])) also works
-
-        image_subsurfaces[pos] = subsurface
-        pygame.draw.rect(text_surfaces[pos], color, text_surfaces[pos].get_rect(), 3)
-        screen.blit(text_surfaces[pos], positions[pos])
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
         text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, color)
-        screen.blit(text, (positions[pos][0]+5,positions[pos][1]+5)) #Room for the line to go around text
+        
+        foo.blit(text, (5,5)) 
+
         font.set_bold(False)
         t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
         t = t[1:] if t[0] == '0' else t
         t = t[:-2] + t[-2:].lower()
-        #text = font.render(t.strftime("%I:%M:%S %p"), True, (255, 0, 0))
         text = font.render(t, True, color)
-        screen.blit(text, (positions[pos][0]+rectangles[pos][0]-text.get_rect().width-5,positions[pos][1]+5)) 
+
+        # blitting the time to upper right corner of text box
+        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) ######################################################################
+
         n = 20
         for text in z.get('text',''): 
-            if n+20 > rectangles[pos][1]:
+            if n+20 > max_height:
                 break
             lines = textwrap.wrap(text, 75)
-            pygame.draw.rect(bullet_surface, color, ((0,0), (6,6)))
-            screen.blit(bullet_surface, (positions[pos][0]+4, positions[pos][1]+n+13))
+            pygame.draw.rect(bullet_surface, color, ((0,0), (5,5)))
+            foo.blit(bullet_surface, (4,n+13))
             for line in lines:
 
-                if n+20 > rectangles[pos][1]:
+                if n+20 > max_height:
                     break
 
                 try:
@@ -420,10 +405,18 @@ def on_message(client, userdata, msg):
                 except UnicodeError as e:
                     print "UnicodeError in text lines: ", e
                 else:
-                    screen.blit(text, (positions[pos][0]+14,positions[pos][1]+n+5))
+                    foo.blit(text, (14,n+5))
                     n+=20
 
+        # calculate the size of foo and then draw box and crop foo
+        rectangles[pos] = (rectangles[pos][0],n+12)
+        pygame.draw.rect(foo, color, ((0,0), rectangles[pos]), 3)
+        screen.blit(foo, positions[pos], ((0,0), rectangles[pos]))
         pygame.display.flip()
+
+        subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) # note subsurface(pygame.Rect(positions[pos], rectangles[pos])) also works
+        image_subsurfaces[pos] = subsurface
+
         return
 
     print "The python object from mqtt is:",z
