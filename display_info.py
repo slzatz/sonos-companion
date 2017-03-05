@@ -82,6 +82,7 @@ screen_image = pygame.Surface((screen_width, screen_height))
 
 positions = [(1920,1080), (1920,1080), (1920,1080), (1920,1080)] # will be determined randomly but initially off screen
 rectangles = [(665,150), (665,250), (400,52), (665,250)] # dimensions of the text rectangles
+colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0)]
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 
 # the text from weather, news, etc gets written on these surfaces
@@ -96,7 +97,7 @@ for p in range(4):
 #pygame.draw.circle(bullet_surface, (255,0,0), (3,3), 4)
 
 bullet_surface = pygame.Surface((6,6))
-pygame.draw.rect(bullet_surface, (255,0,0), ((0,0), (6,6)))
+#pygame.draw.rect(bullet_surface, (255,0,0), ((0,0), (6,6)))
 
 font = pygame.font.SysFont('Sans', 30)
 font.set_bold(True)
@@ -360,6 +361,7 @@ def on_message(client, userdata, msg):
             return
 
         pos = z.get('pos',0)
+        color = colors[pos]
 
         # this blit is "patching" the changes created by the text box that is being updated
         if image_subsurfaces[pos]:
@@ -388,24 +390,25 @@ def on_message(client, userdata, msg):
         subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) # note subsurface(pygame.Rect(positions[pos], rectangles[pos])) also works
 
         image_subsurfaces[pos] = subsurface
-        pygame.draw.rect(text_surfaces[pos], (255,0,0), text_surfaces[pos].get_rect(), 3)
+        pygame.draw.rect(text_surfaces[pos], color, text_surfaces[pos].get_rect(), 3)
         screen.blit(text_surfaces[pos], positions[pos])
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
-        text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, (255, 0, 0))
+        text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, color)
         screen.blit(text, (positions[pos][0]+5,positions[pos][1]+5)) #Room for the line to go around text
         font.set_bold(False)
         t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
         t = t[1:] if t[0] == '0' else t
         t = t[:-2] + t[-2:].lower()
         #text = font.render(t.strftime("%I:%M:%S %p"), True, (255, 0, 0))
-        text = font.render(t, True, (255, 0, 0))
+        text = font.render(t, True, color)
         screen.blit(text, (positions[pos][0]+rectangles[pos][0]-text.get_rect().width-5,positions[pos][1]+5)) 
         n = 20
         for text in z.get('text',''): 
             if n+20 > rectangles[pos][1]:
                 break
             lines = textwrap.wrap(text, 75)
+            pygame.draw.rect(bullet_surface, color, ((0,0), (6,6)))
             screen.blit(bullet_surface, (positions[pos][0]+4, positions[pos][1]+n+13))
             for line in lines:
 
@@ -413,7 +416,7 @@ def on_message(client, userdata, msg):
                     break
 
                 try:
-                    text = font.render(line.strip(), True, (255, 0, 0))
+                    text = font.render(line.strip(), True, color)
                 except UnicodeError as e:
                     print "UnicodeError in text lines: ", e
                 else:
