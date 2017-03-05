@@ -166,8 +166,11 @@ def todo():
 
     #z = list(j.id for j in scheduler.get_jobs())
     #tasks3 = session.query(Task).filter(Task.id.in_(z))
+    titles = [task.title for task in tasks]
+    print(datetime.datetime.now())
+    print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"To Do", "text":[task.title for task in tasks], "pos":3} #expects a list
+    data = {"header":"To Do", "text":titles, "pos":3} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 #schedule.every(30).minutes.do(weather)
