@@ -66,8 +66,8 @@ def news():
     articles = [html.unescape(x['title']) for x in z['articles']]
     print(datetime.datetime.now())
     print(repr(articles).encode('ascii', 'ignore'))
-    source = z.get('source', 'no source').replace('-', ' ').title()
-    data = {"header":source,"text":articles, "pos":1} #expects a list
+    header = z.get('source', 'no source').replace('-', ' ').title()
+    data = {"header":header,"text":articles, "pos":1} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 def weather():
