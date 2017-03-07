@@ -361,10 +361,8 @@ def on_message(client, userdata, msg):
 
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
-        text = font.render(z.get('header', 'no source').replace('-', ' ').title(), True, color)
-        
+        text = font.render(z.get('header', 'no source'), True, color)
         foo.blit(text, (5,5)) 
-
         font.set_bold(False)
 
         line_widths = []
