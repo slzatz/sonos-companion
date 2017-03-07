@@ -28,6 +28,7 @@ from time import time,sleep
 import twitter
 from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET
 from lmdb_p import * ######################################################################
+import html
 
 tide_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
@@ -40,7 +41,8 @@ session = remote_session
 
 def twitter_feed():
     z = twit.statuses.home_timeline()
-    tweets = ["{} - {}".format(x['user']['screen_name'],x['text'].split('https')[0]) for x in z] #could just use ['user']['name']
+    #tweets = ["{} - {}".format(x['user']['screen_name'],x['text'].split('https')[0]) for x in z] #could just use ['user']['name']
+    tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
     data = {"header":"twitter", "text":tweets, "pos":1} #expects a list
@@ -61,7 +63,7 @@ def news():
         return
 
     z = r.json()
-    articles = [x['title'] for x in z['articles']]
+    articles = [html.unescape(x['title']) for x in z['articles']]
     print(datetime.datetime.now())
     print(repr(articles).encode('ascii', 'ignore'))
     data = {"header":z.get('source', 'no source'),"text":articles, "pos":1} #expects a list
@@ -153,10 +155,10 @@ def stock_quote():
     except Exception as e:
         print("Exception in WebMD stock quote:", e)
         return
-    results = "{} {} {} {}".format(quote['LastTradePriceOnly'], quote['ChangeinPercent'], quote['EBITDA'], quote['MarketCapitalization']) 
+    results = "{} {} EBITDA:{} Market Cap: {}".format(quote['LastTradePriceOnly'], quote['ChangeinPercent'], quote['EBITDA'], quote['MarketCapitalization']) 
     print(datetime.datetime.now())
     print(results.encode('ascii', 'ignore'))
-    data = {"header":"WebMD Stock Quote", "text":[results], "pos":2} #expects a list
+    data = {"header":"WBMD", "text":[results], "pos":2} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 
