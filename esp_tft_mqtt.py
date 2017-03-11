@@ -30,10 +30,10 @@ from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oau
 from lmdb_p import * ######################################################################
 import html
 
-tide_uri = 'https://www.worldtides.info/api'
+#tide_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
-sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica', 'reddit-r-all']
-source = cycle(sources)
+news_sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica', 'reddit-r-all']
+news_source = cycle(news_sources)
 
 twit = twitter.Twitter(auth=twitter.OAuth(slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET))
 
@@ -52,7 +52,7 @@ def news():
     #pos = 1
     #https://newsapi.org/v1/articles?source=techcrunch&apiKey=...
     #source = 'the-wall-street-journal'
-    payload = {"apiKey":news_key, "source":next(source), "sortBy":"top"}
+    payload = {"apiKey":news_key, "source":next(news_source), "sortBy":"top"}
 
     try:
         r = requests.get(news_uri, params=payload)
@@ -163,17 +163,22 @@ def stock_quote():
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 
-def todo():
-    #tasks0 = session.query(Task).filter(and_(Task.completed == None, Task.modified > (datetime.now() - timedelta(days=2))))
+def todos():
     tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
-
-    #z = list(j.id for j in scheduler.get_jobs())
-    #tasks3 = session.query(Task).filter(Task.id.in_(z))
     titles = [task.title for task in tasks]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
     data = {"header":"To Do", "text":titles, "pos":3} #expects a list
+    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+
+def facts():
+    tasks = session.query(Task).join(Context).filter(and_(Context.title == 'memory aid', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
+    titles = [task.title for task in tasks]
+    print(datetime.datetime.now())
+    print(repr(titles).encode('ascii', 'ignore'))
+
+    data = {"header":"Facts", "text":titles, "pos":3} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 #schedule.every(30).minutes.do(weather)
@@ -205,12 +210,19 @@ schedule.every().hour.at(':30').do(twitter_feed)
 schedule.every().hour.at(':40').do(twitter_feed)
 schedule.every().hour.at(':50').do(twitter_feed)
 
-schedule.every().hour.at(':01').do(todo)
-schedule.every().hour.at(':11').do(todo)
-schedule.every().hour.at(':21').do(todo)
-schedule.every().hour.at(':31').do(todo)
-schedule.every().hour.at(':41').do(todo)
-schedule.every().hour.at(':51').do(todo)
+schedule.every().hour.at(':01').do(todos)
+schedule.every().hour.at(':11').do(todos)
+schedule.every().hour.at(':21').do(todos)
+schedule.every().hour.at(':31').do(todos)
+schedule.every().hour.at(':41').do(todos)
+schedule.every().hour.at(':51').do(todos)
+
+schedule.every().hour.at(':08').do(facts)
+schedule.every().hour.at(':18').do(facts)
+schedule.every().hour.at(':28').do(facts)
+schedule.every().hour.at(':38').do(facts)
+schedule.every().hour.at(':48').do(facts)
+schedule.every().hour.at(':58').do(facts)
 #schedule.run_all()
 
 while True:
