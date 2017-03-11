@@ -26,10 +26,9 @@ import json
 import schedule
 from time import time,sleep
 import twitter
-from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET, sf_id, sf_pw
+from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET
 from lmdb_p import * ######################################################################
 import html
-import csv
 
 tide_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
@@ -177,21 +176,6 @@ def todo():
     data = {"header":"To Do", "text":titles, "pos":3} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
-def sales_forecast():
-    print("hello")
-    s = requests.Session()
-    l = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
-    d = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
-
-    content = d.content.decode('UTF-8')
-    data = csv.reader(StringIO(content))
-
-    data = [row for row in data if len(row)>10]
-    data.pop(0)
-
-    forecast = sum(map(float, [row[11] for row in data]))
-    print("forecast =", forecast)
-
 #schedule.every(30).minutes.do(weather)
 schedule.every().hour.at(':03').do(weather)
 schedule.every().hour.at(':13').do(weather)
@@ -227,13 +211,6 @@ schedule.every().hour.at(':21').do(todo)
 schedule.every().hour.at(':31').do(todo)
 schedule.every().hour.at(':41').do(todo)
 schedule.every().hour.at(':51').do(todo)
-
-schedule.every().hour.at(':08').do(sales_forecast)
-schedule.every().hour.at(':18').do(sales_forecast)
-schedule.every().hour.at(':28').do(sales_forecast)
-schedule.every().hour.at(':38').do(sales_forecast)
-schedule.every().hour.at(':48').do(sales_forecast)
-schedule.every().hour.at(':58').do(sales_forecast)
 #schedule.run_all()
 
 while True:
