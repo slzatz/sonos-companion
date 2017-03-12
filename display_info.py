@@ -26,7 +26,6 @@ import paho.mqtt.client as mqtt
 from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
-#from random import randint
 from datetime import datetime
 
 parser = argparse.ArgumentParser()
@@ -142,8 +141,7 @@ def display_photo(photo):
         else:
             return
 
-    img.resize(screen_width,screen_height) ###########################################
-    #img.transform(resize="{}x{}>".format(screen_width, screen_height)) # this has worked but testing the above
+    img.transform(resize="{}x{}^".format(screen_width, screen_height)) #fits whether original smaller or bigger; ? can accept gravity='center'
     conv_img = img.convert('bmp')
     # need to close image or there is a memory leak
     # could do: with img.convert('bmp') as converted; converted.save(f)
@@ -405,7 +403,7 @@ def on_message(client, userdata, msg):
         # blitting the time to upper right corner of text box
         foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) 
 
-        #one of out ten times rotate the image
+        #one of out 4 times rotate the imagea 90 degrees
         if not random.randrange(4):
             foo = pygame.transform.rotate(foo, 90)
             rectangles[pos] = (n+12,max_line+18) 
@@ -419,7 +417,6 @@ def on_message(client, userdata, msg):
             rect = pygame.Rect((position, rectangles[pos]))    
             idx = rect.collidelist(zip([positions[j] for j in range(len(rectangles)) if j!=pos], [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
             if idx == -1:
-                #if screen.contains(rect): #this shouldn't be necessary
                 print "No collision"
                 positions[pos] = position
                 break
