@@ -169,7 +169,7 @@ def display_photo(photo):
     img_rect = img.get_rect()
     pos = ((screen_width-img_rect.width)/2, 0)
 
-    font = pygame.font.SysFont('Sans', 28)
+    font = pygame.font.SysFont('Sans', 24)
     font.set_bold(True)
 
     text = font.render(photo.get('photographer', 'unknown'), True, (255, 0, 0))
