@@ -29,24 +29,28 @@ import twitter
 from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET
 from lmdb_p import * ######################################################################
 import html
+from functools import partial
 
-#tide_uri = 'https://www.worldtides.info/api'
+tides_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
 news_sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica', 'reddit-r-all']
 news_source = cycle(news_sources)
+
+publish = partial(mqtt_publish.single, 'esp_tft', hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 twit = twitter.Twitter(auth=twitter.OAuth(slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET))
 
 session = remote_session
 
 def twitter_feed():
+    # pos = 1
     z = twit.statuses.home_timeline()
-    #tweets = ["{} - {}".format(x['user']['screen_name'],x['text'].split('https')[0]) for x in z] #could just use ['user']['name']
     tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
     data = {"header":"twitter", "text":tweets, "pos":1} #expects a list
-    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    publish(payload=json.dumps(data))
 
 def news():
     #pos = 1
@@ -68,21 +72,18 @@ def news():
     print(repr(articles).encode('ascii', 'ignore'))
     header = z.get('source', 'no source').replace('-', ' ').title()
     data = {"header":header,"text":articles, "pos":1} #expects a list
-    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    publish(payload=json.dumps(data))
 
 def weather():
-    # pos = 0
-    # Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
-    # Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
+    #pos = 0
+
+    #Tuesday :  Showers and thunderstorms. Lows overnight in the low 70s.
+    #Tuesday Night :  Thunderstorms likely. Low 72F. Winds SSW at 5 to 10 mph. Chance of rain 90%.
     
     try:
         r = requests.get("http://api.wunderground.com/api/6eeded444749b8ec/forecast/q/10011.json")
-        #m1 = r.json()['forecast']['txt_forecast']['forecastday'][0]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-        #m2 = r.json()['forecast']['txt_forecast']['forecastday'][1]['title'] + ': ' + r.json()['forecast']['txt_forecast']['forecastday'][1]['fcttext']
-
-    #except requests.exceptions.ConnectionError as e:
     except Exception as e:
-        #print "ConnectionError in request in display_weather: ", e
         print("Exception in weather", e)
         return
     
@@ -92,9 +93,6 @@ def weather():
         return
 
     forecast = z['forecast']['txt_forecast']['forecastday']
-    #f0 = forecast[0]['title'] + ': ' + forecast[0]['fcttext']
-    #f1 = forecast[1]['title'] + ': ' + forecast[1]['fcttext']
-    #f2 = forecast[2]['title'] + ': ' + forecast[2]['fcttext']
 
     # if before 3 pm get today report and tomorrow report otherwise get tonight and tomorrow
     reports = (1,2) if datetime.datetime.now().hour > 15 else (0,2)
@@ -104,10 +102,11 @@ def weather():
     print(datetime.datetime.now())
     print(repr(text).encode('ascii', 'ignore'))
     data = {"header":"Weather", "text":text, "pos":0}
-    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    publish(payload=json.dumps(data))
 
 def tides():
-    uri = 'https://www.worldtides.info/api'
+    #pos = 0
     saugatuck_entrance = {"lat":"41.1000", "lon":"-73.3667"}
     payload = {"key":tide_key}
     payload.update(saugatuck_entrance)
@@ -115,20 +114,20 @@ def tides():
     payload.update({"start":time()-3600,"length":75000})
     
     try:
-        r = requests.get(uri, params=payload)
+        r = requests.get(tides_uri, params=payload)
     except Exception as e:
         print(e)
         return
 
     z = r.json()
-    data = z['extremes']
-    #print("Tide data =", data.encode('ascii', 'ignore'))
+    extremes = z['extremes']
+    #print("Tide extremes =", extremes.encode('ascii', 'ignore'))
 
     tides = []
-    for n,x in enumerate(data):
+    for n,x in enumerate(extremes):
         print("n =", n)
         print("x =", x)
-        tide = data[n]
+        tide = extremes[n]
         t = datetime.datetime.fromtimestamp(tide['dt'])
         delta = t-datetime.datetime.now()
         print("delta.seconds =",delta.seconds)
@@ -140,9 +139,9 @@ def tides():
         print("{} tide in {} hours".format(tide['type'], hours))
         tides.append("{} tide in {} hours".format(tide['type'], hours))
 
-    data1 = {"header":"Tides", "text":tides, "pos":1}
-    print(data1)
-    mqtt_publish.single('esp_tft', json.dumps(data1), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    data = {"header":"Tides", "text":tides, "pos":0}
+    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    publish(payload=json.dumps(data))
 
 def stock_quote():
     #pos = 2
@@ -160,28 +159,40 @@ def stock_quote():
     print(datetime.datetime.now())
     print(results.encode('ascii', 'ignore'))
     data = {"header":"WBMD", "text":[results], "pos":2} #expects a list
-    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    publish(payload=json.dumps(data))
 
 
 def todos():
+    #pos = 3
     tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
     titles = [task.title for task in tasks]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
     data = {"header":"To Do", "text":titles, "pos":3} #expects a list
-    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    publish(payload=json.dumps(data))
 
 def facts():
+    #pos = 3
     tasks = session.query(Task).join(Context).filter(and_(Context.title == 'memory aid', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
     titles = [task.title for task in tasks]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
     data = {"header":"Facts", "text":titles, "pos":3} #expects a list
-    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    publish(payload=json.dumps(data))
 
 #schedule.every(30).minutes.do(weather)
+schedule.every().hour.at(':07').do(tides)
+#schedule.every().hour.at(':17').do(tides)
+#schedule.every().hour.at(':27').do(tides)
+schedule.every().hour.at(':37').do(tides)
+#schedule.every().hour.at(':47').do(tides)
+#schedule.every().hour.at(':57').do(tides)
+
 schedule.every().hour.at(':03').do(weather)
 schedule.every().hour.at(':13').do(weather)
 schedule.every().hour.at(':23').do(weather)
