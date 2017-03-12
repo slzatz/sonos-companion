@@ -73,8 +73,8 @@ print "Can't execute line below without a control-c"
 # might be necessary and I would put a try except around the while loop but haven't done that
 screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
-blank_surface = pygame.Surface((screen_width,screen_height))
-blank_surface.fill((0,0,0))
+#blank_surface = pygame.Surface((screen_width,screen_height)) #########################################
+#blank_surface.fill((0,0,0)) #######################################################
 # screen_image will hold the "pure" image before text boxes are drawn on it
 screen_image = pygame.Surface((screen_width, screen_height))
 
@@ -82,7 +82,7 @@ positions = [(1920,1080), (1920,1080), (1920,1080), (1920,1080)] # will be deter
 rectangles = [(0,0), (0,0), (0,0), (0,0)] # future - hold the dimensions of the text rectangles for patching purposes
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0)]
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
-max_height = 250
+max_height = 300
 max_width = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to max_width
 
 bullet_surface = pygame.Surface((5,5))
@@ -174,7 +174,7 @@ def display_photo(photo):
 
     text = font.render(photo.get('photographer', 'unknown'), True, (255, 0, 0))
 
-    screen.blit(blank_surface, (0,0))
+    #screen.blit(blank_surface, (0,0)) #####################################################################################
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
 
@@ -403,13 +403,14 @@ def on_message(client, userdata, msg):
         # blitting the time to upper right corner of text box
         foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) 
 
+        #decided this was cute but not really useful
         #one of out 4 times rotate the imagea 90 degrees
-        if not random.randrange(4):
-            foo = pygame.transform.rotate(foo, 90)
-            rectangles[pos] = (n+12,max_line+18) 
-            box_origin = (0,800-max_line-18)
-        else:
-            box_origin = (0,0)
+        #if not random.randrange(4):
+        #    foo = pygame.transform.rotate(foo, 90)
+        #    rectangles[pos] = (n+12,max_line+18) 
+        #    box_origin = (0,800-max_line-18)
+        #else:
+        #    box_origin = (0,0)
             
 
         while 1:
@@ -424,18 +425,11 @@ def on_message(client, userdata, msg):
                 print "collision"
                 print "idx = ", idx
 
-        screen.blit(foo, positions[pos], (box_origin, rectangles[pos]))
+        #screen.blit(foo, positions[pos], (box_origin, rectangles[pos]))
+        screen.blit(foo, positions[pos], ((0,0), rectangles[pos]))
         pygame.display.flip()
 
-        try:
-            subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) # note subsurface(pygame.Rect(positions[pos], rectangles[pos])) also works
-        except ValueError:
-            print "pos =", pos
-            print "screen_image.get_rect() =", screen_image.get_rect()
-            print "positions[pos] =", positions[pos]
-            print "rectangles[pos] =", rectangles[pos]
-            sys.exit("subsurface problem")
-
+        subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) 
         image_subsurfaces[pos] = subsurface
 
         return
