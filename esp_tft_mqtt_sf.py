@@ -22,11 +22,14 @@ import csv
 from io import StringIO
 
 def sales_forecast():
+    #forecast
     s = requests.Session()
-    l = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
-    d = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
+
+    #forecast
+    r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
     
-    content = d.content.decode('UTF-8')
+    content = r.content.decode('UTF-8')
     sf_data = csv.reader(StringIO(content))
 
     sf_data = [row for row in sf_data if len(row)>10]
@@ -35,7 +38,13 @@ def sales_forecast():
     forecast = sum(map(float, [row[11] for row in sf_data]))
     forecast = "${:,d}".format(round(forecast))
     print("forecast =", forecast)
-    data = {"header":"Forecast", "text":[forecast], "pos":5} #expects a list
+
+    #closed
+    closed = sum(map(float, [row[10] for row in sf_data]))
+    closed = "${:,d}".format(round(closed))
+    print("closed =", closed)
+
+    data = {"header":"Forecast", "text":["forecast: {}".format(forecast), "closed: {}".format(closed)], "pos":5} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 
