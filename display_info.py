@@ -83,10 +83,11 @@ NUM_BOXES = 6
 positions = []
 rectangles = []
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
-colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255), (0,0,255)]
+colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255), (255,255,255)] # blue too dark
 color = cycle(colors)
 MAX_HEIGHT = 300
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
+MIN_WIDTH = 200
 
 bullet_surface = pygame.Surface((5,5))
 
@@ -397,6 +398,8 @@ def on_message(client, userdata, msg):
         max_line = max(line_widths)
         if max_line > MAX_WIDTH:
             max_line = MAX_WIDTH
+        elif max_line < MIN_WIDTH:
+            max_line = MIN_WIDTH
         rectangles[pos] = (max_line+18,n+12)
         pygame.draw.rect(foo, col, ((0,0), rectangles[pos]), 3)
 
