@@ -1,4 +1,5 @@
 '''
+Currently a python 2.7 program but needs to be re-written as python 3 since pygame now runs on 3
 This is the current script that runs on a raspberry pi or on Windows to display
 pictures from unsplash, artists' images when music is playing and weather, news, twitter, stock prices, etc.
 It displays lyrics and artists pictures to accompany what is playing on Sonos
@@ -27,6 +28,7 @@ from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from datetime import datetime
+from itertools import cycle
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--search", help="unsplash search term; if no command line switches defaults to celestial - 543026")
@@ -73,26 +75,27 @@ print "Can't execute line below without a control-c"
 # might be necessary and I would put a try except around the while loop but haven't done that
 screen = pygame.display.set_mode((screen_width, screen_height))
 screen.fill((0,0,0))
-#blank_surface = pygame.Surface((screen_width,screen_height)) #########################################
-#blank_surface.fill((0,0,0)) #######################################################
 # screen_image will hold the "pure" image before text boxes are drawn on it
 screen_image = pygame.Surface((screen_width, screen_height))
 
-positions = [(1920,1080), (1920,1080), (1920,1080), (1920,1080)] # will be determined randomly but initially off screen
-rectangles = [(0,0), (0,0), (0,0), (0,0)] # future - hold the dimensions of the text rectangles for patching purposes
-colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0)]
+#Globals
+NUM_BOXES = 6
+positions = []
+rectangles = []
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
-max_height = 300
-max_width = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to max_width
+colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255), (0,0,255)]
+color = cycle(colors)
+MAX_HEIGHT = 300
+MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 
 bullet_surface = pygame.Surface((5,5))
 
-font = pygame.font.SysFont('Sans', 30)
-font.set_bold(True)
-text = font.render("Sonos-Companion", True, (0,0,0))
-screen.fill((255,255,255)) 
-screen.blit(text, (0,0))
-pygame.display.flip()
+#font = pygame.font.SysFont('Sans', 30)
+#font.set_bold(True)
+#text = font.render("Sonos-Companion", True, (0,0,0))
+#screen.fill((255,255,255)) 
+#screen.blit(text, (0,0))
+#pygame.display.flip()
 
 trackinfo = {"artist":None, "track_title":None}
 
@@ -187,9 +190,13 @@ def display_photo(photo):
     # when a new background image is displayed then delete the subsurfaces
     #image_subsurfaces.clear() # only 3.3 and above
     del image_subsurfaces[:]
+    del positions[:]
+    del rectangles[:]
 
-    for i in range(4):
+    for i in range(NUM_BOXES):
         image_subsurfaces.append(None)
+        positions.append((1920,1080))
+        rectangles.append((0,0))
 
 def get_artist_images(name):
 
@@ -346,39 +353,39 @@ def on_message(client, userdata, msg):
         if trackinfo['artist']:
             return
 
-        pos = z.get('pos',0)
-        color = colors[pos]
+        col = next(color)
 
+        pos = z.get('pos',0)
         # this blit is "patching" the changes created by the text box that is being updated
         if image_subsurfaces[pos]:
             screen.blit(image_subsurfaces[pos], positions[pos])
         
-        #foo is an arbitrary surface
+        #foo is the surface that we 'paint' the text and rectangles on
         foo = pygame.Surface((800,800))
         foo.fill((0,0,0))
         foo.set_alpha(125)
 
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
-        text = font.render(z.get('header', 'no source'), True, color)
+        text = font.render(z.get('header', 'no source'), True, col)
         foo.blit(text, (5,5)) 
         font.set_bold(False)
 
         line_widths = []
         n = 20
         for text in z.get('text',''): 
-            if n+20 > max_height:
+            if n+20 > MAX_HEIGHT:
                 break
             lines = textwrap.wrap(text, 75)
-            pygame.draw.rect(bullet_surface, color, ((0,0), (5,5)))
+            pygame.draw.rect(bullet_surface, col, ((0,0), (5,5)))
             foo.blit(bullet_surface, (4,n+13))
             for line in lines:
 
-                if n+20 > max_height:
+                if n+20 > MAX_HEIGHT:
                     break
 
                 try:
-                    text = font.render(line.strip(), True, color)
+                    text = font.render(line.strip(), True, col)
                 except UnicodeError as e:
                     print "UnicodeError in text lines: ", e
                 else:
@@ -388,16 +395,16 @@ def on_message(client, userdata, msg):
 
         # determine the size of the rectangle for foo and its line border
         max_line = max(line_widths)
-        if max_line > max_width:
-            max_line = max_width
+        if max_line > MAX_WIDTH:
+            max_line = MAX_WIDTH
         rectangles[pos] = (max_line+18,n+12)
-        pygame.draw.rect(foo, color, ((0,0), rectangles[pos]), 3)
+        pygame.draw.rect(foo, col, ((0,0), rectangles[pos]), 3)
 
         # put time in upper right of box
         t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
         t = t[1:] if t[0] == '0' else t
         t = t[:-2] + t[-2:].lower()
-        text = font.render(t, True, color)
+        text = font.render(t, True, col)
         foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) 
 
         # blitting the time to upper right corner of text box
