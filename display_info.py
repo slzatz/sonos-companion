@@ -79,13 +79,13 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 6
+NUM_BOXES = 7 #numbered 0 to 6
 positions = []
 rectangles = []
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255), (255,255,255)] # blue too dark
 color = cycle(colors)
-MAX_HEIGHT = 300
+MAX_HEIGHT = 450
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 200
 
@@ -422,8 +422,8 @@ def on_message(client, userdata, msg):
         #else:
         #    box_origin = (0,0)
             
-
-        while 1:
+        attempts = 0
+        while attemps < 10:
             position = (random.randint(50,screen_width-rectangles[pos][0]), random.randint(50,screen_height-rectangles[pos][1]))
             rect = pygame.Rect((position, rectangles[pos]))    
             idx = rect.collidelist(zip([positions[j] for j in range(len(rectangles)) if j!=pos], [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
@@ -434,6 +434,13 @@ def on_message(client, userdata, msg):
             else:
                 print "collision"
                 print "idx = ", idx
+
+            attempts+=1
+
+        else:
+            print "Couldn't find a clear area for box"
+            positions[pos] = position
+            
 
         #screen.blit(foo, positions[pos], (box_origin, rectangles[pos]))
         screen.blit(foo, positions[pos], ((0,0), rectangles[pos]))
