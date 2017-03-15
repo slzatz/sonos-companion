@@ -423,7 +423,7 @@ def on_message(client, userdata, msg):
         #    box_origin = (0,0)
             
         attempts = 0
-        while attemps < 10:
+        while attempts < 10:
             position = (random.randint(50,screen_width-rectangles[pos][0]), random.randint(50,screen_height-rectangles[pos][1]))
             rect = pygame.Rect((position, rectangles[pos]))    
             idx = rect.collidelist(zip([positions[j] for j in range(len(rectangles)) if j!=pos], [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
