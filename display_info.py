@@ -85,7 +85,7 @@ rectangles = []
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255), (255,255,255)] # blue too dark
 color = cycle(colors)
-MAX_HEIGHT = 450
+MAX_HEIGHT = 375
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 200
 
@@ -364,7 +364,7 @@ def on_message(client, userdata, msg):
         #foo is the surface that we 'paint' the text and rectangles on
         foo = pygame.Surface((800,800))
         foo.fill((0,0,0))
-        foo.set_alpha(125)
+        foo.set_alpha(175) #125
 
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
@@ -423,7 +423,7 @@ def on_message(client, userdata, msg):
         #    box_origin = (0,0)
             
         attempts = 0
-        while attempts < 10:
+        while attempts < 20:
             position = (random.randint(50,screen_width-rectangles[pos][0]), random.randint(50,screen_height-rectangles[pos][1]))
             rect = pygame.Rect((position, rectangles[pos]))    
             idx = rect.collidelist(zip([positions[j] for j in range(len(rectangles)) if j!=pos], [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
