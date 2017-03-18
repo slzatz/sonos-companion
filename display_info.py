@@ -81,7 +81,6 @@ screen_image = pygame.Surface((screen_width, screen_height))
 #Globals
 NUM_BOXES = 7 #numbered 0 to 6
 positions = []
-rectangles = []
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255), (255,255,255)] # blue too dark
 color = cycle(colors)
@@ -192,12 +191,10 @@ def display_photo(photo):
     #image_subsurfaces.clear() # only 3.3 and above
     del image_subsurfaces[:]
     del positions[:]
-    del rectangles[:]
 
     for i in range(NUM_BOXES):
-        image_subsurfaces.append(None)
+        image_subsurfaces.append(pygame.Surface((1,1)))
         positions.append((1920,1080))
-        rectangles.append((0,0))
 
 def get_artist_images(name):
 
@@ -356,10 +353,12 @@ def on_message(client, userdata, msg):
 
         col = next(color)
 
-        pos = z.get('pos',0)
+        # we want a copy before the text box is patched
+        new_screen = pygame.Surface.copy(screen) ##################################
+        k = z.get('pos',0)
+        subsurface = image_subsurfaces[k]
         # this blit is "patching" the changes created by the text box that is being updated
-        if image_subsurfaces[pos]:
-            screen.blit(image_subsurfaces[pos], positions[pos])
+        new_screen.blit(subsurface, positions[k])
         
         #foo is the surface that we 'paint' the text and rectangles on
         foo = pygame.Surface((800,800))
@@ -400,36 +399,25 @@ def on_message(client, userdata, msg):
             max_line = MAX_WIDTH
         elif max_line < MIN_WIDTH:
             max_line = MIN_WIDTH
-        rectangles[pos] = (max_line+18,n+12)
-        pygame.draw.rect(foo, col, ((0,0), rectangles[pos]), 3)
+        prev_center = (subsurface.get_rect().centerx+positions[k][0], subsurface.get_rect().centery+positions[k][1])                          #get_rect().center
+        new_size = (max_line+18,n+12)
+        pygame.draw.rect(foo, col, ((0,0), new_size), 3)
 
         # put time in upper right of box
         t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
         t = t[1:] if t[0] == '0' else t
         t = t[:-2] + t[-2:].lower()
         text = font.render(t, True, col)
-        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) 
+        foo.blit(text, (new_size[0]-text.get_rect().width-5,5)) 
 
-        # blitting the time to upper right corner of text box
-        foo.blit(text, (rectangles[pos][0]-text.get_rect().width-5,5)) 
-
-        #decided this was cute but not really useful
-        #one of out 4 times rotate the imagea 90 degrees
-        #if not random.randrange(4):
-        #    foo = pygame.transform.rotate(foo, 90)
-        #    rectangles[pos] = (n+12,max_line+18) 
-        #    box_origin = (0,800-max_line-18)
-        #else:
-        #    box_origin = (0,0)
-            
         attempts = 0
         while attempts < 20:
-            position = (random.randint(50,screen_width-rectangles[pos][0]), random.randint(50,screen_height-rectangles[pos][1]))
-            rect = pygame.Rect((position, rectangles[pos]))    
-            idx = rect.collidelist(zip([positions[j] for j in range(len(rectangles)) if j!=pos], [rectangles[i] for i in range(len(rectangles)) if i!=pos]))
+            new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
+            rect = pygame.Rect((new_pos, new_size))    
+            idx = rect.collidelist(zip([positions[j] for j in range(len(positions)) if j!=k], [image_subsurfaces[i].get_rect().size for i in range(len(positions)) if i!=k]))
             if idx == -1:
                 print "No collision"
-                positions[pos] = position
+                positions[k] = new_pos
                 break
             else:
                 print "collision"
@@ -439,15 +427,21 @@ def on_message(client, userdata, msg):
 
         else:
             print "Couldn't find a clear area for box"
-            positions[pos] = position
+            positions[k] = new_pos
             
+        new_screen.blit(foo, positions[k], ((0,0), new_size)) 
 
-        #screen.blit(foo, positions[pos], (box_origin, rectangles[pos]))
-        screen.blit(foo, positions[pos], ((0,0), rectangles[pos]))
+        pygame.draw.line(screen, col, new_pos, prev_center) 
+        pygame.draw.line(screen, col, (new_pos[0],new_pos[1]+new_size[1]), prev_center) 
+        pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]), prev_center) 
+        pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), prev_center) 
+
         pygame.display.flip()
-
-        subsurface = screen_image.subsurface((positions[pos], rectangles[pos])) 
-        image_subsurfaces[pos] = subsurface
+        sleep(.5) 
+        screen.blit(new_screen, (0,0)) 
+        pygame.display.flip() 
+        subsurface = screen_image.subsurface((positions[k], new_size)) 
+        image_subsurfaces[k] = subsurface
 
         return
 
