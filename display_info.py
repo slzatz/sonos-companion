@@ -193,7 +193,7 @@ def display_photo(photo):
     del positions[:]
 
     for i in range(NUM_BOXES):
-        image_subsurfaces.append(pygame.Surface((1,1)))
+        image_subsurfaces.append(pygame.Surface((0,0)))
         positions.append((1920,1080))
 
 def get_artist_images(name):
@@ -356,9 +356,10 @@ def on_message(client, userdata, msg):
         # we want a copy before the text box is patched
         new_screen = pygame.Surface.copy(screen) ##################################
         k = z.get('pos',0)
+        prev_pos = positions[k]
         subsurface = image_subsurfaces[k]
         # this blit is "patching" the changes created by the text box that is being updated
-        new_screen.blit(subsurface, positions[k])
+        new_screen.blit(subsurface, prev_pos)
         
         #foo is the surface that we 'paint' the text and rectangles on
         foo = pygame.Surface((800,800))
@@ -399,7 +400,7 @@ def on_message(client, userdata, msg):
             max_line = MAX_WIDTH
         elif max_line < MIN_WIDTH:
             max_line = MIN_WIDTH
-        prev_center = (subsurface.get_rect().centerx+positions[k][0], subsurface.get_rect().centery+positions[k][1])                          #get_rect().center
+
         new_size = (max_line+18,n+12)
         pygame.draw.rect(foo, col, ((0,0), new_size), 3)
 
@@ -417,7 +418,6 @@ def on_message(client, userdata, msg):
             idx = rect.collidelist(zip([positions[j] for j in range(len(positions)) if j!=k], [image_subsurfaces[i].get_rect().size for i in range(len(positions)) if i!=k]))
             if idx == -1:
                 print "No collision"
-                positions[k] = new_pos
                 break
             else:
                 print "collision"
@@ -427,21 +427,37 @@ def on_message(client, userdata, msg):
 
         else:
             print "Couldn't find a clear area for box"
-            positions[k] = new_pos
             
-        new_screen.blit(foo, positions[k], ((0,0), new_size)) 
+        new_screen.blit(foo, new_pos, ((0,0), new_size)) 
 
-        pygame.draw.line(screen, col, new_pos, prev_center) 
-        pygame.draw.line(screen, col, (new_pos[0],new_pos[1]+new_size[1]), prev_center) 
-        pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]), prev_center) 
-        pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), prev_center) 
+        blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
+        blast_x = random.randint(0,screen_width)
+        blast_point = (blast_x,blast_y)
+
+        pygame.draw.line(screen, col, new_pos, blast_point) 
+        pygame.draw.line(screen, col, (new_pos[0],new_pos[1]+new_size[1]), blast_point) 
+        pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]), blast_point) 
+        pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), blast_point) 
+        pygame.draw.rect(screen, col, (new_pos, new_size), 3)
+
+        if subsurface.get_height() > 1:
+            prev_size = subsurface.get_rect().size
+            blast_y = 0 if prev_pos[1]+prev_size[1]/2 > screen_height/2 else screen_height
+            blast_x = random.randint(0,screen_width)
+            blast_point = (blast_x,blast_y)
+            pygame.draw.line(screen, (255,255,255), prev_pos, blast_point) 
+            pygame.draw.line(screen, (255,255,255), (prev_pos[0],prev_pos[1]+prev_size[1]), blast_point) 
+            pygame.draw.line(screen, (255,255,255), (prev_pos[0]+prev_size[0],prev_pos[1]), blast_point) 
+            pygame.draw.line(screen, (255,255,255), (prev_pos[0]+prev_size[0],prev_pos[1]+prev_size[1]), blast_point) 
+            pygame.draw.rect(screen, (255,255,255), (prev_pos, prev_size)) # default is to fill (width=0)
 
         pygame.display.flip()
-        sleep(.5) 
+        sleep(1) #.5
         screen.blit(new_screen, (0,0)) 
         pygame.display.flip() 
-        subsurface = screen_image.subsurface((positions[k], new_size)) 
+        subsurface = screen_image.subsurface((new_pos, new_size)) 
         image_subsurfaces[k] = subsurface
+        positions[k] = new_pos
 
         return
 
