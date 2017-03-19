@@ -82,7 +82,7 @@ screen_image = pygame.Surface((screen_width, screen_height))
 NUM_BOXES = 7 #numbered 0 to 6
 positions = []
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
-colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255), (255,255,255)] # blue too dark
+colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255)] # (255,255,255)] # blue too dark
 color = cycle(colors)
 MAX_HEIGHT = 375
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
@@ -374,19 +374,21 @@ def on_message(client, userdata, msg):
 
         line_widths = []
         n = 20
-        for text in z.get('text',''): 
+        for item in z.get('text',''): 
             if n+20 > MAX_HEIGHT:
                 break
-            lines = textwrap.wrap(text, 75)
+
             pygame.draw.rect(bullet_surface, col, ((0,0), (5,5)))
             foo.blit(bullet_surface, (4,n+13))
+
+            lines = textwrap.wrap(item, 75)
             for line in lines:
 
                 if n+20 > MAX_HEIGHT:
                     break
 
                 try:
-                    text = font.render(line.strip(), True, col)
+                    text = font.render(line.strip(), True, (255,255,255)) #col
                 except UnicodeError as e:
                     print "UnicodeError in text lines: ", e
                 else:
