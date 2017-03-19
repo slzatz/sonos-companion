@@ -45,13 +45,12 @@ twit = twitter.Twitter(auth=twitter.OAuth(slz_twitter_oauth_token, slz_twitter_o
 session = remote_session
 
 def twitter_feed():
-    # pos = 1
+    #pos = 1
     z = twit.statuses.home_timeline()
     tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
     data = {"header":"twitter", "text":tweets, "pos":1} #expects a list
-    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
     publish(payload=json.dumps(data))
 
 def news():
@@ -74,7 +73,6 @@ def news():
     print(repr(articles).encode('ascii', 'ignore'))
     header = z.get('source', 'no source').replace('-', ' ').title()
     data = {"header":header,"text":articles, "pos":1} #expects a list
-    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
     publish(payload=json.dumps(data))
 
 def weather():
@@ -104,7 +102,6 @@ def weather():
     print(datetime.datetime.now())
     print(repr(text).encode('ascii', 'ignore'))
     data = {"header":"Weather", "text":text, "pos":0}
-    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
     publish(payload=json.dumps(data))
 
 def tides():
@@ -142,7 +139,6 @@ def tides():
         tides.append("{} tide in {} hours".format(tide['type'], hours))
 
     data = {"header":"Tides", "text":tides, "pos":0}
-    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
     publish(payload=json.dumps(data))
 
 def stock_quote():
@@ -161,41 +157,31 @@ def stock_quote():
     print(datetime.datetime.now())
     print(results.encode('ascii', 'ignore'))
     data = {"header":"WBMD", "text":[results], "pos":2} #expects a list
-    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
     publish(payload=json.dumps(data))
 
 
 def todos():
     #pos = 3
-    #tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
     tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.completed == None)).order_by(desc(Task.modified))
-    #titles = [task.title for task in tasks]
     titles = ['#'+task.title if task.star else task.title for task in tasks]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
     data = {"header":"To Do", "text":titles, "pos":3} #expects a list
-    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
     publish(payload=json.dumps(data))
 
 def facts():
     #pos = 3
-    tasks = session.query(Task).join(Context).filter(and_(Context.title == 'memory aid', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
-    titles = [task.title for task in tasks]
+    tasks = session.query(Task).join(Context).filter(and_(Context.title == 'memory aid', Task.priority == 3, Task.completed == None)).order_by(desc(Task.modified))
+    titles = ['#'+task.title if task.star else task.title for task in tasks]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
     data = {"header":"Facts", "text":titles, "pos":3} #expects a list
-    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
     publish(payload=json.dumps(data))
 
-#schedule.every(30).minutes.do(weather)
 schedule.every().hour.at(':07').do(tides)
-#schedule.every().hour.at(':17').do(tides)
-#schedule.every().hour.at(':27').do(tides)
 schedule.every().hour.at(':37').do(tides)
-#schedule.every().hour.at(':47').do(tides)
-#schedule.every().hour.at(':57').do(tides)
 
 schedule.every().hour.at(':03').do(weather)
 schedule.every().hour.at(':13').do(weather)
