@@ -384,10 +384,13 @@ def on_message(client, userdata, msg):
             if item[0] == '#':
                 item=item[1:]
                 font.set_bold(True)
+                max_chars_line = 65
             else:
                 font.set_bold(False)
+                max_chars_line = 75
 
-            lines = textwrap.wrap(item, 75)
+            #lines = textwrap.wrap(item, 75)
+            lines = textwrap.wrap(item, max_chars_line)
             for line in lines:
 
                 if n+20 > MAX_HEIGHT:
