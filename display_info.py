@@ -447,15 +447,15 @@ def on_message(client, userdata, msg):
             screen.blit(subsurface, prev_pos)
 
             prev_size = subsurface.get_rect().size
-            blast_y = 0 if prev_pos[1]+prev_size[1]/2 > screen_height/2 else screen_height
-            blast_x = random.randint(0,screen_width)
-            blast_point = (blast_x,blast_y)
+            #blast_y = 0 if prev_pos[1]+prev_size[1]/2 > screen_height/2 else screen_height
+            #blast_x = random.randint(0,screen_width)
+            #blast_point = (blast_x,blast_y)
             col = (125,125,125)
 
-            pygame.draw.line(screen, col, prev_pos, blast_point) 
-            pygame.draw.line(screen, col, (prev_pos[0],prev_pos[1]+prev_size[1]), blast_point) 
-            pygame.draw.line(screen, col, (prev_pos[0]+prev_size[0],prev_pos[1]), blast_point) 
-            pygame.draw.line(screen, col, (prev_pos[0]+prev_size[0],prev_pos[1]+prev_size[1]), blast_point) 
+            #pygame.draw.line(screen, col, prev_pos, blast_point) 
+            #pygame.draw.line(screen, col, (prev_pos[0],prev_pos[1]+prev_size[1]), blast_point) 
+            #pygame.draw.line(screen, col, (prev_pos[0]+prev_size[0],prev_pos[1]), blast_point) 
+            #pygame.draw.line(screen, col, (prev_pos[0]+prev_size[0],prev_pos[1]+prev_size[1]), blast_point) 
 
             pygame.draw.rect(screen, col, (prev_pos, prev_size), 3)
 
