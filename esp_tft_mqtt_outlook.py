@@ -30,11 +30,14 @@ account = Account(primary_smtp_address=email, credentials = cred, autodiscover=T
 calendar = account.calendar
 eastern = timezone('US/Eastern')
 
-days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-
 def outlook():
     now = datetime.now()
-    next_ = 1 if now.hour > 15 else 0
+    if now.weekday > 4:
+        next_ = 7 - now.weekday
+    elif now.hour > 14:
+        next_ = 1
+    else:
+        next_ = 0
 
     items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_)), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_+1)))
     text = []
