@@ -381,6 +381,12 @@ def on_message(client, userdata, msg):
             pygame.draw.rect(bullet_surface, col, ((0,0), (5,5)))
             foo.blit(bullet_surface, (4,n+13))
 
+            if item[0] == '#':
+                item=item[1:]
+                font.set_bold(True)
+            else:
+                font.set_bold(False)
+
             lines = textwrap.wrap(item, 75)
             for line in lines:
 
