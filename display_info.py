@@ -438,18 +438,24 @@ def on_message(client, userdata, msg):
         pygame.draw.line(screen, col, (new_pos[0],new_pos[1]+new_size[1]), blast_point) 
         pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]), blast_point) 
         pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), blast_point) 
+
         pygame.draw.rect(screen, col, (new_pos, new_size), 3)
 
         if subsurface.get_height() > 1:
+            screen.blit(subsurface, prev_pos)
+
             prev_size = subsurface.get_rect().size
             blast_y = 0 if prev_pos[1]+prev_size[1]/2 > screen_height/2 else screen_height
             blast_x = random.randint(0,screen_width)
             blast_point = (blast_x,blast_y)
-            pygame.draw.line(screen, (255,255,255), prev_pos, blast_point) 
-            pygame.draw.line(screen, (255,255,255), (prev_pos[0],prev_pos[1]+prev_size[1]), blast_point) 
-            pygame.draw.line(screen, (255,255,255), (prev_pos[0]+prev_size[0],prev_pos[1]), blast_point) 
-            pygame.draw.line(screen, (255,255,255), (prev_pos[0]+prev_size[0],prev_pos[1]+prev_size[1]), blast_point) 
-            pygame.draw.rect(screen, (255,255,255), (prev_pos, prev_size)) # default is to fill (width=0)
+            col = (125,125,125)
+
+            pygame.draw.line(screen, col, prev_pos, blast_point) 
+            pygame.draw.line(screen, col, (prev_pos[0],prev_pos[1]+prev_size[1]), blast_point) 
+            pygame.draw.line(screen, col, (prev_pos[0]+prev_size[0],prev_pos[1]), blast_point) 
+            pygame.draw.line(screen, col, (prev_pos[0]+prev_size[0],prev_pos[1]+prev_size[1]), blast_point) 
+
+            pygame.draw.rect(screen, col, (prev_pos, prev_size), 3)
 
         pygame.display.flip()
         sleep(1) #.5
