@@ -10,7 +10,9 @@ The script is esp_display_info.py
 Schedule.every().hour.at(':00').do(job)
 https://www.worldtides.info/api?extremes&lat=41.117597&lon=-73.407897&key=a417...
 Documentation at https://www.worldtides.info/apidocs
-
+Need to use the following for To Dos and Facts
+random.choice(seq)- Return a random element from the non-empty sequence seq. If seq is empty, raises IndexError.
+random.shuffle(x)
 '''
 import os
 import sys
@@ -165,8 +167,10 @@ def stock_quote():
 
 def todos():
     #pos = 3
-    tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
-    titles = [task.title for task in tasks]
+    #tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.star == True, Task.completed == None)).order_by(desc(Task.modified))
+    tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.completed == None)).order_by(desc(Task.modified))
+    #titles = [task.title for task in tasks]
+    titles = ['#'+task.title if task.star else task.title for task in tasks]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
