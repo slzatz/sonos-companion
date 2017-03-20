@@ -32,6 +32,7 @@ from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oau
 from lmdb_p import * ######################################################################
 import html
 from functools import partial
+from random import shuffle
 
 tides_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
@@ -164,6 +165,7 @@ def todos():
     #pos = 3
     tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.completed == None)).order_by(desc(Task.modified))
     titles = ['#'+task.title if task.star else task.title for task in tasks]
+    shuffle(titles)
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
@@ -174,6 +176,7 @@ def facts():
     #pos = 3
     tasks = session.query(Task).join(Context).filter(and_(Context.title == 'memory aid', Task.priority == 3, Task.completed == None)).order_by(desc(Task.modified))
     titles = ['#'+task.title if task.star else task.title for task in tasks]
+    shuffle(titles)
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
