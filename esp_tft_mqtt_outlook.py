@@ -32,7 +32,7 @@ eastern = timezone('US/Eastern')
 
 def outlook():
     now = datetime.now()
-    if now.weekday > 4:
+    if now.weekday() > 4:
         next_ = 7 - now.weekday()
     elif now.hour > 14:
         next_ = 1
