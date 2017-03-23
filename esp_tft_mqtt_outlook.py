@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 #import os
 #home = os.path.split(os.getcwd())[0]
 #sys.path = sys.path + [os.path.join(home,'exchangelib')] 
-from exchangelib import Account, EWSDateTime, credentials
+from exchangelib import Account, EWSDateTime, credentials, errors
 
 cred = credentials.Credentials(username=exch_name, password=exch_pw)
 account = Account(primary_smtp_address=email, credentials = cred, autodiscover=True, access_type=credentials.DELEGATE)
@@ -40,6 +40,13 @@ def outlook():
         next_ = 0
 
     items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_)), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_+1)))
+
+    try:
+        len(items)
+    except exchangelib.errors.ErrorInternalServerTransientError as e:
+        print "exchangelib error: ", e
+        return
+
     text = []
     for item in items:
         line = (item.start-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+" "+item.subject
