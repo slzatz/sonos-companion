@@ -82,6 +82,7 @@ screen_image = pygame.Surface((screen_width, screen_height))
 NUM_BOXES = 7 #numbered 0 to 6
 positions = []
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
+foos = [] #######################################################################################################
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255)] # (255,255,255)] # blue too dark
 color = cycle(colors)
 MAX_HEIGHT = 375
@@ -191,10 +192,12 @@ def display_photo(photo):
     #image_subsurfaces.clear() # only 3.3 and above
     del image_subsurfaces[:]
     del positions[:]
+    del foos[:]
 
     for i in range(NUM_BOXES):
         image_subsurfaces.append(pygame.Surface((0,0)))
         positions.append((1920,1080))
+        foos.append(pygame.Surface((0,0)))
 
 def get_artist_images(name):
 
@@ -353,13 +356,18 @@ def on_message(client, userdata, msg):
 
         col = next(color)
 
-        # we want a copy before the text box is patched
-        new_screen = pygame.Surface.copy(screen) ##################################
+        # create a copy of the current screen that we will be blitting later
+        new_screen = pygame.Surface.copy(screen) 
         k = z.get('pos',0)
         prev_pos = positions[k]
         subsurface = image_subsurfaces[k]
         # this blit is "patching" the changes created by the text box that is being updated
         new_screen.blit(subsurface, prev_pos)
+        # Current code below assumes there was a collision the last time the position was painted
+        # Problems: we could be painting in wrong order and should check if no collision no need to reblit the foos
+        for i in range(len(foos)):
+            if i!=k:
+                new_screen.blit(foos[i], positions[i])
         
         #foo is the surface that we 'paint' the text and rectangles on
         foo = pygame.Surface((800,800))
@@ -440,6 +448,11 @@ def on_message(client, userdata, msg):
             print "Couldn't find a clear area for box"
             
         new_screen.blit(foo, new_pos, ((0,0), new_size)) 
+
+        # Below is saving the text box to reblit the screen to deal with collisions
+        cropped_foo = pygame.Surface(new_size)
+        cropped_foo.blit(foo, (0,0))
+        foos[k] = cropped_foo
 
         blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
         blast_x = random.randint(0,screen_width)
@@ -529,10 +542,17 @@ while 1:
     cur_time = time()
 
     if cur_time - t0 > 300:
-        alive = session.query(session.query(Artist).exists()).all()
-        if alive[0][0]:
-            print cur_time, "database connection alive", num_photos_shown
-            t0 = time()
+        try:
+            alive = session.query(session.query(Artist).exists()).all()
+        except Exception as e:
+             print "Exception checking if db alive: ", e
+        else:
+            if alive[0][0]:
+                print cur_time, "The connection to Artsit db is alive", num_photos_shown
+            else:
+                print cur_time, "There is a problem with the Artist db connection"
+
+        t0 = time()
 
     artist = trackinfo['artist']
     track = trackinfo['track_title']
