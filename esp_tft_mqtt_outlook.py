@@ -34,7 +34,7 @@ def outlook():
     now = datetime.now()
     if now.weekday() > 4:
         next_ = 7 - now.weekday()
-    elif now.hour > 16:
+    elif now.hour > 17:
         next_ = 1
     else:
         next_ = 0
