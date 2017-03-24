@@ -83,6 +83,7 @@ NUM_BOXES = 7 #numbered 0 to 6
 positions = []
 image_subsurfaces = [] # 'global' list to hold the image subsurfaces to "patch" screen
 foos = [] #######################################################################################################
+sizes = []
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255)] # (255,255,255)] # blue too dark
 color = cycle(colors)
 MAX_HEIGHT = 375
@@ -193,11 +194,13 @@ def display_photo(photo):
     del image_subsurfaces[:]
     del positions[:]
     del foos[:]
+    del sizes[:]
 
     for i in range(NUM_BOXES):
         image_subsurfaces.append(pygame.Surface((0,0)))
         positions.append((1920,1080))
         foos.append(pygame.Surface((0,0)))
+        sizes.append((0,0))
 
 def get_artist_images(name):
 
@@ -359,15 +362,16 @@ def on_message(client, userdata, msg):
         # create a copy of the current screen that we will be blitting later
         new_screen = pygame.Surface.copy(screen) 
         k = z.get('pos',0)
-        prev_pos = positions[k]
-        subsurface = image_subsurfaces[k]
-        # this blit is "patching" the changes created by the text box that is being updated
-        new_screen.blit(subsurface, prev_pos)
-        # Current code below assumes there was a collision the last time the position was painted
+
+        # Current code below assumes there was a collision the last time the position was painted, might be possible to check
         # Problems: we could be painting in wrong order and should check if no collision no need to reblit the foos
         for i in range(len(foos)):
-            if i!=k:
-                new_screen.blit(foos[i], positions[i])
+            # restore the background image where all the text boxes are, not just the one that is moving and repaint all the old ones below
+            new_screen.blit(image_subsurfaces[i], positions[i])
+            if i==k:
+                continue
+            # repaint all the text boxes so that erasing the position of the current box doesn't create a hole
+            new_screen.blit(foos[i], positions[i], ((0,0), image_subsurfaces[i].get_rect().size)) 
         
         #foo is the surface that we 'paint' the text and rectangles on
         foo = pygame.Surface((800,800))
@@ -450,9 +454,11 @@ def on_message(client, userdata, msg):
         new_screen.blit(foo, new_pos, ((0,0), new_size)) 
 
         # Below is saving the text box to reblit the screen to deal with collisions
-        cropped_foo = pygame.Surface(new_size)
-        cropped_foo.blit(foo, (0,0))
-        foos[k] = cropped_foo
+        #cropped_foo = pygame.Surface(new_size)
+        #cropped_foo.blit(foo, (0,0)) # unfortunately lose alpha
+        #foos[k] = cropped_foo
+        foos[k] = foo ##############################
+        sizes[k] = new_size ###################################
 
         blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
         blast_x = random.randint(0,screen_width)
@@ -464,6 +470,9 @@ def on_message(client, userdata, msg):
         pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), blast_point) 
 
         pygame.draw.rect(screen, col, (new_pos, new_size), 3)
+
+        prev_pos = positions[k]
+        subsurface = image_subsurfaces[k]
 
         if subsurface.get_height() > 1:
             screen.blit(subsurface, prev_pos)
