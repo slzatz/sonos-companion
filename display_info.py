@@ -360,17 +360,19 @@ def on_message(client, userdata, msg):
         col = next(color)
 
         # create a copy of the current screen that we will be blitting later
-        new_screen = pygame.Surface.copy(screen) 
+        #new_screen = pygame.Surface.copy(screen) ############################################### 
+        new_screen = pygame.Surface.copy(screen_image) 
         k = z.get('pos',0)
 
         # Current code below assumes there was a collision the last time the position was painted, might be possible to check
         # Problems: we could be painting in wrong order and should check if no collision no need to reblit the foos
+
         for i in range(len(foos)):
             # restore the background image where all the text boxes are, not just the one that is moving and repaint all the old ones below
-            new_screen.blit(image_subsurfaces[i], positions[i])
+            #new_screen.blit(image_subsurfaces[i], positions[i])###########################################################
             if i==k:
                 continue
-            # repaint all the text boxes so that erasing the position of the current box doesn't create a hole
+            # repainting all the text boxes except the one about to be painted seems the best way to deal with erasing a box
             new_screen.blit(foos[i], positions[i], ((0,0), image_subsurfaces[i].get_rect().size)) 
         
         #foo is the surface that we 'paint' the text and rectangles on
