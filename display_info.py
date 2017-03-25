@@ -90,7 +90,10 @@ MAX_HEIGHT = 375
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 200
 
+star = pygame.image.load('star.png').convert()
+
 bullet_surface = pygame.Surface((5,5))
+pygame.draw.rect(bullet_surface, (200,200,200), ((0,0), (5,5))) #col
 
 trackinfo = {"artist":None, "track_title":None}
 
@@ -381,18 +384,15 @@ def on_message(client, userdata, msg):
             n+=4
             if n+20 > MAX_HEIGHT:
                 break
-            pygame.draw.rect(bullet_surface, col, ((0,0), (5,5)))
-            foo.blit(bullet_surface, (4,n+13))
 
             if item[0] == '#':
+                foo.blit(star, (2,n+7))
                 item=item[1:]
-                font.set_bold(True)
-                max_chars_line = 65
             else:
-                font.set_bold(False)
-                max_chars_line = 75
-
-            lines = textwrap.wrap(item, max_chars_line)
+                #pygame.draw.rect(bullet_surface, (200,200,200), ((0,0), (5,5))) #col
+                foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
+            
+            lines = textwrap.wrap(item, 68)
             for line in lines:
 
                 if n+20 > MAX_HEIGHT:
@@ -403,7 +403,7 @@ def on_message(client, userdata, msg):
                 except UnicodeError as e:
                     print "UnicodeError in text lines: ", e
                 else:
-                    foo.blit(text, (14,n+5))
+                    foo.blit(text, (17,n+5)) 
                     line_widths.append(text.get_rect().width)
                     n+=20
 
