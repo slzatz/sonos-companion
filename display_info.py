@@ -381,18 +381,25 @@ def on_message(client, userdata, msg):
         line_widths = []
         n = 20
         for item in z.get('text',''): 
+            font.set_bold(False)
+            max_chars_line = 66        
+
             n+=4
+
             if n+20 > MAX_HEIGHT:
                 break
 
-            if item[0] == '#':
+            if item[0] == '*': 
                 foo.blit(star, (2,n+7))
                 item=item[1:]
             else:
-                #pygame.draw.rect(bullet_surface, (200,200,200), ((0,0), (5,5))) #col
                 foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
-            
-            lines = textwrap.wrap(item, 68)
+                if item[0] == '#':
+                    item=item[1:]
+                    font.set_bold(True)
+                    max_chars_line = 60
+
+            lines = textwrap.wrap(item, max_chars_line)
             for line in lines:
 
                 if n+20 > MAX_HEIGHT:
