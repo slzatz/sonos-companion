@@ -54,7 +54,7 @@ def outlook():
             continue
         line = (item.start-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+" "+subject
         if "12:00-12:00" in line:
-            line = "All Day Event -"+line[10:]
+            line = "All Day Event -"+line[11:]
 
         if now.hour == item.start.hour - 4:
             line = "->"+line
