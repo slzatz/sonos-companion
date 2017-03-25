@@ -156,7 +156,7 @@ def stock_quote():
         return
     results = ["{} {}".format(x['item'],x['value']) for x in info]
     print(datetime.datetime.now())
-    print(results.encode('ascii', 'ignore'))
+    print(repr(results).encode('ascii', 'ignore'))
     data = {"header":"WBMD", "text":results, "pos":2} #expects a list
     publish(payload=json.dumps(data))
 
