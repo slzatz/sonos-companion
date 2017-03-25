@@ -49,7 +49,12 @@ def outlook():
 
     text = []
     for item in items:
-        line = (item.start-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+" "+item.subject
+        subject = item.subject
+        if "time off" in subject.lower():
+            continue
+        line = (item.start-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+" "+subject
+        if "12:00-12:00" in line:
+        line = "All Day Event -"+line[10:]
         # could check time and use some marker to indicate since hard to bold
         # unless there was some signal to display_info.py that a line should be bolded
         if now.hour == item.start.hour - 4:
