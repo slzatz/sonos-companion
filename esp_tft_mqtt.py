@@ -172,9 +172,9 @@ def stock_quote():
 def todos():
     #pos = 3
     #tasks = session.query(Task).join(Context).filter(and_(Context.title == 'work', Task.priority == 3, Task.completed == None)).order_by(desc(Task.modified))
-    tasks = session.query(Task).join(Context).filter(Context.title=='work', Task.priority==3, Task.completed==None, Task.deleted==False)
+    tasks = session.query(Task).join(Context).filter(Context.title=='work', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(desc(Task.star))
     titles = ['#'+task.title if task.star else task.title for task in tasks]
-    shuffle(titles)
+    #shuffle(titles)
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
