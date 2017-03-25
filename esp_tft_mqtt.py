@@ -147,7 +147,7 @@ def stock_quote():
 
     uri = "https://api.intrinio.com/data_point"
     payload = {'ticker':'WBMD', 'item':'last_price,volume'}
-    r = requests.get(uri, params=payload, auth=(intrinio_username, intrinio_password)
+    r = requests.get(uri, params=payload, auth=(intrinio_username, intrinio_password))
     z = r.json()
     try:
         info = z['data']
