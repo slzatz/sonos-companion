@@ -378,9 +378,9 @@ def on_message(client, userdata, msg):
         line_widths = []
         n = 20
         for item in z.get('text',''): 
+            n+=4
             if n+20 > MAX_HEIGHT:
                 break
-
             pygame.draw.rect(bullet_surface, col, ((0,0), (5,5)))
             foo.blit(bullet_surface, (4,n+13))
 
