@@ -146,7 +146,7 @@ def stock_quote():
     #pos = 2
 
     uri = "https://api.intrinio.com/data_point"
-    payload = {'ticker':'WBMD', 'item':'last_price,volume'}
+    payload = {'ticker':'WBMD', 'item':'last_price,volume,last_timestamp'}
     r = requests.get(uri, params=payload, auth=(intrinio_username, intrinio_password))
     z = r.json()
     try:
@@ -154,7 +154,15 @@ def stock_quote():
     except Exception as e:
         print("Exception in attempt to retrieve stock info:", e)
         return
+
+    try:
+        info[1]['value'] = format(int(float(info[1]['value'])), ',d')
+        info[2]['value'] = info[2]['value'].split('T')[1].split('+')[0]
+    except Exception as e:
+        print("Exception trying to format stock info", e)
+
     results = ["{} {}".format(x['item'],x['value']) for x in info]
+    # doesn't seem worth it for volume but here it is: format(int(float('4893848.4')), ',d')
     print(datetime.datetime.now())
     print(repr(results).encode('ascii', 'ignore'))
     data = {"header":"WBMD", "text":results, "pos":2} #expects a list
