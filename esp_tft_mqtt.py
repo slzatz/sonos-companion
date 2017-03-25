@@ -28,7 +28,7 @@ import json
 import schedule
 from time import time,sleep
 import twitter
-from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET
+from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET, intrinio_username, intrinio_password
 from lmdb_p import * ######################################################################
 import html
 from functools import partial
@@ -144,20 +144,20 @@ def tides():
 
 def stock_quote():
     #pos = 2
-    uri = "https://query.yahooapis.com/v1/public/yql" 
-    payload = {'q':'select * from yahoo.finance.quotes where symbol in ("WBMD")', "format":"json", "env":"store://datatables.org/alltableswithkeys"}
-    r = requests.get(uri, params=payload)
+
+    uri = "https://api.intrinio.com/data_point"
+    payload = {'ticker':'WBMD', 'item':'last_price,volume'}
+    r = requests.get(uri, params=payload, auth=(intrinio_username, intrinio_password)
     z = r.json()
-    #print(z)
     try:
-        quote = z['query']['results']['quote']
+        info = z['data']
     except Exception as e:
-        print("Exception in WebMD stock quote:", e)
+        print("Exception in attempt to retrieve stock info:", e)
         return
-    results = "{} {} EBITDA:{} Market Cap: {}".format(quote['LastTradePriceOnly'], quote['ChangeinPercent'], quote['EBITDA'], quote['MarketCapitalization']) 
+    results = ["{} {}".format(x['item'],x['value']) for x in info]
     print(datetime.datetime.now())
     print(results.encode('ascii', 'ignore'))
-    data = {"header":"WBMD", "text":[results], "pos":2} #expects a list
+    data = {"header":"WBMD", "text":results, "pos":2} #expects a list
     publish(payload=json.dumps(data))
 
 
