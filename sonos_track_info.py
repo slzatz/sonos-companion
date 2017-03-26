@@ -22,13 +22,12 @@ import sys
 import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
-from config import local_mqtt_uri, location, mqtt_uris
+from config import local_mqtt_uri, location, mqtt_uris, aws_mqtt_uri
 import soco
 from soco import config as soco_config
 import paho.mqtt.publish as mqtt_publish
 import requests
 import lxml.html
-
 
 print("The current location is {}".format(location))
 
@@ -38,7 +37,8 @@ print("topic =",topic)
 topic2 = 'sonos/{}/volume'.format(location)
 print("topic2 =",topic2)
 
-aws_host = mqtt_uris['other']
+#aws_host = mqtt_uris['other']
+#aws_host = aws_mqtt_uri
 
 #topic3 = 'sonos/{}/lyrics'.format(location)
 #print("topic3 =",topic3)
@@ -188,8 +188,8 @@ while 1:
         data2 = {'header':'Track Info', 'text':[data['artist'], cur_title], 'pos':2}
         try:
             #mqtt_publish.single(topic, json.dumps(data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-            mqtt_publish.single(topic, json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
-            mqtt_publish.single('esp_tft', json.dumps(data2), hostname=aws_host, retain=False, port=1883, keepalive=60)
+            mqtt_publish.single(topic, json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+            mqtt_publish.single('esp_tft', json.dumps(data2), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         except Exception as e:
             print "Exception trying to publish to mqtt broker: ", e
         else:
