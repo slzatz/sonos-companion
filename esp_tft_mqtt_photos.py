@@ -23,7 +23,7 @@ import paho.mqtt.publish as mqtt_publish
 import paho.mqtt.client as mqtt
 import json
 from time import time,sleep
-from config import aws_mqtt_uri
+from config import aws_mqtt_uri, google_api_key
 from functools import partial
 from artist_images_db import *
 from apiclient import discovery #google custom search api
