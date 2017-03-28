@@ -11,6 +11,7 @@ esp_tft_mqtt.py message: {"header": "Weather", "text": ["Thursday Night: Some cl
 Low 18F. Winds WNW at 10 to 20 mph.", "Friday: Mostly sunny skies. High around 30F. Winds W at 10 to 15 mph."], "pos": 0}
 esp_tft_mqtt.py message: {"header": "Top WSJ Article", "text": ["Trump Lashes Out as Senator, Others Recount Court Nominee\u2019s Criticism"], "pos": 1}
 esp_tft_mqtt.py message: {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
+esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
 '''
 import platform
 import os
@@ -211,7 +212,7 @@ def display_artist_image(x):
         try:
             img = wand.image.Image(file=StringIO(response.content))
         except Exception as e:
-            print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", x.link, "Exception:", e
+            print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", x, "Exception:", e
             # in some future better world may indicate that the image was bad
 
             return
@@ -468,7 +469,7 @@ print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ig
 display_background_image(photo)
 
 num_photos_shown = 1
-t1 = t0 = time()
+t1 = time()
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
