@@ -126,8 +126,11 @@ while 1:
 
         data = {'session':{}, 'request':{'type':'IntentRequest', 'intent':{'slots':slot_dict, 'name':intent}}}
         #print("data= {}".format(data).encode('cp1252', errors='ignore'))
-        r = requests.post(url, json=data)
-        #print(r.text)
-        print("-->", r.json()['response']['outputSpeech']['text'])
+        try:
+            r = requests.post(url, json=data, timeout=1.0)
+        except requests.exceptions.ReadTimeout as e: 
+            print("request timed out to flask_ask: ",e)
+        else:
+            print("-->", r.json()['response']['outputSpeech']['text'])
     except KeyboardInterrupt:
         sys.exit()
