@@ -148,8 +148,8 @@ def stock_quote():
     uri = "https://api.intrinio.com/data_point"
     payload = {'ticker':'WBMD', 'item':'last_price,volume,last_timestamp'}
     r = requests.get(uri, params=payload, auth=(intrinio_username, intrinio_password))
-    z = r.json()
     try:
+        z = r.json()
         info = z['data']
     except Exception as e:
         print("Exception in attempt to retrieve stock info:", e)
