@@ -33,7 +33,7 @@ with open('location') as f:
     location = f.read().strip()
 sonos_topic = "sonos/{}/current_track".format(location)
 info_topic = "esp_tft"
-sonos_status = []
+sonos_status = ['STOPPED']
 
 pub_topic = 'images'
 publish = partial(mqtt_publish.single, pub_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
