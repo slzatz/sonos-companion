@@ -16,7 +16,7 @@ current_track = master.get_current_track_info() --> {
 '''
 
 import os
-from time import sleep
+from time import sleep, time
 import json
 import sys
 import datetime
@@ -144,6 +144,7 @@ def get_lyrics(artist,title):
 
     return lyrics
 
+t0 = time()
 while 1:
     
     # get the current state to see if Sonos is actually playing
@@ -197,5 +198,10 @@ while 1:
 
         prev_title = cur_title
 
+    if time() > t0+60:
+        data3 = {'header':'Sonos Status', 'text':[state], 'pos':2}
+        mqtt_publish.single('esp_tft', json.dumps(data3), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+        t0 = time()
+        
     sleep(0.5)
 
