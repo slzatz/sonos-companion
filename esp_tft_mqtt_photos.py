@@ -121,6 +121,8 @@ client.connect(aws_mqtt_uri, 1883, 60)
 t1 = t0 = time()
 while 1:
 
+    cur_time = time()
+
     if cur_time  < t1+15:
         continue
 
@@ -135,9 +137,7 @@ while 1:
         t1 = time()
         print t1
         sleep(1)
-        return
-
-    cur_time = time()
+        continue
 
     #if cur_time - t0 > 300:
     #    try:
@@ -193,7 +193,7 @@ while 1:
 
         uri = cycle(uris)
 
-        t1 = 0
+        #t1 = 0
 
     #if cur_time  < t1+15:
     #    continue
