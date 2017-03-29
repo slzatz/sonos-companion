@@ -292,28 +292,19 @@ def on_message(client, userdata, msg):
 
     if topic in (info_topic, image_topic):
 
-    #if topic==info_topic:
-
-        # if there is an active track don't post weather/news/twitter/stock price message boxes
-        #if trackinfo['artist']: ##########################################################################################################################
-        #    return   ##########################################################################################################################
-
         col = next(color)
 
         new_screen = pygame.Surface.copy(screen_image) 
         k = z.get('pos',0)
-
+        move_box = True if k >= 0 else False
+        k = abs(k)
         # Current code below assumes there was a collision the last time the position was painted, might be possible to check
-        # Problems: we could be painting in wrong order and should check if no collision no need to reblit the foos
-
+        # Need to repaint in the right order
         for i in sorted(range(len(timing)), key=lambda t:timing[t]):
-        #for i in range(len(foos)):
-            # restore the background image where all the text boxes are, not just the one that is moving and repaint all the old ones below
+            # paint a copy of the current screen except for the box that is moving/being updated
             if i==k:
                 continue
 
-            # this needs to be ordered by time timing = [timestamp[0], timestamp[1], timestamp[2] ...]
-            # [x for (y,x) in sorted(zip(Y,X))] [x for (y,x) in sorted(zip(timing, range(len(timing))))] sorted(range(len(s)), key=lambda k: s[k])
             new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
 
         if topic==info_topic:
@@ -329,7 +320,8 @@ def on_message(client, userdata, msg):
 
             line_widths = []
             n = 20
-            for item in z.get('text',''): 
+            for item in z.get('text',[' ']): 
+                item = item if item !='' else ' '
                 font.set_bold(False)
                 max_chars_line = 66        
 
@@ -392,37 +384,44 @@ def on_message(client, userdata, msg):
             pygame.draw.rect(foo, col, ((0,0), new_size), 3)
             # for image could just say that new_pos = old_pos (if time is less than some value or something)
 
-        attempts = 0
-        while attempts < 20:
-            new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
-            rect = pygame.Rect((new_pos, new_size))    
-            idx = rect.collidelist(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
-            if idx == -1:
-                print "No collision"
-                break
-            else:
-                print "collision"
-                print "idx = ", idx
+        if move_box:
+            attempts = 0
+            while attempts < 20:
+                new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
+                rect = pygame.Rect((new_pos, new_size))    
+                idx = rect.collidelist(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
+                if idx == -1:
+                    print "No collision"
+                    break
+                else:
+                    print "collision"
+                    print "idx = ", idx
 
-            attempts+=1
+                attempts+=1
+
+            else:
+                print "Couldn't find a clear area for box"
+            
+
+            #new_screen.blit(foo, new_pos, ((0,0), new_size)) 
+
+            blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
+            blast_x = random.randint(0,screen_width)
+            blast_point = (blast_x,blast_y)
+
+            pygame.draw.line(screen, col, new_pos, blast_point) 
+            pygame.draw.line(screen, col, (new_pos[0],new_pos[1]+new_size[1]), blast_point) 
+            pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]), blast_point) 
+            pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), blast_point) 
+            pygame.draw.rect(screen, col, (new_pos, new_size), 3)
+
+            pygame.display.flip()
+            sleep(1) #.5
 
         else:
-            print "Couldn't find a clear area for box"
-            
+            new_pos = positions[k]
+
         new_screen.blit(foo, new_pos, ((0,0), new_size)) 
-
-        blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
-        blast_x = random.randint(0,screen_width)
-        blast_point = (blast_x,blast_y)
-
-        pygame.draw.line(screen, col, new_pos, blast_point) 
-        pygame.draw.line(screen, col, (new_pos[0],new_pos[1]+new_size[1]), blast_point) 
-        pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]), blast_point) 
-        pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), blast_point) 
-        pygame.draw.rect(screen, col, (new_pos, new_size), 3)
-
-        pygame.display.flip()
-        sleep(1) #.5
         screen.blit(new_screen, (0,0)) 
         pygame.display.flip() 
 
