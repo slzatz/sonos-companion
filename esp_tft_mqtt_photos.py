@@ -32,6 +32,8 @@ import httplib2 #needed by the google custom search engine module apiclient
 with open('location') as f:
     location = f.read().strip()
 sonos_topic = "sonos/{}/current_track".format(location)
+info_topic = "esp_tft"
+sonos_status = []
 
 pub_topic = 'images'
 publish = partial(mqtt_publish.single, pub_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
@@ -81,7 +83,7 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
-    client.subscribe([(sonos_topic, 0)])
+    client.subscribe([(sonos_topic, 0), (info_topic,0)]) 
 
 def on_message(client, userdata, msg):
 
@@ -95,14 +97,20 @@ def on_message(client, userdata, msg):
         print "error reading the mqtt message body: ", e
         return
 
-    print "z = json.loads(body) =",z
-    artist = z.get("artist")
-    track_title = z.get("title", "")
-    lyrics = z.get("lyrics", "")
+    if topic == sonos_topic:
 
-    print "on_message:artist =",artist
-    print "on_message:track_title =",track_title
-    trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
+        print "z = json.loads(body) =",z
+        artist = z.get("artist")
+        track_title = z.get("title", "")
+        lyrics = z.get("lyrics", "")
+
+        print "on_message:artist =",artist
+        print "on_message:track_title =",track_title
+        trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
+    else:
+        if z.get('header') == 'Sonos Status':
+            pass
+            sonos_status[0] = z.get('text')[0]
 
 client = mqtt.Client()
 client.on_connect = on_connect
@@ -113,22 +121,36 @@ client.connect(aws_mqtt_uri, 1883, 60)
 t1 = t0 = time()
 while 1:
 
+    if cur_time  < t1+15:
+        continue
+
     client.loop()
+
+    if sonos_status[0] != 'PLAYING':
+
+        z = session.query(Image).order_by(func.random()).first()
+        data = {"header":z.artist.name, "uri":z.link, "pos":7} 
+        print data
+        publish(payload=json.dumps(data))
+        t1 = time()
+        print t1
+        sleep(1)
+        return
 
     cur_time = time()
 
-    if cur_time - t0 > 300:
-        try:
-            alive = session.query(session.query(Artist).exists()).all()
-        except Exception as e:
-             print "Exception checking if db alive: ", e
-        else:
-            if alive[0][0]:
-                print cur_time, "The connection to Artsit db is alive"
-            else:
-                print cur_time, "There is a problem with the Artist db connection"
+    #if cur_time - t0 > 300:
+    #    try:
+    #        alive = session.query(session.query(Artist).exists()).all()
+    #    except Exception as e:
+    #         print "Exception checking if db alive: ", e
+    #    else:
+    #        if alive[0][0]:
+    #            print cur_time, "The connection to Artsit db is alive"
+    #        else:
+    #            print cur_time, "There is a problem with the Artist db connection"
 
-        t0 = time()
+    #    t0 = time()
 
     artist = trackinfo['artist']
     track = trackinfo['track_title']
@@ -139,6 +161,7 @@ while 1:
 
     artist_track = "{} - {}".format(artist,track)
 
+    # this should probably just look at artist and not artist_track which is needed by sonos_track_info.py
     if prev_artist_track != artist_track:
 
         prev_artist_track = artist_track
@@ -172,16 +195,11 @@ while 1:
 
         t1 = 0
 
-    if cur_time - t1 < 15:
-        continue
+    #if cur_time  < t1+15:
+    #    continue
 
     if not uris:
         continue
-
-    #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
-    data = {"header":artist, "uri":next(uri), "pos":7} #expects a list
-    print data
-    publish(payload=json.dumps(data))
 
     t1 = time()
     print t1
