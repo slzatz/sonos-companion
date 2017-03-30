@@ -38,7 +38,7 @@ sonos_status = ['STOPPED']
 pub_topic = 'images'
 publish = partial(mqtt_publish.single, pub_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 trackinfo = {"artist":None, "track_title":None}
-prev_artist_track = None
+prev_artist = None
 
 def get_artist_images(name):
 
@@ -109,7 +109,6 @@ def on_message(client, userdata, msg):
         trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
     else:
         if z.get('header') == 'Sonos Status':
-            pass
             sonos_status[0] = z.get('text')[0]
 
 client = mqtt.Client()
@@ -139,19 +138,6 @@ while 1:
         sleep(1)
         continue
 
-    #if cur_time - t0 > 300:
-    #    try:
-    #        alive = session.query(session.query(Artist).exists()).all()
-    #    except Exception as e:
-    #         print "Exception checking if db alive: ", e
-    #    else:
-    #        if alive[0][0]:
-    #            print cur_time, "The connection to Artsit db is alive"
-    #        else:
-    #            print cur_time, "There is a problem with the Artist db connection"
-
-    #    t0 = time()
-
     artist = trackinfo['artist']
     track = trackinfo['track_title']
 
@@ -159,12 +145,9 @@ while 1:
         sleep(1)
         continue
 
-    artist_track = "{} - {}".format(artist,track)
+    if prev_artist != artist:
 
-    # this should probably just look at artist and not artist_track which is needed by sonos_track_info.py
-    if prev_artist_track != artist_track:
-
-        prev_artist_track = artist_track
+        prev_artist = artist
 
         print "about to query image database for artist", artist
 
@@ -193,16 +176,11 @@ while 1:
 
         uri = cycle(uris)
 
-        #t1 = 0
-
-    #if cur_time  < t1+15:
-    #    continue
-
     if not uris:
         continue
 
     #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
-    data = {"header":artist, "uri":next(uri), "pos":7} #expects a list
+    data = {"header":"{} - {} (7)".format(artist,track), "uri":next(uri), "pos":7} #expects a list
     print data
     publish(payload=json.dumps(data))
 
