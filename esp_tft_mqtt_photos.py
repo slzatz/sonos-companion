@@ -201,6 +201,11 @@ while 1:
     if not uris:
         continue
 
+    #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
+    data = {"header":artist, "uri":next(uri), "pos":7} #expects a list
+    print data
+    publish(payload=json.dumps(data))
+
     t1 = time()
     print t1
 
