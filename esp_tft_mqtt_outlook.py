@@ -43,7 +43,7 @@ def outlook():
 
     try:
         len(items)
-    except exchangelib.errors.ErrorInternalServerTransientError as e:
+    except errors.ErrorInternalServerTransientError as e:
         print "exchangelib error: ", e
         return
 
