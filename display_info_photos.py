@@ -381,6 +381,11 @@ def on_message(client, userdata, msg):
             if not foo:
                 return
             new_size = (400,400)
+            font = pygame.font.SysFont('Sans', 18)
+            font.set_bold(True)
+            text = font.render(z.get('header', 'no artist'), True, col)
+            foo.blit(text, (5,5)) 
+            font.set_bold(False)
             pygame.draw.rect(foo, col, ((0,0), new_size), 3)
             # for image could just say that new_pos = old_pos (if time is less than some value or something)
 
