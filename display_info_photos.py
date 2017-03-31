@@ -77,7 +77,7 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 8 #numbered 0 to 6 7 = artist image
+NUM_BOXES = 9 #numbered 0 to 6 7 = artist image, 8 = lyrics
 positions = []
 foos = [] 
 sizes = []
