@@ -37,6 +37,7 @@ sonos_status = ['STOPPED']
 
 pub_topic = 'images'
 publish = partial(mqtt_publish.single, pub_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+publish_lyrics = partial(mqtt_publish.single, info_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 trackinfo = {"artist":None, "track_title":None}
 prev_artist = None
 
@@ -120,30 +121,13 @@ client.connect(aws_mqtt_uri, 1883, 60)
 t1 = t0 = time()
 while 1:
 
-    cur_time = time()
-
     client.loop()
 
-    if cur_time  < t1+15:
-        continue
-
-    if sonos_status[0] != 'PLAYING':
-
-        z = session.query(Image).order_by(func.random()).first()
-        data = {"header":z.artist.name, "uri":z.link, "pos":7} 
-        print data
-        publish(payload=json.dumps(data))
-        t1 = time()
-        print t1
-        sleep(1)
-        continue
+    #if sonos_status[0] == 'PLAYING': # don't think need to have this check here
 
     artist = trackinfo['artist']
     track = trackinfo['track_title']
-
-    if not artist:
-        sleep(1)
-        continue
+    lyrics = trackinfo['lyrics']
 
     if prev_artist != artist:
 
@@ -169,12 +153,40 @@ while 1:
         if len(images) < 8:
             print "fewer than 8 images so getting new set of images for artist"
             images = get_artist_images(artist)
-            uris = [image.link for image in images if image.ok]
             if not images:
                 print "Could not find images for {}".format(artist)
+                uris = []
                 continue
+            else:
+                uris = [image.link for image in images if image.ok]
 
         uri = cycle(uris)
+        #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
+        data = {"header":"{} - {} (7)".format(artist,track), "uri":next(uri), "pos":7} #expects a list
+        print data
+        publish(payload=json.dumps(data))
+        data = {"header":track, "text":lyrics, "pos":8} #expects a list
+        print data
+        publish_lyrics(payload=json.dumps(data))
+
+        t1 = time()
+        print t1
+        sleep(1)
+        continue
+
+    if time()  < t1+15:
+        continue
+
+    if sonos_status[0] != 'PLAYING':
+
+        z = session.query(Image).order_by(func.random()).first()
+        data = {"header":z.artist.name, "uri":z.link, "pos":7} 
+        print data
+        publish(payload=json.dumps(data))
+        t1 = time()
+        print t1
+        sleep(1)
+        continue
 
     if not uris:
         continue
