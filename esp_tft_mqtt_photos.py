@@ -38,7 +38,7 @@ sonos_status = ['STOPPED']
 pub_topic = 'images'
 publish = partial(mqtt_publish.single, pub_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 publish_lyrics = partial(mqtt_publish.single, info_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
-trackinfo = {"artist":None, "track_title":None}
+trackinfo = {"artist":None, "track_title":None, "lyrics":None}
 prev_artist = None
 
 def get_artist_images(name):
