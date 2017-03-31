@@ -122,10 +122,10 @@ while 1:
 
     cur_time = time()
 
+    client.loop()
+
     if cur_time  < t1+15:
         continue
-
-    client.loop()
 
     if sonos_status[0] != 'PLAYING':
 
