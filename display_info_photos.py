@@ -2,7 +2,7 @@
 Currently a python 2.7 program but needs to be re-written as python 3 since pygame now runs on 3
 This is the current script that runs on a raspberry pi or on Windows that displays
 rotating background images from unsplash, info boxes that can display weather, news, twitter, stock prices,, outlook schedule, sales force numbers etc.
-When sonos is playing, it displays lyrics and artists pictures 
+When sonos is playing, it displays lyrics and artists pictures - now in a 400 x 400 box and not broadcasting lyrics at the moment but will
 The news, stocks, twitter, etc information being broadcast by:
 esp_tft_mqtt.py, esp_tft_mqtt_sf.py and esp_tft_mqtt_outlook.py, esp_tft_mqtt_photos currently running on AWS.
 The odd "esp_tft..." name comes from the fact that these mqtt broadcasts were originally designed to go to an esp8266 and some still do.
@@ -24,12 +24,10 @@ import textwrap
 import sys
 from cStringIO import StringIO
 import wand.image
-from config import google_api_key, unsplash_api_key, aws_mqtt_uri 
+from config import unsplash_api_key, aws_mqtt_uri 
 import json
 import paho.mqtt.client as mqtt
 from artist_images_db import *
-from apiclient import discovery #google custom search api
-import httplib2 #needed by the google custom search engine module apiclient
 from datetime import datetime
 from itertools import cycle
 
@@ -40,10 +38,6 @@ parser.add_argument("-c", "--collection", help="unsplash collection id: celestia
 parser.add_argument("-w", "--window", action='store_true', help="use -w if you want a small window instead of full screen")
 args = parser.parse_args()
 
-with open('location') as f:
-    location = f.read().strip()
-
-sonos_topic = "sonos/{}/current_track".format(location)
 info_topic = "esp_tft" # should be changed to "info"
 image_topic = "images"
 unsplash_uri = 'https://api.unsplash.com/'
@@ -99,13 +93,11 @@ star = pygame.image.load('star.png').convert()
 bullet_surface = pygame.Surface((5,5))
 pygame.draw.rect(bullet_surface, (200,200,200), ((0,0), (5,5))) #col
 
-trackinfo = {"artist":None, "track_title":None}
-
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
-    client.subscribe([(sonos_topic, 0), (info_topic, 0), (image_topic, 0)])
+    client.subscribe([(info_topic, 0), (image_topic, 0)])
 
 print "\n"
 
@@ -372,8 +364,8 @@ def on_message(client, userdata, msg):
             text = font.render(t, True, col)
             foo.blit(text, (new_size[0]-text.get_rect().width-5,5)) 
 
-        elif topic==image_topic: ###################################################################3
-            ######################################################################################################o
+        elif topic==image_topic: 
+
             uri = z.get('uri')
             if not uri:
                 return
@@ -435,19 +427,8 @@ def on_message(client, userdata, msg):
         sizes[k] = new_size 
         timing[k] = time()
 
-
         return
 
-    elif topic == sonos_topic:
-
-        print "The python object from mqtt is:",z
-        artist = z.get("artist")
-        track_title = z.get("title", "")
-        lyrics = z.get("lyrics", "")
-
-        print "on_message:artist =",artist
-        print "on_message:track_title =",track_title
-        trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
 
 client = mqtt.Client()
 client.on_connect = on_connect
@@ -484,7 +465,7 @@ while 1:
     elif event.type == pygame.QUIT:
         sys.exit(0)
 
-    client.loop()
+    client.loop(timeout = 1.0)
 
     if time() - t1 > 3600: # picture flips each hour
         photo = random.choice(photos)
