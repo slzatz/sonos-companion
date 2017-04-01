@@ -94,10 +94,13 @@ bullet_surface = pygame.Surface((5,5))
 pygame.draw.rect(bullet_surface, (200,200,200), ((0,0), (5,5))) #col
 
 def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
+    print "(Re)Connected with result code "+str(rc) 
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
     client.subscribe([(info_topic, 0), (image_topic, 0)])
+
+def on_disconnect():
+    print "Disconnected from mqtt broker"
 
 print "\n"
 
@@ -106,17 +109,17 @@ print "program running ..."
 def get_unsplash_images():
 
     if args.search:
-        r = requests.get('{}search/photos'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search})
+        r = requests.get('{}search/photos'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search}, timeout=1.0)
         z = r.json()['results']
     elif args.name:
-        r = requests.get('{}users/{}/photos'.format(unsplash_uri, args.name), params={'client_id':unsplash_api_key, 'per_page':40})
+        r = requests.get('{}users/{}/photos'.format(unsplash_uri, args.name), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=1.0)
         z = r.json()
     elif args.collection:
-        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, args.collection), params={'client_id':unsplash_api_key, 'per_page':40})
+        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, args.collection), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=1.0)
         z = r.json()
     else:
         #r = requests.get('{}photos/curated'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40})
-        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, '543026'), params={'client_id':unsplash_api_key, 'per_page':40})
+        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, '543026'), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=1.0)
         z = r.json()
 
     return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
@@ -124,7 +127,7 @@ def get_unsplash_images():
 def display_background_image(photo):
 
     try:
-        response = requests.get(photo['url'])
+        response = requests.get(photo['url'], timeout=1.0)
     except Exception as e:
         print "response = requests.get(url) generated exception:", e
         return
@@ -194,7 +197,7 @@ def display_artist_image(x):
 
     print x
     try:
-        response = requests.get(x)
+        response = requests.get(x, timeout=1.0)
     except Exception as e:
         print "response = requests.get(url) generated exception: ", e
         # in some future better world may indicate that the image was bad
@@ -472,6 +475,9 @@ while 1:
         print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
         display_background_image(photo)
         num_photos_shown+=1
+        # shouldn't have to do this but I seem to be losing connection to mqtt broker
+        client.disconnect()
+        client.reconnect()
 
         t1 = time()
 
