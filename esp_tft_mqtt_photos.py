@@ -31,6 +31,7 @@ import httplib2 #needed by the google custom search engine module apiclient
 
 with open('location') as f:
     location = f.read().strip()
+
 sonos_track_topic = "sonos/{}/track".format(location)
 sonos_status_topic = "sonos/{}/status".format(location)
 info_topic = "esp_tft"
@@ -86,7 +87,7 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
     #client.subscribe([(sonos_topic, 0), (info_topic,0)]) 
-    client.subscribe([(sonos_track_topic, 0)], [(sonos_track_topic, 0)]) 
+    client.subscribe([(sonos_track_topic, 0)], [(sonos_status_topic, 0)]) 
 
 def on_message(client, userdata, msg):
 
@@ -194,6 +195,7 @@ while 1:
     if not uris:
         continue
 
+    # only gets here if status is PLAYING
     #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
     data = {"header":"{} - {} (7)".format(artist,track), "uri":next(uri), "pos":7} #expects a list
     print data
