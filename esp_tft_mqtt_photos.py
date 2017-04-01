@@ -124,6 +124,7 @@ client.connect(aws_mqtt_uri, 1883, 60)
 #not calling client.loop_forever() but explicitly calling client.loop() below
 
 t1 = t0 = time()
+uris = []
 while 1:
 
     client.loop()
