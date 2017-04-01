@@ -77,7 +77,7 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 9 #numbered 0 to 6 7 = artist image, 8 = lyrics
+NUM_BOXES = 11 #numbered 0 to 6 7=artist image, 8=lyrics 9=track_info
 positions = []
 foos = [] 
 sizes = []
@@ -309,7 +309,8 @@ def on_message(client, userdata, msg):
             foo.set_alpha(175) #125
             font = pygame.font.SysFont('Sans', 18)
             font.set_bold(True)
-            text = font.render(z.get('header', 'no source'), True, col)
+            header = "{} [{}]".format(z.get('header', 'no source'), k)
+            text = font.render(header, True, col)
             foo.blit(text, (5,5)) 
             font.set_bold(False)
 
@@ -378,7 +379,8 @@ def on_message(client, userdata, msg):
             new_size = (400,400)
             font = pygame.font.SysFont('Sans', 18)
             font.set_bold(True)
-            text = font.render(z.get('header', 'no artist'), True, col)
+            header = "{} [{}]".format(z.get('header', 'no artist'), k)
+            text = font.render(header, True, col)
             foo.blit(text, (5,5)) 
             font.set_bold(False)
             pygame.draw.rect(foo, col, ((0,0), new_size), 3)

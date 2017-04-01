@@ -19,11 +19,8 @@ from time import sleep
 from config import aws_mqtt_uri as aws_host, exch_name, exch_pw, email
 from pytz import timezone
 from datetime import datetime, timedelta
-#import sys
-#import os
-#home = os.path.split(os.getcwd())[0]
-#sys.path = sys.path + [os.path.join(home,'exchangelib')] 
 from exchangelib import Account, EWSDateTime, credentials, errors
+from calendar import monthrange
 
 cred = credentials.Credentials(username=exch_name, password=exch_pw)
 account = Account(primary_smtp_address=email, credentials = cred, autodiscover=True, access_type=credentials.DELEGATE)
@@ -32,14 +29,24 @@ eastern = timezone('US/Eastern')
 
 def outlook():
     now = datetime.now()
-    if now.weekday() > 4:
-        next_ = 7 - now.weekday()
+    if now.weekday() == 4 and now.hour > 17:
+        inc_days = 3
+    elif now.weekday() > 4:
+        inc_days = 7 - now.weekday()
     elif now.hour > 17:
-        next_ = 1
+        inc_days = 1
     else:
-        next_ = 0
+        inc_days = 0
+  
+    dt = now + timedelta(inc_days)
+    print "dt =",dt
+    # below a problem at the end of the month
+    #items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_)), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_+1)))
+    #below works
+    #items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_)), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_, now.hour+10)))
 
-    items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_)), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_+1)))
+    #items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_), 1), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_, 23)))
+    items = calendar.view(start=eastern.localize(EWSDateTime(dt.year, dt.month, dt.day, 1)), end=eastern.localize(EWSDateTime(dt.year, dt.month, dt.day, 23)))
 
     try:
         len(items)
@@ -61,8 +68,9 @@ def outlook():
         text.append(line)
         print line
 
-    date = now+timedelta(days=next_)
-    data = {"header":"Schedule "+date.strftime("%a %b %d"), "text":text, "pos":6} #expects a list
+    if not text:
+        text = ["Nothing Scheduled"]
+    data = {"header":"Schedule "+dt.strftime("%a %b %d"), "text":text, "pos":6} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 schedule.every().hour.at(':04').do(outlook)

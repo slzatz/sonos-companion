@@ -186,9 +186,11 @@ while 1:
         if lyrics:
             data['lyrics'] = lyrics
         # publish to MQTT - could require less code by using micropython mqtt client
-        data2 = {'header':'Track Info', 'text':[data['artist'], cur_title], 'pos':2}
+        data2 = {'header':'Track Info - '+location, 'text':[data['artist'], cur_title], 'pos':9}
         try:
             #mqtt_publish.single(topic, json.dumps(data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+            # The line below is currently being picked up by esp_tft_mqtt_photos and don't really want it to be picked up by 
+            # display_info_photos because it would just be published directly
             mqtt_publish.single(topic, json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
             mqtt_publish.single('esp_tft', json.dumps(data2), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         except Exception as e:
@@ -199,7 +201,7 @@ while 1:
         prev_title = cur_title
 
     if time() > t0+60:
-        data3 = {'header':'Sonos Status', 'text':[state], 'pos':2}
+        data3 = {'header':'Sonos Status - '+location, 'text':[state], 'pos':2}
         mqtt_publish.single('esp_tft', json.dumps(data3), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         t0 = time()
         

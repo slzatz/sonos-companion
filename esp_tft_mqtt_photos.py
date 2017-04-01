@@ -162,7 +162,7 @@ while 1:
 
         uri = cycle(uris)
         #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
-        data = {"header":"{} - {} (7)".format(artist,track), "uri":next(uri), "pos":7} #expects a list
+        data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7} #expects a list
         print data
         publish(payload=json.dumps(data))
         data = {"header":track, "text":lyrics, "pos":8} #expects a list
