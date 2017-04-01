@@ -31,12 +31,13 @@ import httplib2 #needed by the google custom search engine module apiclient
 
 with open('location') as f:
     location = f.read().strip()
-sonos_topic = "sonos/{}/current_track".format(location)
+sonos_track_topic = "sonos/{}/track".format(location)
+sonos_status_topic = "sonos/{}/status".format(location)
 info_topic = "esp_tft"
 sonos_status = ['STOPPED']
 
 pub_topic = 'images'
-publish = partial(mqtt_publish.single, pub_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+publish_images = partial(mqtt_publish.single, pub_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 publish_lyrics = partial(mqtt_publish.single, info_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 trackinfo = {"artist":None, "track_title":None, "lyrics":None}
 prev_artist = None
@@ -84,7 +85,8 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
-    client.subscribe([(sonos_topic, 0), (info_topic,0)]) 
+    #client.subscribe([(sonos_topic, 0), (info_topic,0)]) 
+    client.subscribe([(sonos_track_topic, 0)], [(sonos_track_topic, 0)]) 
 
 def on_message(client, userdata, msg):
 
@@ -98,19 +100,20 @@ def on_message(client, userdata, msg):
         print "error reading the mqtt message body: ", e
         return
 
-    if topic == sonos_topic:
+    print "z = json.loads(body) =",z
 
-        print "z = json.loads(body) =",z
-        artist = z.get("artist")
+    if topic == sonos_track_topic:
+
+        artist = z.get("artist", "")
         track_title = z.get("title", "")
         lyrics = z.get("lyrics", "")
 
-        print "on_message:artist =",artist
-        print "on_message:track_title =",track_title
+        print "artist =",artist
+        print "track_title =",track_title
         trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
-    else:
-        if z.get('header') == 'Sonos Status':
-            sonos_status[0] = z.get('text')[0]
+
+    elif topic == sonos_status_topic:
+        sonos_status[0] = z.get('status')
 
 client = mqtt.Client()
 client.on_connect = on_connect
@@ -164,7 +167,7 @@ while 1:
         #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
         data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7} #expects a list
         print data
-        publish(payload=json.dumps(data))
+        publish_images(payload=json.dumps(data))
         data = {"header":track, "text":lyrics, "pos":8} #expects a list
         print data
         publish_lyrics(payload=json.dumps(data))
@@ -182,7 +185,7 @@ while 1:
         z = session.query(Image).order_by(func.random()).first()
         data = {"header":z.artist.name, "uri":z.link, "pos":7} 
         print data
-        publish(payload=json.dumps(data))
+        publish_images(payload=json.dumps(data))
         t1 = time()
         print t1
         sleep(1)
@@ -194,7 +197,7 @@ while 1:
     #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
     data = {"header":"{} - {} (7)".format(artist,track), "uri":next(uri), "pos":7} #expects a list
     print data
-    publish(payload=json.dumps(data))
+    publish_images(payload=json.dumps(data))
 
     t1 = time()
     print t1

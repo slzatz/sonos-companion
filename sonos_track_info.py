@@ -31,8 +31,11 @@ import lxml.html
 
 print("The current location is {}".format(location))
 
-topic = 'sonos/{}/current_track'.format(location)
-print("topic =",topic)
+sonos_track_topic = 'sonos/{}/track'.format(location)
+print("sonos_track_topic =",sonos_track_topic)
+
+sonos_status_topic = 'sonos/{}/status'.format(location)
+print("sonos_status_topic =",sonos_status_topic)
 
 topic2 = 'sonos/{}/volume'.format(location)
 print("topic2 =",topic2)
@@ -191,7 +194,7 @@ while 1:
             #mqtt_publish.single(topic, json.dumps(data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
             # The line below is currently being picked up by esp_tft_mqtt_photos and don't really want it to be picked up by 
             # display_info_photos because it would just be published directly
-            mqtt_publish.single(topic, json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+            mqtt_publish.single(sonos_track_topic, json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
             mqtt_publish.single('esp_tft', json.dumps(data2), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         except Exception as e:
             print "Exception trying to publish to mqtt broker: ", e
@@ -203,6 +206,8 @@ while 1:
     if time() > t0+60:
         data3 = {'header':'Sonos Status - '+location, 'text':[state], 'pos':2}
         mqtt_publish.single('esp_tft', json.dumps(data3), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+        # at least one of the listeners for the below is esp_tft_mqtt_photos.py
+        mqtt_publish.single(sonos_status_topic, json.dumps({'state':'state'}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         t0 = time()
         
     sleep(0.5)
