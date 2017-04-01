@@ -84,9 +84,9 @@ sizes = []
 timing = []
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255)] # (255,255,255)] # blue too dark
 color = cycle(colors)
-MAX_HEIGHT = 375
+MAX_HEIGHT = 400
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
-MIN_WIDTH = 200
+MIN_WIDTH = 275
 
 star = pygame.image.load('star.png').convert()
 
