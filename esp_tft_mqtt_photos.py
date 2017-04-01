@@ -114,7 +114,7 @@ def on_message(client, userdata, msg):
         trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
 
     elif topic == sonos_status_topic:
-        sonos_status[0] = z.get('status')
+        sonos_status[0] = z.get('state')
         print "sonos_status[0] =",sonos_status[0]
 
 client = mqtt.Client()
