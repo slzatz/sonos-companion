@@ -87,7 +87,7 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
     #client.subscribe([(sonos_topic, 0), (info_topic,0)]) 
-    client.subscribe([(sonos_track_topic, 0)], [(sonos_status_topic, 0)]) 
+    client.subscribe([(sonos_track_topic, 0), (sonos_status_topic, 0)]) 
 
 def on_message(client, userdata, msg):
 
