@@ -379,7 +379,10 @@ def on_message(client, userdata, msg):
             new_size = (400,400)
             font = pygame.font.SysFont('Sans', 18)
             font.set_bold(True)
-            header = "{} [{}]".format(z.get('header', 'no artist'), k)
+            try:
+                header = "{} [{}]".format(z.get('header', 'no artist'), k)
+            except UnicodeEncodeError:
+                header = "{} [{}]".format("Unicode Error", k)
             text = font.render(header, True, col)
             foo.blit(text, (5,5)) 
             font.set_bold(False)

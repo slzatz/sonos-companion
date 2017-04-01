@@ -207,7 +207,7 @@ while 1:
         data3 = {'header':'Sonos Status - '+location, 'text':[state], 'pos':2}
         mqtt_publish.single('esp_tft', json.dumps(data3), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         # at least one of the listeners for the below is esp_tft_mqtt_photos.py
-        mqtt_publish.single(sonos_status_topic, json.dumps({'state':'state'}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+        mqtt_publish.single(sonos_status_topic, json.dumps({'state':state}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         t0 = time()
         
     sleep(0.5)
