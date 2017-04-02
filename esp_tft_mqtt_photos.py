@@ -291,6 +291,9 @@ while 1:
             data = {"pos":8, "erase":True}
             print data
             publish_lyrics(payload=json.dumps(data))
+
+            uris = []
+
             t1 = time()
             print t1
 
