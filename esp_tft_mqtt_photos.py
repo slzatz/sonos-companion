@@ -260,8 +260,7 @@ while 1:
         if not lyrics:
             continue
 
-        data = {"header":track, "text":lyrics, "pos":8} #expects a list
-        data['lyrics'] = lyrics
+        data = {"header":track, "text":lyrics, "pos":8, "bullets":False} #expects a list
         print data
         publish_lyrics(payload=json.dumps(data))
         t1 = time()
