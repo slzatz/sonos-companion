@@ -241,9 +241,9 @@ while 1:
         data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7} #expects a list
         print data
         publish_images(payload=json.dumps(data))
-        data = {"header":track, "text":lyrics, "pos":8} #expects a list
-        print data
-        publish_lyrics(payload=json.dumps(data))
+        #data = {"header":track, "text":lyrics, "pos":8} #expects a list
+        #print data
+        #publish_lyrics(payload=json.dumps(data))
         t1 = time()
         print t1
         sonos_status[0] = 'PLAYING' # if we switched the picture and posted lyrics we're playing because there may be a lag in getting state/status info
@@ -261,7 +261,7 @@ while 1:
         if not track:
             continue
 
-        lyrics = get_lyrics(track, title)
+        lyrics = get_lyrics(artist, track)
 
         if not lyrics:
             continue
