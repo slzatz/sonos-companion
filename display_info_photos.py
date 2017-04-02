@@ -291,8 +291,6 @@ def on_message(client, userdata, msg):
 
         new_screen = pygame.Surface.copy(screen_image) 
         k = z.get('pos',0)
-        move_box = True if k >= 0 else False
-        k = abs(k)
         # Current code below assumes there was a collision the last time the position was painted, might be possible to check
         # Need to repaint in the right order
         for i in sorted(range(len(timing)), key=lambda t:timing[t]):
@@ -370,6 +368,15 @@ def on_message(client, userdata, msg):
 
         elif topic==image_topic: 
 
+            if z.get('erase'):
+                positions[k] = (1920,1080)
+                foos[k] = pygame.Surface((0,0)) 
+                sizes[k] = (0,0)
+                timing[k] = 0
+                screen.blit(new_screen, (0,0)) 
+                pygame.display.flip() 
+                return
+                
             uri = z.get('uri')
             if not uri:
                 return
@@ -389,7 +396,7 @@ def on_message(client, userdata, msg):
             pygame.draw.rect(foo, col, ((0,0), new_size), 3)
             # for image could just say that new_pos = old_pos (if time is less than some value or something)
 
-        if move_box:
+        if z.get('move', True):
             attempts = 0
             while attempts < 20:
                 new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
@@ -481,6 +488,7 @@ while 1:
         display_background_image(photo)
         num_photos_shown+=1
         # shouldn't have to do this but I seem to be losing connection to mqtt broker
+        # and this seems to be working
         client.disconnect()
         client.reconnect()
 

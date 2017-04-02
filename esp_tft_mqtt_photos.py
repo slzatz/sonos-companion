@@ -125,6 +125,7 @@ client.connect(aws_mqtt_uri, 1883, 60)
 
 t1 = t0 = time()
 uris = []
+erase = False
 while 1:
 
     client.loop()
@@ -174,32 +175,51 @@ while 1:
         data = {"header":track, "text":lyrics, "pos":8} #expects a list
         print data
         publish_lyrics(payload=json.dumps(data))
-
+        erase = True # indicates that if music stops, there is something to erase - applies to lyrics too
         t1 = time()
         print t1
         sleep(1)
         continue
 
-    if time()  < t1+15:
-        continue
+    # moved below
+    #if time()  < t1+15:
+    #    continue
 
     if sonos_status[0] != 'PLAYING':
+        # another option is just to erase the box - how do that?
+        if erase:
+            data = {"pos":7, "erase":True}
+            print data
+            publish_images(payload=json.dumps(data))
+            t1 = time()
+            print t1
+            erase = False
 
-        z = session.query(Image).order_by(func.random()).first()
-        data = {"header":z.artist.name, "uri":z.link, "pos":7} 
-        print data
-        publish_images(payload=json.dumps(data))
-        t1 = time()
-        print t1
         sleep(1)
         continue
 
+        # below flips random images if nothing is playing - it works but was pretty distracting so now just erase when no music
+        #z = session.query(Image).order_by(func.random()).first()
+        #data = {"header":z.artist.name, "uri":z.link, "pos":7} 
+        #print data
+        #publish_images(payload=json.dumps(data))
+        #t1 = time()
+        #print t1
+        #sleep(1)
+        #continue
+
+    if time() < t1+15:
+        sleep(1)
+        continue
+
+    # there may be situations in which state is PLAYING but uris have not been obtained yet
     if not uris:
+        sleep(1)
         continue
 
     # only gets here if status is PLAYING
     #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
-    data = {"header":"{} - {} (7)".format(artist,track), "uri":next(uri), "pos":7} #expects a list
+    data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7, "move":False} #minus means don't move probably should be move:True
     print data
     publish_images(payload=json.dumps(data))
 
