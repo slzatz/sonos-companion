@@ -270,24 +270,29 @@ while 1:
         data['lyrics'] = lyrics
         print data
         publish_lyrics(payload=json.dumps(data))
+        t1 = time()
+        print t1
+        sonos_status[0] = 'PLAYING' # if we switched the picture and posted lyrics we're playing because there may be a lag in getting state/status info
+        sleep(1)
+        continue
 
     if prev_state != state:
         
         prev_state = state
 
-    if state != 'PLAYING':
-        # erase artist image box and lyrics box
-        data = {"pos":7, "erase":True}
-        print data
-        publish_images(payload=json.dumps(data))
-        data = {"pos":8, "erase":True}
-        print data
-        publish_lyrics(payload=json.dumps(data))
-        t1 = time()
-        print t1
+        if state != 'PLAYING':
+            # erase artist image box and lyrics box
+            data = {"pos":7, "erase":True}
+            print data
+            publish_images(payload=json.dumps(data))
+            data = {"pos":8, "erase":True}
+            print data
+            publish_lyrics(payload=json.dumps(data))
+            t1 = time()
+            print t1
 
-        sleep(1)
-        continue
+            sleep(1)
+            continue
 
     if time() < t1+15:
         sleep(1)
