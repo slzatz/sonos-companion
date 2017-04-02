@@ -257,21 +257,6 @@ def display_artist_image(x):
 
     return foo
 
-def draw_lyrics(lyrics, x_coord):
-    print "drawing lyrics"
-    font = pygame.font.SysFont('Sans', 16)
-    n = 10
-    for lyric in lyrics:
-        lines = textwrap.wrap(lyric, 60)
-        for line in lines:
-            try:
-                text = font.render(line.strip(), True, (255, 0, 0))
-            except UnicodeError as e:
-                print "UnicodeError in text lines: ", e
-            else:
-                screen.blit(text, (x_coord,n))
-                n+=20
-
 def on_message(client, userdata, msg):
     # {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
     # {"pos":4, "header":"Wall Street Journal", "text":"["The rain in spain falls mainly on the plain", "I am a yankee doodle dandy"]}
@@ -287,8 +272,6 @@ def on_message(client, userdata, msg):
 
     if topic in (info_topic, image_topic):
 
-        col = next(color)
-
         new_screen = pygame.Surface.copy(screen_image) 
         k = z.get('pos',0)
         # Current code below assumes there was a collision the last time the position was painted, might be possible to check
@@ -300,15 +283,18 @@ def on_message(client, userdata, msg):
 
             new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
 
+        if z.get('erase'):
+            positions[k] = (1920,1080)
+            foos[k] = pygame.Surface((0,0)) 
+            sizes[k] = (0,0)
+            timing[k] = 0
+            screen.blit(new_screen, (0,0)) 
+            pygame.display.flip() 
+            return
+
+        col = next(color)
+
         if topic==info_topic:
-            if z.get('erase'):
-                positions[k] = (1920,1080)
-                foos[k] = pygame.Surface((0,0)) 
-                sizes[k] = (0,0)
-                timing[k] = 0
-                screen.blit(new_screen, (0,0)) 
-                pygame.display.flip() 
-                return
 
             #foo is the surface that we 'paint' the text and rectangles on
             foo = pygame.Surface((800,800))
@@ -333,15 +319,20 @@ def on_message(client, userdata, msg):
                 if n+20 > MAX_HEIGHT:
                     break
 
+                if item[0] == '#':
+                    item=item[1:]
+                    font.set_bold(True)
+                    max_chars_line = 60
+
                 if item[0] == '*': 
                     foo.blit(star, (2,n+7))
                     item=item[1:]
-                else:
+                elif z.get('bullet', True):
                     foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
-                    if item[0] == '#':
-                        item=item[1:]
-                        font.set_bold(True)
-                        max_chars_line = 60
+                    #if item[0] == '#':
+                    #    item=item[1:]
+                    #    font.set_bold(True)
+                    #    max_chars_line = 60
 
                 lines = textwrap.wrap(item, max_chars_line)
                 for line in lines:
@@ -377,15 +368,6 @@ def on_message(client, userdata, msg):
 
         elif topic==image_topic: 
 
-            if z.get('erase'):
-                positions[k] = (1920,1080)
-                foos[k] = pygame.Surface((0,0)) 
-                sizes[k] = (0,0)
-                timing[k] = 0
-                screen.blit(new_screen, (0,0)) 
-                pygame.display.flip() 
-                return
-                
             uri = z.get('uri')
             if not uri:
                 return
@@ -477,8 +459,7 @@ photo = random.choice(photos)
 print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
 display_background_image(photo)
 
-num_photos_shown = 1
-t1 = time()
+t0 = time()
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
@@ -491,16 +472,15 @@ while 1:
 
     client.loop(timeout = 1.0)
 
-    if time() - t1 > 3600: # picture flips each hour
+    if time() - t0 > 3600: # picture flips each hour
         photo = random.choice(photos)
         print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
         display_background_image(photo)
-        num_photos_shown+=1
         # shouldn't have to do this but I seem to be losing connection to mqtt broker
         # and this seems to be working
         client.disconnect()
         client.reconnect()
 
-        t1 = time()
+        t0 = time()
 
     sleep(1)
