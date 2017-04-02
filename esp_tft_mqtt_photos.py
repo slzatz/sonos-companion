@@ -41,8 +41,6 @@ pub_topic = 'images'
 publish_images = partial(mqtt_publish.single, pub_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 publish_lyrics = partial(mqtt_publish.single, info_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 trackinfo = {"artist":None, "track_title":None, "lyrics":None}
-prev_artist = None
-prev_track = None
 
 def get_artist_images(name):
 
@@ -190,6 +188,9 @@ client.connect(aws_mqtt_uri, 1883, 60)
 
 t1 = t0 = time()
 uris = []
+prev_artist = None
+prev_track = None
+prev_state = None
 while 1:
 
     client.loop()
