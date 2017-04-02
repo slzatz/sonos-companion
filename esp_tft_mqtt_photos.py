@@ -178,6 +178,7 @@ while 1:
         erase = True # indicates that if music stops, there is something to erase - applies to lyrics too
         t1 = time()
         print t1
+        sonos_status[0] = 'PLAYING' # if we switched the picture and posted lyrics we're playing because there may be a lag in getting state/status info
         sleep(1)
         continue
 
