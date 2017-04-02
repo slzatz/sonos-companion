@@ -314,7 +314,7 @@ def on_message(client, userdata, msg):
             foo.blit(text, (5,5)) 
             font.set_bold(False)
 
-            line_widths = []
+            line_widths = [0] # for situation when text = [''] otherwise line_widths = [] would be fine; happens when no lyrics
             n = 20
             for item in z.get('text',[' ']): 
                 item = item if item !='' else ' '
