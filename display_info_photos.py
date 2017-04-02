@@ -396,7 +396,7 @@ def on_message(client, userdata, msg):
             pygame.draw.rect(foo, col, ((0,0), new_size), 3)
             # for image could just say that new_pos = old_pos (if time is less than some value or something)
 
-        if z.get('move', True):
+        if z.get('move', True) or positions[k] == (1920,1080):
             attempts = 0
             while attempts < 20:
                 new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
