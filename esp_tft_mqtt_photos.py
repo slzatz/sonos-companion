@@ -206,7 +206,6 @@ while 1:
     state = sonos_status[0]
 
     if prev_artist != artist:
-
         prev_artist = artist
 
         if not artist:
@@ -244,21 +243,13 @@ while 1:
         data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7} #expects a list
         print data
         publish_images(payload=json.dumps(data))
-        #data = {"header":track, "text":lyrics, "pos":8} #expects a list
-        #print data
-        #publish_lyrics(payload=json.dumps(data))
         t1 = time()
         print t1
         sonos_status[0] = 'PLAYING' # if we switched the picture and posted lyrics we're playing because there may be a lag in getting state/status info
         sleep(1)
         continue
 
-    # moved below
-    #if time()  < t1+15:
-    #    continue
-
     if prev_track != track:
-
         prev_track = track
 
         if not track:
