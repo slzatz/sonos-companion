@@ -28,6 +28,7 @@ from functools import partial
 from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
+import requests
 
 with open('location') as f:
     location = f.read().strip()
@@ -91,6 +92,7 @@ def get_url(artist, title):
     try:
          r = requests.get("http://lyrics.wikia.com/api.php", params=payload)
     except:
+        print "Problem retrieving lyrics"
         url = None
          
     else:        
