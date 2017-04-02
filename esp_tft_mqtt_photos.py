@@ -29,6 +29,7 @@ from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 import requests
+import lxml.html
 
 with open('location') as f:
     location = f.read().strip()
