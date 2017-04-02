@@ -68,7 +68,7 @@ def get_artist_images(name):
 
     images = []
 
-    for data in z['items']:
+    for data in z.get('items', []): #['items']: # only empty search should be on artist='' and I think I am catching that but this makes sure
         image=Image()
         image.link = data['link']
         image.width = data['image']['width']
@@ -81,6 +81,69 @@ def get_artist_images(name):
             
     print "images = ", images
     return images 
+
+def get_url(artist, title):
+
+    if artist is None or title is None:
+        return None
+
+    payload = {'func': 'getSong', 'artist': artist, 'song': title, 'fmt': 'realjson'}
+    
+    try:
+         r = requests.get("http://lyrics.wikia.com/api.php", params=payload)
+    except:
+        url = None
+         
+    else:        
+        q = r.json()
+        
+        url = q['url'] if 'url' in q else None
+        
+        if url and url.find("action=edit") != -1: 
+            url = None 
+            
+    return url
+
+def get_lyrics(artist,title):
+
+    if artist is None or title is None:
+        print "No artist or title" 
+        return None
+
+    print artist, title 
+    
+    url = get_url(artist, title)
+    if not url:
+        return None
+    
+    try:
+        doc = lxml.html.parse(url)
+    except IOError as e:
+        print e
+        return None
+
+    try:
+        lyricbox = doc.getroot().cssselect(".lyricbox")[0]        
+    except IndexError as e:
+        print e
+        return None
+
+    # look for a sign that it's instrumental
+    if len(doc.getroot().cssselect(".lyricbox a[title=\"Instrumental\"]")):
+        print "appears to be instrumental"
+        return None
+
+    lyrics = []
+    if lyricbox.text is not None:
+        lyrics.append(lyricbox.text)
+    for node in lyricbox:
+        if node.tail is not None:
+            lyrics.append(node.tail)
+
+    for line in lyrics:
+        print line
+
+    return lyrics
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -107,11 +170,12 @@ def on_message(client, userdata, msg):
 
         artist = z.get("artist", "")
         track_title = z.get("title", "")
-        lyrics = z.get("lyrics", "")
+        #lyrics = z.get("lyrics", "")
 
         print "artist =",artist
         print "track_title =",track_title
-        trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
+        #trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
+        trackinfo.update({"artist":artist, "track_title":track_title})
 
     elif topic == sonos_status_topic:
         sonos_status[0] = z.get('state')
@@ -125,7 +189,6 @@ client.connect(aws_mqtt_uri, 1883, 60)
 
 t1 = t0 = time()
 uris = []
-erase = False
 while 1:
 
     client.loop()
@@ -134,11 +197,15 @@ while 1:
 
     artist = trackinfo['artist']
     track = trackinfo['track_title']
-    lyrics = trackinfo['lyrics']
+    #lyrics = trackinfo['lyrics']
+    state = sonos_status[0]
 
     if prev_artist != artist:
 
         prev_artist = artist
+
+        if not artist:
+            continue
 
         print "about to query image database for artist", artist
 
@@ -175,7 +242,6 @@ while 1:
         data = {"header":track, "text":lyrics, "pos":8} #expects a list
         print data
         publish_lyrics(payload=json.dumps(data))
-        erase = True # indicates that if music stops, there is something to erase - applies to lyrics too
         t1 = time()
         print t1
         sonos_status[0] = 'PLAYING' # if we switched the picture and posted lyrics we're playing because there may be a lag in getting state/status info
@@ -186,28 +252,40 @@ while 1:
     #if time()  < t1+15:
     #    continue
 
-    if sonos_status[0] != 'PLAYING':
-        # another option is just to erase the box - how do that?
-        if erase:
-            data = {"pos":7, "erase":True}
-            print data
-            publish_images(payload=json.dumps(data))
-            t1 = time()
-            print t1
-            erase = False
+    if prev_track != track:
+
+        prev_track = track
+
+        if not track:
+            continue
+
+        lyrics = get_lyrics(track, title)
+
+        if not lyrics:
+            continue
+
+        data = {"header":track, "text":lyrics, "pos":8} #expects a list
+        data['lyrics'] = lyrics
+        print data
+        publish_lyrics(payload=json.dumps(data))
+
+    if prev_state != state:
+        
+        prev_state = state
+
+    if state != 'PLAYING':
+        # erase artist image box and lyrics box
+        data = {"pos":7, "erase":True}
+        print data
+        publish_images(payload=json.dumps(data))
+        data = {"pos":8, "erase":True}
+        print data
+        publish_lyrics(payload=json.dumps(data))
+        t1 = time()
+        print t1
 
         sleep(1)
         continue
-
-        # below flips random images if nothing is playing - it works but was pretty distracting so now just erase when no music
-        #z = session.query(Image).order_by(func.random()).first()
-        #data = {"header":z.artist.name, "uri":z.link, "pos":7} 
-        #print data
-        #publish_images(payload=json.dumps(data))
-        #t1 = time()
-        #print t1
-        #sleep(1)
-        #continue
 
     if time() < t1+15:
         sleep(1)

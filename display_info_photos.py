@@ -301,6 +301,15 @@ def on_message(client, userdata, msg):
             new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
 
         if topic==info_topic:
+            if z.get('erase'):
+                positions[k] = (1920,1080)
+                foos[k] = pygame.Surface((0,0)) 
+                sizes[k] = (0,0)
+                timing[k] = 0
+                screen.blit(new_screen, (0,0)) 
+                pygame.display.flip() 
+                return
+
             #foo is the surface that we 'paint' the text and rectangles on
             foo = pygame.Surface((800,800))
             foo.fill((0,0,0))

@@ -81,9 +81,10 @@ print "\nprogram running ..."
 
 prev_title = ''
 prev_volume = -1
+prev_state = ''
 track = {}
 
-def get_url(artist, title):
+def get_url_(artist, title):
 
     if artist is None or title is None:
         return None
@@ -103,10 +104,9 @@ def get_url(artist, title):
         if url and url.find("action=edit") != -1: 
             url = None 
             
-            
     return url
 
-def get_lyrics(artist,title):
+def get_lyrics_(artist,title):
 
     if artist is None or title is None:
         print "No artist or title" 
@@ -147,7 +147,7 @@ def get_lyrics(artist,title):
 
     return lyrics
 
-t0 = time()
+#t0 = time()
 while 1:
     
     # get the current state to see if Sonos is actually playing
@@ -180,35 +180,40 @@ while 1:
             print "Encountered error in track = master.get_current_track_info(): ", e
             continue
 
-    cur_title = track.get('title', '')
+    title = track.get('title', '')
     
-    if cur_title != prev_title:
+    if prev_title != title:
 
-        data = {'artist':track.get('artist', ''), 'title':cur_title}
-        lyrics = get_lyrics(track.get('artist'), cur_title)
-        if lyrics:
-            data['lyrics'] = lyrics
+        data = {'artist':track.get('artist', ''), 'title':title}
+        ########################## I am thinking that all this should be in esp_tft_mqtt_photos(_lyrics) 
+        ########################## and that sonos_track_info.py should only collect info it can get
+        ########################## directly from sonos
+        #lyrics = get_lyrics(track.get('artist'), title)
+        #if lyrics:
+        #    data['lyrics'] = lyrics
         # publish to MQTT - could require less code by using micropython mqtt client
-        data2 = {'header':'Track Info - '+location, 'text':[data['artist'], cur_title], 'pos':9}
+        data2 = {'header':'Track Info - '+location, 'text':[data['artist'], title], 'pos':9}
         try:
             #mqtt_publish.single(topic, json.dumps(data), hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-            # The line below is currently being picked up by esp_tft_mqtt_photos and don't really want it to be picked up by 
-            # display_info_photos because it would just be published directly
+            # The line below is currently being picked up by esp_tft_mqtt_photos but not intended to be published by display_info_photos.py
             mqtt_publish.single(sonos_track_topic, json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+            # publishing track info to box 9
             mqtt_publish.single('esp_tft', json.dumps(data2), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         except Exception as e:
             print "Exception trying to publish to mqtt broker: ", e
         else:
             print "{} sent successfully to mqtt broker".format(json.dumps(data))
 
-        prev_title = cur_title
+        prev_title = title
 
-    if time() > t0+60:
-        data3 = {'header':'Sonos Status - '+location, 'text':[state], 'pos':2}
-        mqtt_publish.single('esp_tft', json.dumps(data3), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+    #if time() > t0+60:
+    if prev_state != state:
+        data = {'header':'Sonos Status - '+location, 'text':[state], 'pos':2}
+        mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
         # at least one of the listeners for the below is esp_tft_mqtt_photos.py
         mqtt_publish.single(sonos_status_topic, json.dumps({'state':state}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
-        t0 = time()
+        #t0 = time()
+        prev_state = state
         
-    sleep(0.5)
+    sleep(1)
 
