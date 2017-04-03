@@ -327,7 +327,7 @@ def on_message(client, userdata, msg):
                 if item[0] == '*': 
                     foo.blit(star, (2,n+7))
                     item=item[1:]
-                elif z.get('bullet', True):
+                elif z.get('bullets', True):
                     foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
                     #if item[0] == '#':
                     #    item=item[1:]
