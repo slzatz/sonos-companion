@@ -120,9 +120,7 @@ def tides():
         return
 
     z = r.json()
-    extremes = z['extremes']
-    #print("Tide extremes =", extremes.encode('ascii', 'ignore'))
-
+    extremes = z.get('extremes', [])
     tides = []
     for n,x in enumerate(extremes):
         print("n =", n)
