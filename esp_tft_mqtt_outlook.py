@@ -50,7 +50,7 @@ def outlook():
 
     try:
         len(items)
-    except errors.ErrorInternalServerTransientError as e:
+    except (errors.ErrorInternalServerTransientError, errors.ErrorMailboxStoreUnavailable) as e:
         print "exchangelib error: ", e
         return
 
