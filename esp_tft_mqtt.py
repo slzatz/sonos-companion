@@ -47,7 +47,7 @@ session = remote_session
 
 def twitter_feed():
     #pos = 1
-    z = twit.statuses.home_timeline()
+    z = twit.statuses.home_timeline()[:5]
     tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
@@ -69,7 +69,7 @@ def news():
         return
 
     z = r.json()
-    articles = [html.unescape(x['title']) for x in z['articles']]
+    articles = [html.unescape(x['title']) for x in z['articles'][:5]]
     print(datetime.datetime.now())
     print(repr(articles).encode('ascii', 'ignore'))
     header = z.get('source', 'no source').replace('-', ' ').title()
@@ -185,6 +185,7 @@ def facts():
     tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
     titles = ['#'+task.title if task.star else task.title for task in tasks]
     shuffle(titles)
+    titles = titles[:5]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
