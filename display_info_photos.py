@@ -89,7 +89,7 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 11 #numbered 0=weather 1=news feeds 2=sonos status 3=Facts/ToDos 4=sonos track sales_forecast=5 to outlook_schedule=6 2=stock quote  info 7=artist image, 8=lyrics 9=track_info
+NUM_BOXES = 11 
 positions = []
 foos = [] 
 sizes = []
@@ -269,6 +269,13 @@ def display_artist_image(x):
 
     return foo
 
+#Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
+def area(a, b):
+    dx = min(a[1][0], b[1][0])- max(a[0][0], b[0][0])
+    dy = min(a[1][1], b[1][1]) - max(a[0][1], b[0][1])
+    #if dx >= 0 and dy >= 0: # shouldn't need this since only checking if there was a collision
+    return dx*dy
+
 def on_message(client, userdata, msg):
     # {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
     # {"pos":4, "header":"Wall Street Journal", "text":"["The rain in spain falls mainly on the plain", "I am a yankee doodle dandy"]}
@@ -401,25 +408,51 @@ def on_message(client, userdata, msg):
 
         if z.get('move', True) or positions[k] == (1920,1080):
             attempts = 0
-            while attempts < 20:
+            collision_areas = [] # holds the new positions and how much overlap there is
+            print "k =", k
+            while attempts < 10: #20
                 new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
                 rect = pygame.Rect((new_pos, new_size))    
-                idx = rect.collidelist(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
-                #collisions = rect.collidelistall(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
-                if idx == -1:
+                collisions = rect.collidelistall(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
+                if not collisions:
                     print "No collision"
                     break
                 else:
-                    print "collision"
-                    print "idx = ", idx
+                    new_xy = tuple(map(sum, zip(new_pos, new_size)))
+                    print "Collision: possible new rectangle that collides is ", (new_pos,new_xy)
+                    #collision_hx.append(new_pos, collisions) #########################################################################
+                    overlap = 0
+                    for j in collisions:
+                        idx = j if j < k else j+1 
+                        xy = tuple(map(sum, zip(positions[idx], sizes[idx])))
+                        overlap += area((new_pos, new_xy), (positions[idx], xy)) 
+
+                    collision_areas.append((new_pos,overlap))   
+                    #print "collision_areas =",collision_areas
 
                 attempts+=1
 
             else:
                 print "Couldn't find a clear area for box"
-            
+                print "collision_areas =",collision_areas
+                new_pos, min_area = min(collision_areas, key=lambda x:x[1])
+                print "new_pos =", new_pos
+                #######################################################################################################33
+                print "min_area =", min_area
+                #collision_areas = []
+                #for new_pos, collections in collision_hx:
+                    #overlap = 0
+                    #new_xy = tuple(map(sum, zip(new_pos, new_size)))
+                    #for j in collisions:
+                        #idx = j if j < k else j+1 
+                        #xy = tuple(map(sum, zip(positions[idx], sizes[idx])))
+                        #overlap += area((new_pos, new_xy), (positions[idx], xy)) 
 
-            #new_screen.blit(foo, new_pos, ((0,0), new_size)) 
+                    #collision_areas.append((new_pos,overlap))   
+                #new_pos, min_area = min(collision_areas, key=lambda x:x[1])
+                #print "new_pos =", new_pos
+                #print "min_area =", min_area
+                    
 
             blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
             blast_x = random.randint(0,screen_width)
