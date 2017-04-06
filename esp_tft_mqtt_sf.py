@@ -33,6 +33,8 @@ def sales_forecast():
     sf_data = csv.reader(StringIO(content))
 
     sf_data = [row for row in sf_data if len(row)>10]
+    if not sf_data:
+        return
     sf_data.pop(0)
 
     forecast = sum(map(float, [row[11] for row in sf_data]))
