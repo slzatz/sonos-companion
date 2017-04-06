@@ -2,7 +2,7 @@
 Currently a python 2.7 program but needs to be re-written as python 3 since pygame now runs on 3
 This is the current script that runs on a raspberry pi or on Windows that displays
 rotating background images from unsplash, info boxes that can display weather, news, twitter, stock prices,, outlook schedule, sales force numbers etc.
-When sonos is playing, it displays lyrics and artists pictures - now in a 400 x 400 box and not broadcasting lyrics at the moment but will
+When sonos is playing, it displays lyrics and artists pictures - now in a 400 x 400 box 
 The news, stocks, twitter, etc information being broadcast by:
 esp_tft_mqtt.py, esp_tft_mqtt_sf.py and esp_tft_mqtt_outlook.py, esp_tft_mqtt_photos currently running on AWS.
 The odd "esp_tft..." name comes from the fact that these mqtt broadcasts were originally designed to go to an esp8266 and some still do.
@@ -12,6 +12,18 @@ Low 18F. Winds WNW at 10 to 20 mph.", "Friday: Mostly sunny skies. High around 3
 esp_tft_mqtt.py message: {"header": "Top WSJ Article", "text": ["Trump Lashes Out as Senator, Others Recount Court Nominee\u2019s Criticism"], "pos": 1}
 esp_tft_mqtt.py message: {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
 esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
+
+0=weather
+1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
+2=stock quote
+3=Facts/ToDos
+4=sonos status (PLAYING, TRANSITIONING, STOPPED and alarms) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics)
+5=sales forecast
+6=outlook_schedule
+7=artist image
+8=lyrics
+9=track_info broadcast by sonos_track_info.py
+
 '''
 import platform
 import os
@@ -77,14 +89,14 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 11 #numbered 0 to 6 7=artist image, 8=lyrics 9=track_info
+NUM_BOXES = 11 #numbered 0=weather 1=news feeds 2=sonos status 3=Facts/ToDos 4=sonos track sales_forecast=5 to outlook_schedule=6 2=stock quote  info 7=artist image, 8=lyrics 9=track_info
 positions = []
 foos = [] 
 sizes = []
 timing = []
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255)] # (255,255,255)] # blue too dark
 color = cycle(colors)
-MAX_HEIGHT = 400
+MAX_HEIGHT = 800
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 275
 
@@ -306,17 +318,21 @@ def on_message(client, userdata, msg):
             text = font.render(header, True, col)
             foo.blit(text, (5,5)) 
             font.set_bold(False)
+            font_size = z.get('font', 18)
+            font = pygame.font.SysFont('Sans', font_size)
+            line_height = font.get_linesize()
+            print "line_height =",line_height
 
             line_widths = [0] # for situation when text = [''] otherwise line_widths = [] would be fine; happens when no lyrics
-            n = 20
+
+            n = line_height #20
             for item in z.get('text',[' ']): 
                 item = item if item !='' else ' '
                 font.set_bold(False)
                 max_chars_line = 66        
+                n+=4 if z.get('bullets', True) else 0
 
-                n+=4
-
-                if n+20 > MAX_HEIGHT:
+                if n+line_height > MAX_HEIGHT: #20
                     break
 
                 if item[0] == '#':
@@ -329,15 +345,11 @@ def on_message(client, userdata, msg):
                     item=item[1:]
                 elif z.get('bullets', True):
                     foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
-                    #if item[0] == '#':
-                    #    item=item[1:]
-                    #    font.set_bold(True)
-                    #    max_chars_line = 60
 
                 lines = textwrap.wrap(item, max_chars_line)
                 for line in lines:
 
-                    if n+20 > MAX_HEIGHT:
+                    if n+line_height > MAX_HEIGHT: #20
                         break
 
                     try:
@@ -347,7 +359,7 @@ def on_message(client, userdata, msg):
                     else:
                         foo.blit(text, (17,n+5)) 
                         line_widths.append(text.get_rect().width)
-                        n+=20
+                        n+=line_height #20
 
             # determine the size of the rectangle for foo and its line border
             max_line = max(line_widths)
@@ -393,6 +405,7 @@ def on_message(client, userdata, msg):
                 new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
                 rect = pygame.Rect((new_pos, new_size))    
                 idx = rect.collidelist(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
+                #collisions = rect.collidelistall(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
                 if idx == -1:
                     print "No collision"
                     break
