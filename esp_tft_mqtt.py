@@ -84,11 +84,12 @@ def weather():
     
     try:
         r = requests.get("http://api.wunderground.com/api/6eeded444749b8ec/forecast/q/10011.json")
+        z = r.json()
     except Exception as e:
         print("Exception in weather", e)
         return
     
-    z = r.json()
+    #z = r.json()
     if not 'forecast' in z:
         print("'forecast' not in result of weather request")
         return
