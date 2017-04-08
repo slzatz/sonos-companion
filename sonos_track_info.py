@@ -126,7 +126,7 @@ while 1:
         prev_title = title
 
     if prev_state != state:
-        data = {'header':'Sonos Status - '+location, 'text':[state], 'pos':4}
+        data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+master.volume], 'pos':10}
         mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 
         # at least one of the listeners for the below is esp_tft_mqtt_photos.py
