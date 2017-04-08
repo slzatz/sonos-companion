@@ -85,21 +85,39 @@ while 1:
         print "Encountered error in state = master.get_current_transport_info(): ", e
         state = 'ERROR'
 
+    if prev_state != state:
+        data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(master.volume)], 'pos':10}
+        mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+
+        # at least one of the listeners for the below is esp_tft_mqtt_photos.py
+        mqtt_publish.single(sonos_status_topic, json.dumps({'state':state}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+
+        prev_state = state
+
+    volume = master.volume
+    
+    if volume != prev_volume:
+        data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(volume)], 'pos':10}
+        mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+
+        prev_volume = volume
+
     # check if sonos is playing music
+
     if state == 'PLAYING':
 
         # get volume for neopixel display
-        cur_volume = master.volume
-        
-        if cur_volume != prev_volume:
-            try:
-                mqtt_publish.single(sonos_volume_topic, cur_volume, hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-            except Exception as e:
-                print "Exception trying to publish to mqtt broker: ", e
-            else:
-                print "volume {} sent successfully to mqtt broker".format(cur_volume)
+        #cur_volume = master.volume
+        #
+        #if cur_volume != prev_volume:
+        #    try:
+        #        mqtt_publish.single(sonos_volume_topic, cur_volume, hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
+        #    except Exception as e:
+        #        print "Exception trying to publish to mqtt broker: ", e
+        #    else:
+        #        print "volume {} sent successfully to mqtt broker".format(cur_volume)
 
-            prev_volume = cur_volume
+        #    prev_volume = cur_volume
 
         # get track info to see if track has changed
         try:
@@ -125,14 +143,14 @@ while 1:
 
         prev_title = title
 
-    if prev_state != state:
-        data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(master.volume)], 'pos':10}
-        mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+    #if prev_state != state:
+    #    data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(master.volume)], 'pos':10}
+    #    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 
-        # at least one of the listeners for the below is esp_tft_mqtt_photos.py
-        mqtt_publish.single(sonos_status_topic, json.dumps({'state':state}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+    #    # at least one of the listeners for the below is esp_tft_mqtt_photos.py
+    #    mqtt_publish.single(sonos_status_topic, json.dumps({'state':state}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 
-        prev_state = state
+    #    prev_state = state
         
     sleep(1)
 
