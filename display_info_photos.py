@@ -96,7 +96,7 @@ sizes = []
 timing = []
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255)] # (255,255,255)] # blue too dark
 color = cycle(colors)
-MAX_HEIGHT = 800
+MAX_HEIGHT = 875
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 275
 
@@ -184,10 +184,18 @@ def display_background_image(photo):
     font = pygame.font.SysFont('Sans', 24)
     font.set_bold(True)
 
-    text = font.render(photo.get('photographer', 'unknown'), True, (255, 0, 0))
+    text = font.render(photo.get('photographer', 'unknown'), True, (255,0,0))
 
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
+
+    t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
+    t = t[1:] if t[0] == '0' else t
+    t = t[:-2] + t[-2:].lower()
+    font = pygame.font.SysFont('Sans', 16)
+    font.set_bold(False)
+    text = font.render(t, True, (255,0,0))
+    screen.blit(text, (screen_width-text.get_rect().width-5,5)) 
 
     pygame.display.flip()
 
