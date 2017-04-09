@@ -23,6 +23,7 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 7=artist image
 8=lyrics
 9=track_info broadcast by sonos_track_info.py
+10=sonos status (PLAYING, TRANSITIONING, STOPPED
 
 '''
 import platform
@@ -208,7 +209,8 @@ def display_background_image(photo):
     del timing[:]
 
     for i in range(NUM_BOXES):
-        positions.append((1920,1080))
+        #positions.append((1920,1080))
+        positions.append((0,0))
         foos.append(pygame.Surface((0,0)))
         sizes.append((0,0))
         timing.append(0)
