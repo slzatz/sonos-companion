@@ -84,7 +84,7 @@ def top_opportunities():
 
     data = {"header":"Opportunities and Closed",
             "text":[''] + fc_formatted + [''] + closed_formatted, #blank lines cause a line feed
-            "font size":14,
+            "font size":16,
             "font type":"monospace",
             "bullets":False,
             "pos":11}
