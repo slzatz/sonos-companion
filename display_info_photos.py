@@ -17,13 +17,15 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=Facts/ToDos
-4=sonos status (PLAYING, TRANSITIONING, STOPPED and alarms) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics)
+4=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) and Alarms 
 5=sales forecast
 6=outlook_schedule
 7=artist image
 8=lyrics
 9=track_info broadcast by sonos_track_info.py
 10=sonos status (PLAYING, TRANSITIONING, STOPPED
+11=sales top opportunities
+12=ALARMS
 
 '''
 import platform
@@ -90,7 +92,7 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 11 
+NUM_BOXES = 13 
 positions = []
 foos = [] 
 sizes = []
@@ -335,8 +337,9 @@ def on_message(client, userdata, msg):
             text = font.render(header, True, col)
             foo.blit(text, (5,5)) 
             font.set_bold(False)
-            font_size = z.get('font', 18)
-            font = pygame.font.SysFont('Sans', font_size)
+            font_size = z.get('font size', 18)
+            font_type = z.get('font type', 'Sans')
+            font = pygame.font.SysFont(font_type, font_size)
             line_height = font.get_linesize()
             print "line_height =",line_height
 
