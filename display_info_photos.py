@@ -340,6 +340,7 @@ def on_message(client, userdata, msg):
             font_size = z.get('font size', 18)
             font_type = z.get('font type', 'Sans')
             antialias = z.get('antialias', True)
+            bullets = z.get('bullets', True):
             font = pygame.font.SysFont(font_type, font_size)
             line_height = font.get_linesize()
             print "line_height =",line_height
@@ -353,9 +354,10 @@ def on_message(client, userdata, msg):
                     continue
                 font.set_bold(False)
                 max_chars_line = 66        
-                n+=4 if z.get('bullets', True) else 0
+                indent = 17
+                n+=4 if bullets else 0 # makes multi-line bullets more separated from prev and next bullet
 
-                if n+line_height > MAX_HEIGHT: #20
+                if n+line_height > MAX_HEIGHT:
                     break
 
                 if item[0] == '#':
@@ -366,11 +368,12 @@ def on_message(client, userdata, msg):
                 if item[0] == '*': 
                     foo.blit(star, (2,n+7))
                     item=item[1:]
-                elif z.get('bullets', True):
+                elif bullets:
                     foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
-                #else:
-                    #max_chars_line+= 1 #############################################
-                    #x_offset = 8
+                # neither a star in front of item or a bullet
+                else:
+                    max_chars_line+= 1 
+                    indent = 10
 
                 lines = textwrap.wrap(item, max_chars_line) # if line is just whitespace it returns []
                     
@@ -384,10 +387,9 @@ def on_message(client, userdata, msg):
                     except UnicodeError as e:
                         print "UnicodeError in text lines: ", e
                     else:
-                        # if no bullets (or stars) could bump up max_chars_line but would have to subtract x_offset from 17
-                        foo.blit(text, (17,n+5))
+                        foo.blit(text, (indent,n+5))
                         line_widths.append(text.get_rect().width)
-                        n+=line_height #20
+                        n+=line_height
 
             # determine the size of the rectangle for foo and its line border
             max_line = max(line_widths)
