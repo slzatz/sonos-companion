@@ -340,7 +340,7 @@ def on_message(client, userdata, msg):
             font_size = z.get('font size', 18)
             font_type = z.get('font type', 'Sans')
             antialias = z.get('antialias', True)
-            bullets = z.get('bullets', True):
+            bullets = z.get('bullets', True)
             font = pygame.font.SysFont(font_type, font_size)
             line_height = font.get_linesize()
             print "line_height =",line_height
