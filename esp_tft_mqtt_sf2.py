@@ -71,8 +71,8 @@ def top_opportunities():
     fc = []
     for x in range(5):
         row = result.iloc[x]
-        fc.append([row["Brand Level"][:30],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
-    headers=["Brand", "EA", "Prob", "Forecast", "Segment"]
+        fc.append([row["Brand Level"][:27],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
+    headers=["Brand", "EA", "%%", "Fcast", "Segment"]
     fc_formatted = tabulate(fc, headers).split("\n")
 
     result = df.sort_values(["Amount Closed"], ascending=False)
