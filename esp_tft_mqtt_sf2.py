@@ -83,7 +83,7 @@ def top_opportunities():
     closed_formatted = tabulate(closed, headers).split("\n")
 
     data = {"header":"Opportunities and Closed",
-            "text":fc_formatted + closed_formatted,
+            "text":[' ', 'Top Opportunities'] + fc_formatted + [' ', 'Closed'] + closed_formatted,
             "font size":14,
             "font type":"monospace",
             "bullets":False,
