@@ -405,7 +405,9 @@ def on_message(client, userdata, msg):
             t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
             t = t[1:] if t[0] == '0' else t
             t = t[:-2] + t[-2:].lower()
-            text = font.render(t, True, col)
+            #pygame.font.SysFont('Sans', 18)
+            #text = font.render(t, True, col)
+            text = pygame.font.SysFont('Sans', 18).render(t, True, col)
             foo.blit(text, (new_size[0]-text.get_rect().width-5,5)) 
 
         elif topic==image_topic: 
