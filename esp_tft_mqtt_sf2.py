@@ -24,14 +24,16 @@ from config import aws_mqtt_uri as aws_host, sf_id, sf_pw
 import csv
 from io import StringIO
 
-millnames = ['','k','M',' Billion',' Trillion']
+millnames = ['','k','M'] #,' Billion',' Trillion']
 
 def millify(n):
     n = float(n)
     millidx = max(0,min(len(millnames)-1,
                         int(math.floor(0 if n == 0 else math.log10(abs(n))/3))))
 
-    return '{:.1f}{}'.format(n / 10**(3 * millidx), millnames[millidx])
+    s = '{:.1f}{}' if millidx > 1 else '{:.0f}{}'
+    #return '{:.1f}{}'.format(n / 10**(3 * millidx), millnames[millidx])
+    return s.format(n / 10**(3 * millidx), millnames[millidx])
 
 def sales_forecast():
     s = requests.Session()
@@ -39,9 +41,6 @@ def sales_forecast():
     r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
     
     content = r.content.decode('UTF-8')
-    #sf_data = csv.reader(StringIO(content))
-
-    #df = pd.read_csv('sf_report.csv')
     df = pd.read_csv(StringIO(content))
     sm = df.sum(axis=0)
     expected_amount = millify(sm['Amount Open Expected'])
@@ -71,15 +70,15 @@ def top_opportunities():
     fc = []
     for x in range(5):
         row = result.iloc[x]
-        fc.append([row["Brand Level"][:27],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
-    headers=["Brand", "EA", "%%", "Fcast", "Segment"]
+        fc.append([row["Brand Level"][:26],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
+    headers=["Brand", "EA", "%", "Fcast", "Segment"]
     fc_formatted = tabulate(fc, headers).split("\n")
 
     result = df.sort_values(["Amount Closed"], ascending=False)
     closed = []
     for x in range(5):
         row = result.iloc[x]
-        closed.append([row["Brand Level"][:30],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
+        closed.append([row["Brand Level"][:26],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
     headers=["Brand", "Closed", "Segment"]
     closed_formatted = tabulate(closed, headers).split("\n")
 
@@ -87,6 +86,7 @@ def top_opportunities():
             "text":fc_formatted + closed_formatted,
             "font size":14,
             "font type":"monospace",
+            "bullets":False,
             "pos":11}
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
