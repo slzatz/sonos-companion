@@ -142,8 +142,8 @@ def get_lyrics(artist,title):
         if node.tail is not None:
             lyrics.append(node.tail)
 
-    for line in lyrics:
-        print line
+    #for line in lyrics:
+    #    print line
 
     return lyrics
 
@@ -261,7 +261,7 @@ while 1:
             continue
 
         data = {"header":track, "text":lyrics, "pos":8, "bullets":False, "font size":16} #expects a list
-        print data
+        #print data
         publish_lyrics(payload=json.dumps(data))
         t1 = time()
         print t1
