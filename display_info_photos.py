@@ -339,6 +339,7 @@ def on_message(client, userdata, msg):
             font.set_bold(False)
             font_size = z.get('font size', 18)
             font_type = z.get('font type', 'Sans')
+            antialias = z.get('antialias', True)
             font = pygame.font.SysFont(font_type, font_size)
             line_height = font.get_linesize()
             print "line_height =",line_height
@@ -347,7 +348,6 @@ def on_message(client, userdata, msg):
 
             n = line_height #20
             for item in z.get('text',['No text']): 
-                #item = item if item !='' else ' '
                 if not item.strip():
                     n+=line_height
                     continue
@@ -368,6 +368,9 @@ def on_message(client, userdata, msg):
                     item=item[1:]
                 elif z.get('bullets', True):
                     foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
+                #else:
+                    #max_chars_line+= 1 #############################################
+                    #x_offset = 8
 
                 lines = textwrap.wrap(item, max_chars_line) # if line is just whitespace it returns []
                     
@@ -377,11 +380,12 @@ def on_message(client, userdata, msg):
                         break
 
                     try:
-                        text = font.render(line.strip(), True, (255,255,255)) #col
+                        text = font.render(line.strip(), antialias, (255,255,255)) 
                     except UnicodeError as e:
                         print "UnicodeError in text lines: ", e
                     else:
-                        foo.blit(text, (17,n+5)) 
+                        # if no bullets (or stars) could bump up max_chars_line but would have to subtract x_offset from 17
+                        foo.blit(text, (17,n+5))
                         line_widths.append(text.get_rect().width)
                         n+=line_height #20
 

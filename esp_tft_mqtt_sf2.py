@@ -87,6 +87,7 @@ def top_opportunities():
             "font size":16,
             "font type":"monospace",
             "bullets":False,
+            "antialias":False, # we'll see if this makes mono-spaced more readable
             "pos":11}
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
