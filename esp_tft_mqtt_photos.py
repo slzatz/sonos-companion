@@ -258,6 +258,8 @@ while 1:
         lyrics = get_lyrics(artist, track)
 
         if not lyrics:
+            data = {"pos":8, "erase":True}
+            publish_lyrics(payload=json.dumps(data))
             continue
 
         data = {"header":track, "text":lyrics, "pos":8, "bullets":False, "font size":16} #expects a list
@@ -276,10 +278,8 @@ while 1:
         if state != 'PLAYING':
             # erase artist image box and lyrics box
             data = {"pos":7, "erase":True}
-            print data
             publish_images(payload=json.dumps(data))
             data = {"pos":8, "erase":True}
-            print data
             publish_lyrics(payload=json.dumps(data))
 
             uris = []
