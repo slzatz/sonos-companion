@@ -71,7 +71,7 @@ def top_opportunities():
     fc = []
     for x in range(5):
         row = result.iloc[x]
-        fc.append([row["Brand Level"],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
+        fc.append([row["Brand Level"][:30],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
     headers=["Brand", "EA", "Prob", "Forecast", "Segment"]
     fc_formatted = tabulate(fc, headers).split("\n")
 
@@ -79,7 +79,7 @@ def top_opportunities():
     closed = []
     for x in range(5):
         row = result.iloc[x]
-        closed.append([row["Brand Level"],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
+        closed.append([row["Brand Level"][:30],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
     headers=["Brand", "Closed", "Segment"]
     closed_formatted = tabulate(closed, headers).split("\n")
 
