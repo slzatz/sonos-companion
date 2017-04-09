@@ -59,6 +59,37 @@ def sales_forecast():
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
+def top_opportunities():
+    s = requests.Session()
+    r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
+    r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    
+    content = r.content.decode('UTF-8')
+    df = pd.read_csv(StringIO(content))
+
+    result = df.sort_values(["Current Forecast"], ascending=False)
+    fc = []
+    for x in range(5):
+        row = result.iloc[x]
+        fc.append([row["Brand Level"],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
+    headers=["Brand", "EA", "Prob", "Forecast", "Segment"]
+    fc_formatted = tabulate(fc, headers).split("\n")
+
+    result = df.sort_values(["Amount Closed"], ascending=False)
+    closed = []
+    for x in range(5):
+        row = result.iloc[x]
+        closed.append([row["Brand Level"],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
+    headers=["Brand", "Closed", "Segment"]
+    closed_formatted = tabulate(closed, headers).split("\n")
+
+    data = {"header":"Opportunities and Closed",
+            "text":fc_formatted + closed_formatted,
+            "font size":14,
+            "font type":"monospace",
+            "pos":11}
+
+    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 schedule.every().hour.at(':03').do(sales_forecast)
 schedule.every().hour.at(':08').do(sales_forecast)
@@ -72,6 +103,19 @@ schedule.every().hour.at(':43').do(sales_forecast)
 schedule.every().hour.at(':48').do(sales_forecast)
 schedule.every().hour.at(':53').do(sales_forecast)
 schedule.every().hour.at(':58').do(sales_forecast)
+
+schedule.every().hour.at(':01').do(top_opportunities)
+schedule.every().hour.at(':06').do(top_opportunities)
+schedule.every().hour.at(':11').do(top_opportunities)
+schedule.every().hour.at(':16').do(top_opportunities)
+schedule.every().hour.at(':21').do(top_opportunities)
+schedule.every().hour.at(':26').do(top_opportunities)
+schedule.every().hour.at(':31').do(top_opportunities)
+schedule.every().hour.at(':36').do(top_opportunities)
+schedule.every().hour.at(':41').do(top_opportunities)
+schedule.every().hour.at(':46').do(top_opportunities)
+schedule.every().hour.at(':51').do(top_opportunities)
+schedule.every().hour.at(':56').do(top_opportunities)
 #schedule.run_all()
 
 while True:
