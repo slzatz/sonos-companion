@@ -343,11 +343,14 @@ def on_message(client, userdata, msg):
             line_height = font.get_linesize()
             print "line_height =",line_height
 
-            line_widths = [0] # for situation when text = [''] otherwise line_widths = [] would be fine; happens when no lyrics
+            line_widths = [0] # for situation when text = [''] otherwise line_widths = [] and can't do max
 
             n = line_height #20
-            for item in z.get('text',[' ']): 
-                item = item if item !='' else ' '
+            for item in z.get('text',['No text']): 
+                #item = item if item !='' else ' '
+                if not item.strip():
+                    n+=line_height
+                    continue
                 font.set_bold(False)
                 max_chars_line = 66        
                 n+=4 if z.get('bullets', True) else 0
@@ -366,7 +369,8 @@ def on_message(client, userdata, msg):
                 elif z.get('bullets', True):
                     foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
 
-                lines = textwrap.wrap(item, max_chars_line)
+                lines = textwrap.wrap(item, max_chars_line) # if line is just whitespace it returns []
+                    
                 for line in lines:
 
                     if n+line_height > MAX_HEIGHT: #20
