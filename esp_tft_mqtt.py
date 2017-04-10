@@ -29,7 +29,7 @@ import schedule
 from time import time,sleep
 import twitter
 from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET, intrinio_username, intrinio_password
-from lmdb_p import * ######################################################################
+from lmdb_p import * 
 import html
 from functools import partial
 from random import shuffle
@@ -198,7 +198,7 @@ def facts2(): #should be ticklers but easier for testing
     #tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
     tasks = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False)
     #titles = ['#'+task.title if task.star else task.title for task in tasks]
-    titles = ["[{}] {}".format(task.context.title, title) for task in tasks]
+    titles = ["[{}] {}".format(task.context.title, task.title) for task in tasks]
     shuffle(titles)
     titles = titles[:5]
     print(datetime.datetime.now())

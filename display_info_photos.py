@@ -13,11 +13,11 @@ esp_tft_mqtt.py message: {"header": "Top WSJ Article", "text": ["Trump Lashes Ou
 esp_tft_mqtt.py message: {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
 esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
 
-0=weather
+0=weather/tides(2x per hour)
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=Facts/ToDos
-4=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) and Alarms 
+4=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
 5=sales forecast
 6=outlook_schedule
 7=artist image
@@ -25,7 +25,7 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 9=track_info broadcast by sonos_track_info.py
 10=sonos status (PLAYING, TRANSITIONING, STOPPED
 11=sales top opportunities
-12=ALARMS
+12=Reminders (alarms)
 
 '''
 import platform
