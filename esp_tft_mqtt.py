@@ -190,21 +190,20 @@ def facts():
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"Facts", "text":titles, "pos":3} #expects a list
+    data = {"header":"Things you need to remember ...", "text":titles, "pos":14} #expects a list
     publish(payload=json.dumps(data))
 
-def facts2(): #should be ticklers but easier for testing
-    #pos = 3??
+def ticklers(): #should be ticklers but easier for testing
+    #pos = 14
     #tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
     tasks = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False)
-    #titles = ['#'+task.title if task.star else task.title for task in tasks]
-    titles = ["[{}] {}".format(task.context.title, task.title) for task in tasks]
+    titles = ["[{}] {}".format(task.context.title.capitalize(), task.title) for task in tasks]
     shuffle(titles)
     titles = titles[:5]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"Ticklers", "text":titles, "pos":3} #expects a list
+    data = {"header":"Ticklers", "text":titles, "pos":13} #expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)
@@ -245,12 +244,19 @@ schedule.every().hour.at(':31').do(todos)
 schedule.every().hour.at(':41').do(todos)
 schedule.every().hour.at(':51').do(todos)
 
-schedule.every().hour.at(':08').do(facts2)
-schedule.every().hour.at(':18').do(facts2)
-schedule.every().hour.at(':28').do(facts2)
-schedule.every().hour.at(':38').do(facts2)
-schedule.every().hour.at(':48').do(facts2)
-schedule.every().hour.at(':58').do(facts2)
+schedule.every().hour.at(':08').do(facts)
+schedule.every().hour.at(':18').do(facts)
+schedule.every().hour.at(':28').do(facts)
+schedule.every().hour.at(':38').do(facts)
+schedule.every().hour.at(':48').do(facts)
+schedule.every().hour.at(':58').do(facts)
+
+schedule.every().hour.at(':00').do(ticklers)
+schedule.every().hour.at(':10').do(ticklers)
+schedule.every().hour.at(':20').do(ticklers)
+schedule.every().hour.at(':30').do(ticklers)
+schedule.every().hour.at(':40').do(ticklers)
+schedule.every().hour.at(':50').do(ticklers)
 #schedule.run_all()
 
 while True:
