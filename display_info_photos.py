@@ -16,7 +16,7 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 0=weather/tides(2x per hour)
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
-3=Facts/ToDos
+3=ToDos
 4=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
 5=sales forecast
 6=outlook_schedule
@@ -25,7 +25,9 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 9=track_info broadcast by sonos_track_info.py
 10=sonos status (PLAYING, TRANSITIONING, STOPPED
 11=sales top opportunities
-12=Reminders (alarms)
+12=Reminders (alarms) and individual ticklers??
+13=Ticklers
+14=Facts
 
 '''
 import platform
@@ -92,7 +94,7 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 13 
+NUM_BOXES = 15 
 positions = []
 foos = [] 
 sizes = []
