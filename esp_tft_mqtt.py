@@ -197,7 +197,8 @@ def facts2(): #should be ticklers but easier for testing
     #pos = 3??
     #tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
     tasks = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False)
-    titles = ['#'+task.title if task.star else task.title for task in tasks]
+    #titles = ['#'+task.title if task.star else task.title for task in tasks]
+    titles = ["[{}] {}".format(task.context.title, title) for task in tasks]
     shuffle(titles)
     titles = titles[:5]
     print(datetime.datetime.now())
