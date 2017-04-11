@@ -17,8 +17,7 @@ random.shuffle(x)
 import os
 import sys
 home = os.path.split(os.getcwd())[0]
-#sys.path = [os.path.join(home, 'twitter')] + sys.path
-sys.path =  sys.path + [os.path.join(home,'sqlalchemy','lib')] + [os.path.join(home, 'twitter')] + [os.path.join(home, 'mylistmanager3')]  ############################################
+sys.path =  sys.path + [os.path.join(home,'sqlalchemy','lib')] + [os.path.join(home, 'twitter')] + [os.path.join(home, 'mylistmanager3')]
 from operator import itemgetter
 from itertools import cycle
 import requests
@@ -177,11 +176,11 @@ def todos():
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"To Do", "text":titles, "pos":3} #expects a list
+    data = {"header":"Important Work Stuff", "text":titles, "pos":3} #expects a list
     publish(payload=json.dumps(data))
 
 def facts():
-    #pos = 3
+    #pos = 14
     #tasks = session.query(Task).join(Context).filter(and_(Context.title == 'memory aid', Task.priority == 3, Task.completed == None)).order_by(desc(Task.modified))
     tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
     titles = ['#'+task.title if task.star else task.title for task in tasks]
@@ -194,16 +193,23 @@ def facts():
     publish(payload=json.dumps(data))
 
 def ticklers(): #should be ticklers but easier for testing
-    #pos = 14
+    #pos = 13
+    # this should be converted into one item that includes the text field
     #tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
-    tasks = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False)
-    titles = ["[{}] {}".format(task.context.title.capitalize(), task.title) for task in tasks]
-    shuffle(titles)
-    titles = titles[:5]
+    #body = task.note if task.note else ''
+    #select.order_by(func.random()) # for PostgreSQL, SQLite
+    #z = session.query(Image).order_by(func.random()).first()
+    #tasks = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False)
+    #titles = ["[{}] {}".format(task.context.title.capitalize(), task.title) for task in tasks]
+    #shuffle(titles)
+    #titles = titles[:5]
+    task = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    title = "#[{}] {}".format(task.context.title.capitalize(), task.title)
+    note = task.note if task.note else ''
     print(datetime.datetime.now())
-    print(repr(titles).encode('ascii', 'ignore'))
+    print(title.encode('ascii', 'ignore'))
 
-    data = {"header":"Ticklers", "text":titles, "pos":13} #expects a list
+    data = {"header":"Ticklers", "text":[title, note] "pos":13} #expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)
