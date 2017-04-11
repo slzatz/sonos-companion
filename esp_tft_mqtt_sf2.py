@@ -70,6 +70,8 @@ def top_opportunities():
     fc = []
     for x in range(8):
         row = result.iloc[x]
+        if row["Amount Open Expected"] == 0:
+            continue
         fc.append([row["Brand Level"][:26],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
     headers=["Brand", "EA", "%", "Fcast", "Segment"]
     fc_formatted = tabulate(fc, headers).split("\n")
