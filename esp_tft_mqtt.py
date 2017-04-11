@@ -209,7 +209,7 @@ def ticklers(): #should be ticklers but easier for testing
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
 
-    data = {"header":"Ticklers", "text":[title, note] "pos":13} #expects a list
+    data = {"header":"Ticklers", "text":[title, note], "pos":13, "bullets":False, "font_size":16} #text expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)
