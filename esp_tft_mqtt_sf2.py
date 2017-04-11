@@ -68,7 +68,7 @@ def top_opportunities():
 
     result = df.sort_values(["Current Forecast"], ascending=False)
     fc = []
-    for x in range(5):
+    for x in range(8):
         row = result.iloc[x]
         fc.append([row["Brand Level"][:26],millify(row["Amount Open Expected"]),row["Likely Probability in Quarter"],millify(row["Current Forecast"]),row["WebMD Segment (Oppty)"][4:]])
     headers=["Brand", "EA", "%", "Fcast", "Segment"]
@@ -76,7 +76,7 @@ def top_opportunities():
 
     result = df.sort_values(["Amount Closed"], ascending=False)
     closed = []
-    for x in range(5):
+    for x in range(8):
         row = result.iloc[x]
         closed.append([row["Brand Level"][:26],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
     headers=["Brand", "Closed", "Segment"]
