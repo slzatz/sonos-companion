@@ -1,18 +1,22 @@
 '''
 python3
 This script gathers information about things like weather and tides using Web apis
+Also gathers info from listmanager (AWS)
 and then sends that information in an mqtt message with topic "esp_tft" 
 The format is {"header":"Tides", "text":"The next high tide is ...", "pos":2}
 pos is the position on the tft screen and is 0, 1, 2 etc
 Information may be tides, stock prices, news, weather
 The mqtt message is picked up by the esp8266 + feather tft
 The script is esp_display_info.py
-Schedule.every().hour.at(':00').do(job)
+
+Note that this script while it can still be used by an esp-TFT is now driving a full screen TV, monitor or Windows window
+
+News feeds are from newsapi.org, which is free
+Stock prices are through intrinio.  uri = "https://api.intrinio.com/data_point"
+Description of available data elements here: http://docs.intrinio.com/tags/intrinio-public#data-point
+For tides using https://www.worldtides.info/apidocs - I think I bought 20k calls
 https://www.worldtides.info/api?extremes&lat=41.117597&lon=-73.407897&key=a417...
-Documentation at https://www.worldtides.info/apidocs
 Need to use the following for To Dos and Facts
-random.choice(seq)- Return a random element from the non-empty sequence seq. If seq is empty, raises IndexError.
-random.shuffle(x)
 '''
 import os
 import sys
@@ -144,7 +148,8 @@ def stock_quote():
     #pos = 2
 
     uri = "https://api.intrinio.com/data_point"
-    payload = {'ticker':'WBMD', 'item':'last_price,volume,last_timestamp'}
+    #payload = {'ticker':'WBMD', 'item':'last_price,volume,last_timestamp'} #percent_change and maybe change
+    payload = {'ticker':'WBMD', 'item':'last_price,change,percent_change,volume,last_timestamp'} #percent_change and maybe change
     r = requests.get(uri, params=payload, auth=(intrinio_username, intrinio_password))
     try:
         z = r.json()
@@ -154,8 +159,8 @@ def stock_quote():
         return
 
     try:
-        info[1]['value'] = format(int(float(info[1]['value'])), ',d')
-        info[2]['value'] = info[2]['value'].split('T')[1].split('+')[0]
+        info[3]['value'] = format(int(float(info[1]['value'])), ',d') #1
+        info[4]['value'] = info[2]['value'].split('T')[1].split('+')[0] #2
     except Exception as e:
         print("Exception trying to format stock info", e)
 
