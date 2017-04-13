@@ -159,11 +159,16 @@ def stock_quote():
         return
 
     try:
-        info[3]['value'] = format(int(float(info[3]['value'])), ',d') #1
-        info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #2
+        info[2]['value'] = "{}{}".format(str(100*float(info[2]['value'])), "%") #percent change
+        info[3]['value'] = format(int(float(info[3]['value'])), ',d') #volume
+        info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #last timestamp
     except Exception as e:
         print("Exception trying to format stock info", e)
 
+    for x in info:
+        x['item'] = "{}{}".format(x['item'].replace('_', ' ').title(),":")
+
+    #results = ["{} {}".format(x['item'].replace('_', ' ').title()+":",x['value']) for x in info]
     results = ["{} {}".format(x['item'],x['value']) for x in info]
     # doesn't seem worth it for volume but here it is: format(int(float('4893848.4')), ',d')
     print(datetime.datetime.now())
