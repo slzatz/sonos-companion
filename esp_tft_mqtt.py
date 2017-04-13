@@ -159,8 +159,8 @@ def stock_quote():
         return
 
     try:
-        info[3]['value'] = format(int(float(info[1]['value'])), ',d') #1
-        info[4]['value'] = info[2]['value'].split('T')[1].split('+')[0] #2
+        info[3]['value'] = format(int(float(info[3]['value'])), ',d') #1
+        info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #2
     except Exception as e:
         print("Exception trying to format stock info", e)
 
