@@ -434,7 +434,13 @@ def on_message(client, userdata, msg):
             pygame.draw.rect(foo, col, ((0,0), new_size), 3)
             # for image could just say that new_pos = old_pos (if time is less than some value or something)
 
-        if (z.get('move', True) or positions[k] == (0,0)) and not dest:
+        if dest:
+            # negative coordinates are subtracted from the screen_width/height
+            x,y = dest
+            x = x if x > 0 else screen_width + x
+            y = y if y > 0 else screen_height + y
+            new_pos = (x,y)
+        else: # need to find a location and since it's moving do the animation
             attempts = 0
             collision_hx = []
             print "k =", k
@@ -485,11 +491,6 @@ def on_message(client, userdata, msg):
 
             pygame.display.flip()
             sleep(1) #.5
-
-        else:
-            new_pos = dest if dest else positions[k]
-
-        dest = z.get('dest', None)
 
         new_screen.blit(foo, new_pos, ((0,0), new_size)) 
         screen.blit(new_screen, (0,0)) 
