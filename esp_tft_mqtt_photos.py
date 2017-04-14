@@ -262,7 +262,7 @@ while 1:
             publish_lyrics(payload=json.dumps(data))
             continue
 
-        data = {"header":track, "text":lyrics, "pos":8, "bullets":False, "font size":16} #expects a list
+        data = {"header":track, "text":lyrics, "pos":8, "bullets":False, "font size":16, "dest":(30,450)} #expects a list
         #print data
         publish_lyrics(payload=json.dumps(data))
         t1 = time()
@@ -301,7 +301,7 @@ while 1:
 
     # only gets here if status is PLAYING
     #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
-    data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7, "move":False} #minus means don't move probably should be move:True
+    data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7, "dest":(30,30)} #"move":False - should eventually remove move:False
     print data
     publish_images(payload=json.dumps(data))
 

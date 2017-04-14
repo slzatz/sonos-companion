@@ -317,7 +317,7 @@ def on_message(client, userdata, msg):
             new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
 
         if z.get('erase'):
-            positions[k] = (1920,1080)
+            positions[k] = (0,0) #(1920,1080)
             foos[k] = pygame.Surface((0,0)) 
             sizes[k] = (0,0)
             timing[k] = 0
@@ -326,6 +326,7 @@ def on_message(client, userdata, msg):
             return
 
         col = next(color)
+        dest = z.get('dest')
 
         if topic==info_topic:
 
@@ -433,7 +434,7 @@ def on_message(client, userdata, msg):
             pygame.draw.rect(foo, col, ((0,0), new_size), 3)
             # for image could just say that new_pos = old_pos (if time is less than some value or something)
 
-        if z.get('move', True) or positions[k] == (1920,1080):
+        if (z.get('move', True) or positions[k] == (0,0)) and not dest:
             attempts = 0
             collision_hx = []
             print "k =", k
@@ -486,7 +487,9 @@ def on_message(client, userdata, msg):
             sleep(1) #.5
 
         else:
-            new_pos = positions[k]
+            new_pos = dest if dest else positions[k]
+
+        dest = z.get('dest', None)
 
         new_screen.blit(foo, new_pos, ((0,0), new_size)) 
         screen.blit(new_screen, (0,0)) 
@@ -499,13 +502,6 @@ def on_message(client, userdata, msg):
 
         return
 
-
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-client.connect(aws_mqtt_uri, 1883, 60)
-#not calling client.loop_forever() but explicitly calling client.loop() below
-    
 photos = get_unsplash_images()
 
 L = len(photos)
@@ -523,6 +519,11 @@ photo = random.choice(photos)
 print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
 display_background_image(photo)
 
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+client.connect(aws_mqtt_uri, 1883, 60)
+
 t0 = time()
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
@@ -534,6 +535,7 @@ while 1:
     elif event.type == pygame.QUIT:
         sys.exit(0)
 
+    #not calling client.loop_forever() but explicitly calling client.loop() below
     client.loop(timeout = 1.0)
 
     if time() - t0 > 3600: # picture flips each hour
