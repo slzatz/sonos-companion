@@ -101,7 +101,7 @@ sizes = []
 timing = []
 colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255)] # (255,255,255)] # blue too dark
 color = cycle(colors)
-MAX_HEIGHT = 875
+MAX_HEIGHT = screen_height - 50 #875
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 275
 
@@ -124,7 +124,7 @@ print "\n"
 print "program running ..."
 
 def get_unsplash_images():
-
+    # probably need try/except since have seen it time out
     if args.search:
         r = requests.get('{}search/photos'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search}, timeout=1.0)
         z = r.json()['results']
@@ -219,7 +219,7 @@ def display_background_image(photo):
         sizes.append((0,0))
         timing.append(0)
 
-def display_artist_image(x):
+def display_image(x):
 
     print x
     try:
@@ -245,7 +245,7 @@ def display_artist_image(x):
         t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
         img.crop(*t)
         # resize should take the image and enlarge it without cropping so will fill vertical but leave space for lyrics
-        img.resize(screen_height,screen_height)
+        #img.resize(screen_height,screen_height)
         img.resize(400,400)
         conv_img = img.convert('bmp')
         img.close()
@@ -272,10 +272,10 @@ def display_artist_image(x):
 
     print "img_rect =", img_rect
     # 430 seems to give enough room for lyrics on a standard monintor - used 300 when doing 1000 x 700 in a  window on Windows
-    pos = (430,0)
-    print "pos =", pos
+    #pos = (430,0)
+    #print "pos =", pos
 
-    foo = pygame.Surface((800,800))
+    foo = pygame.Surface((400,400)) # (800,800) someday will make this something that you pass with the image
     foo.fill((0,0,0))
     foo.set_alpha(175) #125
     
@@ -331,7 +331,7 @@ def on_message(client, userdata, msg):
         if topic==info_topic:
 
             #foo is the surface that we 'paint' the text and rectangles on
-            foo = pygame.Surface((800,800))
+            foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHT)) # (800,800)
             foo.fill((0,0,0))
             foo.set_alpha(175) #125
             font = pygame.font.SysFont('Sans', 18)
@@ -401,7 +401,11 @@ def on_message(client, userdata, msg):
             elif max_line < MIN_WIDTH:
                 max_line = MIN_WIDTH
 
-            new_size = (max_line+18,n+12)
+            # item is the last item and if the last item is white space n gets incremented unnecessarily and this 'un'increments it
+            if not item.strip():
+                n-=line_height
+            height = min(n+12, MAX_HEIGHT)
+            new_size = (max_line+18,height)
             pygame.draw.rect(foo, col, ((0,0), new_size), 3)
 
             # put time in upper right of box
@@ -418,7 +422,7 @@ def on_message(client, userdata, msg):
             uri = z.get('uri')
             if not uri:
                 return
-            foo = display_artist_image(uri)
+            foo = display_image(uri)
             if not foo:
                 return
             new_size = (400,400)
