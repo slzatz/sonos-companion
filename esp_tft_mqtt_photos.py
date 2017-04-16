@@ -237,7 +237,7 @@ while 1:
         uri = cycle(uris)
 
         #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
-        data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7, "dest":(-410,30)} #expects a list
+        data = {"header":"{} - {}".format(artist.encode('utf-8', 'ignore'), track.encode('utf-8', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30)} 
         print data
         publish_images(payload=json.dumps(data))
         t1 = time()
