@@ -225,20 +225,17 @@ while 1:
             continue
         else:
             images = a.images
+            if len(images) < 8:
+                print "fewer than 8 images so getting new set of images for artist"
+                images = get_artist_images(artist)
+                if not images:
+                    print "Could not find images for {}".format(artist)
+                    uris = []
+                    continue
 
-            uris = [image.link for image in images if image.ok]
-
-        if len(images) < 8:
-            print "fewer than 8 images so getting new set of images for artist"
-            images = get_artist_images(artist)
-            if not images:
-                print "Could not find images for {}".format(artist)
-                uris = []
-                continue
-            else:
-                uris = [image.link for image in images if image.ok]
-
+        uris = [image.link for image in images if image.ok] ########### unindented on 4-15-2017
         uri = cycle(uris)
+
         #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
         data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7, "dest":(-410,30)} #expects a list
         print data
