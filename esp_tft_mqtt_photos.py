@@ -1,5 +1,5 @@
 '''
-python3
+python2
 This script gathers information about things like weather and tides using Web apis
 and then sends that information in an mqtt message with topic "esp_tft" 
 The format is {"header":"Tides", "text":"The next high tide is ...", "pos":2}
@@ -298,7 +298,7 @@ while 1:
 
     # only gets here if status is PLAYING
     #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
-    data = {"header":"{} - {}".format(artist,track), "uri":next(uri), "pos":7, "dest":(-410,30)} 
+    data = {"header":"{} - {}".format(artist.encode('utf-8', 'ignore'), track.encode('utf-8', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30)} 
     print data
     publish_images(payload=json.dumps(data))
 
