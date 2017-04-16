@@ -213,7 +213,6 @@ def display_background_image(photo):
     del timing[:]
 
     for i in range(NUM_BOXES):
-        #positions.append((1920,1080))
         positions.append((0,0))
         foos.append(pygame.Surface((0,0)))
         sizes.append((0,0))
@@ -271,9 +270,6 @@ def display_image(x):
     img_rect = img.get_rect()
 
     print "img_rect =", img_rect
-    # 430 seems to give enough room for lyrics on a standard monintor - used 300 when doing 1000 x 700 in a  window on Windows
-    #pos = (430,0)
-    #print "pos =", pos
 
     foo = pygame.Surface((400,400)) # (800,800) someday will make this something that you pass with the image
     foo.fill((0,0,0))
@@ -283,7 +279,7 @@ def display_image(x):
 
     return foo
 
-#Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
+# area used to figure out when there is a collision how much area overlapped
 def area(a, b):
     dx = min(a[1][0], b[1][0])- max(a[0][0], b[0][0])
     dy = min(a[1][1], b[1][1]) - max(a[0][1], b[0][1])
@@ -305,7 +301,7 @@ def on_message(client, userdata, msg):
 
     if topic in (info_topic, image_topic):
 
-        new_screen = pygame.Surface.copy(screen_image) 
+        new_screen = pygame.Surface.copy(screen_image) # screen image is the clean background image
         k = z.get('pos',0)
         # Current code below assumes there was a collision the last time the position was painted, might be possible to check
         # Need to repaint in the right order
@@ -412,8 +408,6 @@ def on_message(client, userdata, msg):
             t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
             t = t[1:] if t[0] == '0' else t
             t = t[:-2] + t[-2:].lower()
-            #pygame.font.SysFont('Sans', 18)
-            #text = font.render(t, True, col)
             text = pygame.font.SysFont('Sans', 18).render(t, True, col)
             foo.blit(text, (new_size[0]-text.get_rect().width-5,5)) 
 
@@ -494,7 +488,7 @@ def on_message(client, userdata, msg):
             pygame.draw.rect(screen, col, (new_pos, new_size), 3)
 
             pygame.display.flip()
-            sleep(1) #.5
+            sleep(1) 
 
         new_screen.blit(foo, new_pos, ((0,0), new_size)) 
         screen.blit(new_screen, (0,0)) 
@@ -534,8 +528,8 @@ while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
     
-    if event.type == pygame.NOEVENT:
-        pass # want pass and not continue because want this to fall through to the non pygame event stuff
+    #if event.type == pygame.NOEVENT: ############################4-16-2017
+    #    pass ############################4-16-2017 # want pass to fall through to the non pygame event stuff
         
     elif event.type == pygame.QUIT:
         sys.exit(0)
