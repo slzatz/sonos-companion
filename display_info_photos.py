@@ -528,9 +528,8 @@ while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
     event = pygame.event.poll()
     
-    #if event.type == pygame.NOEVENT: ############################4-16-2017
-    #    pass ############################4-16-2017 # want pass to fall through to the non pygame event stuff
-        
+    if event.type == pygame.NOEVENT: 
+        pass # appears necessary to check this although not sure why
     elif event.type == pygame.QUIT:
         sys.exit(0)
 
