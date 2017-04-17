@@ -159,7 +159,8 @@ def stock_quote():
         return
 
     try:
-        info[2]['value'] = "{}{}".format(str(100*float(info[2]['value'])), "%") #percent change
+        #info[2]['value'] = "{}{}".format(str(100*float(info[2]['value'])), "%") #percent change
+        info[2]['value'] = "{:.2f}%".format(100*float(info[2]['value'])) #percent change
         info[3]['value'] = format(int(float(info[3]['value'])), ',d') #volume
         info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #last timestamp
     except Exception as e:
