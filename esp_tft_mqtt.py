@@ -211,7 +211,7 @@ def ticklers(): #should be ticklers but easier for testing
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
     text = [title]
-    text.extend(note.split())
+    text.extend(note.split("\n"))
     data = {"header":"Ticklers", "text":text, "pos":13, "bullets":False, "font size":16} #text expects a list
     publish(payload=json.dumps(data))
 
