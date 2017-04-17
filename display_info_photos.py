@@ -304,13 +304,24 @@ def on_message(client, userdata, msg):
     new_screen = pygame.Surface.copy(screen_image) # screen image is the clean background image
     k = z.get('pos',0)
 
+    # because of changes this erases the whole screen until the next box is drawn
     if z.get('erase'):
-        positions[k] = (0,0) #(1920,1080)
+
+        for i in sorted(range(len(timing)), key=lambda t:timing[t]):
+            # paint a copy of the current screen except for the box that is moving/being updated
+            if i==k:
+                continue
+
+            new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
+
+        screen.blit(new_screen, (0,0)) 
+        pygame.display.flip() 
+
+        positions[k] = (0,0) 
         foos[k] = pygame.Surface((0,0)) 
         sizes[k] = (0,0)
         timing[k] = 0
-        screen.blit(new_screen, (0,0)) 
-        pygame.display.flip() 
+
         return
 
     col = next(color)
