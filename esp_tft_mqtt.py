@@ -207,7 +207,7 @@ def facts():
     title = '#'+task.title if task.star else task.title
     new_title = re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]',title)
     new_title = re.sub(r'\b\d+M?k?\b', '[  ]',title) #because single digit no decimal place are missed by the first re
-    data = {"header":"You really need to remember ...", "text":[new_title,'','','','',title] "pos":14} #expects a list
+    data = {"header":"You really need to remember ...", "text":[new_title,'','','','',title], "pos":14} #expects a list
 
     publish(payload=json.dumps(data))
 
