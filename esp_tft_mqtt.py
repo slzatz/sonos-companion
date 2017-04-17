@@ -199,7 +199,7 @@ def facts():
     shuffle(titles)
     titles = titles[:5]
     new_titles = [re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]',title) for title in titles]
-    new_titles = [re.sub(r'\b\d+M?k?\b', '[  ]',title) for title in titles] because single digit no decimal place are missed by the first re
+    new_titles = [re.sub(r'\b\d+M?k?\b', '[  ]',title) for title in titles] #because single digit no decimal place are missed by the first re
     #re.sub(r'\b\d+\M?k?\b', '[  ]', 'About $650M he33llo 42% 200k I\'m a $32.5 string 30 one 1 two 2')
     #re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]', 'About $650M he33llo 42% 200k I\'m a $32.5 string 30')# captures numbers, numbers with decimal points and numbers followed by 'M' and 'k'
     #print(datetime.datetime.now())
