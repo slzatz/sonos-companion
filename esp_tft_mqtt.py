@@ -197,6 +197,7 @@ def facts():
     titles = ['#'+task.title if task.star else task.title for task in tasks]
     shuffle(titles)
     titles = titles[:5]
+    titles = [re.sub(r'\b\d+\b', '[  ]',title) for title in titles]
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
