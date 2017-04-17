@@ -210,8 +210,9 @@ def ticklers(): #should be ticklers but easier for testing
     #while 1: if not note[749].isspace():i-=1 continue else break
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
-
-    data = {"header":"Ticklers", "text":[title, note], "pos":13, "bullets":False, "font size":16} #text expects a list
+    text = [title]
+    text.extend(note.split())
+    data = {"header":"Ticklers", "text":text, "pos":13, "bullets":False, "font size":16} #text expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)
