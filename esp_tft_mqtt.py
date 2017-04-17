@@ -36,6 +36,7 @@ from lmdb_p import *
 import html
 from functools import partial
 from random import shuffle
+import re
 
 tides_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
