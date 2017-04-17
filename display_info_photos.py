@@ -299,207 +299,214 @@ def on_message(client, userdata, msg):
         print "error reading the mqtt message body: ", e
         return
 
-    if topic in (info_topic, image_topic):
+    #if topic in (info_topic, image_topic):
 
-        new_screen = pygame.Surface.copy(screen_image) # screen image is the clean background image
-        k = z.get('pos',0)
-        # Current code below assumes there was a collision the last time the position was painted, might be possible to check
-        # Need to repaint in the right order
-        for i in sorted(range(len(timing)), key=lambda t:timing[t]):
-            # paint a copy of the current screen except for the box that is moving/being updated
-            if i==k:
-                continue
+    new_screen = pygame.Surface.copy(screen_image) # screen image is the clean background image
+    k = z.get('pos',0)
 
-            new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
-
-        if z.get('erase'):
-            positions[k] = (0,0) #(1920,1080)
-            foos[k] = pygame.Surface((0,0)) 
-            sizes[k] = (0,0)
-            timing[k] = 0
-            screen.blit(new_screen, (0,0)) 
-            pygame.display.flip() 
-            return
-
-        col = next(color)
-        dest = z.get('dest')
-
-        if topic==info_topic:
-
-            #foo is the surface that we 'paint' the text and rectangles on
-            foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHT)) # (800,800)
-            foo.fill((0,0,0))
-            foo.set_alpha(175) #125
-            font = pygame.font.SysFont('Sans', 18)
-            font.set_bold(True)
-            header = "{} [{}]".format(z.get('header', 'no source'), k)
-            text = font.render(header, True, col)
-            foo.blit(text, (5,5)) 
-            font.set_bold(False)
-            font_size = z.get('font size', 18)
-            font_type = z.get('font type', 'Sans')
-            antialias = z.get('antialias', True)
-            bullets = z.get('bullets', True)
-            font = pygame.font.SysFont(font_type, font_size)
-            line_height = font.get_linesize()
-            print "line_height =",line_height
-
-            line_widths = [0] # for situation when text = [''] otherwise line_widths = [] and can't do max
-
-            n = line_height #20
-            for item in z.get('text',['No text']): 
-                if not item.strip():
-                    n+=line_height
-                    continue
-                font.set_bold(False)
-                max_chars_line = 66        
-                indent = 17
-                n+=4 if bullets else 0 # makes multi-line bullets more separated from prev and next bullet
-
-                if n+line_height > MAX_HEIGHT:
-                    break
-
-                if item[0] == '#':
-                    item=item[1:]
-                    font.set_bold(True)
-                    max_chars_line = 60
-
-                if item[0] == '*': 
-                    foo.blit(star, (2,n+7))
-                    item=item[1:]
-                elif bullets:
-                    foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
-                # neither a star in front of item or a bullet
-                else:
-                    max_chars_line+= 1 
-                    indent = 10
-
-                lines = textwrap.wrap(item, max_chars_line) # if line is just whitespace it returns []
-                    
-                for line in lines:
-
-                    if n+line_height > MAX_HEIGHT: #20
-                        break
-
-                    try:
-                        text = font.render(line.strip(), antialias, (255,255,255)) 
-                    except UnicodeError as e:
-                        print "UnicodeError in text lines: ", e
-                    else:
-                        foo.blit(text, (indent,n+5))
-                        line_widths.append(text.get_rect().width)
-                        n+=line_height
-
-            # determine the size of the rectangle for foo and its line border
-            max_line = max(line_widths)
-            if max_line > MAX_WIDTH:
-                max_line = MAX_WIDTH
-            elif max_line < MIN_WIDTH:
-                max_line = MIN_WIDTH
-
-            # item is the last item and if the last item is white space n gets incremented unnecessarily and this 'un'increments it
-            if not item.strip():
-                n-=line_height
-            height = min(n+12, MAX_HEIGHT)
-            new_size = (max_line+18,height)
-            pygame.draw.rect(foo, col, ((0,0), new_size), 3)
-
-            # put time in upper right of box
-            t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
-            t = t[1:] if t[0] == '0' else t
-            t = t[:-2] + t[-2:].lower()
-            text = pygame.font.SysFont('Sans', 18).render(t, True, col)
-            foo.blit(text, (new_size[0]-text.get_rect().width-5,5)) 
-
-        elif topic==image_topic: 
-
-            uri = z.get('uri')
-            if not uri:
-                return
-            foo = display_image(uri)
-            if not foo:
-                return
-            new_size = (400,400)
-            font = pygame.font.SysFont('Sans', 18)
-            font.set_bold(True)
-            try:
-                header = "{} [{}]".format(z.get('header', 'no artist'), k)
-            except UnicodeEncodeError:
-                header = "{} [{}]".format("Unicode Error", k)
-            text = font.render(header, True, col)
-            foo.blit(text, (5,5)) 
-            font.set_bold(False)
-            pygame.draw.rect(foo, col, ((0,0), new_size), 3)
-            # for image could just say that new_pos = old_pos (if time is less than some value or something)
-
-        if dest:
-            # negative coordinates are subtracted from the screen_width/height
-            x,y = dest
-            x = x if x > 0 else screen_width + x
-            y = y if y > 0 else screen_height + y
-            new_pos = (x,y)
-        else: # need to find a location and since it's moving do the animation
-            attempts = 0
-            collision_hx = []
-            print "k =", k
-            while attempts < 10: #20
-                new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
-                rect = pygame.Rect((new_pos, new_size))    
-                collisions = rect.collidelistall(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
-                if not collisions:
-                    print "No collision"
-                    break
-                else:
-                    print "Collision: new rectangle position collides with existing boxes: ", new_pos
-                    collision_hx.append((new_pos, collisions)) ######### [(x if x < k else x+1) for x in collisions] and not do it below
-
-                attempts+=1
-
-            else:
-                print "Couldn't find a clear area for box"
-                print "collision_hx =", collision_hx
-                collision_areas = []
-                for new_pos, collisions in collision_hx:
-                    overlap = 0
-                    new_xy = tuple(map(sum, zip(new_pos, new_size)))
-                    for j in collisions:
-                        idx = j if j < k else j+1 
-                        xy = tuple(map(sum, zip(positions[idx], sizes[idx])))
-                        overlap += area((new_pos, new_xy), (positions[idx], xy)) 
-
-                    collision_areas.append((new_pos,overlap))   
-                
-                print "collision_areas =",collision_areas
-                new_pos, min_area = min(collision_areas, key=lambda x:x[1])
-                if min_area < 0:
-                    raise ValueError("min_area should not be less than 0")
-                print "new_pos =", new_pos
-                print "min_area =", min_area
-                    
-
-            blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
-            blast_x = random.randint(0,screen_width)
-            blast_point = (blast_x,blast_y)
-
-            pygame.draw.line(screen, col, new_pos, blast_point) 
-            pygame.draw.line(screen, col, (new_pos[0],new_pos[1]+new_size[1]), blast_point) 
-            pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]), blast_point) 
-            pygame.draw.line(screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), blast_point) 
-            pygame.draw.rect(screen, col, (new_pos, new_size), 3)
-
-            pygame.display.flip()
-            sleep(1) 
-
-        new_screen.blit(foo, new_pos, ((0,0), new_size)) 
+    if z.get('erase'):
+        positions[k] = (0,0) #(1920,1080)
+        foos[k] = pygame.Surface((0,0)) 
+        sizes[k] = (0,0)
+        timing[k] = 0
         screen.blit(new_screen, (0,0)) 
         pygame.display.flip() 
+        return
+
+    col = next(color)
+    dest = z.get('dest')
+
+    if topic==info_topic:
+
+        #foo is the surface that we 'paint' the text and rectangles on
+        foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHT)) # (800,800)
+        foo.fill((0,0,0))
+        foo.set_alpha(175) #125
+        font = pygame.font.SysFont('Sans', 18)
+        font.set_bold(True)
+        header = "{} [{}]".format(z.get('header', 'no source'), k)
+        text = font.render(header, True, col)
+        foo.blit(text, (5,5)) 
+        font.set_bold(False)
+        font_size = z.get('font size', 18)
+        font_type = z.get('font type', 'Sans')
+        antialias = z.get('antialias', True)
+        bullets = z.get('bullets', True)
+        font = pygame.font.SysFont(font_type, font_size)
+        line_height = font.get_linesize()
+        print "line_height =",line_height
+
+        line_widths = [0] # for situation when text = [''] otherwise line_widths = [] and can't do max
+
+        n = line_height #20
+        for item in z.get('text',['No text']): 
+            if not item.strip():
+                n+=line_height
+                continue
+            font.set_bold(False)
+            max_chars_line = 66        
+            indent = 17
+            n+=4 if bullets else 0 # makes multi-line bullets more separated from prev and next bullet
+
+            if n+line_height > MAX_HEIGHT:
+                break
+
+            if item[0] == '#':
+                item=item[1:]
+                font.set_bold(True)
+                max_chars_line = 60
+
+            if item[0] == '*': 
+                foo.blit(star, (2,n+7))
+                item=item[1:]
+            elif bullets:
+                foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
+            # neither a star in front of item or a bullet
+            else:
+                max_chars_line+= 1 
+                indent = 10
+
+            lines = textwrap.wrap(item, max_chars_line) # if line is just whitespace it returns []
+                
+            for line in lines:
+
+                if n+line_height > MAX_HEIGHT: #20
+                    break
+
+                try:
+                    text = font.render(line.strip(), antialias, (255,255,255)) 
+                except UnicodeError as e:
+                    print "UnicodeError in text lines: ", e
+                else:
+                    foo.blit(text, (indent,n+5))
+                    line_widths.append(text.get_rect().width)
+                    n+=line_height
+
+        # determine the size of the rectangle for foo and its line border
+        max_line = max(line_widths)
+        if max_line > MAX_WIDTH:
+            max_line = MAX_WIDTH
+        elif max_line < MIN_WIDTH:
+            max_line = MIN_WIDTH
+
+        # item is the last item and if the last item is white space n gets incremented unnecessarily and this 'un'increments it
+        if not item.strip():
+            n-=line_height
+        height = min(n+12, MAX_HEIGHT)
+        new_size = (max_line+18,height)
+        pygame.draw.rect(foo, col, ((0,0), new_size), 3)
+
+        # put time in upper right of box
+        t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
+        t = t[1:] if t[0] == '0' else t
+        t = t[:-2] + t[-2:].lower()
+        text = pygame.font.SysFont('Sans', 18).render(t, True, col)
+        foo.blit(text, (new_size[0]-text.get_rect().width-5,5)) 
+
+    elif topic==image_topic: 
+
+        uri = z.get('uri')
+        if not uri:
+            return
+        foo = display_image(uri)
+        if not foo:
+            return
+        new_size = (400,400)
+        font = pygame.font.SysFont('Sans', 18)
+        font.set_bold(True)
+        try:
+            header = "{} [{}]".format(z.get('header', 'no artist'), k)
+        except UnicodeEncodeError:
+            header = "{} [{}]".format("Unicode Error", k)
+        text = font.render(header, True, col)
+        foo.blit(text, (5,5)) 
+        font.set_bold(False)
+        pygame.draw.rect(foo, col, ((0,0), new_size), 3)
+        # for image could just say that new_pos = old_pos (if time is less than some value or something)
+
+    #positions[k] = new_pos
+    foos[k] = foo 
+    sizes[k] = new_size 
+    timing[k] = time()
+    # Need to repaint in the right order so boxes arranged correctly from front to back
+    order = sorted(range(len(timing)), key=lambda t:timing[t])
+
+    if dest:
+        # negative coordinates are subtracted from the screen_width/height
+        x,y = dest
+        x = x if x > 0 else screen_width + x
+        y = y if y > 0 else screen_height + y
+        #new_pos = (x,y)
+        positions[k] = (x,y)
+    else: # need to find a location and since it's moving do the animation
+        attempts = 0
+        collision_hx = []
+        print "k =", k
+        while attempts < 10: #20
+            new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
+            rect = pygame.Rect((new_pos, new_size))    
+            collisions = rect.collidelistall(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
+            if not collisions:
+                print "No collision"
+                break
+            else:
+                print "Collision: new rectangle position collides with existing boxes: ", new_pos
+                collision_hx.append((new_pos, collisions)) ######### [(x if x < k else x+1) for x in collisions] and not do it below
+
+            attempts+=1
+
+        else:
+            print "Couldn't find a clear area for box"
+            print "collision_hx =", collision_hx
+            collision_areas = []
+            for new_pos, collisions in collision_hx:
+                overlap = 0
+                new_xy = tuple(map(sum, zip(new_pos, new_size)))
+                for j in collisions:
+                    idx = j if j < k else j+1 
+                    xy = tuple(map(sum, zip(positions[idx], sizes[idx])))
+                    overlap += area((new_pos, new_xy), (positions[idx], xy)) 
+
+                collision_areas.append((new_pos,overlap))   
+            
+            print "collision_areas =",collision_areas
+            new_pos, min_area = min(collision_areas, key=lambda x:x[1])
+            if min_area < 0:
+                raise ValueError("min_area should not be less than 0")
+            print "new_pos =", new_pos
+            print "min_area =", min_area
+                
+
+        blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
+        blast_x = random.randint(0,screen_width)
+        blast_point = (blast_x,blast_y)
+
+        pygame.draw.line(new_screen, col, new_pos, blast_point) 
+        pygame.draw.line(new_screen, col, (new_pos[0],new_pos[1]+new_size[1]), blast_point) 
+        pygame.draw.line(new_screen, col, (new_pos[0]+new_size[0],new_pos[1]), blast_point) 
+        pygame.draw.line(new_screen, col, (new_pos[0]+new_size[0],new_pos[1]+new_size[1]), blast_point) 
+        pygame.draw.rect(new_screen, col, (new_pos, new_size), 3)
 
         positions[k] = new_pos
-        foos[k] = foo 
-        sizes[k] = new_size 
-        timing[k] = time()
 
-        return
+
+        # here painting the boxes on top of the rays
+        for i in order:
+            new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
+
+        screen.blit(new_screen, (0,0)) 
+        pygame.display.flip()
+        sleep(2) 
+
+    # here painting the new screen (will overwrite rays if they were drawn because no designated dest
+    new_screen = pygame.Surface.copy(screen_image) # screen image is the clean background image
+    for i in order:
+        new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
+
+    screen.blit(new_screen, (0,0)) 
+    pygame.display.flip() 
+
+    return
 
 photos = get_unsplash_images()
 
