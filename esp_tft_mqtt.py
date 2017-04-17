@@ -198,14 +198,14 @@ def facts():
     titles = ['#'+task.title if task.star else task.title for task in tasks]
     shuffle(titles)
     titles = titles[:5]
-    titles = [re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]',title) for title in titles]
-    titles = [re.sub(r'\b\d+M?k?\b', '[  ]',title) for title in titles] because single digit no decimal place are missed by the first re
+    new_titles = [re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]',title) for title in titles]
+    new_titles = [re.sub(r'\b\d+M?k?\b', '[  ]',title) for title in titles] because single digit no decimal place are missed by the first re
     #re.sub(r'\b\d+\M?k?\b', '[  ]', 'About $650M he33llo 42% 200k I\'m a $32.5 string 30 one 1 two 2')
     #re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]', 'About $650M he33llo 42% 200k I\'m a $32.5 string 30')# captures numbers, numbers with decimal points and numbers followed by 'M' and 'k'
-    print(datetime.datetime.now())
-    print(repr(titles).encode('ascii', 'ignore'))
+    #print(datetime.datetime.now())
+    #print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"Things you need to remember ...", "text":titles, "pos":14} #expects a list
+    data = {"header":"Things you need to remember ...", "text":new_titles + titles, "pos":14} #expects a list
     publish(payload=json.dumps(data))
 
 def ticklers(): #should be ticklers but easier for testing
