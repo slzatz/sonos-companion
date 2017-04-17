@@ -193,19 +193,22 @@ def todos():
 
 def facts():
     #pos = 14
-    #tasks = session.query(Task).join(Context).filter(and_(Context.title == 'memory aid', Task.priority == 3, Task.completed == None)).order_by(desc(Task.modified))
-    tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
-    titles = ['#'+task.title if task.star else task.title for task in tasks]
-    shuffle(titles)
-    titles = titles[:5]
-    new_titles = [re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]',title) for title in titles]
-    new_titles = [re.sub(r'\b\d+M?k?\b', '[  ]',title) for title in titles] #because single digit no decimal place are missed by the first re
-    #re.sub(r'\b\d+\M?k?\b', '[  ]', 'About $650M he33llo 42% 200k I\'m a $32.5 string 30 one 1 two 2')
-    #re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]', 'About $650M he33llo 42% 200k I\'m a $32.5 string 30')# captures numbers, numbers with decimal points and numbers followed by 'M' and 'k'
-    #print(datetime.datetime.now())
-    #print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"Things you need to remember ...", "text":new_titles + titles, "pos":14} #expects a list
+    #the below all works but trying now to have just one item
+    #tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
+    #titles = ['#'+task.title if task.star else task.title for task in tasks]
+    #shuffle(titles)
+    #titles = titles[:5]
+    #new_titles = [re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]',title) for title in titles]
+    #new_titles = [re.sub(r'\b\d+M?k?\b', '[  ]',title) for title in titles] #because single digit no decimal place are missed by the first re
+    #data = {"header":"Things you need to remember ...", "text":new_titles + titles, "pos":14} #expects a list
+
+    task = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    title = '#'+task.title if task.star else task.title
+    new_title = re.sub(r'\b\d+\.?\d+M?k?\b', '[  ]',title)
+    new_title = re.sub(r'\b\d+M?k?\b', '[  ]',title) #because single digit no decimal place are missed by the first re
+    data = {"header":"You really need to remember ...", "text":[new_title,'','','','',title] "pos":14} #expects a list
+
     publish(payload=json.dumps(data))
 
 def ticklers(): #should be ticklers but easier for testing
