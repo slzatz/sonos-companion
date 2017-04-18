@@ -205,13 +205,13 @@ def facts():
 
     task = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     title = '#'+task.title if task.star else task.title
-    new_title = re.sub(r'(\b20\d{2}\b)', r'\1###', title) #put a 'Y' after the years so those numbers don't get substituted with []
+    new_title = re.sub(r'(\b20\d{2}\b)', r'\1YYY', title) #put a 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
     new_title = re.sub(r'\b\d+\.?,?\d+M?k?B?\b', '[  ]', new_title)
     print(new_title)
     new_title = re.sub(r'\b\d+M?k?B?\b', '[  ]', new_title) #because single digit no decimal place are missed by the first re
     print(new_title)
-    new_title = re.sub(r'###', '', new_title) #remove the 'Y' after the years so those numbers don't get substituted with []
+    new_title = re.sub(r'YYY', '', new_title) #remove the 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
 
     data = {"header":"You really need to remember ...", "text":[new_title,'','','','',title], "pos":14} #expects a list
