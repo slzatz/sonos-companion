@@ -220,7 +220,8 @@ def facts():
 
 def ticklers(): #should be ticklers but easier for testing
     #pos = 13
-    task = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    #task = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    task = session.query(Task).join(Context).filter(or_(Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     title = "#[{}] {}".format(task.context.title.capitalize(), task.title)
     note = task.note[:750] if task.note else '' # would be nice to truncate on a word
     #while 1: if not note[749].isspace():i-=1 continue else break
@@ -228,7 +229,7 @@ def ticklers(): #should be ticklers but easier for testing
     print(title.encode('ascii', 'ignore'))
     text = [title]
     text.extend(note.split("\n"))
-    data = {"header":"Ticklers", "text":text, "pos":13, "bullets":False, "font size":16} #text expects a list
+    data = {"header":"Ticklers - starred items from work & programming", "text":text, "pos":13, "bullets":False, "font size":16} #text expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)
