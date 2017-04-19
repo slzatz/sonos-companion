@@ -83,7 +83,7 @@ def top_opportunities():
         row = result.iloc[x]
         # immedately below works for the non-grouped results and below that when grouping
         #closed.append([row["Brand Level"][:26],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
-        closed.append([row.name[0], millify(row[3]), row.name[1][4:].strip()])
+        closed.append([row.name[0][:26], millify(row[3]), row.name[1][4:].strip()])
     headers=["Brand", "Closed", "Segment"]
     closed_formatted = tabulate(closed, headers).split("\n")
 
