@@ -76,11 +76,14 @@ def top_opportunities():
     headers=["Brand", "EA", "%", "Fcast", "Segment"]
     fc_formatted = tabulate(fc, headers).split("\n")
 
-    result = df.sort_values(["Amount Closed"], ascending=False)
+    #result = df.sort_values(["Amount Closed"], ascending=False) #this works but doesn't group same brand/same segment which below does
+    result = df.groupby(["Brand Level", "WebMD Segment (Oppty)"]).sum().sort_values(by=["Amount Closed"], ascending=False)
     closed = []
     for x in range(8):
         row = result.iloc[x]
-        closed.append([row["Brand Level"][:26],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
+        # immedately below works for the non-grouped results and below that when grouping
+        #closed.append([row["Brand Level"][:26],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
+        closed.append([row.name[0], millify(row[3]), row.name[1][4:].strip()])
     headers=["Brand", "Closed", "Segment"]
     closed_formatted = tabulate(closed, headers).split("\n")
 
