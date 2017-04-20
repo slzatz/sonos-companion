@@ -107,7 +107,7 @@ def weather():
        text.append(forecast[n]['title'] + ': ' + forecast[n]['fcttext'])
     print(datetime.datetime.now())
     print(repr(text).encode('ascii', 'ignore'))
-    data = {"header":"Weather", "text":text, "pos":0}
+    data = {"header":"Weather", "text":text, "pos":15, "dest":(1100,850)}
     publish(payload=json.dumps(data))
 
 def tides():
@@ -142,7 +142,7 @@ def tides():
         print("{} tide in {} hours".format(tide['type'], hours))
         tides.append("{} tide in {} hours".format(tide['type'], hours))
 
-    data = {"header":"Tides", "text":tides, "pos":0}
+    data = {"header":"Tides", "text":tides, "pos":15, "dest":(1100,850)}
     publish(payload=json.dumps(data))
 
 def stock_quote():
@@ -175,7 +175,7 @@ def stock_quote():
     # doesn't seem worth it for volume but here it is: format(int(float('4893848.4')), ',d')
     print(datetime.datetime.now())
     print(repr(results).encode('ascii', 'ignore'))
-    data = {"header":"WBMD", "text":results, "pos":2} #expects a list
+    data = {"header":"WBMD", "text":results, "pos":2, "dest":(20,40)} #expects a list
     publish(payload=json.dumps(data))
 
 
@@ -188,7 +188,7 @@ def todos():
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"Important Work Stuff", "text":titles, "pos":3} #expects a list
+    data = {"header":"Important Work Stuff", "text":titles, "pos":3, "dest":(20,500)} #expects a list
     publish(payload=json.dumps(data))
 
 def facts():
@@ -229,7 +229,7 @@ def ticklers(): #should be ticklers but easier for testing
     print(title.encode('ascii', 'ignore'))
     text = [title]
     text.extend(note.split("\n"))
-    data = {"header":"Ticklers - starred items from work & programming", "text":text, "pos":13, "bullets":False, "font size":16} #text expects a list
+    data = {"header":"Ticklers - starred items from work & programming", "text":text, "pos":13, "bullets":False, "font size":16, "dest":(1025,425)} #text expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)

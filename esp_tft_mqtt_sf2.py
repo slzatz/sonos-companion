@@ -54,6 +54,7 @@ def sales_forecast():
             "text":["expected amount: {}".format(expected_amount),
                     "forecast: {}".format(forecast),
                     "closed: {}".format(closed)], 
+                    "dest":(1600,900),
                     "pos":5} 
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
@@ -92,7 +93,8 @@ def top_opportunities():
             "font size":16,
             "font type":"monospace",
             "bullets":False,
-            "antialias":False, # we'll see if this makes mono-spaced more readable
+            "antialias":False, # makes monospace more readable
+            "dest":(400,30),
             "pos":11}
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
