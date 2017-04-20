@@ -13,7 +13,7 @@ esp_tft_mqtt.py message: {"header": "Top WSJ Article", "text": ["Trump Lashes Ou
 esp_tft_mqtt.py message: {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
 esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
 
-0=weather/tides(2x per hour)
+0=temp sensors
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=ToDos
@@ -28,6 +28,7 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 12=Reminders (alarms) and individual ticklers??
 13=Ticklers
 14=Facts
+15=weather/tides
 
 '''
 import platform
@@ -94,7 +95,7 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 15 
+NUM_BOXES = 16 
 positions = []
 foos = [] 
 sizes = []
