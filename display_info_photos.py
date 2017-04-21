@@ -13,7 +13,7 @@ esp_tft_mqtt.py message: {"header": "Top WSJ Article", "text": ["Trump Lashes Ou
 esp_tft_mqtt.py message: {"header": "WebMD Stock Quote", "text": ["50.955 +0.582% 176.80M 1.91B"], "pos": 2}
 esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
 
-0=temp sensors
+0=temp sensors (CT, NYC)
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=ToDos

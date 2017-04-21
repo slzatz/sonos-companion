@@ -1,4 +1,5 @@
 '''
+Python 3 script
 Current script to scrobble songs playing on Sonos to mqtt broker: have used
 aws ec2 for mqtt broker but probably does make more sense to use a local
 raspberry pi -- so config.py needs to set the local_mqtt_uri to localhost
