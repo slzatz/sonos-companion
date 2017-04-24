@@ -160,7 +160,8 @@ def stock_quote():
         return
 
     try:
-        color = "{green}" if info[2] > 0 else "{red}" if info[2] < 0 else "{}"
+        print("type(info[2]['value']) = ", type(info[2]['value']))
+        color = "{green}" if float(info[2]['value']) > 0 else "{red}" if float(info[2]['value']) < 0 else "{}"
         info[2]['value'] = "{}{:.2f}%".format(color, 100*float(info[2]['value'])) #percent change
         info[3]['value'] = format(int(float(info[3]['value'])), ',d') #volume
         info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #last timestamp
