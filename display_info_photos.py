@@ -48,6 +48,7 @@ import paho.mqtt.client as mqtt
 from artist_images_db import *
 from datetime import datetime
 from itertools import cycle
+import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--search", help="unsplash search term; if no command line switches defaults to celestial - 543026")
@@ -106,6 +107,7 @@ MAX_HEIGHT = screen_height - 50 #875
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 275
 
+color_map = {'{blue}':(0,0,255), '{red}':(255,0,0), '{green}':(0,255,0), '{grey}':(127,127,127), '{gray}':(127,127,127), '{}':(255,255,255), '{white}':(255,255,255), 'black':(0,0,0)}
 star = pygame.image.load('star.png').convert()
 
 bullet_surface = pygame.Surface((5,5))
@@ -287,6 +289,29 @@ def area(a, b):
     #if dx >= 0 and dy >= 0: # shouldn't need this since only checking if there was a collision
     return dx*dy
 
+#phrases = [(u'{}', u'the holy grail '), (u'{blue}', u' is very nice '), (u'{red}', u' is it?')]
+def get_phrases(line, start='{}'):
+
+    if line.find('{') == -1:
+        print "phrases =", [(start, line)]
+        return [(start, line)]
+
+    if line[0]!='{':
+        line = start+line
+
+    line = line+'{}'
+
+    z = re.finditer(r'{(.*?)}', line)
+    s = [[m.group(), m.span()] for m in z]
+    #print(s)
+    if not s:
+        return [('{}', line)]
+    phrases = []
+    for j in range(len(s)-1):
+        phrases.append((s[j][0],line[s[j][1][1]:s[j+1][1][0]]))
+    print "phrases =", phrases
+    return phrases
+
 def on_message(client, userdata, msg):
     # {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
     # {"pos":4, "header":"Wall Street Journal", "text":"["The rain in spain falls mainly on the plain", "I am a yankee doodle dandy"]}
@@ -379,20 +404,29 @@ def on_message(client, userdata, msg):
                 indent = 10
 
             lines = textwrap.wrap(item, max_chars_line) # if line is just whitespace it returns []
-                
-            for line in lines:
+
+            for l,line in enumerate(lines):
 
                 if n+line_height > MAX_HEIGHT: #20
                     break
 
-                try:
-                    text = font.render(line.strip(), antialias, (255,255,255)) 
-                except UnicodeError as e:
-                    print "UnicodeError in text lines: ", e
+                if l:
+                    phrases = get_phrases(line, phrase[0])
                 else:
-                    foo.blit(text, (indent,n+5))
-                    line_widths.append(text.get_rect().width)
-                    n+=line_height
+                    phrases = get_phrases(line)
+
+                xx = 0
+                for phrase in phrases:
+                    try:
+                        text = font.render(phrase[1], antialias, color_map.get(phrase[0], (255,255,255))) 
+                    except UnicodeError as e:
+                        print "UnicodeError in text lines: ", e
+                        continue
+                    foo.blit(text, (indent + xx,n+5))
+                    xx+=text.get_rect().width
+
+                line_widths.append(xx)
+                n+=line_height
 
         # determine the size of the rectangle for foo and its line border
         max_line = max(line_widths)
