@@ -409,7 +409,7 @@ def on_message(client, userdata, msg):
         pygame.draw.rect(foo, col, ((0,0), new_size), 3)
 
         # put time in upper right of box
-        t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
+        t = datetime.now().strftime("%I:%M %p")
         t = t[1:] if t[0] == '0' else t
         t = t[:-2] + t[-2:].lower()
         text = pygame.font.SysFont('Sans', 18).render(t, True, col)
@@ -434,9 +434,7 @@ def on_message(client, userdata, msg):
         foo.blit(text, (5,5)) 
         font.set_bold(False)
         pygame.draw.rect(foo, col, ((0,0), new_size), 3)
-        # for image could just say that new_pos = old_pos (if time is less than some value or something)
 
-    #positions[k] = new_pos
     foos[k] = foo 
     sizes[k] = new_size 
     timing[k] = time()
@@ -448,7 +446,6 @@ def on_message(client, userdata, msg):
         x,y = dest
         x = x if x > 0 else screen_width + x
         y = y if y > 0 else screen_height + y
-        #new_pos = (x,y)
         positions[k] = (x,y)
     else: # need to find a location and since it's moving do the animation
         attempts = 0
@@ -463,7 +460,7 @@ def on_message(client, userdata, msg):
                 break
             else:
                 print "Collision: new rectangle position collides with existing boxes: ", new_pos
-                collision_hx.append((new_pos, collisions)) ######### [(x if x < k else x+1) for x in collisions] and not do it below
+                collision_hx.append((new_pos, collisions)) 
 
             attempts+=1
 
@@ -527,9 +524,6 @@ print "Number of photos = {}".format(L)
 if not photos:
     sys.exit("No photos")
 
-prev_artist_track = None
-nn = 0 # measures the number of times in a row we've displayed the same artist so it doesn't go on endlessly
-
 screen.fill((0,0,0)) 
 pygame.display.flip()
 
@@ -542,6 +536,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.connect(aws_mqtt_uri, 1883, 60)
 
+prev_artist_track = None
 t0 = time()
 while 1:
     #pygame.event.get() or .poll() -- necessary to keep pygame window from going to sleep
