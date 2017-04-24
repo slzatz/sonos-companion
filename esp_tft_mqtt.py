@@ -214,7 +214,7 @@ def facts():
     new_title = re.sub(r'YYY', '', new_title) #remove the 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
 
-    data = {"header":"You really need to remember ...", "text":[new_title,,'',"{grey}"+title], "pos":14} #expects a list
+    data = {"header":"You really need to remember ...", "text":[new_title,'',"{grey}"+title], "pos":14} #expects a list
     
     publish(payload=json.dumps(data))
 
