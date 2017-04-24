@@ -160,8 +160,8 @@ def stock_quote():
         return
 
     try:
-        #info[2]['value'] = "{}{}".format(str(100*float(info[2]['value'])), "%") #percent change
-        info[2]['value'] = "{:.2f}%".format(100*float(info[2]['value'])) #percent change
+        color = "{green}" if info[2] > 0 else "{red}" if info[2] < 0 else "{}"
+        info[2]['value'] = "{}{:.2f}%".format(color, 100*float(info[2]['value'])) #percent change
         info[3]['value'] = format(int(float(info[3]['value'])), ',d') #volume
         info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #last timestamp
     except Exception as e:
@@ -214,7 +214,7 @@ def facts():
     new_title = re.sub(r'YYY', '', new_title) #remove the 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
 
-    data = {"header":"You really need to remember ...", "text":[new_title,'','','','',title], "pos":14} #expects a list
+    data = {"header":"You really need to remember ...", "text":[new_title,,'',"{grey}"+title], "pos":14} #expects a list
     
     publish(payload=json.dumps(data))
 
