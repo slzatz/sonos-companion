@@ -147,7 +147,6 @@ def tides():
 
 def stock_quote():
     #pos = 2
-
     uri = "https://api.intrinio.com/data_point"
     #payload = {'ticker':'WBMD', 'item':'last_price,volume,last_timestamp'} #percent_change and maybe change
     payload = {'ticker':'WBMD', 'item':'last_price,change,percent_change,volume,last_timestamp'} #percent_change and maybe change
@@ -160,9 +159,12 @@ def stock_quote():
         return
 
     try:
-        print("type(info[2]['value']) = ", type(info[2]['value']))
-        color = "{green}" if float(info[2]['value']) > 0 else "{red}" if float(info[2]['value']) < 0 else "{}"
-        info[2]['value'] = "{}{:.2f}%".format(color, 100*float(info[2]['value'])) #percent change
+        print("type(info[0]['value']) = ", type(info[0]['value']))  #type(info[3]['value']) =  
+        print("type(info[1]['value']) = ", type(info[1]['value']))  #type(info[3]['value']) =  
+        print("type(info[2]['value']) = ", type(info[2]['value']))  #type(info[2]['value']) =  <class 'float'>
+        print("type(info[3]['value']) = ", type(info[3]['value']))  #type(info[3]['value']) =  
+        color = "{green}" if info[2]['value'] > 0 else "{red}" if info[2]['value'] < 0 else "{}"
+        info[2]['value'] = "{}{:.2f}%".format(color, 100*info[2]['value']) #percent change
         info[3]['value'] = format(int(float(info[3]['value'])), ',d') #volume
         info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #last timestamp
     except Exception as e:
