@@ -25,6 +25,7 @@ import csv
 from io import StringIO
 
 millnames = ['','k','M'] #,' Billion',' Trillion']
+prev_forecast = [] # used to pick up the forecast around 1:30 am for comparisons
 
 def millify(n):
     n = float(n)
@@ -35,6 +36,7 @@ def millify(n):
     #return '{:.1f}{}'.format(n / 10**(3 * millidx), millnames[millidx])
     return s.format(n / 10**(3 * millidx), millnames[millidx])
 
+#schedule.every().day.at("10:30").do(job) # 1:30 am to 2am - need this to get the start of the day sales forcast to compare to
 def sales_forecast():
     s = requests.Session()
     r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
@@ -49,15 +51,30 @@ def sales_forecast():
     print("Expected Amount: ", expected_amount)
     print("Forecast: ", forecast)
     print("Closed: ", closed)
+    if prev_forecast:
+        color = '{green}' if sm['Current Forecast'] > prev_forecast[0] else '{red}' if sm['Current Forecast'] < prev_forecast[0] else '{}'
+    else:
+        color ='{}'
 
     data = {"header":"Forecast",
             "text":["expected amount: {}".format(expected_amount),
-                    "forecast: {}".format(forecast),
+                    "forecast: {}{}".format(color,forecast),
                     "closed: {}".format(closed)], 
                     "dest":(1600,900),
                     "pos":5} 
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+
+# gets the forecast at 1:30 am every morning
+def get_previous_forecast():
+    s = requests.Session()
+    r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
+    r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    content = r.content.decode('UTF-8')
+    df = pd.read_csv(StringIO(content))
+    sm = df.sum(axis=0)
+    prev_forecast.clear()
+    prev_forecast.append(sm['Current Forecast'])
 
 def top_opportunities():
     s = requests.Session()
@@ -124,6 +141,8 @@ schedule.every().hour.at(':41').do(top_opportunities)
 schedule.every().hour.at(':46').do(top_opportunities)
 schedule.every().hour.at(':51').do(top_opportunities)
 schedule.every().hour.at(':56').do(top_opportunities)
+
+schedule.every().day.at("1:30").do(get_previous_forecast)
 #schedule.run_all()
 
 while True:
