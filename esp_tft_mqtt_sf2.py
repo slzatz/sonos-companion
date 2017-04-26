@@ -47,8 +47,10 @@ def sales_forecast():
     sm = df.sum(axis=0)
     expected_amount = millify(sm['Amount Open Expected'])
     forecast = millify(sm['Current Forecast'])
+    previous_forecast = millify(prev_forecast[0]) if prev_forecast else "not available"
     closed = millify(sm['Amount Closed'])
     print("Expected Amount: ", expected_amount)
+    print("Previous Forecast: ", 
     print("Forecast: ", forecast)
     print("Closed: ", closed)
     if prev_forecast:
@@ -58,7 +60,7 @@ def sales_forecast():
 
     data = {"header":"Forecast",
             "text":["expected amount: {}".format(expected_amount),
-                    "forecast: {}{}".format(color,forecast),
+                    "forecast: {}{} v.{{}} {}".format(color,forecast,previous_forecast),
                     "closed: {}".format(closed)], 
                     "dest":(1600,900),
                     "pos":5} 
