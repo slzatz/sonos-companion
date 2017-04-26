@@ -50,7 +50,7 @@ def sales_forecast():
     previous_forecast = millify(prev_forecast[0]) if prev_forecast else "not available"
     closed = millify(sm['Amount Closed'])
     print("Expected Amount: ", expected_amount)
-    print("Previous Forecast: ", 
+    print("Previous Forecast: ", previous_forecast)
     print("Forecast: ", forecast)
     print("Closed: ", closed)
     if prev_forecast:
