@@ -6,10 +6,8 @@ and then sends that information in an mqtt message with topic "esp_tft"
 The format is {"header":"Tides", "text":"The next high tide is ...", "pos":2}
 pos is the position on the tft screen and is 0, 1, 2 etc
 Information may be tides, stock prices, news, weather
-The mqtt message is picked up by the esp8266 + feather tft
+The mqtt message is picked up by the esp8266 + feather tft or raspi pi+hdmi to TV`
 The script is esp_display_info.py
-
-Note that this script while it can still be used by an esp-TFT is now driving a full screen TV, monitor or Windows window
 
 News feeds are from newsapi.org, which is free
 Stock prices are through intrinio.  uri = "https://api.intrinio.com/data_point"
@@ -46,6 +44,8 @@ news_source = cycle(news_sources)
 publish = partial(mqtt_publish.single, 'esp_tft', hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 twit = twitter.Twitter(auth=twitter.OAuth(slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET))
+
+stock_info = []
 
 session = remote_session
 
@@ -169,16 +169,21 @@ def stock_quote():
         info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #last timestamp
     except Exception as e:
         print("Exception trying to format stock info", e)
+        print("Will use data in stock_info if any")
+    else:
+        stock_info.clear()
+        for x in info:
+            label = "{}:".format(x['item'].replace('_', ' ').title())
+            stock_info.append("{} {}".format(label, x['value']))
 
-    for x in info:
-        x['item'] = "{}{}".format(x['item'].replace('_', ' ').title(),":")
+    if not stock_info:
+        return
 
-    #results = ["{} {}".format(x['item'].replace('_', ' ').title()+":",x['value']) for x in info]
-    results = ["{} {}".format(x['item'],x['value']) for x in info]
+    #results = ["{} {}".format(x['item'], x['value']) for x in info]
     # doesn't seem worth it for volume but here it is: format(int(float('4893848.4')), ',d')
     print(datetime.datetime.now())
-    print(repr(results).encode('ascii', 'ignore'))
-    data = {"header":"WBMD", "text":results, "pos":2, "dest":(20,40)} #expects a list
+    print(repr(stock_info).encode('ascii', 'ignore'))
+    data = {"header":"WBMD", "text":stock_info, "pos":2, "dest":(20,40)} #expects a list
     publish(payload=json.dumps(data))
 
 
