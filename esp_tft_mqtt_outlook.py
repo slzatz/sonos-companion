@@ -55,18 +55,22 @@ def outlook():
         return
 
     text = []
-    for item in items:
-        subject = item.subject
-        if "time off" in subject.lower():
-            continue
-        line = (item.start-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+" "+subject
-        if "12:00-12:00" in line:
-            line = "All Day Event -"+line[11:]
+    try:
+        for item in items:
+            subject = item.subject
+            if "time off" in subject.lower():
+                continue
+            line = (item.start-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+" "+subject
+            if "12:00-12:00" in line:
+                line = "All Day Event -"+line[11:]
 
-        if now.hour == item.start.hour - 4:
-            line = "#{red}"+line
-        text.append(line)
-        print line
+            if now.hour == item.start.hour - 4:
+                line = "#{red}"+line
+            text.append(line)
+            print line
+    except errors.ErrorTimeoutExpired as e:
+        print "exchangelib error: ", e
+        return
 
     if not text:
         text = ["Nothing Scheduled"]
