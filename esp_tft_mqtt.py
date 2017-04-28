@@ -107,7 +107,7 @@ def weather():
        text.append(forecast[n]['title'] + ': ' + forecast[n]['fcttext'])
     print(datetime.datetime.now())
     print(repr(text).encode('ascii', 'ignore'))
-    data = {"header":"Weather", "text":text, "pos":15, "dest":(1100,850)}
+    data = {"header":"Weather", "text":text, "pos":15, "dest":(1000,825)}
     publish(payload=json.dumps(data))
 
 def tides():
@@ -142,7 +142,7 @@ def tides():
         print("{} tide in {} hours".format(tide['type'], hours))
         tides.append("{} tide in {} hours".format(tide['type'], hours))
 
-    data = {"header":"Tides", "text":tides, "pos":15, "dest":(1100,850)}
+    data = {"header":"Tides", "text":tides, "pos":15, "dest":(1000,825)}
     publish(payload=json.dumps(data))
 
 def stock_quote():

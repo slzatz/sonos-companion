@@ -62,7 +62,7 @@ def sales_forecast():
             "text":["expected amount: {}".format(expected_amount),
                     "forecast: {}{} v.{{}} {}".format(color,forecast,previous_forecast),
                     "closed: {}".format(closed)], 
-                    "dest":(1600,900),
+                    "dest":(1550,800),
                     "pos":5} 
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
