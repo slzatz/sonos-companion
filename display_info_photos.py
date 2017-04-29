@@ -101,7 +101,7 @@ positions = []
 foos = [] 
 sizes = []
 timing = []
-colors = [(255,0,0), (0,255,0), (0,255,255), (255,255,0), (255,0,255)] # (255,255,255)] # blue too dark
+colors = [(0,255,0), (0,255,255), (255,255,0), (255,0,255), (127,127,127)] # (255,255,255)] # blue too dark and red for alerts
 color = cycle(colors)
 MAX_HEIGHT = screen_height - 50 #875
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
@@ -192,7 +192,7 @@ def display_background_image(photo):
     font = pygame.font.SysFont('Sans', 24)
     font.set_bold(True)
 
-    text = font.render(photo.get('photographer', 'unknown'), True, (255,0,0))
+    text = font.render(photo.get('photographer', 'unknown'), True, (127,127,127))
 
     screen.blit(img, pos)      
     screen.blit(text, (0,0))
@@ -202,7 +202,7 @@ def display_background_image(photo):
     t = t[:-2] + t[-2:].lower()
     font = pygame.font.SysFont('Sans', 16)
     font.set_bold(False)
-    text = font.render(t, True, (255,0,0))
+    text = font.render(t, True, (127,127,127))
     screen.blit(text, (screen_width-text.get_rect().width-5,5)) 
 
     pygame.display.flip()
@@ -350,7 +350,8 @@ def on_message(client, userdata, msg):
 
         return
 
-    col = next(color)
+    col = z.get('color', next(color))
+    #col = next(color)
     dest = z.get('dest')
 
     if topic==info_topic:
