@@ -25,10 +25,15 @@ import csv
 from io import StringIO
 
 millnames = ['','k','M'] #,' Billion',' Trillion']
-prev_forecast = [] # used to pick up the forecast around 1:30 am for comparisons
+#prev_forecast = [] # used to pick up the forecast around 1:30 am for comparisons
+prev_day = {}
 
 def millify(n):
-    n = float(n)
+    try:
+        n = float(n)
+    except ValueError:
+        return n
+
     millidx = max(0,min(len(millnames)-1,
                         int(math.floor(0 if n == 0 else math.log10(abs(n))/3))))
 
@@ -47,36 +52,48 @@ def sales_forecast():
     sm = df.sum(axis=0)
     expected_amount = millify(sm['Amount Open Expected'])
     forecast = millify(sm['Current Forecast'])
-    previous_forecast = millify(prev_forecast[0]) if prev_forecast else "not available"
+    #previous_forecast = millify(prev_forecast[0]) if prev_forecast else "not available"
+    previous_forecast = millify(prev_day.get('forecast', 'not available')) 
+    previous_closed = millify(prev_day.get('closed', 'not available'))
     closed = millify(sm['Amount Closed'])
     print("Expected Amount: ", expected_amount)
     print("Previous Forecast: ", previous_forecast)
     print("Forecast: ", forecast)
+    print("Previous Closed: ", previous_closed)
     print("Closed: ", closed)
-    if prev_forecast:
-        color = '{green}' if sm['Current Forecast'] > prev_forecast[0] else '{red}' if sm['Current Forecast'] < prev_forecast[0] else '{}'
+
+    if prev_day.get('forecast'):
+        color = '{green}' if sm['Current Forecast'] > prev_day['forecast'] else '{red}' if sm['Current Forecast'] < prev_day['forecast'] else '{}'
+    else:
+        color ='{}'
+    if prev_day.get('closed'):
+        color = '{green}' if sm['Amount Closed'] > prev_day['closed'] else '{red}' if sm['Amount Closed'] < prev_day['closed'] else '{}'
     else:
         color ='{}'
 
     data = {"header":"Forecast",
             "text":["expected amount: {}".format(expected_amount),
-                    "forecast: {}{} v.{{}} {}".format(color,forecast,previous_forecast),
-                    "closed: {}".format(closed)], 
+                    "forecast: {}{}{{}} .v {}".format(color,forecast,previous_forecast),
+                    "closed: {}{}{{}} .v {}".format(color,closed,previous_closed),
+                    #"closed: {}".format(closed)], 
                     "dest":(1550,800),
                     "pos":5} 
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 # gets the forecast at 1:30 am every morning
-def get_previous_forecast():
+def get_prev_day():
     s = requests.Session()
     r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
     r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
     content = r.content.decode('UTF-8')
     df = pd.read_csv(StringIO(content))
     sm = df.sum(axis=0)
-    prev_forecast.clear()
-    prev_forecast.append(sm['Current Forecast'])
+    #prev_forecast.clear()
+    prev_day.clear()
+    prev_day['forecast'] = sm['Current Forecast']
+    prev_day['closed'] = sm['Amount Closed']
+    #prev_forecast.append(sm['Current Forecast'])
 
 def top_opportunities():
     s = requests.Session()
@@ -144,7 +161,7 @@ schedule.every().hour.at(':46').do(top_opportunities)
 schedule.every().hour.at(':51').do(top_opportunities)
 schedule.every().hour.at(':56').do(top_opportunities)
 
-schedule.every().day.at("1:30").do(get_previous_forecast)
+schedule.every().day.at("1:30").do(get_prev_day)
 #schedule.run_all()
 
 while True:
