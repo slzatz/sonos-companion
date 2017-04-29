@@ -161,7 +161,7 @@ def stock_quote():
     try:
         # all the values are floats except the last_timestamp which doesn't seem too useful is a string (and prob should be removed)
         color = "{green}" if info[1]['value'] > 0 else "{red}" if info[1]['value'] < 0 else "{}"
-        info[1]['value'] = "{}{}%".format(color, info[1]['value'])
+        info[1]['value'] = "{}{}".format(color, info[1]['value'])
         info[2]['value'] = "{}{:.2f}%".format(color, 100*info[2]['value']) #percent change
         info[3]['value'] = format(int(info[3]['value']), ',d') #volume
         info[4]['value'] = info[4]['value'].split('T')[1].split('+')[0] #last timestamp
