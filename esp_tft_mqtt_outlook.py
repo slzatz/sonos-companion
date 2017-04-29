@@ -29,6 +29,7 @@ eastern = timezone('US/Eastern')
 
 def outlook():
     now = datetime.now()
+    highlight_hour = False
     if now.weekday() == 4 and now.hour > 17:
         inc_days = 3
     elif now.weekday() > 4:
@@ -37,6 +38,7 @@ def outlook():
         inc_days = 1
     else:
         inc_days = 0
+        highlight_hour = True
   
     dt = now + timedelta(inc_days)
     print "dt =",dt
@@ -64,7 +66,7 @@ def outlook():
             if "12:00-12:00" in line:
                 line = "All Day Event -"+line[11:]
 
-            if now.hour == item.start.hour - 4:
+            if highlight_hour and (now.hour == item.start.hour - 4):
                 line = "#{red}"+line
             text.append(line)
             print line
