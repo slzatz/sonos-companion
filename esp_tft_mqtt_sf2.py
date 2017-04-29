@@ -74,8 +74,8 @@ def sales_forecast():
 
     data = {"header":"Forecast",
             "text":["expected amount: {}".format(expected_amount),
-                    "forecast: {}{}{{}} .v {}".format(color,forecast,previous_forecast),
-                    "closed: {}{}{{}} .v {}".format(color,closed,previous_closed)],
+                    "forecast: {}{}{{}} v. {}".format(color,forecast,previous_forecast),
+                    "closed: {}{}{{}} v. {}".format(color,closed,previous_closed)],
                     #"closed: {}".format(closed)], 
                     "dest":(1550,800),
                     "pos":5} 
