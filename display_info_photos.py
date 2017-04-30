@@ -25,7 +25,7 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 9=track_info broadcast by sonos_track_info.py
 10=sonos status (PLAYING, TRANSITIONING, STOPPED
 11=sales top opportunities
-12=Reminders (alarms) and individual ticklers??
+12=Reminders (alarms) 
 13=Ticklers
 14=Facts
 15=weather/tides
@@ -106,6 +106,7 @@ color = cycle(colors)
 MAX_HEIGHT = screen_height - 50 #875
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 275
+on_top = [7, 8, 12]
 
 color_map = {'{blue}':(0,0,255), '{red}':(255,0,0), '{green}':(0,255,0), '{grey}':(127,127,127), '{gray}':(127,127,127), '{}':(255,255,255), '{white}':(255,255,255), 'black':(0,0,0)}
 star = pygame.image.load('star.png').convert()
@@ -534,9 +535,10 @@ def on_message(client, userdata, msg):
         positions[k] = new_pos
 
 
-        # here painting the boxes on top of the rays
+        # here painting the boxes on top of the rays but don't worry about always on top
         for i in order:
             new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
+
 
         screen.blit(new_screen, (0,0)) 
         pygame.display.flip()
@@ -544,7 +546,15 @@ def on_message(client, userdata, msg):
 
     # here painting the new screen (will overwrite rays if they were drawn because no designated dest
     new_screen = pygame.Surface.copy(screen_image) # screen image is the clean background image
+    #for i in order:
+        #new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
+
     for i in order:
+        if i in on_top:
+            continue
+        new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
+
+    for i in on_top:
         new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
 
     screen.blit(new_screen, (0,0)) 
