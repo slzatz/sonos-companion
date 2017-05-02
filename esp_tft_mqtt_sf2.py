@@ -68,15 +68,14 @@ def sales_forecast():
         color ='{}'
 
     if prev_day.get('closed'):
-        color = '{green}' if sm['Amount Closed'] > prev_day['closed'] else '{red}' if sm['Amount Closed'] < prev_day['closed'] else '{}'
+        color1 = '{green}' if sm['Amount Closed'] > prev_day['closed'] else '{red}' if sm['Amount Closed'] < prev_day['closed'] else '{}'
     else:
-        color ='{}'
+        color1 ='{}'
 
     data = {"header":"Forecast",
             "text":["expected amount: {}".format(expected_amount),
                     "forecast: {}{}{{}} v. {}".format(color,forecast,previous_forecast),
-                    "closed: {}{}{{}} v. {}".format(color,closed,previous_closed)],
-                    #"closed: {}".format(closed)], 
+                    "closed: {}{}{{}} v. {}".format(color1,closed,previous_closed)],
                     "dest":(1550,800),
                     "pos":5} 
 
