@@ -245,7 +245,7 @@ def ticklers():
         else:
             table_as_str = tabulate(table_as_list, headers='firstrow')
             print(table_as_str)
-            text.extend(table_as_str))
+            text.extend(table_as_str)
 
     else:
         text.extend(note.split("\n"))
