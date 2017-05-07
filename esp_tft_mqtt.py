@@ -35,6 +35,7 @@ import html
 from functools import partial
 from random import shuffle
 import re
+from tabulate import tabulate
 
 tides_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
@@ -224,7 +225,7 @@ def facts():
     
     publish(payload=json.dumps(data))
 
-def ticklers(): #should be ticklers but easier for testing
+def ticklers(): 
     #pos = 13
     #task = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     task = session.query(Task).join(Context).filter(or_(Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
@@ -234,7 +235,21 @@ def ticklers(): #should be ticklers but easier for testing
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
     text = [title]
-    text.extend(note.split("\n"))
+
+    if task.tag and 'table' in task.tag.split(','):
+        try:
+            table_as_list = json.loads(note)
+        except ValueError:
+            print("Probably not valid json")
+            text.extend("Problem rendering table")
+        else:
+            table_as_str = tabulate(table_as_list, headers='firstrow')
+            print(table_as_str)
+            text.extend(table_as_str))
+
+    else:
+        text.extend(note.split("\n"))
+
     data = {"header":"Ticklers - starred items from work & programming", "text":text, "pos":13, "bullets":False, "font size":16, "dest":(1025,425)} #text expects a list
     publish(payload=json.dumps(data))
 
