@@ -241,16 +241,17 @@ def ticklers():
             table_as_list = json.loads(note)
         except ValueError:
             print("Probably not valid json")
-            text.extend("Problem rendering table")
+            #text.extend("Problem rendering table")
+            note = "Problem rendering table"
         else:
-            table_as_str = tabulate(table_as_list, headers='firstrow')
-            print(table_as_str)
-            text.extend(table_as_str)
+            note = tabulate(table_as_list, headers='firstrow')
+            print(note)
+            #text.extend(table_as_str.split("\n"))
 
-    else:
-        text.extend(note.split("\n"))
+    #else:
+    text.extend(note.split("\n"))
 
-    data = {"header":"Ticklers - starred items from work & programming", "text":text, "pos":13, "bullets":False, "font size":16, "dest":(1025,425)} #text expects a list
+    data = {"header":"Ticklers - starred items from work & programming", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,425)} #text expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)
