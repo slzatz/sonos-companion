@@ -237,18 +237,9 @@ def ticklers():
     text = [title]
 
     if task.tag and 'table' in task.tag.split(','):
-        try:
-            table_as_list = json.loads(note)
-        except ValueError:
-            print("Probably not valid json")
-            #text.extend("Problem rendering table")
-            note = "Problem rendering table"
-        else:
-            note = tabulate(table_as_list, headers='firstrow')
-            print(note)
-            #text.extend(table_as_str.split("\n"))
+        table_as_list = [x.split(",") for x in task.note.split("\n")]
+        note = tabulate(table_as_list, headers='firstrow')
 
-    #else:
     text.extend(note.split("\n"))
 
     data = {"header":"Ticklers - starred items from work & programming", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,425)} #text expects a list
