@@ -235,14 +235,16 @@ def ticklers():
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
     text = [title]
+    data = {}
 
     if task.tag and 'table' in task.tag.split(','):
         table_as_list = [x.split(",") for x in task.note.split("\n")]
         note = tabulate(table_as_list, headers='firstrow')
+        data.update({"font type":"monospace"})
 
     text.extend(note.split("\n"))
 
-    data = {"header":"Ticklers - starred items from work & programming", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,425)} #text expects a list
+    data.update({"header":"Ticklers - starred items from work & programming", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,425)}) #text expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)
