@@ -25,7 +25,6 @@ import csv
 from io import StringIO
 
 millnames = ['','k','M'] #,' Billion',' Trillion']
-#prev_forecast = [] # used to pick up the forecast around 1:30 am for comparisons
 prev_day = {}
 
 def millify(n):
@@ -52,7 +51,6 @@ def sales_forecast():
     sm = df.sum(axis=0)
     expected_amount = millify(sm['Amount Open Expected'])
     forecast = millify(sm['Current Forecast'])
-    #previous_forecast = millify(prev_forecast[0]) if prev_forecast else "not available"
     previous_forecast = millify(prev_day.get('forecast', 'not available')) 
     previous_closed = millify(prev_day.get('closed', 'not available'))
     closed = millify(sm['Amount Closed'])
@@ -89,11 +87,9 @@ def get_prev_day():
     content = r.content.decode('UTF-8')
     df = pd.read_csv(StringIO(content))
     sm = df.sum(axis=0)
-    #prev_forecast.clear()
     prev_day.clear()
     prev_day['forecast'] = sm['Current Forecast']
     prev_day['closed'] = sm['Amount Closed']
-    #prev_forecast.append(sm['Current Forecast'])
 
 def top_opportunities():
     s = requests.Session()
@@ -102,8 +98,9 @@ def top_opportunities():
     
     content = r.content.decode('UTF-8')
     df = pd.read_csv(StringIO(content))
+    df_ = df[df["Amount Open Expected"] != 0] ####################################################
 
-    result = df.sort_values(["Current Forecast"], ascending=False)
+    result = df_.sort_values(["Current Forecast"], ascending=False) ######################################
     fc = []
     for x in range(8):
         row = result.iloc[x]
