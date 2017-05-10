@@ -230,6 +230,8 @@ def facts():
         data.update({"font type":"monospace"})
         text = [title]
         text.extend(note.split("\n"))
+    else:
+        text = [title]
 
     data.update({"header":"You really need to remember ...", "text":text, "pos":14}) #expects a list
     
@@ -237,7 +239,7 @@ def facts():
 
 def ticklers(): 
     #pos = 13
-    #task = session.query(Task).join(Context).filter(or_(Context.title=='memory aid', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    #task = session.query(Task).join(Context).filter(or_(Context.title=='facts', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     task = session.query(Task).join(Context).filter(or_(Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     title = "#[{}] {}".format(task.context.title.capitalize(), task.title)
     note = task.note[:750] if task.note else '' # would be nice to truncate on a word
