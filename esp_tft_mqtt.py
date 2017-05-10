@@ -202,7 +202,7 @@ def facts():
     #pos = 14
 
     #the below all works but trying now to have just one item
-    #tasks = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False)
+    #tasks = session.query(Task).join(Context).filter(Context.title=='facts', Task.priority==3, Task.completed==None, Task.deleted==False)
     #titles = ['#'+task.title if task.star else task.title for task in tasks]
     #shuffle(titles)
     #titles = titles[:5]
@@ -210,7 +210,7 @@ def facts():
     #new_titles = [re.sub(r'\b\d+M?k?\b', '[  ]',title) for title in titles] #because single digit no decimal place are missed by the first re
     #data = {"header":"Things you need to remember ...", "text":new_titles + titles, "pos":14} #expects a list
 
-    task = session.query(Task).join(Context).filter(Context.title=='memory aid', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    task = session.query(Task).join(Context).filter(Context.title=='facts', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     title = '#'+task.title if task.star else task.title
     new_title = re.sub(r'(\b20\d{2}\b)', r'\1YYY', title) #put a 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
@@ -221,7 +221,17 @@ def facts():
     new_title = re.sub(r'YYY', '', new_title) #remove the 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
 
-    data = {"header":"You really need to remember ...", "text":[new_title,'',"{grey}"+title], "pos":14} #expects a list
+    data = {}
+    if title!=new_title:
+        text = [new_title,'',"{grey}"+title]
+    elif task.tag and 'table' in task.tag.split(','):
+        table_as_list = [x.split(",") for x in task.note.split("\n")]
+        note = tabulate(table_as_list, headers='firstrow')
+        data.update({"font type":"monospace"})
+        text = [title]
+        text.extend(note.split("\n"))
+
+    data.update({"header":"You really need to remember ...", "text":text, "pos":14}) #expects a list
     
     publish(payload=json.dumps(data))
 
