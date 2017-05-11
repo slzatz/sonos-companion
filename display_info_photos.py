@@ -29,7 +29,8 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 13=Ticklers
 14=Facts
 15=weather/tides
-
+16=Industry
+17=temp sensor
 '''
 import platform
 import os
@@ -96,7 +97,7 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-NUM_BOXES = 16 
+NUM_BOXES = 18 
 positions = []
 foos = [] 
 sizes = []
