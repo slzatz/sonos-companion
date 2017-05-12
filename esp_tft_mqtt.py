@@ -52,7 +52,11 @@ session = remote_session
 
 def twitter_feed():
     #pos = 1
-    z = twit.statuses.home_timeline()[:5]
+    try:
+        z = twit.statuses.home_timeline()[:5]
+    except twitter.api.TwitterHTTPError as e:
+        print("Twitter exception: "+e)
+        return
     tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
@@ -267,7 +271,7 @@ def industry():
     #while 1: if not note[749].isspace():i-=1 continue else break
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
-    text = [title]
+    text = ['',title]
     text.extend(note.split("\n"))
     data = {"header":"Industry - starred items", "text":text[:10], "pos":16, "bullets":False, "font size":12} #text expects a list
     publish(payload=json.dumps(data))
