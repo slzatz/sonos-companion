@@ -55,6 +55,9 @@ def outlook():
     except (errors.ErrorInternalServerTransientError, errors.ErrorMailboxStoreUnavailable) as e:
         print "exchangelib error: ", e
         return
+    except AttributeError as e:
+        print "outlook error - would be caused by incorrect pw", e
+        return
 
     text = []
     try:
