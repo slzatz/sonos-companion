@@ -368,7 +368,7 @@ def on_message(client, userdata, msg):
         text = font.render(header, True, col)
         foo.blit(text, (5,5)) 
         font.set_bold(False)
-        font_size = z.get('font size', 18)
+        font_size = z.get('font size', 16)
         font_type = z.get('font type', 'Sans')
         antialias = z.get('antialias', True)
         bullets = z.get('bullets', True)
