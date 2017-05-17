@@ -60,7 +60,7 @@ def twitter_feed():
     tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
-    data = {"header":"twitter", "text":tweets, "pos":1} #expects a list
+    data = {"header":"twitter", "text":tweets, "pos":1, "font size":14, "dest":(12,725)} #expects a list
     publish(payload=json.dumps(data))
 
 def news():
@@ -82,7 +82,7 @@ def news():
     print(datetime.datetime.now())
     print(repr(articles).encode('ascii', 'ignore'))
     header = z.get('source', 'no source').replace('-', ' ').title()
-    data = {"header":header,"text":articles, "pos":1} #expects a list
+    data = {"header":header,"text":articles, "pos":1, "font size":14, "dest":(12,725)} #expects a list
     publish(payload=json.dumps(data))
 
 def weather():
@@ -199,7 +199,7 @@ def todos():
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"Important Work Stuff", "text":titles, "pos":3, "dest":(20,500)} #expects a list
+    data = {"header":"Important Work Stuff", "text":titles, "pos":3, "dest":(1000,10)} #expects a list
     publish(payload=json.dumps(data))
 
 def facts():
@@ -260,7 +260,7 @@ def ticklers():
 
     text.extend(note.split("\n"))
 
-    data.update({"header":"Ticklers - starred items from work & programming", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,425)}) #text expects a list
+    data.update({"header":"Ticklers - starred items from work & programming", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,325)}) #text expects a list
     publish(payload=json.dumps(data))
 
 def industry(): 
@@ -273,7 +273,11 @@ def industry():
     print(title.encode('ascii', 'ignore'))
     text = ['',title]
     text.extend(note.split("\n"))
-    data = {"header":"Industry - starred items", "text":text[:10], "pos":16, "bullets":False, "font size":12} #text expects a list
+    data = {"header":"Industry - starred items",
+            "text":text[:10],
+            "pos":16, "bullets":False,
+            "dest":(15,400),
+            "font size":12} #text expects a list
     publish(payload=json.dumps(data))
 
 schedule.every().hour.at(':07').do(tides)

@@ -74,7 +74,7 @@ def sales_forecast():
             "text":["expected amount: {}".format(expected_amount),
                     "forecast: {}{}{{}} v. {}".format(color,forecast,previous_forecast),
                     "closed: {}{}{{}} v. {}".format(color1,closed,previous_closed)],
-                    "dest":(1550,800),
+                    "dest":(10,250),
                     "pos":5} 
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
@@ -127,7 +127,7 @@ def top_opportunities():
             "font type":"monospace",
             "bullets":False,
             "antialias":False, # makes monospace more readable
-            "dest":(400,30),
+            "dest":(325,10),
             "pos":11}
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)

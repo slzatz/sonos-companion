@@ -259,7 +259,7 @@ while 1:
             publish_lyrics(payload=json.dumps(data))
             continue
 
-        data = {"header":track, "text":lyrics, "pos":8, "bullets":False, "font size":16, "dest":(30,30)} #expects a list
+        data = {"header":track, "text":lyrics, "pos":8, "bullets":False, "font size":14, "dest":(30,30)} #expects a list
         #print data
         publish_lyrics(payload=json.dumps(data))
         t1 = time()
