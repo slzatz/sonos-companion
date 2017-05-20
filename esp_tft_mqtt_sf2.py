@@ -43,8 +43,12 @@ def millify(n):
 #schedule.every().day.at("10:30").do(job) # 1:30 am to 2am - need this to get the start of the day sales forcast to compare to
 def sales_forecast():
     s = requests.Session()
-    r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
-    r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    try:
+        r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
+        r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    except requests.exceptions.ConnectionError as e:
+        print("Connection error in sales_forecast: "+e)
+        return
     
     content = r.content.decode('UTF-8')
     df = pd.read_csv(StringIO(content))
@@ -82,8 +86,12 @@ def sales_forecast():
 # gets the forecast at 1:30 am every morning
 def get_prev_day():
     s = requests.Session()
-    r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
-    r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    try:
+        r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
+        r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    except requests.exceptions.ConnectionError as e:
+        print("Connection error in get_prev_day: "+e)
+        return
     content = r.content.decode('UTF-8')
     df = pd.read_csv(StringIO(content))
     sm = df.sum(axis=0)
@@ -93,8 +101,12 @@ def get_prev_day():
 
 def top_opportunities():
     s = requests.Session()
-    r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
-    r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    try:
+        r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
+        r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
+    except requests.exceptions.ConnectionError as e:
+        print("Connection error in top_opportunities: "+e)
+        return
     
     content = r.content.decode('UTF-8')
     df = pd.read_csv(StringIO(content))
