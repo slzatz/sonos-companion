@@ -237,7 +237,7 @@ def facts():
     else:
         text = [title]
 
-    data.update({"header":"You really need to remember ...", "text":text, "pos":14}) #expects a list
+    data.update({"header":"Fact ...", "text":text, "pos":14, "dest":(800,800)}) #expects a list
     
     publish(payload=json.dumps(data))
 
@@ -250,7 +250,7 @@ def ticklers():
     #while 1: if not note[749].isspace():i-=1 continue else break
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
-    text = [title]
+    text = ["(Starred item from work or programming)", title]
     data = {}
 
     if task.tag and 'table' in task.tag.split(','):
@@ -260,7 +260,7 @@ def ticklers():
 
     text.extend(note.split("\n"))
 
-    data.update({"header":"Ticklers - starred items from work & programming", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,325)}) #text expects a list
+    data.update({"header":"Tickler ...", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,450)}) #text expects a list
     publish(payload=json.dumps(data))
 
 def industry(): 
@@ -271,9 +271,9 @@ def industry():
     #while 1: if not note[749].isspace():i-=1 continue else break
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
-    text = ['',title]
+    text = ['', "Starred item from Industry", title]
     text.extend(note.split("\n"))
-    data = {"header":"Industry - starred items",
+    data = {"header":"Industry ...",
             "text":text[:10],
             "pos":16, "bullets":False,
             "dest":(15,400),
