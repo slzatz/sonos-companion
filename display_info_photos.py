@@ -364,7 +364,7 @@ def on_message(client, userdata, msg):
         foo.set_alpha(175) #125
         font = pygame.font.SysFont('Sans', 18)
         font.set_bold(True)
-        header = "{} [{}]".format(z.get('header', 'no source'), k)
+        header = "{} [{}] {}".format(z.get('header', 'no source'), k, dest if dest else " ") # problem if dest None would like to know what it was
         text = font.render(header, True, col)
         foo.blit(text, (5,5)) 
         font.set_bold(False)
