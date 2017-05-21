@@ -55,7 +55,7 @@ def twitter_feed():
     try:
         z = twit.statuses.home_timeline()[:5]
     except twitter.api.TwitterHTTPError as e:
-        print("Twitter exception: "+e)
+        print("Twitter exception: ",e)
         return
     tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())

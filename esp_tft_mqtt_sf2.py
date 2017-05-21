@@ -47,7 +47,7 @@ def sales_forecast():
         r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
         r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
     except requests.exceptions.ConnectionError as e:
-        print("Connection error in sales_forecast: "+e)
+        print("Connection error in sales_forecast: ", e)
         return
     
     content = r.content.decode('UTF-8')
@@ -90,7 +90,7 @@ def get_prev_day():
         r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
         r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
     except requests.exceptions.ConnectionError as e:
-        print("Connection error in get_prev_day: "+e)
+        print("Connection error in get_prev_day: ", e)
         return
     content = r.content.decode('UTF-8')
     df = pd.read_csv(StringIO(content))
@@ -105,12 +105,16 @@ def top_opportunities():
         r = s.get("https://login.salesforce.com/?un={}&pw={}".format(sf_id, sf_pw))
         r = s.get("https://na3.salesforce.com/00O50000003OCM5?view=d&snip&export=1&enc=UTF-8&xf=csv")
     except requests.exceptions.ConnectionError as e:
-        print("Connection error in top_opportunities: "+e)
+        print("Connection error in top_opportunities: ", e)
         return
     
     content = r.content.decode('UTF-8')
     df = pd.read_csv(StringIO(content))
-    df_ = df[df["Amount Open Expected"] != 0] ####################################################
+    series = df.get("Amount Open Expected")
+    if series is None:
+        return
+    #df_ = df[df["Amount Open Expected"] != 0] ####################################################
+    df_ = df[series != 0] ####################################################
 
     result = df_.sort_values(["Current Forecast"], ascending=False) ######################################
     fc = []
