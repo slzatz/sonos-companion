@@ -81,6 +81,7 @@ def outlook():
         text = ["Nothing Scheduled"]
     data = {"header":"Schedule "+dt.strftime("%a %b %d"), "text":text, "pos":6, "dest":(475,455), "font size":16} #expects a list
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    mqtt_publish.single('esp_tft_display', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 schedule.every().hour.at(':04').do(outlook)
 schedule.every().hour.at(':09').do(outlook)
