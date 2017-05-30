@@ -1,5 +1,5 @@
 '''
-Python 3 script
+Python 2.7 script
 Current script to scrobble songs playing on Sonos to mqtt broker: have used
 aws ec2 for mqtt broker but probably does make more sense to use a local
 raspberry pi -- so config.py needs to set the local_mqtt_uri to localhost
@@ -28,16 +28,16 @@ import soco
 from soco import config as soco_config
 import paho.mqtt.publish as mqtt_publish
 
-print("The current location is {}".format(location))
+print "The current location is {}".format(location) 
 
 sonos_track_topic = 'sonos/{}/track'.format(location)
-print("sonos_track_topic =",sonos_track_topic)
+print "sonos_track_topic =", sonos_track_topic
 
 sonos_status_topic = 'sonos/{}/status'.format(location)
-print("sonos_status_topic =",sonos_status_topic)
+print "sonos_status_topic =", sonos_status_topic 
 
 sonos_volume_topic = 'sonos/{}/volume'.format(location)
-print("sonos_volume_topic =", sonos_volume_topic)
+print "sonos_volume_topic =", sonos_volume_topic 
 
 soco_config.CACHE_ENABLED = False
 
