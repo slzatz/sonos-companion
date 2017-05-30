@@ -1,16 +1,7 @@
 '''
-python2
-This script gathers information about things like weather and tides using Web apis
-and then sends that information in an mqtt message with topic "esp_tft" 
-The format is {"header":"Tides", "text":"The next high tide is ...", "pos":2}
-pos is the position on the tft screen and is 0, 1, 2 etc
-Information may be tides, stock prices, news, weather
-The mqtt message is picked up by the esp8266 + feather tft
-The script is esp_display_info.py
-Schedule.every().hour.at(':00').do(job)
-https://www.worldtides.info/api?extremes&lat=41.117597&lon=-73.407897&key=a417...
-Documentation at https://www.worldtides.info/apidocs
-Need to use the following for To Dos and Facts
+python 2.7
+This script gets artists images and lyrics when sonos is playing
+Relies on sonos_track_info.py for artist and track
 '''
 import os
 import sys
@@ -172,11 +163,9 @@ def on_message(client, userdata, msg):
 
         artist = z.get("artist", "")
         track_title = z.get("title", "")
-        #lyrics = z.get("lyrics", "")
 
         print "artist =",artist
         print "track_title =",track_title
-        #trackinfo.update({"artist":artist, "track_title":track_title, "lyrics":lyrics})
         trackinfo.update({"artist":artist, "track_title":track_title})
 
     elif topic == sonos_status_topic:
@@ -198,11 +187,8 @@ while 1:
 
     client.loop()
 
-    #if sonos_status[0] == 'PLAYING': # don't think need to have this check here
-
     artist = trackinfo['artist']
     track = trackinfo['track_title']
-    #lyrics = trackinfo['lyrics']
     state = sonos_status[0]
 
     if prev_artist != artist:
@@ -260,7 +246,6 @@ while 1:
             continue
 
         data = {"header":track, "text":lyrics, "pos":8, "bullets":False, "font size":14, "dest":(30,30)} #expects a list
-        #print data
         publish_lyrics(payload=json.dumps(data))
         t1 = time()
         print t1
