@@ -1,4 +1,5 @@
 '''
+python2 script
 The script uses the flask extension flask-ask, which was written specifically for python-
 based Alexa apps.
 Uses flask_ask_zmq.py to do the actual interactions with Sonos
