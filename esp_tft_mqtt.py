@@ -218,16 +218,19 @@ def facts():
     title = '#'+task.title if task.star else task.title
     new_title = re.sub(r'(\b20\d{2}\b)', r'\1YYY', title) #put a 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
-    new_title = re.sub(r'\b\d+\.?,?\d+M?k?B?\b', '[  ]', new_title)
+    #new_title = re.sub(r'\b\d+\.?,?\d+M?k?B?\b', '[  ]', new_title)
+    new_title = re.sub(r'\b\d+\.?,?\d+M?k?B?\b', r'{grey}\1{}', new_title)
     print(new_title)
-    new_title = re.sub(r'\b\d+M?k?B?\b', '[  ]', new_title) #because single digit no decimal place are missed by the first re
+    #new_title = re.sub(r'\b\d+M?k?B?\b', '[  ]', new_title) #because single digit no decimal place are missed by the first re
+    new_title = re.sub(r'\b\d+M?k?B?\b', r'{grey}\1{}', new_title) #because single digit no decimal place are missed by the first re
     print(new_title)
     new_title = re.sub(r'YYY', '', new_title) #remove the 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
 
     data = {}
     if title!=new_title:
-        text = [new_title,'',"{grey}"+title]
+        #text = [new_title,'',"{grey}"+title]
+        text = [new_title]
     elif task.tag and 'table' in task.tag.split(','):
         table_as_list = [x.split(",") for x in task.note.split("\n")]
         note = tabulate(table_as_list, headers='firstrow')
