@@ -219,10 +219,10 @@ def facts():
     new_title = re.sub(r'(\b20\d{2}\b)', r'\1YYY', title) #put a 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
     #new_title = re.sub(r'\b\d+\.?,?\d+M?k?B?\b', '[  ]', new_title)
-    new_title = re.sub(r'\b\d+\.?,?\d+M?k?B?\b', r'{grey}\1{}', new_title)
+    new_title = re.sub(r'(\b\d+\.?,?\d+M?k?B?\b)', r'{grey}\1{}', new_title)
     print(new_title)
     #new_title = re.sub(r'\b\d+M?k?B?\b', '[  ]', new_title) #because single digit no decimal place are missed by the first re
-    new_title = re.sub(r'\b\d+M?k?B?\b', r'{grey}\1{}', new_title) #because single digit no decimal place are missed by the first re
+    new_title = re.sub(r'(\b\d+M?k?B?\b)', r'{grey}\1{}', new_title) #because single digit no decimal place are missed by the first re
     print(new_title)
     new_title = re.sub(r'YYY', '', new_title) #remove the 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
