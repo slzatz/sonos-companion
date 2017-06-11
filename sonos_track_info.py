@@ -1,9 +1,7 @@
 '''
 Python 2.7 script
-Current script to scrobble songs playing on Sonos to mqtt broker: have used
-aws ec2 for mqtt broker but probably does make more sense to use a local
-raspberry pi -- so config.py needs to set the local_mqtt_uri to localhost
-uri
+Current script to scrobble songs playing on Sonos to mqtt broker
+using aws ec2 for mqtt broker 
 
 current_track = master.get_current_track_info() --> {
             u'album': 'We Walked In Song', 
@@ -23,7 +21,7 @@ import sys
 import datetime
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
-from config import local_mqtt_uri, location, aws_mqtt_uri
+from config import location, aws_mqtt_uri
 import soco
 from soco import config as soco_config
 import paho.mqtt.publish as mqtt_publish
@@ -107,20 +105,6 @@ while 1:
 
     if state == 'PLAYING':
 
-        # get volume for neopixel display
-        #cur_volume = master.volume
-        #
-        #if cur_volume != prev_volume:
-        #    try:
-        #        mqtt_publish.single(sonos_volume_topic, cur_volume, hostname=local_mqtt_uri, retain=False, port=1883, keepalive=60)
-        #    except Exception as e:
-        #        print "Exception trying to publish to mqtt broker: ", e
-        #    else:
-        #        print "volume {} sent successfully to mqtt broker".format(cur_volume)
-
-        #    prev_volume = cur_volume
-
-        # get track info to see if track has changed
         try:
             track = master.get_current_track_info()
         except Exception as e:
@@ -144,14 +128,5 @@ while 1:
 
         prev_title = title
 
-    #if prev_state != state:
-    #    data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(master.volume)], 'pos':10}
-    #    mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
-
-    #    # at least one of the listeners for the below is esp_tft_mqtt_photos.py
-    #    mqtt_publish.single(sonos_status_topic, json.dumps({'state':state}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
-
-    #    prev_state = state
-        
     sleep(1)
 
