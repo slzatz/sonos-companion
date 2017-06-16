@@ -143,7 +143,7 @@ def top_opportunities():
             "font type":"monospace",
             "bullets":False,
             "antialias":False, # makes monospace more readable
-            "dest":(325,10),
+            "dest":(355,10),
             "pos":11}
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
