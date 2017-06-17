@@ -2,6 +2,9 @@
 python 2.7
 This script gets artists images and lyrics when sonos is playing
 Relies on sonos_track_info.py for artist and track
+
+location = the sonos system that is being listened to looking for what sonos is playing
+so that pictures and lyrics and status can be presented to display_info_photos.py running wherever
 '''
 import os
 import sys
