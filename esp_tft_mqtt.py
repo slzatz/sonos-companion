@@ -60,7 +60,7 @@ def twitter_feed():
     tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
-    data = {"header":"twitter", "text":tweets, "pos":1, "font size":14, "dest":(12,725)} #expects a list
+    data = {"header":"twitter", "text":tweets, "pos":1, "font size":14, "dest":(25,725)} #expects a list
     publish(payload=json.dumps(data))
 
 def news():
@@ -147,7 +147,7 @@ def tides():
         print("{} tide in {} hours".format(tide['type'], hours))
         tides.append("{} tide in {} hours".format(tide['type'], hours))
 
-    data = {"header":"Tides", "text":tides, "pos":15, "dest":(1000,825)}
+    data = {"header":"Tides", "text":tides, "pos":15, "dest":(1075,825)}
     publish(payload=json.dumps(data))
 
 def stock_quote():
@@ -186,7 +186,7 @@ def stock_quote():
     # doesn't seem worth it for volume but here it is: format(int(float('4893848.4')), ',d')
     print(datetime.datetime.now())
     print(repr(stock_info).encode('ascii', 'ignore'))
-    data = {"header":"WBMD", "text":stock_info, "pos":2, "dest":(20,40)} #expects a list
+    data = {"header":"WBMD", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
     publish(payload=json.dumps(data))
 
 
@@ -199,7 +199,7 @@ def todos():
     print(datetime.datetime.now())
     print(repr(titles).encode('ascii', 'ignore'))
 
-    data = {"header":"Important Work Stuff", "text":titles, "pos":3, "dest":(1000,10)} #expects a list
+    data = {"header":"Important Work Stuff", "text":titles, "pos":3, "dest":(1075,10)} #expects a list
     publish(payload=json.dumps(data))
 
 def facts():
@@ -240,7 +240,7 @@ def facts():
     else:
         text = [title]
 
-    data.update({"header":"Fact ...", "text":text, "pos":14, "dest":(800,800)}) #expects a list
+    data.update({"header":"Fact ...", "text":text, "pos":14, "dest":(900,700)}) #expects a list
     
     publish(payload=json.dumps(data))
 
