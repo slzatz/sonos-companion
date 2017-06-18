@@ -86,10 +86,13 @@ while 1:
 
     if prev_state != state:
         data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(master.volume)], 'pos':10}
-        mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+        try:
+            mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 
-        # at least one of the listeners for the below is esp_tft_mqtt_photos.py
-        mqtt_publish.single(sonos_status_topic, json.dumps({'state':state}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+            # at least one of the listeners for the below is esp_tft_mqtt_photos.py
+            mqtt_publish.single(sonos_status_topic, json.dumps({'state':state}), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+        except Exception as e:
+            print "Encountered error in mqtt_publish_single ...", e
 
         prev_state = state
 
