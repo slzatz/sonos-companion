@@ -161,7 +161,11 @@ def tides():
 def stock_quote():
     #pos = 2
 
-    if not check():
+    if not check() and stock_info:
+        print(datetime.datetime.now())
+        print(repr(stock_info).encode('ascii', 'ignore'))
+        data = {"header":"WBMD", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
+        publish(payload=json.dumps(data))
         return
 
     uri = "https://api.intrinio.com/data_point"
