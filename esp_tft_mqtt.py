@@ -279,7 +279,7 @@ def industry():
     data = {"header":"Industry ...",
             "text":text[:10],
             "pos":16, "bullets":False,
-            "dest":(15,400),
+            "dest":(15,380),
             "font size":12} #text expects a list
     publish(payload=json.dumps(data))
 
