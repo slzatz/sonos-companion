@@ -131,6 +131,8 @@ def top_opportunities():
     closed = []
     for x in range(8):
         row = result.iloc[x]
+        if not row[3]:
+            continue
         # immedately below works for the non-grouped results and below that when grouping
         #closed.append([row["Brand Level"][:26],millify(row["Amount Closed"]),row["WebMD Segment (Oppty)"][4:]])
         closed.append([row.name[0][:26], millify(row[3]), row.name[1][4:].strip()])
