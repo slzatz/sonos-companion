@@ -69,7 +69,8 @@ def outlook():
             if "12:00-12:00" in line:
                 line = "All Day Event -"+line[11:]
 
-            if highlight_hour and (now.hour == item.start.hour - 4):
+            #if highlight_hour and (now.hour == item.start.hour - 4):
+            if highlight_hour and (now.hour == item.start.hour):
                 line = "#{red}"+line
             text.append(line)
             print line
