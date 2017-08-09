@@ -30,11 +30,11 @@ eastern = timezone('US/Eastern')
 def outlook():
     now = datetime.now()
     highlight_hour = False
-    if now.weekday() == 4 and now.hour > 17:
+    if now.weekday() == 4 and now.hour > 21: # note this include time_zone_offset, ie 17 + 4
         inc_days = 3
     elif now.weekday() > 4:
         inc_days = 7 - now.weekday()
-    elif now.hour > 17:
+    elif now.hour > 21:
         inc_days = 1
     else:
         inc_days = 0
