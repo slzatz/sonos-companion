@@ -285,6 +285,8 @@ def ticklers():
 def industry(): 
     #pos = 16
     task = session.query(Task).join(Context).filter(Context.title=='industry', Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    if not task:
+        return
     title = "#[{}] {}".format(task.context.title.capitalize(), task.title)
     note = task.note[:750] if task.note else '' # would be nice to truncate on a word
     #while 1: if not note[749].isspace():i-=1 continue else break
