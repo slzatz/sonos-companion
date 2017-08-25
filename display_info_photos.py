@@ -46,7 +46,6 @@ import wand.image
 from config import unsplash_api_key, aws_mqtt_uri 
 import json
 import paho.mqtt.client as mqtt
-from artist_images_db import *
 from datetime import datetime
 from itertools import cycle
 import re
@@ -131,17 +130,17 @@ print "program running ..."
 def get_unsplash_images():
     # probably need try/except since have seen it time out
     if args.search:
-        r = requests.get('{}search/photos'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search}, timeout=1.0)
+        r = requests.get('{}search/photos'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40, 'query':args.search}, timeout=5.0)
         z = r.json()['results']
     elif args.name:
-        r = requests.get('{}users/{}/photos'.format(unsplash_uri, args.name), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=1.0)
+        r = requests.get('{}users/{}/photos'.format(unsplash_uri, args.name), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=5.0)
         z = r.json()
     elif args.collection:
-        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, args.collection), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=1.0)
+        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, args.collection), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=5.0)
         z = r.json()
     else:
         #r = requests.get('{}photos/curated'.format(unsplash_uri), params={'client_id':unsplash_api_key, 'per_page':40})
-        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, '543026'), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=1.0)
+        r = requests.get('{}collections/{}/photos'.format(unsplash_uri, '543026'), params={'client_id':unsplash_api_key, 'per_page':40}, timeout=5.0)
         z = r.json()
 
     return [{'url':x['links']['download'], 'photographer':x['user']['name']} for x in z]
@@ -149,7 +148,7 @@ def get_unsplash_images():
 def display_background_image(photo):
 
     try:
-        response = requests.get(photo['url'], timeout=1.0)
+        response = requests.get(photo['url'], timeout=5.0)
     except Exception as e:
         print "response = requests.get(url) generated exception:", e
         return
@@ -227,7 +226,7 @@ def display_image(x):
 
     print x
     try:
-        response = requests.get(x, timeout=1.0)
+        response = requests.get(x, timeout=5.0)
     except Exception as e:
         print "response = requests.get(url) generated exception: ", e
         # in some future better world may indicate that the image was bad
