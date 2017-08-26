@@ -1,6 +1,10 @@
 '''
 This is a python 2.7 program that is usually run  on a raspberry pi
-Intended to respond to commands issued by the esp8266
+and is connected to sonos so it can issue sonos commands like changing
+the volume and pausing the music
+This script subscribes to mqtt messages from an esp8266 running the script sonos_remote.py
+Those mqtt messages are sent to the mqtt broker running on ec2 box and this script subscribes
+to that topic, which is sonos/{location}
 '''
 import os
 from time import sleep
@@ -11,7 +15,7 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
 import paho.mqtt.client as mqtt
-from config import user_id, aws_mqtt_uri, location
+from config import aws_mqtt_uri, location
 
 soco_config.CACHE_ENABLED = False
 
