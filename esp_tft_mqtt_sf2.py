@@ -82,7 +82,7 @@ def sales_forecast():
                     "pos":5} 
 
     mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
-    mqtt_publish.single('esp_tft_display', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    #mqtt_publish.single('esp_tft_display', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 # gets the forecast at 1:30 am every morning
 def get_prev_day():

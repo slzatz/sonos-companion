@@ -122,6 +122,7 @@ def weather():
     print(repr(text).encode('ascii', 'ignore'))
     data = {"header":"Weather", "text":text, "pos":15, "dest":(1000,825)}
     publish(payload=json.dumps(data))
+    mqtt_publish.single('esp_tft_display', payload=json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
 def tides():
     #pos = 0
