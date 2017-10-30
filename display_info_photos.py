@@ -64,7 +64,7 @@ unsplash_uri = 'https://api.unsplash.com/'
 # Environment varialbes for pygame
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
-    os.environ['SDL_VIDEO_WINDOW_POS'] = '-150, -1400'
+    os.environ['SDL_VIDEO_WINDOW_POS'] = '-1920, -1080'# works for home low res monitor: '-74, -1080'
 elif platform.system() == "Linux":
     os.environ['SDL_VIDEODRIVER'] = 'x11' 
     os.environ['SDL_VIDEO_CENTERED'] = '1'
