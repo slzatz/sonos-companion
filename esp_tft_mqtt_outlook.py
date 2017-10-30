@@ -74,7 +74,7 @@ def outlook():
                 line = "#{red}"+line
             text.append(line)
             print line
-    except errors.ErrorTimeoutExpired as e:
+    except (errors.ErrorTimeoutExpired, errors.ErrorInternalServerTransientError) as e:
         print "exchangelib error: ", e
         return
 
