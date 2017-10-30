@@ -165,13 +165,14 @@ def stock_quote():
     if not check() and stock_info:
         print(datetime.datetime.now())
         print(repr(stock_info).encode('ascii', 'ignore'))
-        data = {"header":"WBMD", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
+        #data = {"header":"WBMD", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
+        data = {"header":"SPY", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
         publish(payload=json.dumps(data))
         return
 
     uri = "https://api.intrinio.com/data_point"
-    #payload = {'ticker':'WBMD', 'item':'last_price,volume,last_timestamp'} #percent_change and maybe change
-    payload = {'ticker':'WBMD', 'item':'last_price,change,percent_change,volume,last_timestamp'} #percent_change and maybe change
+    #payload = {'ticker':'WBMD', 'item':'last_price,change,percent_change,volume,last_timestamp'} #percent_change and maybe change
+    payload = {'ticker':'SPY', 'item':'last_price,change,percent_change,volume,last_timestamp'} #percent_change and maybe change
     r = requests.get(uri, params=payload, auth=(intrinio_username, intrinio_password))
     try:
         z = r.json()
@@ -203,7 +204,8 @@ def stock_quote():
     # doesn't seem worth it for volume but here it is: format(int(float('4893848.4')), ',d')
     print(datetime.datetime.now())
     print(repr(stock_info).encode('ascii', 'ignore'))
-    data = {"header":"WBMD", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
+    #data = {"header":"WBMD", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
+    data = {"header":"SPY", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
     publish(payload=json.dumps(data))
 
 
