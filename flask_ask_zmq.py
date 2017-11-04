@@ -170,8 +170,12 @@ def playback(type_):
 
 def play(add, uris):
     if not add:
-        master.stop()
-        master.clear_queue()
+        try:
+            master.stop()
+            master.clear_queue()
+        except soco.exceptions.SoCoSlaveException as e:
+            print "Exception stopping or clearing master:", e
+
 
     for uri in uris:
         print 'uri: ' + uri
