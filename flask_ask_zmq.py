@@ -173,8 +173,8 @@ def play(add, uris):
         try:
             master.stop()
             master.clear_queue()
-        except soco.exceptions.SoCoSlaveException as e:
-            print "Exception stopping or clearing master:", e
+        except (soco.exceptions.SoCoUPnPException,soco.exceptions.SoCoSlaveException) as e:
+            print "master.stop or master.clear_queue exception:", e
 
 
     for uri in uris:
@@ -207,7 +207,7 @@ def play(add, uris):
     if not add:
         try:
             master.play_from_queue(0)
-        except soco.exceptions.SoCoUPnPException as e:
+        except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
             print "master.play_from_queue exception:", e
 
 def recent_tracks():
