@@ -45,16 +45,19 @@ while 1:
         break 
     
 for s in sp:
-    print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
+    print "{} -- coordinator: {}".format(s.player_name, s.group.coordinator.player_name) 
 
 master_name = raw_input("Which speaker do you want to be master? ")
 master = sp_names.get(master_name)
 if master:
-    print "Master speaker is: {}".format(master.player_name) 
-    m_group = [s for s in sp if s.group.coordinator is master]
-    print "Master group:"
-    for s in m_group:
-        print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
+    if not master.is_coordinator:
+        print "\nThe speaker you selected --{}-- is not the master of any group, so will unjoin it".format(master.player_name)
+        master.unjoin()
+        #sys.exit(1)
+    print "\nMaster speaker is: {}".format(master.player_name) 
+    print "\nMaster group:"
+    for s in master.group.members:
+        print "{} -- coordinator: {}".format(s.player_name, s.group.coordinator.player_name) 
 
 else:
     print "Somehow you didn't pick a master or spell it correctly (case matters)" 
@@ -169,7 +172,12 @@ def playback(type_):
         print "master.{}:".format(type_), e
 
 def play(add, uris):
+    # must be a coordinator and possible that it stopped being a coordinator after launching program
+    if not master.is_coordinator:
+        master.unjoin()
+
     if not add:
+    # with check on is_coordinator may not need the try/except
         try:
             master.stop()
             master.clear_queue()
@@ -205,6 +213,7 @@ def play(add, uris):
             my_add_playlist_to_queue(uri, meta)
 
     if not add:
+    # with check on is_coordinator may not need the try/except
         try:
             master.play_from_queue(0)
         except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
