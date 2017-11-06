@@ -247,7 +247,7 @@ def display_image(x):
         ww = img.width
         hh = img.height
         sq = ww if ww <= hh else hh
-        t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
+        t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
         img.crop(*t)
         # resize should take the image and enlarge it without cropping so will fill vertical but leave space for lyrics
         #img.resize(screen_height,screen_height)
