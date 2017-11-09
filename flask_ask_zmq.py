@@ -154,15 +154,18 @@ def what_is_playing():
     socket.send(output_speech)
 
 def turn_volume(volume):
-    for s in m_group:
+    #for s in m_group:
+    for s in master.group.members:
         s.volume = s.volume - 10 if volume=='quieter' else s.volume + 10
 
 def set_volume(level):
-    for s in m_group:
+    #for s in m_group:
+    for s in master.group.members:
         s.volume = level
 
 def mute(bool_):
-    for s in m_group:
+    #for s in m_group:
+    for s in master.group.members:
         s.mute = bool_
 
 def playback(type_):
