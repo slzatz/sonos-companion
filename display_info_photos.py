@@ -17,13 +17,14 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=ToDos
-4=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
+4=??????????????????????
 5=sales forecast
 6=outlook_schedule
 7=artist image
 8=lyrics
 9=track_info broadcast by sonos_track_info.py
 10=sonos status (PLAYING, TRANSITIONING, STOPPED
+10=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
 11=sales top opportunities
 12=Reminders (alarms) 
 13=Ticklers
