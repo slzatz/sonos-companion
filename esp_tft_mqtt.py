@@ -259,7 +259,7 @@ def facts():
     else:
         text = [title]
 
-    data.update({"header":"Fact ...", "text":text, "pos":14, "dest":(900,700)}) #expects a list
+    data.update({"header":"Fact ...", "text":text, "pos":14, "dest":(900,-300)}) #expects a list
     
     publish(payload=json.dumps(data))
 
@@ -282,7 +282,7 @@ def ticklers():
 
     text.extend(note.split("\n"))
 
-    data.update({"header":"Tickler ...", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(1025,450)}) #text expects a list
+    data.update({"header":"Tickler ...", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(450,-450)}) #text expects a list
     publish(payload=json.dumps(data))
 
 def industry(): 
