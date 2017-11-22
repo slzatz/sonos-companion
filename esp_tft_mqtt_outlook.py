@@ -65,7 +65,8 @@ def outlook():
             subject = item.subject
             if "time off" in subject.lower():
                 continue
-            line = (item.start-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=4)).strftime("%I:%M").lstrip('0')+" "+subject
+            # after fall back hours = 5?
+            line = (item.start-timedelta(hours=5)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=5)).strftime("%I:%M").lstrip('0')+" "+subject
             if "12:00-12:00" in line:
                 line = "All Day Event -"+line[11:]
 
