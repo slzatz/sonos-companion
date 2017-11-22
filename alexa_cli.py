@@ -1,4 +1,5 @@
 '''
+Python 3 script
 This script can be run from anywhere.  It gets to the local sonos network via ngrok URLs.  So, for example,
 you can see what is playing at any given moment in either NYC or CT by just typing "what."
 
@@ -92,13 +93,9 @@ while 1:
             if 'by' in words:
                 words = " ".join(words)
                 values = words.split(' by ')
-                #indx = words.index('by')
-                #value0 = " ".join(words[:indx])
-                #value1 = " ".join(words[indx+1:])
             else:
                 value = " ".join(words)
                 values = [value,'']
-            #values = [" ".join(words)]
         else:
             if 'add' in words:
                 intent = 'AddTrack'
@@ -109,23 +106,16 @@ while 1:
             if 'by' in words:
                 words = " ".join(words)
                 values = words.split(' by ')
-                #indx = words.index('by')
-                #value0 = " ".join(words[:indx])
-                #value1 = " ".join(words[indx+1:])
             else:
                 value = " ".join(words)
                 values = [value,'']
-
-        #print("intent = {}".format(intent).encode('cp1252', errors='ignore'))
 
         slot_dict = {}
         for i,slot in enumerate(slots[intent]):
             s = {slot:{'name':slot, 'value':values[i]}}
             slot_dict.update(s)
-            #print("value = {}".format(values[i]).encode('cp1252', errors='ignore'))
 
         data = {'session':{}, 'request':{'type':'IntentRequest', 'intent':{'slots':slot_dict, 'name':intent}}}
-        #print("data= {}".format(data).encode('cp1252', errors='ignore'))
         try:
             r = requests.post(url, json=data, timeout=1.0)
         except requests.exceptions.ReadTimeout as e: 

@@ -17,14 +17,13 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=ToDos
-4=??????????????????????
+4=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
 5=sales forecast
 6=outlook_schedule
 7=artist image
 8=lyrics
 9=track_info broadcast by sonos_track_info.py
 10=sonos status (PLAYING, TRANSITIONING, STOPPED
-10=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
 11=sales top opportunities
 12=Reminders (alarms) 
 13=Ticklers
@@ -42,7 +41,7 @@ import random
 import requests
 import textwrap
 import sys
-from cStringIO import StringIO
+from io import BytesIO
 import wand.image
 from config import unsplash_api_key, aws_mqtt_uri 
 import json
@@ -65,10 +64,11 @@ unsplash_uri = 'https://api.unsplash.com/'
 # Environment varialbes for pygame
 if platform.system() == 'Windows':
     os.environ['SDL_VIDEODRIVER'] = 'windib'
-    os.environ['SDL_VIDEO_WINDOW_POS'] = '-1920, -1080'# works for home low res monitor: '-74, -1080'
+    os.environ['SDL_VIDEO_WINDOW_POS'] = '-150, -1400'
 elif platform.system() == "Linux":
     os.environ['SDL_VIDEODRIVER'] = 'x11' 
-    os.environ['SDL_VIDEO_CENTERED'] = '1'
+    os.environ['SDL_VIDEO_WINDOW_POS'] = '-150, -1400' #did not use this line for raspy
+    #os.environ['SDL_VIDEO_CENTERED'] = '1' # used this for raspy pi
 else:
     sys.exit("Currently unsupported hardware/OS")
 
@@ -84,12 +84,12 @@ if platform.machine()[:3] == 'arm':
     pygame.mouse.set_visible(False)
 
 if args.window:
-    screen_width, screen_height = 1000,700
+    screen_width, screen_height = 2560,1440
 else:
     screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
 
-print "screen width =", screen_width, "; screen height =", screen_height
-print "Can't execute line below without a control-c"
+print("screen width =", screen_width, "; screen height =", screen_height)
+print("Can't execute line below without a control-c")
 # Note suggestion from https://www.raspberrypi.org/forums/viewtopic.php?f=32&t=22306 is sys.exit(0)
 # might be necessary and I would put a try except around the while loop but haven't done that
 screen = pygame.display.set_mode((screen_width, screen_height), pygame.NOFRAME)
@@ -117,17 +117,17 @@ bullet_surface = pygame.Surface((5,5))
 pygame.draw.rect(bullet_surface, (200,200,200), ((0,0), (5,5))) #col
 
 def on_connect(client, userdata, flags, rc):
-    print "(Re)Connected with result code "+str(rc) 
+    print("(Re)Connected with result code "+str(rc)) 
 
     # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
     client.subscribe([(info_topic, 0), (image_topic, 0)])
 
 def on_disconnect():
-    print "Disconnected from mqtt broker"
+    print("Disconnected from mqtt broker")
 
-print "\n"
+print("\n")
 
-print "program running ..."
+print("program running ...")
 
 def get_unsplash_images():
     # probably need try/except since have seen it time out
@@ -152,13 +152,13 @@ def display_background_image(photo):
     try:
         response = requests.get(photo['url'], timeout=5.0)
     except Exception as e:
-        print "response = requests.get(url) generated exception:", e
+        print("response = requests.get(url) generated exception:", e)
         return
 
     try:
-        img = wand.image.Image(file=StringIO(response.content))
+        img = wand.image.Image(file=BytesIO(response.content))
     except Exception as e:
-        print "img = wand.image.Image(file=StringIO(response.content)) generated exception:", e
+        print("img = wand.image.Image(file=BytesIO(response.content)) generated exception:", e)
         if "Insufficient memory" in repr(e):
             sys.exit("Insufficient memory -- line 104")
         else:
@@ -170,11 +170,11 @@ def display_background_image(photo):
     # could do: with img.convert('bmp') as converted; converted.save(f)
     img.close()
 
-    f = StringIO()
+    f = BytesIO()
     try:
         conv_img.save(f)
     except Exception as e:
-        print "image.save(f) with error:", e
+        print("image.save(f) with error:", e)
         return
 
     # need to close image or there is a memory leak - could do with ... (see above)
@@ -185,7 +185,7 @@ def display_background_image(photo):
     try:
         img = pygame.image.load(f).convert()
     except pygame.error as e:
-        print e
+        print(e)
         return
 
     f.close()
@@ -226,19 +226,19 @@ def display_background_image(photo):
 
 def display_image(x):
 
-    print x
+    print(x)
     try:
         response = requests.get(x, timeout=5.0)
     except Exception as e:
-        print "response = requests.get(url) generated exception: ", e
+        print("response = requests.get(url) generated exception: ", e)
         # in some future better world may indicate that the image was bad
 
         return
     else:     
         try:
-            img = wand.image.Image(file=StringIO(response.content))
+            img = wand.image.Image(file=BytesIO(response.content))
         except Exception as e:
-            print "img = wand.image.Image(file=StringIO(response.content)) generated exception from url:", x, "Exception:", e
+            print("img = wand.image.Image(file=BytesIO(response.content)) generated exception from url:", x, "Exception:", e)
             # in some future better world may indicate that the image was bad
 
             return
@@ -247,7 +247,7 @@ def display_image(x):
         ww = img.width
         hh = img.height
         sq = ww if ww <= hh else hh
-        t = ((ww-sq)/2,(hh-sq)/2,(ww+sq)/2,(hh+sq)/2) 
+        t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
         img.crop(*t)
         # resize should take the image and enlarge it without cropping so will fill vertical but leave space for lyrics
         #img.resize(screen_height,screen_height)
@@ -255,17 +255,17 @@ def display_image(x):
         conv_img = img.convert('bmp')
         img.close()
     except Exception as e:
-        print "img.transfrom or img.convert error:", e
+        print("img.transfrom or img.convert error:", e)
         # in some future better world may indicate that the image was bad
 
         return
 
-    f = StringIO()
+    f = BytesIO()
     try:
         conv_img.save(f)
         conv_img.close()
     except wand.exceptions.OptionError as e:
-        print "Problem saving image:",e
+        print("Problem saving image:",e)
         # in some future better world may indicate that the image was bad
 
         return
@@ -275,7 +275,7 @@ def display_image(x):
     f.close()
     img_rect = img.get_rect()
 
-    print "img_rect =", img_rect
+    print("img_rect =", img_rect)
 
     foo = pygame.Surface((400,400)) # (800,800) someday will make this something that you pass with the image
     foo.fill((0,0,0))
@@ -296,7 +296,7 @@ def area(a, b):
 def get_phrases(line, start='{}'):
 
     if line.find('{') == -1:
-        print "phrases =", [(start, line)]
+        print("phrases =", [(start, line)])
         return [(start, line)]
 
     if line[0]!='{':
@@ -312,7 +312,7 @@ def get_phrases(line, start='{}'):
     phrases = []
     for j in range(len(s)-1):
         phrases.append((s[j][0],line[s[j][1][1]:s[j+1][1][0]]))
-    print "phrases =", phrases
+    print("phrases =", phrases)
     return phrases
 
 def on_message(client, userdata, msg):
@@ -325,7 +325,7 @@ def on_message(client, userdata, msg):
     try:
         z = json.loads(body)
     except Exception as e:
-        print "error reading the mqtt message body: ", e
+        print("error reading the mqtt message body: ", e)
         return
 
     #if topic in (info_topic, image_topic):
@@ -354,7 +354,6 @@ def on_message(client, userdata, msg):
         return
 
     col = z.get('color', next(color))
-    #col = next(color)
     dest = z.get('dest')
 
     if topic==info_topic:
@@ -375,7 +374,7 @@ def on_message(client, userdata, msg):
         bullets = z.get('bullets', True)
         font = pygame.font.SysFont(font_type, font_size)
         line_height = font.get_linesize()
-        print "line_height =",line_height
+        print("line_height =",line_height)
 
         line_widths = [0] # for situation when text = [''] otherwise line_widths = [] and can't do max
 
@@ -424,7 +423,7 @@ def on_message(client, userdata, msg):
                     try:
                         text = font.render(phrase[1], antialias, color_map.get(phrase[0], (255,255,255))) 
                     except UnicodeError as e:
-                        print "UnicodeError in text lines: ", e
+                        print("UnicodeError in text lines: ", e)
                         continue
                     foo.blit(text, (indent + xx,n+5))
                     xx+=text.get_rect().width
@@ -488,23 +487,25 @@ def on_message(client, userdata, msg):
     else: # need to find a location and since it's moving do the animation
         attempts = 0
         collision_hx = []
-        print "k =", k
+        print("k =", k)
         while attempts < 10: #20
             new_pos = (random.randint(50,screen_width-new_size[0]), random.randint(50,screen_height-new_size[1]))
             rect = pygame.Rect((new_pos, new_size))    
-            collisions = rect.collidelistall(zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k]))
+            rectlist = [pygame.Rect(a,b) for a,b in zip([positions[j] for j in range(len(positions)) if j!=k], [sizes[i] for i in range(len(positions)) if i!=k])]
+            print(rectlist)
+            collisions = rect.collidelistall(rectlist)
             if not collisions:
-                print "No collision"
+                print("No collision")
                 break
             else:
-                print "Collision: new rectangle position collides with existing boxes: ", new_pos
+                print("Collision: new rectangle position collides with existing boxes: ", new_pos)
                 collision_hx.append((new_pos, collisions)) 
 
             attempts+=1
 
         else:
-            print "Couldn't find a clear area for box"
-            print "collision_hx =", collision_hx
+            print("Couldn't find a clear area for box")
+            print("collision_hx =", collision_hx)
             collision_areas = []
             for new_pos, collisions in collision_hx:
                 overlap = 0
@@ -516,12 +517,12 @@ def on_message(client, userdata, msg):
 
                 collision_areas.append((new_pos,overlap))   
             
-            print "collision_areas =",collision_areas
+            print("collision_areas =",collision_areas)
             new_pos, min_area = min(collision_areas, key=lambda x:x[1])
             if min_area < 0:
                 raise ValueError("min_area should not be less than 0")
-            print "new_pos =", new_pos
-            print "min_area =", min_area
+            print("new_pos =", new_pos)
+            print("min_area =", min_area)
                 
 
         blast_y = 0 if new_pos[1]+new_size[1]/2 > screen_height/2 else screen_height
@@ -548,8 +549,6 @@ def on_message(client, userdata, msg):
 
     # here painting the new screen (will overwrite rays if they were drawn because no designated dest
     new_screen = pygame.Surface.copy(screen_image) # screen image is the clean background image
-    #for i in order:
-        #new_screen.blit(foos[i], positions[i], ((0,0), sizes[i])) 
 
     for i in order:
         if i in on_top:
@@ -567,7 +566,7 @@ def on_message(client, userdata, msg):
 photos = get_unsplash_images()
 
 L = len(photos)
-print "Number of photos = {}".format(L)
+print("Number of photos = {}".format(L))
 if not photos:
     sys.exit("No photos")
 
@@ -575,7 +574,7 @@ screen.fill((0,0,0))
 pygame.display.flip()
 
 photo = random.choice(photos)
-print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
+print("Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore'))
 display_background_image(photo)
 
 client = mqtt.Client()
@@ -599,7 +598,7 @@ while 1:
 
     if time() - t0 > 3600: # picture flips each hour
         photo = random.choice(photos)
-        print "Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore')
+        print("Next photo is:", photo.get('photographer', '').encode('ascii', errors='ignore'), photo.get('text','').encode('ascii', errors='ignore'))
         display_background_image(photo)
         # shouldn't have to do this but I seem to be losing connection to mqtt broker
         # and this seems to be working
