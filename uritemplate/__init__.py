@@ -1,7 +1,11 @@
 # Early, and incomplete implementation of -04.
 #
 import re
-import urllib
+# added on Nov. 24 to try to get python3 compatibility
+try:
+    import urllib.parse as urllib
+except:
+    import urllib
 
 RESERVED = ":/?#[]@!$&'()*+,;="
 OPERATOR = "+./;?|!@"
