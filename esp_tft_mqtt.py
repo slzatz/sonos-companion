@@ -14,7 +14,26 @@ Stock prices are through intrinio.  uri = "https://api.intrinio.com/data_point"
 Description of available data elements here: http://docs.intrinio.com/tags/intrinio-public#data-point
 For tides using https://www.worldtides.info/apidocs - I think I bought 20k calls
 https://www.worldtides.info/api?extremes&lat=41.117597&lon=-73.407897&key=a417...
-Need to use the following for To Dos and Facts
+
+Google Calendar event:
+kind:calendar#event
+etag:"3023107412872000"
+id:02phikuudsocs66pk8jsq0nj01
+status:confirmed
+htmlLink:https://www.google.com/calendar/event?eid=MDJwaGlrdXVkc29jczY2cGs4anNxMG5qMDEgc2x6YXR6QG0
+created:2017-11-24T15:26:18.000Z
+updated:2017-11-24T20:01:46.436Z
+summary:Meet Joe Kleine
+description:Meeting Joe for coffee.
+location:Starbucks, 1 Parker Harding Plaza, Westport, CT 06880, USA
+colorId:4
+creator:{'email': 'slzatz@gmail.com', 'displayName': 'Steve Zatz', 'self': True}
+organizer:{'email': 'slzatz@gmail.com', 'displayName': 'Steve Zatz', 'self': True}
+start:{'dateTime': '2017-11-25T09:00:00-05:00'}
+end:{'dateTime': '2017-11-25T10:00:00-05:00'}
+iCalUID:02phikuudsocs66pk8jsq0nj01@google.com
+sequence:1
+reminders:{'useDefault': True}
 '''
 import os
 import sys
