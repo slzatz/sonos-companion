@@ -260,23 +260,23 @@ def google_calendar():
         end = event['end'].get('dateTime', event['end'].get('date'))
         end_dt = parser.parse(end)
         summary = event.get('summary', "No description")
-        item = "{}: {} - {}: {}".format(month, start_dt.strftime("%H:%M"), end_dt.strftime("%H:%M"), summary)
+        item = "{{red}}{} {}: {{green}}{} - {}: {{}}{}".format(month, str(start_dt.day), start_dt.strftime("%H:%M"), end_dt.strftime("%H:%M"), summary)
         print("\nItem =", summary)
         location = event.get('location')
         if location:
             print("Location =", location)
-            item = "{} location {}".format(item, location)
+            item = "{} ({})".format(item, location)
         print("Month =", month)
         print("Start =", start_dt.strftime("%H:%M"))
         print("End =", end_dt.strftime("%H:%M"))
         description = event.get('description')
         if description:
             print("Description =", event['description'])
-            item = "{} description {}".format(item, description)
+            item = "{} Description: {}".format(item, description)
 
         text.append(item)
 
-    data = {"header":"Google Calendar", "text":text, "pos":4, "dest":(-500,10)} #expects a list
+    data = {"header":"Google Calendar", "text":text, "pos":4, "dest":(-600,10)} #expects a list
     publish(payload=json.dumps(data))
 
 def facts():
