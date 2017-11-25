@@ -37,6 +37,20 @@ from random import shuffle
 import re
 from tabulate import tabulate
 
+# all the imports below are related to accessing google calendar
+import httplib2
+from dateutil import parser
+from apiclient import discovery
+from oauth2client import client
+from oauth2client import tools
+from oauth2client.file import Storage
+
+home_dir = os.path.expanduser('~')
+credential_dir = os.path.join(home_dir, '.credentials')
+credential_path = os.path.join(credential_dir, 'google-calendar.json')
+store = Storage(credential_path)
+credentials = store.get()
+
 tides_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
 news_sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica', 'reddit-r-all']
@@ -221,6 +235,50 @@ def todos():
     data = {"header":"Important Work Stuff", "text":titles, "pos":3, "dest":(1075,10)} #expects a list
     publish(payload=json.dumps(data))
 
+def google_calendar():
+    #pos = 4
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('calendar', 'v3', http=http)
+
+    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+    print('Getting the upcoming 10 events')
+    eventsResult = service.events().list(
+        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
+        orderBy='startTime').execute()
+    events = eventsResult.get('items', [])
+
+    text = []
+
+    if not events:
+        print('No upcoming events found.')
+        text = ['No upcoming events found']
+    for event in events:
+        print("--------------------------------------------------------")
+        start = event['start'].get('dateTime', event['start'].get('date'))
+        start_dt = parser.parse(start)
+        month = start_dt.strftime("%B")
+        end = event['end'].get('dateTime', event['end'].get('date'))
+        end_dt = parser.parse(end)
+        summary = event.get('summary', "No description")
+        item = "{}: {} - {}: {}".format(month, start_dt.strftime("%H:%M"), end_dt.strftime("%H:%M"), summary)
+        print("\nItem =", summary)
+        location = event.get('location')
+        if location:
+            print("Location =", location)
+            item = "{} location {}".format(item, location)
+        print("Month =", month)
+        print("Start =", start_dt.strftime("%H:%M"))
+        print("End =", end_dt.strftime("%H:%M"))
+        description = event.get('description')
+        if description:
+            print("Description =", event['description'])
+            item = "{} description {}".format(item, description)
+
+        text.append(item)
+
+    data = {"header":"Google Calendar", "text":text, "pos":4, "dest":(-500,10)} #expects a list
+    publish(payload=json.dumps(data))
+
 def facts():
     #pos = 14
 
@@ -362,6 +420,13 @@ schedule.every().hour.at(':24').do(industry)
 schedule.every().hour.at(':34').do(industry)
 schedule.every().hour.at(':44').do(industry)
 schedule.every().hour.at(':54').do(industry)
+
+schedule.every().hour.at(':06').do(google_calendar)
+schedule.every().hour.at(':16').do(google_calendar)
+schedule.every().hour.at(':26').do(google_calendar)
+schedule.every().hour.at(':36').do(google_calendar)
+schedule.every().hour.at(':46').do(google_calendar)
+schedule.every().hour.at(':56').do(google_calendar)
 #schedule.run_all()
 
 while True:
