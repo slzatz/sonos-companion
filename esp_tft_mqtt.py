@@ -341,9 +341,10 @@ def facts():
     publish(payload=json.dumps(data))
 
 def ticklers(): 
+    # for the moment quotations and poems are in test and I am appropriating this since Tickler isn't really doing anything useful for me
     #pos = 13
-    #task = session.query(Task).join(Context).filter(or_(Context.title=='facts', Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
-    task = session.query(Task).join(Context).filter(or_(Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    #task = session.query(Task).join(Context).filter(or_(Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    task = session.query(Task).join(Context).filter(Context.title=='test', Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     title = "#[{}] {}".format(task.context.title.capitalize(), task.title)
     note = task.note[:750] if task.note else '' # would be nice to truncate on a word
     #while 1: if not note[749].isspace():i-=1 continue else break
