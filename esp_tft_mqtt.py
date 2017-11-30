@@ -346,7 +346,7 @@ def ticklers():
     #task = session.query(Task).join(Context).filter(or_(Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     task = session.query(Task).join(Context).filter(Context.title=='test', Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
     title = "#[{}] {}".format(task.context.title.capitalize(), task.title)
-    note = task.note[:750] if task.note else '' # would be nice to truncate on a word
+    note = task.note if task.note else '' # would be nice to truncate on a word
     #while 1: if not note[749].isspace():i-=1 continue else break
     print(datetime.datetime.now())
     print(title.encode('ascii', 'ignore'))
@@ -360,7 +360,7 @@ def ticklers():
 
     text.extend(note.split("\n"))
 
-    data.update({"header":"Tickler ...", "text":text[:10], "pos":13, "bullets":False, "font size":16, "dest":(450,-450)}) #text expects a list
+    data.update({"header":"Poems ...", "text":text[:40], "pos":13, "bullets":False, "font size":16, "dest":(450,-800)}) #text expects a list
     publish(payload=json.dumps(data))
 
 def industry(): 
