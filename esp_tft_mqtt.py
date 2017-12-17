@@ -299,7 +299,7 @@ def google_calendar():
 
         text.append(item)
 
-    data = {"header":"Google Calendar", "text":text, "pos":4, "dest":(-600,10)} #expects a list
+    data = {"header":"Google Calendar", "text":text, "pos":4, "dest":(-600,-800)} #expects a list
     publish(payload=json.dumps(data))
 
 def facts():
