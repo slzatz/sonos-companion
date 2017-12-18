@@ -67,7 +67,8 @@ if platform.system() == 'Windows':
     os.environ['SDL_VIDEO_WINDOW_POS'] = '-150, -1400'
 elif platform.system() == "Linux":
     os.environ['SDL_VIDEODRIVER'] = 'x11' 
-    os.environ['SDL_VIDEO_WINDOW_POS'] = '-150, -1400' #did not use this line for raspy
+    if args.window:
+        os.environ['SDL_VIDEO_WINDOW_POS'] = '-150, -1400' #do not want this line if there is no external monitor
     #os.environ['SDL_VIDEO_CENTERED'] = '1' # used this for raspy pi
 else:
     sys.exit("Currently unsupported hardware/OS")
