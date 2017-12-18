@@ -269,7 +269,6 @@ def google_calendar():
     text = []
 
     if not events:
-        print('No upcoming events found.')
         text = ['No upcoming events found']
     for event in events:
         print("--------------------------------------------------------")
@@ -278,7 +277,7 @@ def google_calendar():
         month = start_dt.strftime("%B")
         end = event['end'].get('dateTime', event['end'].get('date'))
         end_dt = parser.parse(end)
-        summary = event.get('summary', "No description")
+        summary = event.get('summary', "No summary") 
         if start_dt.hour == 0:
             item = "{{red}}{} {} {{}} {}".format(month, str(start_dt.day), summary)
         else:
@@ -287,15 +286,11 @@ def google_calendar():
         print("\nItem =", summary)
         location = event.get('location')
         if location:
-            print("Location =", location)
             item = "{} ({})".format(item, location)
-        print("Month =", month)
-        print("Start =", start_dt.strftime("%H:%M"))
-        print("End =", end_dt.strftime("%H:%M"))
-        description = event.get('description')
-        if description:
-            print("Description =", event['description'])
-            item = "{} Description: {}".format(item, description)
+
+        #description = event.get('description') # summary or description didn't add anything
+        #if description:
+        #    item = "{} Description: {}".format(item, description)
 
         text.append(item)
 
