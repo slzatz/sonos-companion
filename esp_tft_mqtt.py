@@ -282,7 +282,7 @@ def google_calendar():
             item = "{{red}}{} {} {{}} {}".format(month, str(start_dt.day), summary)
         else:
             item = "{{red}}{} {}: {{green}}{} - {}: {{}}{}".format(month, str(start_dt.day),
-                              start_dt.strftime("%H:%M"), end_dt.strftime("%H:%M"), summary)
+                              start_dt.strftime("%-H:%M"), end_dt.strftime("%-H:%M"), summary)
         print("\nItem =", summary)
         location = event.get('location')
         if location:
