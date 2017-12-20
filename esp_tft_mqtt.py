@@ -52,7 +52,8 @@ from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oau
 from lmdb_p import * 
 import html
 from functools import partial
-from random import shuffle
+#from random import shuffle
+from random import choice
 import re
 from tabulate import tabulate
 
@@ -242,7 +243,7 @@ def stock_quote():
     publish(payload=json.dumps(data))
 
 
-def todos():
+def work_stuff():
     #pos = 3
     #tasks = session.query(Task).join(Context).filter(Context.title=='work', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(desc(Task.star))
     tasks = session.query(Task).join(Context).filter(Context.title=='work', Task.star==True, Task.completed==None, Task.deleted==False)
@@ -309,7 +310,9 @@ def facts():
     #new_titles = [re.sub(r'\b\d+M?k?\b', '[  ]',title) for title in titles] #because single digit no decimal place are missed by the first re
     #data = {"header":"Things you need to remember ...", "text":new_titles + titles, "pos":14} #expects a list
 
-    task = session.query(Task).join(Context).filter(Context.title=='facts', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    #task = session.query(Task).join(Context).filter(Context.title=='facts', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
+    tasks = session.query(Task).join(Folder).join(Context).filter(or_(Folder.title=='memory aid', Context.title=='facts'), Task.priority==3, Task.completed==None, Task.deleted==False).all()
+    task = choice(tasks)
     title = '#'+task.title if task.star else task.title
     new_title = re.sub(r'(\b20\d{2}\b)', r'\1YYY', title) #put a 'Y' after the years so those numbers don't get substituted with []
     print(new_title)
@@ -412,12 +415,12 @@ schedule.every().hour.at(':30').do(twitter_feed)
 schedule.every().hour.at(':40').do(twitter_feed)
 schedule.every().hour.at(':50').do(twitter_feed)
 
-schedule.every().hour.at(':01').do(todos)
-schedule.every().hour.at(':11').do(todos)
-schedule.every().hour.at(':21').do(todos)
-schedule.every().hour.at(':31').do(todos)
-schedule.every().hour.at(':41').do(todos)
-schedule.every().hour.at(':51').do(todos)
+schedule.every().hour.at(':01').do(work_stuff)
+schedule.every().hour.at(':11').do(work_stuff)
+schedule.every().hour.at(':21').do(work_stuff)
+schedule.every().hour.at(':31').do(work_stuff)
+schedule.every().hour.at(':41').do(work_stuff)
+schedule.every().hour.at(':51').do(work_stuff)
 
 schedule.every().hour.at(':08').do(facts)
 schedule.every().hour.at(':18').do(facts)
