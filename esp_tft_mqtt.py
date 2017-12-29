@@ -69,7 +69,7 @@ from pytz import timezone
 from exchangelib import Account, EWSDateTime, credentials as exch_credentials, errors as exch_errors
 
 cred = exch_credentials.Credentials(username=exch_name, password=exch_pw)
-account = Account(primary_smtp_address=email, credentials = cred, autodiscover=True, access_type=credentials.DELEGATE)
+account = Account(primary_smtp_address=email, credentials = cred, autodiscover=True, access_type=exch_credentials.DELEGATE)
 calendar = account.calendar
 eastern = timezone('US/Eastern')
 
@@ -406,7 +406,7 @@ def outlook():
         highlight_hour = True
   
     dt = now + datetime.timedelta(inc_days)
-    print "dt =",dt
+    print("dt =",dt)
     # below a problem at the end of the month
     #items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_)), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_+1)))
     #below works
@@ -418,10 +418,10 @@ def outlook():
     try:
         len(items)
     except (errors.ErrorInternalServerTransientError, errors.ErrorMailboxStoreUnavailable) as e:
-        print "exchangelib error: ", e
+        print("exchangelib error: ", e)
         return
     except AttributeError as e:
-        print "outlook error - would be caused by incorrect pw", e
+        print("outlook error - would be caused by incorrect pw", e)
         return
 
     text = []
@@ -431,7 +431,7 @@ def outlook():
             if "time off" in subject.lower():
                 continue
             # after fall back hours = 5?
-            line = (item.start-timedelta(hours=5)).strftime("%I:%M").lstrip('0')+"-"+(item.end-timedelta(hours=5)).strftime("%I:%M").lstrip('0')+" "+subject
+            line = (item.start-datetime.timedelta(hours=5)).strftime("%I:%M").lstrip('0')+"-"+(item.end-datetime.timedelta(hours=5)).strftime("%I:%M").lstrip('0')+" "+subject
             if "12:00-12:00" in line:
                 line = "All Day Event -"+line[11:]
 
@@ -439,9 +439,9 @@ def outlook():
             if highlight_hour and (now.hour == item.start.hour):
                 line = "#{red}"+line
             text.append(line)
-            print line
+            print(line)
     except (exch_errors.ErrorTimeoutExpired, exch_errors.ErrorInternalServerTransientError) as e:
-        print "exchangelib error: ", e
+        print("exchangelib error: ", e)
         return
 
     if not text:
