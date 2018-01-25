@@ -152,17 +152,20 @@ def weather():
     if not 'forecast' in z:
         print("'forecast' not in result of weather request")
         return
+    try:
+        forecast = z['forecast']['txt_forecast']['forecastday']
 
-    forecast = z['forecast']['txt_forecast']['forecastday']
-
-    # if before 3 pm get today report and tomorrow report otherwise get tonight and tomorrow
-    reports = (1,2) if datetime.datetime.now().hour > 15 else (0,2)
-    text = []
-    for n in reports:
-       text.append(forecast[n]['title'] + ': ' + forecast[n]['fcttext'])
-    print(datetime.datetime.now())
-    print(repr(text).encode('ascii', 'ignore'))
-    data = {"header":"Weather", "text":text, "pos":15, "dest":(1000,825)}
+        # if before 3 pm get today report and tomorrow report otherwise get tonight and tomorrow
+        reports = (1,2) if datetime.datetime.now().hour > 15 else (0,2)
+        text = []
+        for n in reports:
+           text.append(forecast[n]['title'] + ': ' + forecast[n]['fcttext'])
+        print(datetime.datetime.now())
+        print(repr(text).encode('ascii', 'ignore'))
+        data = {"header":"Weather", "text":text, "pos":15, "dest":(1000,825)}
+    except Exception as e:
+        data = {"header":"Weather", "text":["Exception: {}".format(e)], "pos":15, "dest":(1000,825)}
+        
     publish(payload=json.dumps(data))
     mqtt_publish.single('esp_tft_display', payload=json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
@@ -417,7 +420,7 @@ def outlook():
 
     try:
         len(items)
-    except (errors.ErrorInternalServerTransientError, errors.ErrorMailboxStoreUnavailable) as e:
+    except (exch_errors.ErrorInternalServerTransientError, exch_errors.ErrorMailboxStoreUnavailable) as e:
         print("exchangelib error: ", e)
         return
     except AttributeError as e:
