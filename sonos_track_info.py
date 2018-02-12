@@ -53,7 +53,7 @@ while 1:
         break 
     
 for s in sp:
-    print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
+    print "{} -- coordinator:{}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore')) 
 
 master_name = raw_input("Which speaker do you want to be master? ")
 master = speakers.get(master_name)
@@ -62,7 +62,7 @@ if master:
     sp = [s for s in sp if s.group.coordinator is master]
     print "Master group:"
     for s in sp:
-        print "{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name) 
+        print "{} -- coordinator:{}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore')) 
 
 else:
     print "Somehow you didn't pick a master or spell it correctly (case matters)" 
