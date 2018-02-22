@@ -48,7 +48,7 @@ import json
 import schedule
 from time import time,sleep
 import twitter
-from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET, intrinio_username, intrinio_password
+from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET, intrinio_username, intrinio_password, exch_name, exch_pw, email
 from lmdb_p import * 
 import html
 from functools import partial
@@ -64,6 +64,14 @@ from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
+
+from pytz import timezone
+from exchangelib import Account, EWSDateTime, credentials as exch_credentials, errors as exch_errors
+
+cred = exch_credentials.Credentials(username=exch_name, password=exch_pw)
+account = Account(primary_smtp_address=email, credentials = cred, autodiscover=True, access_type=exch_credentials.DELEGATE)
+calendar = account.calendar
+eastern = timezone('US/Eastern')
 
 home_dir = os.path.expanduser('~')
 credential_dir = os.path.join(home_dir, '.credentials')
@@ -144,17 +152,20 @@ def weather():
     if not 'forecast' in z:
         print("'forecast' not in result of weather request")
         return
+    try:
+        forecast = z['forecast']['txt_forecast']['forecastday']
 
-    forecast = z['forecast']['txt_forecast']['forecastday']
-
-    # if before 3 pm get today report and tomorrow report otherwise get tonight and tomorrow
-    reports = (1,2) if datetime.datetime.now().hour > 15 else (0,2)
-    text = []
-    for n in reports:
-       text.append(forecast[n]['title'] + ': ' + forecast[n]['fcttext'])
-    print(datetime.datetime.now())
-    print(repr(text).encode('ascii', 'ignore'))
-    data = {"header":"Weather", "text":text, "pos":15, "dest":(1000,825)}
+        # if before 3 pm get today report and tomorrow report otherwise get tonight and tomorrow
+        reports = (1,2) if datetime.datetime.now().hour > 15 else (0,2)
+        text = []
+        for n in reports:
+           text.append(forecast[n]['title'] + ': ' + forecast[n]['fcttext'])
+        print(datetime.datetime.now())
+        print(repr(text).encode('ascii', 'ignore'))
+        data = {"header":"Weather", "text":text, "pos":15, "dest":(1000,825)}
+    except Exception as e:
+        data = {"header":"Weather", "text":["Exception: {}".format(e)], "pos":15, "dest":(1000,825)}
+        
     publish(payload=json.dumps(data))
     mqtt_publish.single('esp_tft_display', payload=json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
 
@@ -384,6 +395,65 @@ def industry():
             "font size":12} #text expects a list
     publish(payload=json.dumps(data))
 
+def outlook():
+    now = datetime.datetime.now()
+    highlight_hour = False
+    if now.weekday() == 4 and now.hour > 21: # note this include time_zone_offset, ie 17 + 4
+        inc_days = 3
+    elif now.weekday() > 4:
+        inc_days = 7 - now.weekday()
+    elif now.hour > 21:
+        inc_days = 1
+    else:
+        inc_days = 0
+        highlight_hour = True
+  
+    dt = now + datetime.timedelta(inc_days)
+    print("dt =",dt)
+    # below a problem at the end of the month
+    #items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_)), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_+1)))
+    #below works
+    #items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_)), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_, now.hour+10)))
+
+    #items = calendar.view(start=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_), 1), end=eastern.localize(EWSDateTime(now.year, now.month, now.day+next_, 23)))
+    items = calendar.view(start=eastern.localize(EWSDateTime(dt.year, dt.month, dt.day, 1)), end=eastern.localize(EWSDateTime(dt.year, dt.month, dt.day, 23)))
+
+    try:
+        len(items)
+    except (exch_errors.ErrorInternalServerTransientError, exch_errors.ErrorMailboxStoreUnavailable) as e:
+        print("exchangelib error: ", e)
+        return
+    except AttributeError as e:
+        print("outlook error - would be caused by incorrect pw", e)
+        return
+
+    text = []
+    try:
+        for item in items:
+            subject = item.subject
+            if "time off" in subject.lower():
+                continue
+            # after fall back hours = 5?
+            line = (item.start-datetime.timedelta(hours=5)).strftime("%I:%M").lstrip('0')+"-"+(item.end-datetime.timedelta(hours=5)).strftime("%I:%M").lstrip('0')+" "+subject
+            if "12:00-12:00" in line:
+                line = "All Day Event -"+line[11:]
+
+            #if highlight_hour and (now.hour == item.start.hour - 4):
+            if highlight_hour and (now.hour == item.start.hour):
+                line = "#{red}"+line
+            text.append(line)
+            print(line)
+    except (exch_errors.ErrorTimeoutExpired, exch_errors.ErrorInternalServerTransientError) as e:
+        print("exchangelib error: ", e)
+        return
+
+    if not text:
+        text = ["Nothing Scheduled"]
+    data = {"header":"Schedule "+dt.strftime("%a %b %d"), "text":text, "pos":6, "dest":(475,470), "font size":16} #expects a list
+    #mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+    publish(payload=json.dumps(data))
+    mqtt_publish.single('esp_tft_display', json.dumps(data), hostname=aws_host, retain=False, port=1883, keepalive=60)
+
 schedule.every().hour.at(':07').do(tides)
 schedule.every().hour.at(':37').do(tides)
 
@@ -449,6 +519,19 @@ schedule.every().hour.at(':26').do(google_calendar)
 schedule.every().hour.at(':36').do(google_calendar)
 schedule.every().hour.at(':46').do(google_calendar)
 schedule.every().hour.at(':56').do(google_calendar)
+
+schedule.every().hour.at(':04').do(outlook)
+schedule.every().hour.at(':09').do(outlook)
+schedule.every().hour.at(':14').do(outlook)
+schedule.every().hour.at(':19').do(outlook)
+schedule.every().hour.at(':24').do(outlook)
+schedule.every().hour.at(':29').do(outlook)
+schedule.every().hour.at(':34').do(outlook)
+schedule.every().hour.at(':39').do(outlook)
+schedule.every().hour.at(':44').do(outlook)
+schedule.every().hour.at(':49').do(outlook)
+schedule.every().hour.at(':53').do(outlook)
+schedule.every().hour.at(':58').do(outlook)
 #schedule.run_all()
 
 while True:
