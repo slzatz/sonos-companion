@@ -147,7 +147,12 @@ def main():
 
         try:
             message = service.users().messages().get(userId=user_id, id=msg_id).execute()
-            print('Message snippet: {}'.format(message['snippet']))
+            #print('Message snippet: {}'.format(message['snippet']))
+            for x in message['payload']['headers']:
+                if x['name']=='Subject':
+                    print(x['value'].encode('ascii', 'ignore'))
+                    break
+                #print("{} -- {}".format(x, message[x]))
 
             return message
         except errors.HttpError, error:
