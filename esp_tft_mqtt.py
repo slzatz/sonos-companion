@@ -322,17 +322,19 @@ def gmail():
     for label_id in ('Label_5', 'Label_37'):
         #response = service.users().messages().list(userId='me', labelIds=label_id, q="is:unread", maxResults=5).execute()
         response = service.users().messages().list(userId='me', labelIds=label_id, maxResults=5).execute()
-        message_ids = response.get('messages', [])
-        for msg_id in message_ids:
-            message = service.users().messages().get(userID='me', id=msg_id).execute()
+        messages = response.get('messages', [])
+        for msg in messages:
+            message = service.users().messages().get(userId='me', id=msg['id']).execute()
             for header in message['payload']['headers']:
                 if header['name']=='Subject':
-                    item = header['value'].encode('ascii', 'ignore')
-                    item+='\n'+message['snippet']+'\n'
+                    #item = header['value'].encode('ascii', 'ignore')
+                    item = header['value']+'\n'+message['snippet']
+                    #item+='\n'+message['snippet']+'\n'
                     text.append(item)
                     break
 
     data = {"header":"Gmail", "text":text, "pos":4, "dest":(-600,-800)} #expects a list
+    publish(payload=json.dumps(data))
 
 def facts():
     #pos = 14
