@@ -79,6 +79,10 @@ credential_path = os.path.join(credential_dir, 'google-calendar.json')
 store = Storage(credential_path)
 credentials = store.get()
 
+gmail_credential_path = os.path.join(credential_dir, 'gmail.json')
+store2 = Storage(gmail_credential_path)
+gmail_credentials = store2.get()
+
 tides_uri = 'https://www.worldtides.info/api'
 news_uri = 'https://newsapi.org/v1/articles'
 news_sources = ['the-wall-street-journal', 'new-scientist', 'techcrunch', 'the-new-york-times', 'ars-technica', 'reddit-r-all']
@@ -309,6 +313,27 @@ def google_calendar():
     data = {"header":"Google Calendar", "text":text, "pos":4, "dest":(-600,-800)} #expects a list
     publish(payload=json.dumps(data))
 
+def gmail():
+    #pos = 4
+    http = gmail_credentials.authorize(httplib2.Http())
+    service = discovery.build('gmail', 'v1', http=http)
+
+    text = []
+    for label_id in ('Label_5', 'Label_37'):
+        #response = service.users().messages().list(userId='me', labelIds=label_id, q="is:unread", maxResults=5).execute()
+        response = service.users().messages().list(userId='me', labelIds=label_id, maxResults=5).execute()
+        message_ids = response.get('messages', [])
+        for msg_id in message_ids:
+            message = service.users().messages().get(userID='me', id=msg_id).execute()
+            for header in message['payload']['headers']:
+                if header['name']=='Subject':
+                    item = header['value'].encode('ascii', 'ignore')
+                    item+='\n'+message['snippet']+'\n'
+                    text.append(item)
+                    break
+
+    data = {"header":"Gmail", "text":text, "pos":4, "dest":(-600,-800)} #expects a list
+
 def facts():
     #pos = 14
 
@@ -513,12 +538,19 @@ schedule.every().hour.at(':34').do(industry)
 schedule.every().hour.at(':44').do(industry)
 schedule.every().hour.at(':54').do(industry)
 
-schedule.every().hour.at(':06').do(google_calendar)
-schedule.every().hour.at(':16').do(google_calendar)
-schedule.every().hour.at(':26').do(google_calendar)
-schedule.every().hour.at(':36').do(google_calendar)
-schedule.every().hour.at(':46').do(google_calendar)
-schedule.every().hour.at(':56').do(google_calendar)
+#schedule.every().hour.at(':06').do(google_calendar)
+#schedule.every().hour.at(':16').do(google_calendar)
+#schedule.every().hour.at(':26').do(google_calendar)
+#schedule.every().hour.at(':36').do(google_calendar)
+#schedule.every().hour.at(':46').do(google_calendar)
+#schedule.every().hour.at(':56').do(google_calendar)
+
+schedule.every().hour.at(':06').do(gmail)
+schedule.every().hour.at(':16').do(gmail)
+schedule.every().hour.at(':26').do(gmail)
+schedule.every().hour.at(':36').do(gmail)
+schedule.every().hour.at(':46').do(gmail)
+schedule.every().hour.at(':56').do(gmail)
 
 schedule.every().hour.at(':04').do(outlook)
 schedule.every().hour.at(':09').do(outlook)
