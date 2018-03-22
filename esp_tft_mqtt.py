@@ -320,7 +320,7 @@ def gmail():
 
     text = []
     #for label_id in ('Label_5', 'Label_37'):
-    for label_id in (['Label_5', 'UNREAD'], ['Label_37', 'UNREAD']):
+    for label_id in (['Label_5', 'UNREAD'], ['Label_37', 'UNREAD'], ['Label_38', 'UNREAD']):
         #response = service.users().messages().list(userId='me', labelIds=label_id, q="is:unread", maxResults=5).execute()
         response = service.users().messages().list(userId='me', labelIds=label_id, maxResults=5).execute()
         messages = response.get('messages', [])
@@ -425,6 +425,7 @@ def industry():
     publish(payload=json.dumps(data))
 
 def outlook():
+    time_offset = 4 #or 5 depending on daylight savings time
     now = datetime.datetime.now()
     highlight_hour = False
     if now.weekday() == 4 and now.hour > 21: # note this include time_zone_offset, ie 17 + 4
@@ -463,7 +464,8 @@ def outlook():
             if "time off" in subject.lower():
                 continue
             # after fall back hours = 5?
-            line = (item.start-datetime.timedelta(hours=5)).strftime("%I:%M").lstrip('0')+"-"+(item.end-datetime.timedelta(hours=5)).strftime("%I:%M").lstrip('0')+" "+subject
+            line = (item.start-datetime.timedelta(hours=time_offset)).strftime("%I:%M").lstrip('0')+ \
+                    "-"+(item.end-datetime.timedelta(hours=time_offset)).strftime("%I:%M").lstrip('0')+" "+subject
             if "12:00-12:00" in line:
                 line = "All Day Event -"+line[11:]
 
@@ -542,12 +544,12 @@ schedule.every().hour.at(':34').do(industry)
 schedule.every().hour.at(':44').do(industry)
 schedule.every().hour.at(':54').do(industry)
 
-#schedule.every().hour.at(':06').do(google_calendar)
-#schedule.every().hour.at(':16').do(google_calendar)
-#schedule.every().hour.at(':26').do(google_calendar)
-#schedule.every().hour.at(':36').do(google_calendar)
-#schedule.every().hour.at(':46').do(google_calendar)
-#schedule.every().hour.at(':56').do(google_calendar)
+schedule.every().hour.at(':01').do(google_calendar)
+schedule.every().hour.at(':11').do(google_calendar)
+schedule.every().hour.at(':21').do(google_calendar)
+schedule.every().hour.at(':31').do(google_calendar)
+schedule.every().hour.at(':41').do(google_calendar)
+schedule.every().hour.at(':51').do(google_calendar)
 
 schedule.every().hour.at(':06').do(gmail)
 schedule.every().hour.at(':16').do(gmail)
