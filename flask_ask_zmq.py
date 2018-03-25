@@ -15,7 +15,7 @@ current_track = master.get_current_track_info() --> {
 # if in prime, url is below
 # x-sonosapi-hls-static:catalog%2ftracks%2fB01E0N3W66%2f%3falbumAsin%3dB01E0N386A?sid=201&flags=0&sn=1
 
-# if still prime but moved to my music (but not purchased) then url is (and sometimes metadata works):
+# if still prime but moved to my music (but not purchased) then url is (and generally metadata works):
 # x-sonosapi-hls-static:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f?sid=201&flags=0&sn=1' 
 
 # if track has been bought:
@@ -214,14 +214,14 @@ def play(add, uris):
             ii = uri.find('.')
             id_ = uri[i:ii]
             meta = didl_library.format(id_=id_)
-        elif 'library' in uri and 'static' in uri:
+        elif 'static:library' in uri: # and 'static' in uri:
         # this is a track moved from prime into my account but not paid for
         # baffling but this sometimes generates correct meta data and sometimes doesn't
             i = uri.find('library')
             ii = uri.find('?')
             id_ = uri[i:ii]
             meta = didl_library.format(id_=id_)
-        elif 'static' in uri and 'catalog' in uri:
+        elif 'static:catalog' in uri: # and 'catalog' in uri:
         # this is a track sitting in prime -- queues it up but right now I can't generate metadata
 
             master.add_uri_to_queue(uri)
