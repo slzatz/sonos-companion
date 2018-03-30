@@ -57,11 +57,15 @@ for s in sp:
 
 master_name = raw_input("Which speaker do you want to be master? ")
 master = speakers.get(master_name)
+###########################################################################
+for s in sp:
+    print s.player_name.encode('ascii', 'ignore'), s.group.coordinator,'*'
+###########################################################################
 if master:
     print "Master speaker is: {}".format(master.player_name) 
-    sp = [s for s in sp if s.group.coordinator is master]
+    m_group = [s for s in sp if s.group is not None and s.group.coordinator is master] #not None should not be necessary but iS
     print "Master group:"
-    for s in sp:
+    for s in m_group:
         print "{} -- coordinator:{}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore')) 
 
 else:
@@ -85,7 +89,12 @@ while 1:
         state = 'ERROR'
 
     if prev_state != state:
-        data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(master.volume)], 'pos':10}
+        try:
+            volume = master.volume
+        except Exception as e:
+            print "volume = master.volume error", e
+            volume = -1
+        data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(volume)], 'pos':10}
         try:
             mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 
@@ -96,13 +105,19 @@ while 1:
 
         prev_state = state
 
-    volume = master.volume
+    try:
+        volume = master.volume
     
-    if volume != prev_volume:
-        data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(volume)], 'pos':10}
-        mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+    #except requests.exceptions.ConnectionError as e: # requests not actually imported must be by SoCo
+    except Exception as e:
+        print "volume = master.volume error:", e
 
-        prev_volume = volume
+    else:
+        if volume != prev_volume:
+            data = {'header':'Sonos Status - '+location, 'text':["state: "+state, "volume: "+str(volume)], 'pos':10}
+            mqtt_publish.single('esp_tft', json.dumps(data), hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+
+            prev_volume = volume
 
     # check if sonos is playing music
 
