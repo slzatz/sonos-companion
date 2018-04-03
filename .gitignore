@@ -1,6 +1,5 @@
 *.pyc
 *.swp
-*.txt
 settings.py
 config.py
 config.js
