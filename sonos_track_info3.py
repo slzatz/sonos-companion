@@ -41,7 +41,7 @@ soco_config.CACHE_ENABLED = False
 n = 0
 while 1:
     n+=1
-    print "attempt "+str(n) 
+    print("attempt "+str(n))
     try:
         sp = soco.discover(timeout=2)
         speakers = {s.player_name:s for s in sp}
@@ -66,6 +66,7 @@ if master:
     print("Master group:")
     for s in m_group:
         print("{} -- coordinator:{}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore')))
+        print("{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name))
 
 else:
     print("Somehow you didn't pick a master or spell it correctly (case matters)")
