@@ -1,3 +1,4 @@
+#!bin/python
 '''
 Python 3 script
 This script can be run from anywhere.  It gets to the local sonos network via ngrok URLs.  So, for example,
