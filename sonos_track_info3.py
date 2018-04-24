@@ -1,7 +1,9 @@
 '''
-Python 2.7 script
-Current script to scrobble songs playing on Sonos to mqtt broker
-using aws ec2 for mqtt broker 
+Python 3.x version of sonos_track_info.py
+Broadcasts messages via mqtt information about tracks that sonos is playing
+Various scripts/devices subscribe to the messages including sonos_remote running on M5
+as well as display_info_photos.py and dash_sonos.py
+Currently uses the mqtt brokder running on my ec2 instance
 
 current_track = master.get_current_track_info() --> {
             u'album': 'We Walked In Song', 
