@@ -32,8 +32,8 @@ solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #port 8983 is 
 def play_album(album, artist):
     # album must be present; artist is optional
 
-    print "album =",album
-    print "artist=",artist
+    print("album =",album)
+    print("artist=",artist)
 
     if album:
         s = 'album:' + ' AND album:'.join(album.split())
@@ -75,7 +75,7 @@ def shuffle(artist):
     if not count:
         return statement("I couldn't find any tracks for {}".format(artist))
 
-    print "Total track count for {} was {}".format(artist, count)
+    print("Total track count for {} was {}".format(artist, count))
     tracks = result.docs
     k = 10 if count >= 10 else count
     selected_tracks = random.sample(tracks, k)
@@ -88,7 +88,7 @@ def shuffle(artist):
 
 @ask.intent('Mix', mapping={'artist1':'myartista', 'artist2':'myartistb'})
 def mix(artist1, artist2):
-    print "artist1, artist2 = ",artist1,artist2
+    print("artist1, artist2 = ",artist1,artist2)
     uris = []
     for artist in (artist1, artist2):
         if artist:
@@ -96,7 +96,7 @@ def mix(artist1, artist2):
             result = solr.search(s, fl='artist,title,uri', rows=500) 
             count = len(result)
             if count:
-                print "Total track count for {} was {}".format(artist, count)
+                print("Total track count for {} was {}".format(artist, count))
                 tracks = result.docs
                 k = 5 if count >= 5 else count
                 selected_tracks = random.sample(tracks, k)
@@ -121,9 +121,9 @@ def mix(artist1, artist2):
 @ask.intent('PlayTrack', mapping={'title':'mytitle', 'artist':'myartist'})
 def play_track(title, artist, add): #note the decorator will set add to None
     # title must be present; artist is optional
-    print "artist =",artist
-    print "title =",title
-    print "add =", add
+    print("artist =",artist)
+    print("title =",title)
+    print("add =", add)
 
     if not title:
         return statement("I couldn't find the track.")
@@ -140,7 +140,7 @@ def play_track(title, artist, add): #note the decorator will set add to None
     uri = track['uri']
     #socket.send_json({'action':'play', 'add':add, 'uris':[uri]})
     #msg = socket.recv()
-    msg = sonos_actions.play(False, uris)
+    msg = sonos_actions.play(False, [uri])
     print("PlayTrack return msg from zmq:", msg)
     action = 'add' if add else 'play'
     return statement("I will {} {} by {} from album {}".format(action, track['title'], track['artist'], track['album']))
@@ -240,7 +240,7 @@ def play_station(station):
         s = 'album:(c)'
         result = solr.search(s, fl='uri', rows=600) 
         count = len(result)
-        print "Total track count for Deborah tracks was {}".format(count)
+        print("Total track count for Deborah tracks was {}".format(count))
         tracks = result.docs
         selected_tracks = random.sample(tracks, 20) # randomly decided to pick 20 songs
         uris = [t.get('uri') for t in selected_tracks]
@@ -279,7 +279,7 @@ try:
             host='0.0.0.0'
             )
 finally:
-    print "Disconnecting clients"
+    print("Disconnecting clients")
 
-print "Done"
+print("Done")
 

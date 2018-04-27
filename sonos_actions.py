@@ -45,36 +45,36 @@ base_url = "http://ws.audioscrobbler.com/2.0/"
 n = 0
 while 1:
     n+=1
-    print "attempt "+str(n) 
+    print("attempt "+str(n)) 
     try:
         sp = soco.discover(timeout=2)
         sp_names = {s.player_name:s for s in sp}
     except TypeError as e:    
-        print e 
+        print(e) 
         sleep(1)       
     else:
         break 
     
 for s in sp:
-    print "{} -- coordinator: {}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore')) 
+    print("{} -- coordinator: {}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore'))) 
 
-master_name = raw_input("Which speaker do you want to be master? ")
+master_name = input("Which speaker do you want to be master? ")
 master = sp_names.get(master_name)
 if master:
     if not master.is_coordinator:
-        print "\nThe speaker you selected --{}-- is not the master of any group, so will unjoin it".format(master.player_name)
+        print("\nThe speaker you selected --{}-- is not the master of any group, so will unjoin it".format(master.player_name))
         master.unjoin()
         #sys.exit(1)
-    print "\nMaster speaker is: {}".format(master.player_name) 
-    print "\nMaster group:"
+    print("\nMaster speaker is: {}".format(master.player_name)) 
+    print("\nMaster group:")
     for s in master.group.members:
-        print "{} -- coordinator: {}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore')) 
+        print("{} -- coordinator: {}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore'))) 
 
 else:
-    print "Somehow you didn't pick a master or spell it correctly (case matters)" 
+    print("Somehow you didn't pick a master or spell it correctly (case matters)")
     sys.exit(1)
 
-print "\nprogram running ..."
+print("\nprogram running ...")
 
 ##### commented out on 04252018
 #context = zmq.Context()
@@ -120,7 +120,7 @@ def my_add_to_queue(uri, metadata):
                 ('EnqueueAsNext', 1)
                 ])
     except soco.exceptions.SoCoUPnPException as e:
-        print "my_add_to_queue exception:", e
+        print("my_add_to_queue exception:", e)
         return 0
     else:
         qnumber = response['FirstTrackNumberEnqueued']
@@ -136,7 +136,7 @@ def my_add_playlist_to_queue(uri, metadata):
                 ('EnqueueAsNext', 0) #0
                 ])
     except soco.exceptions.SoCoUPnPException as e:
-        print "my_add_to_queue exception:", e
+        print("my_add_to_queue exception:", e)
         return 0
     else:
         qnumber = response['FirstTrackNumberEnqueued']
@@ -147,7 +147,7 @@ def what_is_playing():
     try:
         state = master.get_current_transport_info()['current_transport_state']
     except Exception as e:
-        print "Encountered error in state = master.get_current_transport_info(): ", e
+        print("Encountered error in state = master.get_current_transport_info(): ", e)
         state = 'error'
 
     # check if sonos is playing something
@@ -155,7 +155,7 @@ def what_is_playing():
         try:
             track = master.get_current_track_info()
         except Exception as e:
-            print "Encountered error in track = master.get_current_track_info(): ", e
+            print("Encountered error in track = master.get_current_track_info(): ", e)
             output_speech = "I encountered an error trying to get current track info."
         else:
             output_speech = "The song is {}. The artist is {} and the album is {}.".format(track.get('title','No title'), track.get('artist', 'No artist'), track.get('album', 'No album'))
@@ -187,7 +187,7 @@ def playback(type_):
     try:
         getattr(master, type_)()
     except soco.exceptions.SoCoUPnPException as e:
-        print "master.{}:".format(type_), e
+        print("master.{}:".format(type_), e)
     return 'OK'
 
 def play(add, uris):
@@ -201,12 +201,12 @@ def play(add, uris):
             master.stop()
             master.clear_queue()
         except (soco.exceptions.SoCoUPnPException,soco.exceptions.SoCoSlaveException) as e:
-            print "master.stop or master.clear_queue exception:", e
+            print("master.stop or master.clear_queue exception:", e)
 
 
     for uri in uris:
-        print 'uri: ' + uri
-        print "---------------------------------------------------------------"
+        print('uri: ' + uri)
+        print("---------------------------------------------------------------")
         playlist = False
         if 'library_playlist' in uri:
             i = uri.find(':')
@@ -233,11 +233,11 @@ def play(add, uris):
             continue
         else:
 
-            print 'The uri:{}, was not recognized'.format(uri)
+            print('The uri:{}, was not recognized'.format(uri))
             continue
 
-        print 'meta: ',meta
-        print '---------------------------------------------------------------'
+        print('meta: ',meta)
+        print('---------------------------------------------------------------')
 
         if not playlist:
             my_add_to_queue('', meta)
@@ -250,7 +250,7 @@ def play(add, uris):
         try:
             master.play_from_queue(0)
         except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
-            print "master.play_from_queue exception:", e
+            print("master.play_from_queue exception:", e)
 
     return 'OK'
 
@@ -262,7 +262,7 @@ def recent_tracks():
         r = requests.get(base_url, params=payload)
         z = r.json()['recenttracks']['track']
     except Exception as e:
-        print "Exception in get_scrobble_info: ", e
+        print("Exception in get_scrobble_info: ", e)
         z = []
 
     if z:
@@ -302,7 +302,7 @@ def play_station(station):
     station = STATIONS.get(station.lower())
     if station:
         uri = station[1]
-        print "radio station uri=",uri
+        print("radio station uri=",uri)
         if uri.startswith('pndrradio'):
             meta = meta_format_pandora.format(title=station[0], service=station[2])
             master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
@@ -330,7 +330,7 @@ def clear_queue():
     try:
         master.clear_queue()
     except Exception as e:
-        print "Encountered exception when trying to clear the queue:",e
+        print("Encountered exception when trying to clear the queue:",e)
 
     return 'OK'
 
