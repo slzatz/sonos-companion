@@ -1,3 +1,4 @@
+#!bin/python
 '''
 Python 3.x version of sonos_track_info.py
 Broadcasts messages via mqtt information about tracks that sonos is playing
