@@ -1,3 +1,4 @@
+#!bin/python
 '''
 python3 script that imports sonos_actions.py and is the backend for sonos_cli.py
 The script uses the flask extension flask-ask, which was written specifically for python-
@@ -213,9 +214,9 @@ def play_station(station):
         tracks = result.docs
         selected_tracks = random.sample(tracks, 20) # randomly decided to pick 20 songs
         uris = [t.get('uri') for t in selected_tracks]
-        sonos_actions.play(False, uris)
+        msg = sonos_actions.play(False, uris)
     else:
-        sonos_actions.playstation(station)
+        msg = sonos_actions.play_station(station)
 
     print("PlayStation({}) return msg from zmq:".format(station), msg)
     return statement("I will try to play station {}.".format(station))
@@ -228,7 +229,7 @@ def list_queue():
 
 @ask.intent('ClearQueue')
 def clear_queue():
-    sonos_actions.clear_queue()
+    msg = sonos_actions.clear_queue()
     print("ClearQueue return msg from zmq:", msg)
     return statement(msg)
 
