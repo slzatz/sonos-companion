@@ -1,3 +1,4 @@
+#!bin/python
 '''
 This is a python 3.x script that is usually run  on a raspberry pi
 and is connected to sonos so it can issue sonos commands like changing
