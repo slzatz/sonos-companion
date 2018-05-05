@@ -297,7 +297,7 @@ def area(a, b):
 def get_phrases(line, start='{}'):
 
     if line.find('{') == -1:
-        print("phrases =", [(start, line)])
+        #print("phrases =", [(start, line)])
         return [(start, line)]
 
     if line[0]!='{':
