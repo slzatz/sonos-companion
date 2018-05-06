@@ -193,7 +193,7 @@ def display_background_image(photo):
     img_rect = img.get_rect()
     pos = ((screen_width-img_rect.width)/2, 0)
 
-    font = pygame.font.SysFont('Sans', 24)
+    font = pygame.font.SysFont('notosans', 24)
     font.set_bold(True)
 
     text = font.render(photo.get('photographer', 'unknown'), True, (127,127,127))
@@ -204,7 +204,7 @@ def display_background_image(photo):
     t = datetime.now().strftime("%I:%M %p") #%I:%M:%S %p
     t = t[1:] if t[0] == '0' else t
     t = t[:-2] + t[-2:].lower()
-    font = pygame.font.SysFont('Sans', 16)
+    font = pygame.font.SysFont('notosans', 16)
     font.set_bold(False)
     text = font.render(t, True, (127,127,127))
     screen.blit(text, (screen_width-text.get_rect().width-5,5)) 
@@ -363,14 +363,17 @@ def on_message(client, userdata, msg):
         foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHT)) # (800,800)
         foo.fill((0,0,0))
         foo.set_alpha(175) #125
-        font = pygame.font.SysFont('Sans', 16) #18 changed 05212017
+        #font = pygame.font.SysFont('Sans', 16) #18 changed 05212017
+        font = pygame.font.SysFont('notosans', 16) #18 changed 05212017
         font.set_bold(True)
         header = "{} [{}] {}".format(z.get('header', 'no source'), k, dest if dest else " ") # problem if dest None would like to know what it was
         text = font.render(header, True, col)
         foo.blit(text, (5,5)) 
         font.set_bold(False)
         font_size = z.get('font size', 16)
-        font_type = z.get('font type', 'Sans')
+        font_type = z.get('font type', 'notosans')
+        if font_type=='monospace':
+            font_type = 'notosansmono'
         antialias = z.get('antialias', True)
         bullets = z.get('bullets', True)
         font = pygame.font.SysFont(font_type, font_size)
