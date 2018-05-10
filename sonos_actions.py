@@ -76,11 +76,6 @@ else:
 
 print("\nprogram running ...")
 
-##### commented out on 04252018
-#context = zmq.Context()
-#socket = context.socket(zmq.REP)
-#socket.bind('tcp://127.0.0.1:5554')
-
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
@@ -166,32 +161,26 @@ def what_is_playing():
     return output_speech
 
 def turn_volume(volume):
-    #for s in m_group:
     for s in master.group.members:
         s.volume = s.volume - 10 if volume=='quieter' else s.volume + 10
-    return 'OK'
 
 def set_volume(level):
-    #for s in m_group:
     for s in master.group.members:
         s.volume = level
-    return 'OK'
 
 def mute(bool_):
-    #for s in m_group:
     for s in master.group.members:
         s.mute = bool_
-    return 'OK'
 
 def playback(type_):
     try:
         getattr(master, type_)()
     except soco.exceptions.SoCoUPnPException as e:
         print("master.{}:".format(type_), e)
-    return 'OK'
 
 def play(add, uris):
-    # must be a coordinator and possible that it stopped being a coordinator after launching program
+    # must be a coordinator and possible that it stopped being a coordinator
+    # after launching program
     if not master.is_coordinator:
         master.unjoin()
 
@@ -214,25 +203,24 @@ def play(add, uris):
             meta = didl_library_playlist.format(id_=id_)
             playlist = True
         elif 'library' in uri and not 'static' in uri:
-        # this is a bought track
+            # this is a bought track
             i = uri.find('library')
             ii = uri.find('.')
             id_ = uri[i:ii]
             meta = didl_library.format(id_=id_)
         elif 'static:library' in uri: # and 'static' in uri:
-        # this is a track moved from prime into my account but not paid for
-        # baffling but this sometimes generates correct meta data and sometimes doesn't
+            # this is a track moved from prime into my account but not paid for
+            # baffling but this sometimes generates correct meta data and sometimes doesn't
             i = uri.find('library')
             ii = uri.find('?')
             id_ = uri[i:ii]
             meta = didl_library.format(id_=id_)
         elif 'static:catalog' in uri: # and 'catalog' in uri:
-        # this is a track sitting in prime -- queues it up but right now I can't generate metadata
-
+            # this is a track sitting in prime -- queues it up but right now
+            #I can't generate metadata
             master.add_uri_to_queue(uri)
             continue
         else:
-
             print('The uri:{}, was not recognized'.format(uri))
             continue
 
@@ -246,13 +234,11 @@ def play(add, uris):
             my_add_playlist_to_queue(uri, meta)
 
     if not add:
-    # with check on is_coordinator may not need the try/except
+        # with check on is_coordinator may not need the try/except
         try:
             master.play_from_queue(0)
         except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
             print("master.play_from_queue exception:", e)
-
-    return 'OK'
 
 def recent_tracks():
     # right now look back is one week; note can't limit because you need all the tracks since we're doing the frequency count

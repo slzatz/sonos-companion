@@ -1,10 +1,9 @@
 #!bin/python
 '''
-python3 script that imports sonos_actions.py and is the backend for sonos_cli.py
-The script uses the flask extension flask-ask, which was written specifically for python-
-based Alexa apps. In this case, I am not using Alexa but am using Alexa-like syntax
-for text-based requests.
-sonos_cli.py has a config file that needs the local uri of sonos_cli_server.py
+python3 script that imports sonos_actions.py and is the all-in-one sonos cli
+script.
+Config file inluces the aws solr uri and the local raspberry pi uri
+Uses cmd2 (but not sure I'm using any cmd2 capabilities
 '''
 
 import random
@@ -12,44 +11,69 @@ from operator import itemgetter
 import pysolr
 from cmd2 import Cmd
 import sonos_actions
-from config import solr_uri, ngrok_urls #, user_id #,last_fm_api_key, user_id
+from config import solr_uri, local_urls #, user_id #,last_fm_api_key, user_id
 
+#port 8983 is incorporated in the solr_uri
+solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
 
-solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) #port 8983 is incorporated in the ngrok url
+def play_track(title, artist, add): #note the decorator will set add to None
+    # title must be present; artist is optional
+    print("artist =",artist)
+    print("title =",title)
+    print("add =", add)
 
-def play_album(album, artist):
+    if not title:
+        return "You didn't provide a track title."
+
+    s = 'title:' + ' AND title:'.join(title.split())
+    if artist:
+        s = s + ' artist:' + ' AND artist:'.join(artist.split())
+
+    result = solr.search(s, rows=1) #**{'rows':1})
+    if not len(result):
+        return "I couldn't find the track {} by {}.".format(title,artist)
+
+    track = result.docs[0]
+    uri = track['uri']
+    sonos_actions.play(add, [uri])
+    action = 'add' if add else 'play'
+    return f"I will {action} {track.get('title', '')} by " \
+            "{track.get('artist', '')} from album {track.get('album', '')}"
+
+def play_album(album, artist, add=False):
     # album must be present; artist is optional
 
     print("album =",album)
     print("artist=",artist)
+    print("add =", add)
 
-    if album:
-        s = 'album:' + ' AND album:'.join(album.split())
-        if artist:
-            s = s + ' artist:' + ' AND artist:'.join(artist.split())
+    if not album:
+        return "You didn't provide an album title."
 
-        result = solr.search(s, fl='score,track,uri,album,title', sort='score desc', rows=25) #**{'rows':25}) #only brings back actual matches but 25 seems like max for most albums
-        tracks = result.docs
-        if  tracks:
-            selected_album = tracks[0]['album']
-            try:
-                tracks = sorted([t for t in tracks],key=itemgetter('track'))
-            except KeyError:
-                pass
-            # The if t['album']==selected_album only comes into play if we retrieved more than one album
-            selected_tracks = [t for t in tracks if t['album']==selected_album]
-            uris = [t.get('uri') for t in selected_tracks]
-            msg = sonos_actions.play(False, uris)
-            print("PlayAlbum return msg from zmq:", msg)
-            titles = ', '.join([t.get('title', '') for t in selected_tracks])
-            output_speech = f"I will play {len(uris)} tracks from {selected_album}: {titles}"
-        else:
-            output_speech = "I couldn't find any songs from album {}.".format(album)
+    s = 'album:' + ' AND album:'.join(album.split())
+    if artist:
+        s = s + ' artist:' + ' AND artist:'.join(artist.split())
 
+    #only brings back actual matches but 25 seems like max for most albums
+    result = solr.search(s, fl='score,track,uri,album,title',
+                         sort='score desc', rows=25) 
+
+    tracks = result.docs
+    if  tracks:
+        selected_album = tracks[0]['album']
+        try:
+            tracks = sorted([t for t in tracks],key=itemgetter('track'))
+        except KeyError:
+            pass
+        # The if t['album']==selected_album only comes into play
+        # if we retrieved more than one album
+        selected_tracks = [t for t in tracks if t['album']==selected_album]
+        uris = [t.get('uri') for t in selected_tracks]
+        sonos_actions.play(False, uris)
+        titles = ', '.join([t.get('title', '') for t in selected_tracks])
+        return f"I will play {len(uris)} tracks from {selected_album}: {titles}"
     else:
-        output_speech = "I couldn't even find the album."
-
-    return output_speech
+        return f"I couldn't find any tracks from album {album}."
 
 def shuffle(artist):
     if not artist:
@@ -66,8 +90,7 @@ def shuffle(artist):
     k = 10 if count >= 10 else count
     selected_tracks = random.sample(tracks, k)
     uris = [t.get('uri') for t in selected_tracks]
-    #msg = sonos_actions.play(False, uris)
-    #print("Shuffle return msg from zmq:", msg)
+    sonos_actions.play(False, uris)
     titles = ', '.join([t.get('title') for t in selected_tracks])
     return f"I will shuffle {titles}."
 
@@ -86,73 +109,17 @@ def mix(artist1, artist2):
                 selected_tracks = random.sample(tracks, k)
                 all_tracks.append(selected_tracks)
             else:
-                output_speech = "I couldn't find any tracks for {}".format(artist)
-                return output_speech
+                return f"I couldn't find any tracks for {artist}"
         else:
-            output_speech = "I couldn't find one or both of the artists you were looking for."
-            return output_speech
+            return "I couldn't find one or both of the artists you were looking for."
 
     x = all_tracks[0]
     y = all_tracks[1]
     mix = [t for sublist in zip(x,y) for t in sublist]
     uris = [t.get('uri') for t in mix]
-    msg = sonos_actions.play(False, uris)
-    print("Mix return msg from zmq:", msg)
+    sonos_actions.play(False, uris)
     titles_artists = ', '.join([t.get('title')+' - '+t.get('artist') for t in mix])
     return f"I will shuffle {titles_artists}."
-
-def play_track(title, artist, add): #note the decorator will set add to None
-    # title must be present; artist is optional
-    print("artist =",artist)
-    print("title =",title)
-    print("add =", add)
-
-    if not title:
-        return "I couldn't find the track."
-
-    s = 'title:' + ' AND title:'.join(title.split())
-    if artist:
-        s = s + ' artist:' + ' AND artist:'.join(artist.split())
-
-    result = solr.search(s, rows=1) #**{'rows':1})
-    if not len(result):
-        return "I couldn't find the track {} by {}.".format(title,artist)
-
-    track = result.docs[0]
-    uri = track['uri']
-    msg = sonos_actions.play(add, [uri])
-    #print("PlayTrack return msg from zmq:", msg)
-    action = 'add' if add else 'play'
-    return f"I will {action} {track.get('title', '')} by {track.get('artist', '')} from album {track.get('album', '')}"
-
-#def add_track(title, artist):
-#    r = play_track(title, artist, True)
-#    return r
-
-#def resume():
-#    msg = sonos_actions.playback('play')
-#    #print("Resume return msg from zmq:", msg)
-#    return "I will resume what was playing."
-
-#def pause():
-#    msg = sonos_actions.playback('pause')
-#    #print("Pause return msg from zmq:", msg)
-#    return "I will pause what was playing."
-
-#def next_():
-#    msg = sonos_actions.playback('pause')
-#    #print("Next return msg from zmq:", msg)
-#    return "I will skip to the next track."
-
-#def mute():
-#    msg = sonos_actions.mute(True)
-#    #print("Mute return msg from zmq:", msg)
-#    return "I will mute the sound."
-
-#def unmute(bool_):
-#    msg = sonos_actions.mute(False)
-#    print("UnMute return msg from zmq:", msg)
-#    return "I will unmute the sound."
 
 def turn_volume(volume):
     if volume in ('increase','louder','higher','up'):
@@ -197,7 +164,7 @@ def play_station(station):
     else:
         msg = sonos_actions.play_station(station)
 
-    print("PlayStation({}) return msg from zmq:".format(station), msg)
+    #print("PlayStation({}) return msg from zmq:".format(station), msg)
     return "I will try to play station {}.".format(station)
         
 def list_queue():
@@ -210,8 +177,7 @@ def clear_queue():
     print("ClearQueue return msg from zmq:", msg)
     return msg
 
-class CmdLineApp(Cmd):
-    """ Example cmd2 application. """
+class Sonos(Cmd):
 
     # Setting this true makes it run a shell command if a cmd2/cmd command doesn't exist
     # default_to_shell = True
@@ -227,37 +193,30 @@ class CmdLineApp(Cmd):
         super().__init__(use_ipython=False)
 
     def preparse(self, s):
+        # this is only so when you do a track with no cmd it works
         self.raw = s
         return s
 
     def do_location(self, s):
         if s=='':
             s = input("what is the location? ")
-        self.url = ngrok_urls.get(s)
+        self.url = local_urls.get(s)
         print(f"The location is {s}")
 
     def do_play(self, s):
-        #def play_track(title, artist, add): #note the decorator will set add to None
         if 'by' in s:
-            #self.values = s.split(' by ')
             title, artist = s.split(' by ')
         else:
-            #self.values = [s ,'']
             title, artist = s, ''
 
         self.msg = play_track(title, artist, False)
-        #print(msg)
 
     def do_add(self, s):
-        #def play_track(title, artist, add): #note the decorator will set add to None
         if 'by' in s:
             title, artist = s.split(' by ')
         else:
             title, artist = s ,''
         self.msg = play_track(title, artist, True)
-        #print(s, type(s)) #cmd2.ParsedString
-        #print(str(s), type(str(s)))
-        #print(msg)
 
     def do_album(self, s):
         if 'by' in s:
@@ -266,10 +225,16 @@ class CmdLineApp(Cmd):
             album, artist = s, ''
         self.msg = play_album(album, artist)
 
-
     def do_shuffle(self, s):
         self.msg = shuffle(s)
-        #print(msg)
+
+    def do_mix(self, s):
+        if ' and ' not in s:
+            self.msg = "command is: mix artistA and artistB"
+            return
+
+        artist1, artist2 = s.split(' and ')
+        self.msg = sonos_actions.mix(artist1, artist2))
 
     def default(self, s):
         if 'by' in self.raw:
@@ -285,40 +250,27 @@ class CmdLineApp(Cmd):
         self.msg = turn_volume('quieter')
 
     def do_pause(self, s):
-        #msg = pause()
-        msg = sonos_actions.playback('pause')
-        #print("Pause return msg from zmq:", msg)
+        sonos_actions.playback('pause')
         self.msg = "I will pause what was playing."
-        #print(msg)
 
     def do_resume(self, s):
-        #self.msg = resume()
-        msg = sonos_actions.playback('play')
-        #print("Resume return msg from zmq:", msg)
+        sonos_actions.playback('play')
         self.msg = "I will resume what was playing."
-        #print(msg)
 
     def do_next(self, s):
-        #self.msg = next_()
-        msg = sonos_actions.playback('pause')
-        #print("Next return msg from zmq:", msg)
+        sonos_actions.playback('pause')
         self.msg = "I will skip to the next track."
 
     def do_mute(self, s):
-        #self.msg = mute()
-        msg = sonos_actions.mute(True)
-        #print("Mute return msg from zmq:", msg)
+        sonos_actions.mute(True)
         self.msg = "I will mute the sound."
 
     def do_unmute(self, s):
-        msg = sonos_actions.mute(False)
-        #print("UnMute return msg from zmq:", msg)
+        sonos_actions.mute(False)
         self.msg = "I will unmute the sound."
 
     def do_what(self, s):
         self.msg = sonos_actions.what_is_playing()
-        #print("WhatIsPlaying return msg from zmq:", msg)
-        #return msg
 
     def do_quit(self, s):
         self.quit = True
@@ -326,10 +278,10 @@ class CmdLineApp(Cmd):
     def postcmd(self, stop, s):
         if self.quit:
             return True
-
+        # the below prints the appropriate message after each command
         print(self.msg)
 
 if __name__ == '__main__':
-    c = CmdLineApp()
+    c = Sonos()
     c.cmdloop()
 
