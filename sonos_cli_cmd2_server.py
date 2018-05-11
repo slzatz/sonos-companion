@@ -2,7 +2,7 @@
 '''
 python3 script that imports sonos_actions.py and is the all-in-one sonos cli
 script.
-Config file inluces the aws solr uri and the local raspberry pi uri
+Config file inludes the aws solr uri and the local raspberry pi uri
 Uses cmd2 (but not sure I'm using any cmd2 capabilities
 '''
 
@@ -11,9 +11,8 @@ from operator import itemgetter
 import pysolr
 from cmd2 import Cmd
 import sonos_actions
-from config import solr_uri, local_urls #, user_id #,last_fm_api_key, user_id
+from config import solr_uri 
 
-#port 8983 is incorporated in the solr_uri
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
 
 def play_track(title, artist, add): #note the decorator will set add to None
@@ -29,9 +28,9 @@ def play_track(title, artist, add): #note the decorator will set add to None
     if artist:
         s = s + ' artist:' + ' AND artist:'.join(artist.split())
 
-    result = solr.search(s, rows=1) #**{'rows':1})
+    result = solr.search(s, rows=1) 
     if not len(result):
-        return "I couldn't find the track {} by {}.".format(title,artist)
+        return f"I couldn't find the track {title} by {artist}."
 
     track = result.docs[0]
     uri = track['uri']
@@ -123,33 +122,20 @@ def mix(artist1, artist2):
 
 def turn_volume(volume):
     if volume in ('increase','louder','higher','up'):
-        msg = sonos_actions.turn_volume('louder')
-        #print("Volume return msg from zmq:", msg)
+        sonos_actions.turn_volume('louder')
         return "I will turn the volume up."
     elif volume in ('decrease', 'down','quieter','lower'):
-        msg = sonos_actions.turn_volume('quieter')
-        #print("Volume return msg from zmq:", msg)
+        sonos_actions.turn_volume('quieter')
         return "I will turn the volume down."
     else:
         return "I don't know what you asked me to do to the volume."
 
 def set_volume(level):
     if level > 0 and level < 70: 
-        msg = sonos_actions.set_volume(level)
-        #print("SetVolume return msg from zmq:", msg)
+        sonos_actions.set_volume(level)
         return "I will set the volume to {level}."
     else:
         return f"{level} is not in the range zero to seventy"
-
-def what_is_playing():
-    msg = sonos_actions.what_is_playing()
-    print("WhatIsPlaying return msg from zmq:", msg)
-    return msg
-
-def recent_tracks():
-    msg = sonos_actions.recent_tracks()
-    print("RecentTracks return msg from zmq:", msg)
-    return msg
 
 def play_station(station):
     if station.lower()=='deborah':
@@ -160,23 +146,12 @@ def play_station(station):
         tracks = result.docs
         selected_tracks = random.sample(tracks, 20) # randomly decided to pick 20 songs
         uris = [t.get('uri') for t in selected_tracks]
-        msg = sonos_actions.play(False, uris)
+        sonos_actions.play(False, uris)
     else:
-        msg = sonos_actions.play_station(station)
+        sonos_actions.play_station(station)
 
-    #print("PlayStation({}) return msg from zmq:".format(station), msg)
-    return "I will try to play station {}.".format(station)
+    return f"I will try to play station {station}."
         
-def list_queue():
-    msg = sonos_actions.list_queue()
-    print("ListQueue return msg from zmq:", msg)
-    return msg
-
-def clear_queue():
-    msg = sonos_actions.clear_queue()
-    print("ClearQueue return msg from zmq:", msg)
-    return msg
-
 class Sonos(Cmd):
 
     # Setting this true makes it run a shell command if a cmd2/cmd command doesn't exist
@@ -197,13 +172,11 @@ class Sonos(Cmd):
         self.raw = s
         return s
 
-    def do_location(self, s):
-        if s=='':
-            s = input("what is the location? ")
-        self.url = local_urls.get(s)
-        print(f"The location is {s}")
-
     def do_play(self, s):
+        if s == '':
+            sonos_actions.playback('play')
+            self.msg = "I will resume what was playing."
+            return
         if 'by' in s:
             title, artist = s.split(' by ')
         else:
@@ -234,7 +207,7 @@ class Sonos(Cmd):
             return
 
         artist1, artist2 = s.split(' and ')
-        self.msg = sonos_actions.mix(artist1, artist2))
+        self.msg = sonos_actions.mix(artist1, artist2)
 
     def default(self, s):
         if 'by' in self.raw:
@@ -271,6 +244,16 @@ class Sonos(Cmd):
 
     def do_what(self, s):
         self.msg = sonos_actions.what_is_playing()
+
+    def do_list(self, s):
+        self.msg = sonos_actions.list_queue()
+
+    def do_clear(self, s):
+        sonos_actions.clear_queue()
+        self.msg = "The queue has been cleared."
+
+    def do_recent(self, s):
+        self.msg = sonos_actions.recent_tracks()
 
     def do_quit(self, s):
         self.quit = True

@@ -27,7 +27,6 @@ current_track = master.get_current_track_info() --> {
 
 import os
 from time import time, sleep
-#import random
 import json
 import sys
 home = os.path.split(os.getcwd())[0]
@@ -151,14 +150,16 @@ def what_is_playing():
             track = master.get_current_track_info()
         except Exception as e:
             print("Encountered error in track = master.get_current_track_info(): ", e)
-            output_speech = "I encountered an error trying to get current track info."
+            response = "I encountered an error trying to get current track info."
         else:
-            output_speech = "The song is {}. The artist is {} and the album is {}.".format(track.get('title','No title'), track.get('artist', 'No artist'), track.get('album', 'No album'))
+            title = track.get('title', '')
+            artist = track.get('artist', '')
+            album = track.get('album', '')
+            response = f"The track is {title}, the artist is {artist} and the album is {album}."
     else:
-        output_speech = "Nothing appears to be playing right now, Steve"
+        response = "Nothing appears to be playing right now, Steve"
 
-    #socket.send(output_speech)
-    return output_speech
+    return response
 
 def turn_volume(volume):
     for s in master.group.members:
@@ -259,7 +260,7 @@ def recent_tracks():
         a = sorted(dic.items(), key=lambda x:(x[1],x[0]), reverse=True) 
 
         current_album = ''
-        output_speech = "During the last week you listened to the following tracks"
+        response = "During the last week you listened to the following tracks"
         # if you wanted to limit the number of tracks that were reported on, could do it here
         for album_track,count in a[:10]: #[:10]
             album,track = album_track.split('_')
@@ -276,13 +277,12 @@ def recent_tracks():
             else:
                 count_phrase = str(count)+" times"
 
-            output_speech += line + count_phrase
+            response += line + count_phrase
 
     else:
-        output_speech = "I could  not retrieve recently played tracks or there aren't any."
+        response = "I could  not retrieve recently played tracks or there aren't any."
 
-    #socket.send(output_speech)
-    return output_speech
+    return response
 
 def play_station(station):
     station = STATIONS.get(station.lower())
@@ -303,14 +303,13 @@ def list_queue():
     queue = master.get_queue()
 
     if len(queue) == 0:
-        output_speech = "There is nothing in the queue"
+        response = "There is nothing in the queue"
     else:
-        output_speech = ""
-        for track in queue[:10]: # just pulling first 10
-            output_speech+="{} from {} by {}, ".format(track.title, track.album, track.creator)
+        response = ""
+        for track in queue: # just pulling first 10
+            response+=f"{track.title} from {track.album} by {track.creator}, "
 
-    #socket.send(output_speech)
-    return output_speech
+    return response
 
 def clear_queue():
     try:
