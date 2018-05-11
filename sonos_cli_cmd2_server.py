@@ -37,7 +37,7 @@ def play_track(title, artist, add): #note the decorator will set add to None
     sonos_actions.play(add, [uri])
     action = 'add' if add else 'play'
     return f"I will {action} {track.get('title', '')} by " \
-            "{track.get('artist', '')} from album {track.get('album', '')}"
+            f"{track.get('artist', '')} from album {track.get('album', '')}"
 
 def play_album(album, artist, add=False):
     # album must be present; artist is optional
@@ -133,9 +133,9 @@ def turn_volume(volume):
 def set_volume(level):
     if level > 0 and level < 70: 
         sonos_actions.set_volume(level)
-        return "I will set the volume to {level}."
+        return f"I will set the volume to {level}."
     else:
-        return f"{level} is not in the range zero to seventy"
+        return f"{level} is not less than 70"
 
 def play_station(station):
     if station.lower()=='deborah':
@@ -211,16 +211,19 @@ class Sonos(Cmd):
 
     def default(self, s):
         if 'by' in self.raw:
-            self.values = self.raw.split(' by ')
+            title, artist = self.raw.split(' by ')
         else:
-            self.values = [self.raw ,'']
-        print("play "+self.raw)
+            title, artist = self.raw, ''
+        self.msg = play_track(title, artist, True)
 
     def do_louder(self, s):
         self.msg = turn_volume('louder')
 
     def do_quieter(self, s):
         self.msg = turn_volume('quieter')
+
+    def do_set(self, s):
+        self.msg = set_volume(int(s))
 
     def do_pause(self, s):
         sonos_actions.playback('pause')
@@ -231,7 +234,7 @@ class Sonos(Cmd):
         self.msg = "I will resume what was playing."
 
     def do_next(self, s):
-        sonos_actions.playback('pause')
+        sonos_actions.playback('next')
         self.msg = "I will skip to the next track."
 
     def do_mute(self, s):
@@ -257,6 +260,30 @@ class Sonos(Cmd):
 
     def do_quit(self, s):
         self.quit = True
+
+    def do_select(self, s):
+        if 'by' in s:
+            title, artist = s.split(' by ')
+        else:
+            title, artist = s ,''
+        if not title:
+            self.msg = "You didn't provide a track title."
+            return
+
+        s = 'title:' + ' AND title:'.join(title.split())
+        if artist:
+            s = s + ' artist:' + ' AND artist:'.join(artist.split())
+
+        result = solr.search(s, rows=5) 
+        if not len(result):
+            self.msg = f"I couldn't find any track with title {title} by {artist}."
+            return
+
+        tracks = result.docs
+        # list of tuples to select is [(uri, title from album), (uri2, title2 from album2) ...]
+        uri = self.select([(t.get('uri'), t.get('title', '')+" from "+t.get('album', '')) for t in tracks], "Which track? ")
+        sonos_actions.play(True, [uri])
+        self.msg = uri
 
     def postcmd(self, stop, s):
         if self.quit:
