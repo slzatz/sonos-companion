@@ -1,6 +1,6 @@
 '''
-This is a python 2.7 program that is usually run on a raspberry pi
-It receives task dictionaries via json from flask_ask_sonos.py
+This is a python 3 script that is imported by sonos_cli2.py
+and contains the SoCo functionality that the importing script needs
 
 current_track = master.get_current_track_info() --> {
             u'album': 'We Walked In Song', 
@@ -12,16 +12,16 @@ current_track = master.get_current_track_info() --> {
             u'position': '0:02:38', 
             u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
 
-# if in prime, url is below
-# x-sonosapi-hls-static:catalog%2ftracks%2fB01E0N3W66%2f%3falbumAsin%3dB01E0N386A?sid=201&flags=0&sn=1
+If track is Prime, then url is:
+x-sonosapi-hls-static:catalog%2ftracks%2fB01E0N3W66%2f%3falbumAsin%3dB01E0N386A?sid=201&flags=0&sn=1
 
-# if still prime but moved to my music (but not purchased) then url is (and generally metadata works):
-# x-sonosapi-hls-static:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f?sid=201&flags=0&sn=1' 
+If track is Prime but moved to my music (but not purchased) then url is (and generally metadata works):
+x-sonosapi-hls-static:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f?sid=201&flags=0&sn=1' 
 
-# if track has been bought:
-# x-sonos-http:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f.mp3?sid=201&flags=0&sn=1' 
+If track has been purchased from Amazon:
+x-sonos-http:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f.mp3?sid=201&flags=0&sn=1' 
 
-#actions = {'play':play, 'turn_volume':turn_volume, 'set_volume':set_volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue': list_queue, 'clear_queue':clear_queue, 'mute':mute} 
+actions = {'play':play, 'turn_volume':turn_volume, 'set_volume':set_volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue': list_queue, 'clear_queue':clear_queue, 'mute':mute} 
 
 '''
 
@@ -40,40 +40,6 @@ soco_config.CACHE_ENABLED = False
 
 #last.fm 
 base_url = "http://ws.audioscrobbler.com/2.0/"
-
-n = 0
-while 1:
-    n+=1
-    print("attempt "+str(n)) 
-    try:
-        sp = soco.discover(timeout=2)
-        sp_names = {s.player_name:s for s in sp}
-    except TypeError as e:    
-        print(e) 
-        sleep(1)       
-    else:
-        break 
-    
-for s in sp:
-    print("{} -- coordinator: {}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore'))) 
-
-master_name = input("Which speaker do you want to be master? ")
-master = sp_names.get(master_name)
-if master:
-    if not master.is_coordinator:
-        print("\nThe speaker you selected --{}-- is not the master of any group, so will unjoin it".format(master.player_name))
-        master.unjoin()
-        #sys.exit(1)
-    print("\nMaster speaker is: {}".format(master.player_name)) 
-    print("\nMaster group:")
-    for s in master.group.members:
-        print("{} -- coordinator: {}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore'))) 
-
-else:
-    print("Somehow you didn't pick a master or spell it correctly (case matters)")
-    sys.exit(1)
-
-print("\nprogram running ...")
 
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
 
@@ -103,6 +69,23 @@ with open('stations') as f:
     z = f.read()
 
 STATIONS = json.loads(z)
+
+def get_sonos_players():
+    # master is assigned in sonos_cli2.py
+    n = 0
+    sp = None
+    while n < 10:
+        n+=1
+        print("attempt "+str(n)) 
+        try:
+            sp = soco.discover(timeout=2)
+            #sp_names = {s.player_name:s for s in sp}
+        except TypeError as e:    
+            print(e) 
+            sleep(1)       
+        else:
+            break 
+    return sp    
 
 def my_add_to_queue(uri, metadata):
     try:
@@ -190,7 +173,6 @@ def playback(type_):
             except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
                 print("master.play_from_queue exception:", e)
 
-
 def play(add, uris):
     # must be a coordinator and possible that it stopped being a coordinator
     # after launching program
@@ -206,8 +188,9 @@ def play(add, uris):
             print("master.stop or master.clear_queue exception:", e)
 
     for uri in uris:
-        print('uri: ' + uri)
-        print("---------------------------------------------------------------")
+        #print('uri: ' + uri)
+        #print("---------------------------------------------------------------")
+
         playlist = False
         if 'library_playlist' in uri:
             i = uri.find(':')
@@ -236,8 +219,8 @@ def play(add, uris):
             print('The uri:{}, was not recognized'.format(uri))
             continue
 
-        print('meta: ',meta)
-        print('---------------------------------------------------------------')
+        #print('meta: ',meta)
+        #print('---------------------------------------------------------------')
 
         if not playlist:
             my_add_to_queue('', meta)
@@ -308,8 +291,6 @@ def play_station(station):
             meta = meta_format_radio.format(title=station[0], service=station[2])
             master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
 
-    return 'OK'
-
 def list_queue():
     queue = master.get_queue()
 
@@ -322,7 +303,6 @@ def list_queue():
 
         response = [f"{t.title} from {t.album} by {t.creator}" for t in queue]
 
-
     return response
 
 def clear_queue():
@@ -330,7 +310,4 @@ def clear_queue():
         master.clear_queue()
     except Exception as e:
         print("Encountered exception when trying to clear the queue:",e)
-
-    return 'OK'
-
 

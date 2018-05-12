@@ -17,9 +17,6 @@ solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10)
 
 def play_track(title, artist, add): #note the decorator will set add to None
     # title must be present; artist is optional
-    print("artist =",artist)
-    print("title =",title)
-    print("add =", add)
 
     if not title:
         return "You didn't provide a track title."
@@ -42,10 +39,6 @@ def play_track(title, artist, add): #note the decorator will set add to None
 def play_album(album, artist, add=False):
     # album must be present; artist is optional
 
-    print("album =",album)
-    print("artist=",artist)
-    print("add =", add)
-
     if not album:
         return "You didn't provide an album title."
 
@@ -54,7 +47,7 @@ def play_album(album, artist, add=False):
         s = s + ' artist:' + ' AND artist:'.join(artist.split())
 
     #only brings back actual matches but 25 seems like max for most albums
-    result = solr.search(s, fl='score,track,uri,album,title',
+    result = solr.search(s, fl='score,track,uri,artist,title,album',
                          sort='score desc', rows=25) 
 
     tracks = result.docs
@@ -69,8 +62,11 @@ def play_album(album, artist, add=False):
         selected_tracks = [t for t in tracks if t['album']==selected_album]
         uris = [t.get('uri') for t in selected_tracks]
         sonos_actions.play(False, uris)
-        titles = ', '.join([t.get('title', '') for t in selected_tracks])
-        return f"I will play {len(uris)} tracks from {selected_album}: {titles}"
+        #titles = ', '.join([t.get('title', '') for t in selected_tracks])
+        titles = [t.get('title', '')+'-'+t.get('artist', '') for t in selected_tracks]
+        title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+        return f"I will play {len(uris)} tracks from {selected_album}:\n{title_list}."
+        #return f"I will play {len(uris)} tracks from {selected_album}: {titles}"
     else:
         return f"I couldn't find any tracks from album {album}."
 
@@ -79,7 +75,8 @@ def shuffle(artist):
         return "I couldn't find the artist you were looking for.  Sorry."
 
     s = 'artist:' + ' AND artist:'.join(artist.split())
-    result = solr.search(s, fl='artist,title,uri', rows=500) 
+    #result = solr.search(s, fl='artist,title,uri', rows=500) 
+    result = solr.search(s, fl='album,title,uri', rows=500) 
     count = len(result)
     if not count:
         return "I couldn't find any tracks for {}".format(artist)
@@ -90,11 +87,11 @@ def shuffle(artist):
     selected_tracks = random.sample(tracks, k)
     uris = [t.get('uri') for t in selected_tracks]
     sonos_actions.play(False, uris)
-    titles = ', '.join([t.get('title') for t in selected_tracks])
-    return f"I will shuffle {titles}."
+    titles = [t.get('title', '')+'-'+t.get('album', '') for t in selected_tracks]
+    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+    return f"I will shuffle:\n{title_list}."
 
 def mix(artist1, artist2):
-    print("artist1, artist2 = ",artist1,artist2)
     all_tracks = [] 
     for artist in (artist1, artist2):
         if artist:
@@ -140,13 +137,17 @@ def set_volume(level):
 def play_station(station):
     if station.lower()=='deborah':
         s = 'album:(c)'
-        result = solr.search(s, fl='uri', rows=600) 
+        result = solr.search(s, fl='uri,title,artist', rows=600) 
         count = len(result)
         print("Total track count for Deborah tracks was {}".format(count))
         tracks = result.docs
         selected_tracks = random.sample(tracks, 20) # randomly decided to pick 20 songs
         uris = [t.get('uri') for t in selected_tracks]
         sonos_actions.play(False, uris)
+        titles = [t.get('title', '')+'-'+t.get('artist', '') for t in selected_tracks]
+        title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+        return f"I will play these songs that Deborah chose:\n{title_list}."
+
     else:
         sonos_actions.play_station(station)
 
@@ -161,8 +162,9 @@ class Sonos(Cmd):
         self.raw = "Nothing"
         self.shortcuts.update({'#': 'play', '@':'add'})
         self.intro = "Welcome to sonos_cli"
-        self.prompt = "sonos> "
+        self.prompt = "sonos[]> "
         self.quit = False
+        self.msg = ''
 
         # Set use_ipython to True to enable the "ipy" command which embeds and interactive IPython shell
         super().__init__(use_ipython=False)
@@ -170,11 +172,14 @@ class Sonos(Cmd):
     def preparse(self, s):
         # this is only so when you do a track with no cmd it works
         self.raw = s
+        self.msg = ''
         return s
 
     def do_master(self, s):
-        sp = sonos_actions.sp
-        sp_names = sonos_actions.sp_names
+        '''Select the master speaker that will be controlled; no arguments'''
+        sp = sonos_actions.get_sonos_players()
+        sp_names = {s.player_name:s for s in sp}
+        #sp_names = sonos_actions.sp_names
         lst = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}"\
                for s in sp]
         z = list(zip(sp_names, lst))
@@ -182,9 +187,16 @@ class Sonos(Cmd):
         new_master_name = self.select(z, "Which object do you want to become master? ")
 
         sonos_actions.master = sp_names.get(new_master_name)
+        self.prompt = f"sonos[{new_master_name}]> "
         self.msg = f"New master is {new_master_name}"
 
     def do_play(self, s):
+        '''
+        With a phrase like 'Harvest by Neil Young' will find best match
+        and replace the queue with the selected track
+
+        With no phrase, will resume playing
+        '''
         if s == '':
             sonos_actions.playback('play')
             self.msg = "I will resume what was playing."
@@ -197,6 +209,10 @@ class Sonos(Cmd):
         self.msg = play_track(title, artist, False)
 
     def do_add(self, s):
+        '''
+        With a phrase like 'Harvest by Neil Young' will find best match
+        and add the selected track to the queue
+        '''
         if 'by' in s:
             title, artist = s.split(' by ')
         else:
@@ -204,6 +220,10 @@ class Sonos(Cmd):
         self.msg = play_track(title, artist, True)
 
     def do_album(self, s):
+        '''
+        With a phrase like 'Harvest by Neil Young' will find best match
+        and replace the queue with the tracks of the selected album
+        '''
         if 'by' in s:
             album, artist = s.split(' by ')
         else:
@@ -211,9 +231,15 @@ class Sonos(Cmd):
         self.msg = play_album(album, artist)
 
     def do_shuffle(self, s):
+        '''
+        Selects random tracks from artist
+        '''
         self.msg = shuffle(s)
 
     def do_mix(self, s):
+        '''
+        Mix artist_a and artist_b
+        '''
         if ' and ' not in s:
             self.msg = "command is: mix artistA and artistB"
             return
@@ -221,6 +247,9 @@ class Sonos(Cmd):
         artist1, artist2 = s.split(' and ')
         self.msg = sonos_actions.mix(artist1, artist2)
 
+    def do_station(self, s):
+        self.msg = play_station(s)
+        
     def default(self, s):
         if 'by' in self.raw:
             title, artist = self.raw.split(' by ')
@@ -262,8 +291,10 @@ class Sonos(Cmd):
 
     def do_queue(self, s):
         lst = sonos_actions.list_queue()
-        index = list(range(len(lst)))
-        q = list(zip(index, lst))
+        #index = list(range(len(lst)))
+        #q = list(zip(index, lst))
+        #q = list(zip(len(lst)), lst))
+        q = list(enumerate(lst))
         q.append((-1, "Do nothing"))
         pos = self.select(q, "Which track? ")
         if pos == -1:
