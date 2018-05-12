@@ -172,6 +172,18 @@ class Sonos(Cmd):
         self.raw = s
         return s
 
+    def do_master(self, s):
+        sp = sonos_actions.sp
+        sp_names = sonos_actions.sp_names
+        lst = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}"\
+               for s in sp]
+        z = list(zip(sp_names, lst))
+
+        new_master_name = self.select(z, "Which object do you want to become master? ")
+
+        sonos_actions.master = sp_names.get(new_master_name)
+        self.msg = f"New master is {new_master_name}"
+
     def do_play(self, s):
         if s == '':
             sonos_actions.playback('play')
@@ -248,8 +260,17 @@ class Sonos(Cmd):
     def do_what(self, s):
         self.msg = sonos_actions.what_is_playing()
 
-    def do_list(self, s):
-        self.msg = sonos_actions.list_queue()
+    def do_queue(self, s):
+        lst = sonos_actions.list_queue()
+        index = list(range(len(lst)))
+        q = list(zip(index, lst))
+        q.append((-1, "Do nothing"))
+        pos = self.select(q, "Which track? ")
+        if pos == -1:
+            self.msg = "OK, I won't play anything."
+        else:
+            sonos_actions.play_from_queue(pos)
+            self.msg = f"I will play {q[pos][1]}"
 
     def do_clear(self, s):
         sonos_actions.clear_queue()
@@ -280,7 +301,8 @@ class Sonos(Cmd):
             return
 
         tracks = result.docs
-        # list of tuples to select is [(uri, title from album), (uri2, title2 from album2) ...]
+        # list of tuples to select is [(uri, title from album),
+        # (uri2, title2 from album2) ...]
         uri = self.select([(t.get('uri'), t.get('title', '')+" from "+t.get('album', '')) for t in tracks], "Which track? ")
         sonos_actions.play(True, [uri])
         self.msg = uri

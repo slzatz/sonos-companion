@@ -173,11 +173,23 @@ def mute(bool_):
     for s in master.group.members:
         s.mute = bool_
 
+def play_from_queue(pos):
+    try:
+        master.play_from_queue(pos)
+    except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
+        print("master.play_from_queue exception:", e)
+    
 def playback(type_):
     try:
         getattr(master, type_)()
     except soco.exceptions.SoCoUPnPException as e:
         print("master.{}:".format(type_), e)
+        if type_ == 'play':
+            try:
+                master.play_from_queue(0)
+            except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
+                print("master.play_from_queue exception:", e)
+
 
 def play(add, uris):
     # must be a coordinator and possible that it stopped being a coordinator
@@ -192,7 +204,6 @@ def play(add, uris):
             master.clear_queue()
         except (soco.exceptions.SoCoUPnPException,soco.exceptions.SoCoSlaveException) as e:
             print("master.stop or master.clear_queue exception:", e)
-
 
     for uri in uris:
         print('uri: ' + uri)
@@ -308,6 +319,9 @@ def list_queue():
         response = ""
         for track in queue: # just pulling first 10
             response+=f"{track.title} from {track.album} by {track.creator}, "
+
+        response = [f"{t.title} from {t.album} by {t.creator}" for t in queue]
+
 
     return response
 
