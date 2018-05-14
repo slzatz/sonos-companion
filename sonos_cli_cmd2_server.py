@@ -79,9 +79,9 @@ def shuffle(artist):
     result = solr.search(s, fl='album,title,uri', rows=500) 
     count = len(result)
     if not count:
-        return "I couldn't find any tracks for {}".format(artist)
+        return f"I couldn't find any tracks for {artist}"
 
-    print("Total track count for {} was {}".format(artist, count))
+    print(f"Total track count for {artist} was {count}")
     tracks = result.docs
     k = 10 if count >= 10 else count
     selected_tracks = random.sample(tracks, k)
@@ -99,7 +99,7 @@ def mix(artist1, artist2):
             result = solr.search(s, fl='artist,title,uri', rows=500) 
             count = len(result)
             if count:
-                print("Total track count for {} was {}".format(artist, count))
+                print(f"Total track count for {artist} was {count}")
                 tracks = result.docs
                 k = 5 if count >= 5 else count
                 selected_tracks = random.sample(tracks, k)
@@ -139,7 +139,7 @@ def play_station(station):
         s = 'album:(c)'
         result = solr.search(s, fl='uri,title,artist', rows=600) 
         count = len(result)
-        print("Total track count for Deborah tracks was {}".format(count))
+        print(f"Total track count for Deborah tracks was {count}")
         tracks = result.docs
         selected_tracks = random.sample(tracks, 20) # randomly decided to pick 20 songs
         uris = [t.get('uri') for t in selected_tracks]
@@ -184,10 +184,11 @@ class Sonos(Cmd):
                for s in sp]
         z = list(zip(sp_names, lst))
 
-        new_master_name = self.select(z, "Which object do you want to become master? ")
+        new_master_name = self.select(z, "Which speaker do you want to become the master speaker? ")
 
-        sonos_actions.master = sp_names.get(new_master_name)
-        self.prompt = f"sonos[{new_master_name}]> "
+        master = sonos_actions.master = sp_names.get(new_master_name)
+        members = "+".join([s.player_name for s in sonos_actions.master.group if s!=master])
+        self.prompt = f"sonos[{new_master_name}{'+'+members if members else ''}]> "
         self.msg = f"New master is {new_master_name}"
 
     def do_play(self, s):
@@ -286,6 +287,11 @@ class Sonos(Cmd):
         sonos_actions.mute(False)
         self.msg = "I will unmute the sound."
 
+    def do_unjoin(self, s):
+        '''Unjoin the speakers that are members of the master speaker'''
+        sonos_actions.unjoin()
+        self.prompt = f"{sonos_actions.master.player_name()}>"
+        self.msg = f"Master speaker {sonos_actions.master.player_name} now has no members"
     def do_what(self, s):
         self.msg = sonos_actions.what_is_playing()
 

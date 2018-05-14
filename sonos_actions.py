@@ -33,8 +33,7 @@ home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
-from config import user_id, last_fm_api_key 
-import requests
+from config import user_id
 
 soco_config.CACHE_ENABLED = False
 
@@ -156,6 +155,10 @@ def mute(bool_):
     for s in master.group.members:
         s.mute = bool_
 
+def unjoin():
+    for s in master.group.members:
+        s.unjoin()
+
 def play_from_queue(pos):
     try:
         master.play_from_queue(pos)
@@ -216,7 +219,7 @@ def play(add, uris):
             master.add_uri_to_queue(uri)
             continue
         else:
-            print('The uri:{}, was not recognized'.format(uri))
+            print(f'The uri:{uri} was not recognized')
             continue
 
         #print('meta: ',meta)
@@ -234,49 +237,6 @@ def play(add, uris):
             master.play_from_queue(0)
         except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
             print("master.play_from_queue exception:", e)
-
-def recent_tracks():
-    # right now look back is one week; note can't limit because you need all the tracks since we're doing the frequency count
-    payload = {'method':'user.getRecentTracks', 'user':'slzatz', 'format':'json', 'api_key':last_fm_api_key, 'from':int(time())-604800} #, 'limit':10}
-    
-    try:
-        r = requests.get(base_url, params=payload)
-        z = r.json()['recenttracks']['track']
-    except Exception as e:
-        print("Exception in get_scrobble_info: ", e)
-        z = []
-
-    if z:
-        dic = {}
-        for d in z:
-            dic[d['album']['#text']+'_'+d['name']] = dic.get(d['album']['#text']+'_'+d['name'],0) + 1
-
-        a = sorted(dic.items(), key=lambda x:(x[1],x[0]), reverse=True) 
-
-        current_album = ''
-        response = "During the last week you listened to the following tracks"
-        # if you wanted to limit the number of tracks that were reported on, could do it here
-        for album_track,count in a[:10]: #[:10]
-            album,track = album_track.split('_')
-            if current_album == album:
-                line = ", {} ".format(track)
-            else:
-                line = ". From {}, {} ".format(album,track)
-                current_album = album
-            
-            if count==1:
-                count_phrase = ""
-            elif count==2:
-                count_phrase = "twice"
-            else:
-                count_phrase = str(count)+" times"
-
-            response += line + count_phrase
-
-    else:
-        response = "I could  not retrieve recently played tracks or there aren't any."
-
-    return response
 
 def play_station(station):
     station = STATIONS.get(station.lower())
