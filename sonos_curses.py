@@ -4,7 +4,9 @@
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=ToDos
-4=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
+4=sonos status (PLAYING, TRANSITIONING, STOPPED) ...
+... broadcast by sonos_track_info on topic esp_tft and also on
+... sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
 5=sales forecast
 6=outlook_schedule
 7=artist image
@@ -29,13 +31,13 @@ from datetime import datetime
 import time
 import re
 
-layout   = { 1:{'y':2,  'h':9},
-             2:{'y':12, 'h':5},
-             3:{'y':18, 'h':10},
-             5:{'y':29, 'h':5},
-             6:{'y':35, 'h':11},
-            11:{'y':47, 'h':16},
-            15:{'y':64, 'h':6}}
+layout   = { 1:{'y':1,  'h':10}, #2,9
+             2:{'y':11, 'h':6},
+             3:{'y':17, 'h':11},
+             5:{'y':28, 'h':6},
+             6:{'y':34, 'h':12},
+            11:{'y':46, 'h':21},
+            15:{'y':67, 'h':7}}
 
 # paho stuff
 info_topic = "esp_tft" # should be changed to "info"
@@ -49,20 +51,27 @@ def on_disconnect():
     print("Disconnected from mqtt broker")
 
 screen = curses.initscr()
+curses.start_color()
+curses.use_default_colors()
+curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
+#curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
+curses.init_pair(4, 15, -1)
+color_map = {'{blue}':3, '{red}':1, '{green}':2,'{white}':4}
 curses.curs_set(0)
+curses.cbreak() # respond to keys without needing Enter
+
+
 boxes = {}
 #curses.newwin(nlines, ncols, begin_y, begin_x)
 for b in layout:
     boxes[b] = curses.newwin(layout[b]['h'], 70, layout[b]['y'], 1)
 
-def main(screen):
-    screen.clear()
-
-    screen.addstr(20,20, "Hello World", curses.A_BOLD)
-    screen.refresh()
     screen.getkey()
 
-#phrases = [(u'{}', u'the holy grail '), (u'{blue}', u' is very nice '), (u'{red}', u' is it?')]
+#phrases = [(u'{}', u'the holy grail '), (u'{blue}', u' is very nice '),...
+#...(u'{red}', u' is it?')]
 def get_phrases(line, start='{}'):
 
     if line.find('{') == -1:
@@ -76,13 +85,11 @@ def get_phrases(line, start='{}'):
 
     z = re.finditer(r'{(.*?)}', line)
     s = [[m.group(), m.span()] for m in z]
-    #print(s)
     if not s:
         return [('{}', line)]
     phrases = []
     for j in range(len(s)-1):
         phrases.append((s[j][0],line[s[j][1][1]:s[j+1][1][0]]))
-    #print("phrases =", phrases)
     return phrases
 
 def on_message(client, userdata, msg):
@@ -100,7 +107,7 @@ def on_message(client, userdata, msg):
 
     #if topic in (info_topic, image_topic):
     k = z.get('pos')
-    if not k in layout: ####################
+    if not k in layout:
         return
 
     dest = z.get('dest')
@@ -111,8 +118,7 @@ def on_message(client, userdata, msg):
         box.clear()
         box.box()
 
-        header = "{} [{}] {}".format(z.get('header', 'no source'), k, dest if dest else " ") # problem if dest None would like to know what it was
-        #screen.clear()
+        header = "{} [{}] {}".format(z.get('header', 'no source'), k, dest if dest else " ")
         screen.move(0,0)
         screen.clrtoeol()
         screen.addstr(0,0, header, curses.A_BOLD) #(y,x)
@@ -124,29 +130,22 @@ def on_message(client, userdata, msg):
             if not item.strip():
                 n+=1
                 continue
-            #font.set_bold(False)
-            max_chars_line = 50        
+            font = 1 #means font will be normal
+            max_chars_line = 65        
             indent = 1
-            #n+=4 if bullets else 0 # makes multi-line bullets more separated from prev and next bullet
 
             if n+1 == layout[k]['h']:
                 break
 
             if item[0] == '#':
                 item=item[1:]
-                #font.set_bold(True)
+                font = curses.A_BOLD
                 max_chars_line = 60
 
             if item[0] == '*': 
-                #foo.blit(star, (2,n+7))
-                item=item[1:]
+                item=chr(187)+item[1:]
             elif bullets:
-                #foo.blit(bullet_surface, (7,n+13)) #(4,n+13)
-                pass
-            # neither a star in front of item or a bullet
-            #else:
-            #    max_chars_line+= 1 
-            #    indent = 10
+                item = chr(8226)+item
 
             # if line is just whitespace it returns []
             lines = textwrap.wrap(item, max_chars_line)
@@ -164,7 +163,8 @@ def on_message(client, userdata, msg):
                 xx = 0
                 for phrase in phrases:
                     try:
-                        box.addstr(n, 1 + xx, phrase[1]) #(y,x)
+                        box.addstr(n, 1 + xx, phrase[1],
+                        curses.color_pair(color_map.get(phrase[0], 4))|font) #(y,x)
                     except Exception as e:
                          pass
                     box.refresh()
@@ -195,5 +195,3 @@ screen.refresh()
 while 1:
     client.loop(timeout = 1.0)
     time.sleep(1)
-#time.sleep(60)
-#curses.wrapper(main)
