@@ -13,7 +13,7 @@ MAX_WIDTH = 50
 MIN_WIDTH = 30
 
 info_sources = [1,2,3,5,6,11,15]
-location = {1:1, 2:30, 3:36, 5:50, 6:60, 11:72, 15:80}
+location = {1:3, 2:12, 3:18, 5:30, 6:38, 11:50, 15:62}
 
 # paho stuff
 info_topic = "esp_tft" # should be changed to "info"
@@ -81,9 +81,12 @@ def on_message(client, userdata, msg):
     if topic==info_topic:
 
         header = "{} [{}] {}".format(z.get('header', 'no source'), k, dest if dest else " ") # problem if dest None would like to know what it was
+        #screen.clear()
+        screen.addstr(0, 0, header, curses.A_BOLD) #(y,x)
+        screen.refresh()
         #screen.addstr(20,20, "Hello World", curses.A_BOLD)
-        screen.clear()
-        screen.refresh() #not necessary I don't think
+        #screen.clear()
+        #screen.refresh() #not necessary I don't think
         line_height = 1
         line_widths = [0] # for situation when text = [''] otherwise line_widths = [] and can't do max
         bullets = z.get('bullets', True)
@@ -132,8 +135,13 @@ def on_message(client, userdata, msg):
 
                 xx = 0
                 for phrase in phrases:
-                    #screen.addstr(indent + xx, n, phrase[1], curses.A_BOLD)
-                    screen.addstr(n, indent + xx, phrase[1], curses.A_BOLD) #(y,x)
+                    try:
+                        #screen.addstr(n, indent + xx, phrase[1], curses.A_BOLD) #(y,x)
+                        screen.addstr(n, indent + xx, phrase[1]) #(y,x)
+                    except Exception as e:
+                         #screen.addstr(80, 0, str(e))
+                         #screen.addstr(80, 0, "ERROR", curses.A_REVERSE)
+                         pass
                     screen.refresh()
                     xx+= len(phrase[1])
 
@@ -170,6 +178,10 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(aws_mqtt_uri, 1883, 60)
+time.sleep(10)
+screen.clear()
+screen.addstr(0,0, "Hello Steve", curses.A_BOLD)
+screen.refresh()
 while 1:
     client.loop(timeout = 1.0)
     time.sleep(1)
