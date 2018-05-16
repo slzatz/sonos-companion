@@ -4,9 +4,7 @@
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=ToDos
-4=sonos status (PLAYING, TRANSITIONING, STOPPED) ...
-... broadcast by sonos_track_info on topic esp_tft and also on
-... sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
+4=gmail and google calendar
 5=sales forecast
 6=outlook_schedule
 7=artist image
@@ -31,13 +29,18 @@ from datetime import datetime
 import time
 import re
 
-layout   = { 1:{'y':1,  'h':10}, #2,9
-             2:{'y':11, 'h':6},
-             3:{'y':17, 'h':11},
-             5:{'y':28, 'h':6},
-             6:{'y':34, 'h':12},
-            11:{'y':46, 'h':21},
-            15:{'y':67, 'h':7}}
+layout   = {
+             1:{'y':1,  'h':12}, #2,10
+             2:{'y':13, 'h':6},
+             3:{'y':19, 'h':13},
+             5:{'y':32, 'h':6},
+             6:{'y':38, 'h':14},
+            11:{'y':52, 'h':22},
+            15:{'y':1, 'x':75, 'h':7},
+            10:{'y':8, 'x':75, 'h':7},
+             9:{'y':15, 'x':75, 'h':7},
+             8:{'y':22, 'x':75, 'h':52},
+             }
 
 # paho stuff
 info_topic = "esp_tft" # should be changed to "info"
@@ -55,7 +58,7 @@ curses.start_color()
 curses.use_default_colors()
 curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
 curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
+curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_WHITE)
 #curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
 curses.init_pair(4, 15, -1)
 color_map = {'{blue}':3, '{red}':1, '{green}':2,'{white}':4}
@@ -66,7 +69,7 @@ curses.cbreak() # respond to keys without needing Enter
 boxes = {}
 #curses.newwin(nlines, ncols, begin_y, begin_x)
 for b in layout:
-    boxes[b] = curses.newwin(layout[b]['h'], 70, layout[b]['y'], 1)
+    boxes[b] = curses.newwin(layout[b]['h'], 70, layout[b]['y'], layout[b].get('x', 1))
 
 #screen.getkey()
 
@@ -119,13 +122,15 @@ def on_message(client, userdata, msg):
         box.box()
 
         header = "{} [{}] {}".format(z.get('header', 'no source'), k, dest if dest else " ")
-        screen.move(0,0)
-        screen.clrtoeol()
-        screen.addstr(0,0, header, curses.A_BOLD) #(y,x)
-        screen.refresh()
+        box.addstr(1, 1, header, curses.A_BOLD)
+        #screen.move(0,0)
+        #screen.clrtoeol()
+        #screen.addstr(0,0, header, curses.A_BOLD) #(y,x)
+        #screen.refresh()
+
         bullets = z.get('bullets', True)
 
-        n = 1
+        n = 2
         for item in z.get('text',['No text']): 
             if not item.strip():
                 n+=1
@@ -163,11 +168,11 @@ def on_message(client, userdata, msg):
                 xx = 0
                 for phrase in phrases:
                     try:
-                        box.addstr(n, 1 + xx, phrase[1],
-                        curses.color_pair(color_map.get(phrase[0], 4))|font) #(y,x)
+                        box.addstr(n, 1 + xx, phrase[1],  #(y,x)
+                          curses.color_pair(color_map.get(phrase[0], 4))|font) 
                     except Exception as e:
                          pass
-                    box.refresh()
+                    #box.refresh()
                     xx+= len(phrase[1])
 
                 n+=1
@@ -181,6 +186,8 @@ def on_message(client, userdata, msg):
         t = datetime.now().strftime("%I:%M %p")
         t = t[1:] if t[0] == '0' else t
         t = t[:-2] + t[-2:].lower()
+        box.addstr(1, 61, t, curses.color_pair(3)|curses.A_BOLD) 
+        box.refresh()
 
 print("about to connect to mqtt broker")
 client = mqtt.Client()
