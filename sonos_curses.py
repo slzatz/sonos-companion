@@ -35,11 +35,11 @@ layout   = {
              3:{'y':19, 'h':13},
              5:{'y':32, 'h':6},
              6:{'y':38, 'h':14},
-            11:{'y':52, 'h':22},
+            11:{'y':52, 'h':20},
             15:{'y':1, 'x':75, 'h':7},
             10:{'y':8, 'x':75, 'h':7},
              9:{'y':15, 'x':75, 'h':7},
-             8:{'y':22, 'x':75, 'h':52},
+             8:{'y':22, 'x':75, 'h':50},
              }
 
 # paho stuff
@@ -65,7 +65,9 @@ curses.init_pair(4, 15, -1)
 color_map = {'{blue}':3, '{red}':1, '{green}':2,'{white}':4}
 curses.curs_set(0)
 curses.cbreak() # respond to keys without needing Enter
+curses.noecho()
 size = screen.getmaxyx()
+screen.nodelay(True)
 
 boxes = {}
 #curses.newwin(nlines, ncols, begin_y, begin_x)
@@ -202,7 +204,14 @@ while time.time() < t0 + 10:
     time.sleep(1)
 screen.clear()
 screen.addstr(0,0, f"Hello Steve. screen size = x:{size[1]},y:{size[0]}", curses.A_BOLD)
+screen.addstr(size[0]-1, 0, f"Goodbye Steve", curses.color_pair(3)|curses.A_BOLD)
 screen.refresh()
 while 1:
     client.loop(timeout = 1.0)
+    c = screen.getch()
+    if c == -1:
+        pass
+    else:
+        screen.addstr(size[0]-1, 0, f"key={c}", curses.color_pair(3)|curses.A_BOLD)
+        
     time.sleep(1)
