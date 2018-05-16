@@ -68,7 +68,7 @@ boxes = {}
 for b in layout:
     boxes[b] = curses.newwin(layout[b]['h'], 70, layout[b]['y'], 1)
 
-    screen.getkey()
+#screen.getkey()
 
 #phrases = [(u'{}', u'the holy grail '), (u'{blue}', u' is very nice '),...
 #...(u'{red}', u' is it?')]
