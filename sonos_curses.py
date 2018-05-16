@@ -47,7 +47,8 @@ info_topic = "esp_tft" # should be changed to "info"
 def on_connect(client, userdata, flags, rc):
     print("(Re)Connected with result code "+str(rc)) 
 
-    # Subscribing in on_connect() means that if we lose the connection and reconnect then subscriptions will be renewed.
+    # Subscribing in on_connect() means that if we lose the 
+    # connection and reconnect then subscriptions will be renewed.
     client.subscribe([(info_topic, 0)])
 
 def on_disconnect():
@@ -64,7 +65,7 @@ curses.init_pair(4, 15, -1)
 color_map = {'{blue}':3, '{red}':1, '{green}':2,'{white}':4}
 curses.curs_set(0)
 curses.cbreak() # respond to keys without needing Enter
-
+size = screen.getmaxyx()
 
 boxes = {}
 #curses.newwin(nlines, ncols, begin_y, begin_x)
@@ -123,6 +124,7 @@ def on_message(client, userdata, msg):
 
         header = "{} [{}] {}".format(z.get('header', 'no source'), k, dest if dest else " ")
         box.addstr(1, 1, header, curses.A_BOLD)
+        # below was putting this information on first line instead of where now in box
         #screen.move(0,0)
         #screen.clrtoeol()
         #screen.addstr(0,0, header, curses.A_BOLD) #(y,x)
@@ -189,15 +191,17 @@ def on_message(client, userdata, msg):
         box.addstr(1, 61, t, curses.color_pair(3)|curses.A_BOLD) 
         box.refresh()
 
-print("about to connect to mqtt broker")
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(aws_mqtt_uri, 1883, 60)
-# I think I need a client loop here to connect
-time.sleep(10)
+# brief loop below lets the mqtt client connect to the broker
+t0 = time.time()
+while time.time() < t0 + 10:
+    client.loop(timeout = 1.0)
+    time.sleep(1)
 screen.clear()
-screen.addstr(0,0, "Hello Steve", curses.A_BOLD)
+screen.addstr(0,0, f"Hello Steve. screen size = x:{size[1]},y:{size[0]}", curses.A_BOLD)
 screen.refresh()
 while 1:
     client.loop(timeout = 1.0)
