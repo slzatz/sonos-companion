@@ -154,7 +154,7 @@ def on_message(client, userdata, msg):
             if item[0] == '*': 
                 item=chr(187)+item[1:]
             elif bullets:
-                item = chr(8226)+item
+                item = chr(8226)+' '+item
 
             # if line is just whitespace it returns []
             lines = textwrap.wrap(item, max_chars_line)
@@ -214,4 +214,4 @@ while 1:
     else:
         screen.addstr(size[0]-1, 0, f"key={c}", curses.color_pair(3)|curses.A_BOLD)
         
-    time.sleep(1)
+    time.sleep(.1)
