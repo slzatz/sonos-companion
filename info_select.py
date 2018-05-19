@@ -1,23 +1,7 @@
 #!bin/python
 '''
-0=temp sensors (CT, NYC)
-1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
-2=stock quote
-3=ToDos
-4=gmail and google calendar
-5=sales forecast
-6=outlook_schedule
-7=artist image
-8=lyrics
-9=track_info broadcast by sonos_track_info.py
-10=sonos status (PLAYING, TRANSITIONING, STOPPED
-11=sales top opportunities
-12=Reminders (alarms) 
-13=Ticklers
-14=Facts
-15=weather/tides
-16=Industry
-17=temp sensor
+python3 script: displays infoboxes with key determing which box is displayed
+See below for mapping from pos (int) to topic of infobox
 '''
 
 import curses
@@ -28,19 +12,6 @@ import textwrap
 from datetime import datetime
 import time
 import re
-
-#layout   = {
-#             1:{'y':1,  'h':12}, #2,10
-#             2:{'y':13, 'h':6},
-#             3:{'y':19, 'h':13},
-#             5:{'y':32, 'h':6},
-#             6:{'y':38, 'h':14},
-#            11:{'y':52, 'h':20},
-#            15:{'y':1, 'x':75, 'h':7},
-#            10:{'y':8, 'x':75, 'h':7},
-#             9:{'y':15, 'x':75, 'h':7},
-#             8:{'y':22, 'x':75, 'h':50},
-#             }
 
 info_boxes = {
 0:"temp sensors (CT, NYC)",
@@ -96,7 +67,7 @@ boxes = {}
 for b in info_boxes:
     boxes[b] = curses.newwin(size[0]-2, size[1]-1, 1, 1)
     boxes[b].box()
-    boxes[b].addstr(2, 2, f"No content received yet for {b}:{info_boxes[b]}", 
+    boxes[b].addstr(2, 2, f"No content received yet for {b}", 
                     curses.color_pair(3)|curses.A_BOLD) 
 
 
@@ -149,13 +120,8 @@ def on_message(client, userdata, msg):
         box.clear()
         box.box()
 
-        header = "{} [{}] {}".format(z.get('header', 'no source'), pos, dest if dest else " ")
+        header = "{} [{}]".format(z.get('header', 'no info'), pos)
         box.addstr(1, 1, header, curses.A_BOLD)
-        # below was putting this information on first line instead of where now in box
-        #screen.move(0,0)
-        #screen.clrtoeol()
-        #screen.addstr(0,0, header, curses.A_BOLD) #(y,x)
-        #screen.refresh()
 
         bullets = z.get('bullets', True)
 
@@ -164,19 +130,17 @@ def on_message(client, userdata, msg):
             if not item.strip():
                 n+=1
                 continue
-            font = 1 #means font will be normal
-            #max_chars_line = 65        
+            #font = 1 #means font will be normal
+            font = curses.A_NORMAL
             max_chars_line = size[1] - 3        
             indent = 1
 
-            #if n+1 == layout[pos]['h']:
-            if n+1 == size[0]:
+            if n+2 == size[0]:
                 break
 
             if item[0] == '#':
                 item=item[1:]
                 font = curses.A_BOLD
-                #max_chars_line = 60
                 max_chars_line = size[1] - 5
 
             if item[0] == '*': 
@@ -189,8 +153,7 @@ def on_message(client, userdata, msg):
 
             for l,line in enumerate(lines):
 
-                #if n+1 == layout[pos]['h']:
-                if n+1 == size[0]:
+                if n+2 == size[0]:
                     break
 
                 if l:
@@ -205,7 +168,6 @@ def on_message(client, userdata, msg):
                           curses.color_pair(color_map.get(phrase[0], 4))|font) 
                     except Exception as e:
                          pass
-                    #box.refresh()
                     xx+= len(phrase[1])
 
                 n+=1
@@ -234,23 +196,29 @@ while time.time() < t0 + 10:
     time.sleep(1)
 screen.clear()
 screen.addstr(0,0, f"Hello Steve. screen size = x:{size[1]},y:{size[0]}", curses.A_BOLD)
-screen.addstr(6, 2, f"No content received yet for {selected_pos}:{info_boxes[selected_pos]}", 
+screen.addstr(6, 2, f"No content received yet for {selected_pos}", 
                 curses.color_pair(3)|curses.A_BOLD) 
-s = "1=news, 2=quote, 3=todos, 4=gmail..."
+s = "1:news 2:quote 3:todos 4:gmail 5:sales forecast, 6:outlook schedule, 7:artist image 8:lyrics 9:track info"
+if len(s) > size[1]:
+    s = s[:size[1]-1]
 screen.addstr(size[0]-1, 0, s, curses.color_pair(3)|curses.A_BOLD)
 screen.refresh()
+
 while 1:
     client.loop(timeout = 1.0)
-    c = screen.getch()
-    #if c == -1:
-    if 48 < c < 58:
-        pos = c-48
-        screen.addstr(size[0]-1, 0, f"key={c-48}", curses.color_pair(3)|curses.A_BOLD)
-        boxes[pos].refresh()
-        # below needed otherwise won't redraw win if no changes
-        # and even if changes would only draw changes not whole window
-        boxes[pos].redrawwin()
-        selected_pos = pos
+    n = screen.getch()
+    if n != -1:
+        c = chr(n)
+        if c.isnumeric():
+            pos = int(c)
+            boxes[pos].redrawwin()
+            boxes[pos].refresh()
+            selected_pos = pos
+
+        screen.move(0, size[1]-8)
+        screen.clrtoeol()
+        screen.addstr(0, size[1]-8, f"key={c}", curses.color_pair(3)|curses.A_BOLD)
+        screen.refresh()
         
     size_current = screen.getmaxyx()
     if size != size_current:
