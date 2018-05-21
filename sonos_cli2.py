@@ -102,8 +102,8 @@ def mix(artist1, artist2):
                 print(f"Total track count for {artist} was {count}")
                 tracks = result.docs
                 k = 5 if count >= 5 else count
-                selected_tracks = random.sample(tracks, k)
-                all_tracks.append(selected_tracks)
+                random_tracks = random.sample(tracks, k)
+                all_tracks.append(random_tracks)
             else:
                 return f"I couldn't find any tracks for {artist}"
         else:
@@ -111,11 +111,16 @@ def mix(artist1, artist2):
 
     x = all_tracks[0]
     y = all_tracks[1]
-    mix = [t for sublist in zip(x,y) for t in sublist]
-    uris = [t.get('uri') for t in mix]
+    selected_tracks = [t for sublist in zip(x,y) for t in sublist]
+    uris = [t.get('uri') for t in selected_tracks]
     sonos_actions.play(False, uris)
-    titles_artists = ', '.join([t.get('title')+' - '+t.get('artist') for t in mix])
-    return f"I will shuffle {titles_artists}."
+    
+    titles = [t.get('title', '')+'-'+t.get('artist', '') for t in selected_tracks]
+    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+    return f"The mix for {artist1} and {artist2}:\n{title_list}."
+
+    #titles_artists = ', '.join([t.get('title')+' - '+t.get('artist') for t in mix])
+    #return f"I will shuffle {titles_artists}."
 
 def turn_volume(volume):
     if volume in ('increase','louder','higher','up'):
@@ -179,14 +184,17 @@ class Sonos(Cmd):
         '''Select the master speaker that will be controlled; no arguments'''
         sp = sonos_actions.get_sonos_players()
         sp_names = {s.player_name:s for s in sp}
-        #sp_names = sonos_actions.sp_names
-        lst = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}"\
+
+        if s:
+            master = sonos_actions.master = sp_names.get(s)
+            new_master_name = s
+        else:
+            lst = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}"\
                for s in sp]
-        z = list(zip(sp_names, lst))
+            z = list(zip(sp_names, lst))
+            new_master_name = self.select(z, "Which speaker do you want to become the master speaker? ")
+            master = sonos_actions.master = sp_names.get(new_master_name)
 
-        new_master_name = self.select(z, "Which speaker do you want to become the master speaker? ")
-
-        master = sonos_actions.master = sp_names.get(new_master_name)
         members = "+".join([s.player_name for s in sonos_actions.master.group if s!=master])
         self.prompt = f"sonos[{new_master_name}{'+'+members if members else ''}]> "
         self.msg = f"New master is {new_master_name}"
@@ -207,7 +215,13 @@ class Sonos(Cmd):
         else:
             title, artist = s, ''
 
-        self.msg = play_track(title, artist, False)
+        # changed the below so play adds to queue and doesn't erase it
+        #self.msg = play_track(title, artist, False)
+        self.msg = play_track(title, artist, True)
+        lst = sonos_actions.list_queue()
+        sonos_actions.play_from_queue(len(lst)-1)
+        self.msg.replace('add', 'play', 1)
+        self.msg = self.msg+f", which is {len(lst)} in the queue"
 
     def do_add(self, s):
         '''
@@ -246,7 +260,7 @@ class Sonos(Cmd):
             return
 
         artist1, artist2 = s.split(' and ')
-        self.msg = sonos_actions.mix(artist1, artist2)
+        self.msg = mix(artist1, artist2)
 
     def do_station(self, s):
         self.msg = play_station(s)
@@ -297,9 +311,6 @@ class Sonos(Cmd):
 
     def do_queue(self, s):
         lst = sonos_actions.list_queue()
-        #index = list(range(len(lst)))
-        #q = list(zip(index, lst))
-        #q = list(zip(len(lst)), lst))
         q = list(enumerate(lst))
         q.append((-1, "Do nothing"))
         pos = self.select(q, "Which track? ")
