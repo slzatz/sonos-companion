@@ -144,7 +144,7 @@ def on_message(client, userdata, msg):
                 max_chars_line = size[1] - 5
 
             if item[0] == '*': 
-                item=chr(187)+item[1:]
+                item=chr(187)+' '+item[1:]
             elif bullets:
                 item = chr(8226)+' '+item
 
@@ -205,15 +205,27 @@ screen.addstr(size[0]-1, 0, s, curses.color_pair(3)|curses.A_BOLD)
 screen.refresh()
 
 while 1:
-    client.loop(timeout = 1.0)
+    #client.loop(timeout = 1.0)
+    client.loop(timeout = 0.25) #was 1.0
+    redraw = False
     n = screen.getch()
     if n != -1:
         c = chr(n)
         if c.isnumeric():
-            pos = int(c)
-            boxes[pos].redrawwin()
-            boxes[pos].refresh()
-            selected_pos = pos
+            selected_pos = int(c)
+            redraw = True
+        elif c == 'h':
+            selected_pos = selected_pos-1 if selected_pos > 0 else 17
+            c = selected_pos
+            redraw = True
+        elif c == 'l':
+            selected_pos = selected_pos+1 if selected_pos < 17 else 0
+            c = selected_pos
+            redraw = True
+
+        if redraw:
+            boxes[selected_pos].redrawwin()
+            boxes[selected_pos].refresh()
 
         screen.move(0, size[1]-8)
         screen.clrtoeol()
