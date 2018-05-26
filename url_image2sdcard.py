@@ -4,6 +4,7 @@ Image processing for images that are then transferred to sd card of sonos_remote
 The images are taken from the artist image db and written to hard drive and
 then transferred to sd card
 '''
+import os
 import requests
 from io import BytesIO
 import wand.image
@@ -13,6 +14,14 @@ from PIL import Image
 from random import shuffle
 
 engine.echo = False
+
+directory = input("What do you want the directory to be called that will hold the images? ")
+if not os.path.exists(directory):
+    os.makedirs(directory)
+else:
+    res = input("The directory exists do you really want to proceed? ")
+    if not res.startswith('y'):
+         sys.exit(1)
 
 def retrieve_image(x, ext='jpg', size=(640,480)):
 
@@ -71,12 +80,11 @@ def retrieve_image(x, ext='jpg', size=(640,480)):
 
         return
 
-    artist_name = artist.name.lower()
-    artist_name = artist_name.replace(' ', '_')
+    artist_name = artist.name.lower().replace(' ', '_')
 
     try:
-        #f = open('artist_pics/'+artist.name.lower()+'.'+ext, 'wb')
-        f = open('artist_pics2/'+artist_name+'.'+ext, 'wb')
+        #f = open('artist_pics2/'+artist_name+'.'+ext, 'wb')
+        f = open(f"{directory}/{artist_name}.{ext}", 'wb')
     except FileNotFoundError as e:
         print("Problem creating file", e)
         return
