@@ -96,6 +96,8 @@ def get_phrases(line, start='{}'):
 def on_message(client, userdata, msg):
     # {"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg", "header":"Neil Young"}
     # {"pos":4, "header":"Wall Street Journal", "text":"["The rain in spain falls mainly on the plain", "I am a yankee doodle dandy"]}
+
+    global selected_pos
     topic = msg.topic
     body = msg.payload
     #print(topic+": "+str(body))
@@ -184,6 +186,13 @@ def on_message(client, userdata, msg):
         box.addstr(1, size[1]-10, t, curses.color_pair(3)|curses.A_BOLD) 
         if pos==selected_pos:
             box.refresh()
+        elif pos==8: #switch to lyrics info box if new lyrics show up
+            selected_pos = 8
+            box.refresh()
+            screen.move(0, size[1]-8)
+            screen.clrtoeol()
+            screen.addstr(0, size[1]-8, "key=8", curses.color_pair(3)|curses.A_BOLD)
+            screen.refresh()
 
 client = mqtt.Client()
 client.on_connect = on_connect
