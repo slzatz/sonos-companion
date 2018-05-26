@@ -1,3 +1,4 @@
+#!bin/python
 '''
 Image processing for images that are then transferred to sd card of sonos_remote
 The images are taken from the artist image db and written to hard drive and
@@ -70,8 +71,12 @@ def retrieve_image(x, ext='jpg', size=(640,480)):
 
         return
 
+    artist_name = artist.name.lower()
+    artist_name = artist_name.replace(' ', '_')
+
     try:
-        f = open('artist_pics/'+artist.name.lower()+'.'+ext, 'wb')
+        #f = open('artist_pics/'+artist.name.lower()+'.'+ext, 'wb')
+        f = open('artist_pics2/'+artist_name+'.'+ext, 'wb')
     except FileNotFoundError as e:
         print("Problem creating file", e)
         return
@@ -89,7 +94,9 @@ def retrieve_image(x, ext='jpg', size=(640,480)):
     return True
 
 # below is hacky way to detect grayscale which m5stack cannot display
-def is_grey_scale(img_path="lena.jpg"):
+def is_grey_scale(img_path=None):
+    if not img_path:
+        return
     im = Image.open(img_path).convert('RGB')
     w,h = im.size
     for i in range(w):
