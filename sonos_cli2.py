@@ -183,10 +183,13 @@ class Sonos(Cmd):
     def do_master(self, s):
         '''Select the master speaker that will be controlled; no arguments'''
         sp = sonos_actions.get_sonos_players()
-        sp_names = {s.player_name:s for s in sp}
+        sp_names = {s.player_name.lower():s for s in sp}
 
         if s:
-            master = sonos_actions.master = sp_names.get(s)
+            master = sonos_actions.master = sp_names.get(s.lower())
+            if master is None:
+                self.msg = "Whatever you typed is not a speaker name"
+                return
             new_master_name = s
         else:
             lst = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}"\
@@ -306,19 +309,38 @@ class Sonos(Cmd):
         sonos_actions.unjoin()
         self.prompt = f"{sonos_actions.master.player_name()}>"
         self.msg = f"Master speaker {sonos_actions.master.player_name} now has no members"
+
     def do_what(self, s):
         self.msg = sonos_actions.what_is_playing()
 
     def do_queue(self, s):
         lst = sonos_actions.list_queue()
-        q = list(enumerate(lst))
-        q.append((-1, "Do nothing"))
-        pos = self.select(q, "Which track? ")
-        if pos == -1:
-            self.msg = "OK, I won't play anything."
+        if not lst:
+            self.msg = "The queue is empty"
+            return
+
+        if s:
+            try:
+                pos = int(s)
+            except ValueError:
+                self.msg = "That wasn't a number"
+                return
+
+            if 0 < pos <= len(lst):
+                sonos_actions.play_from_queue(pos-1)
+                self.msg = f"I will play track {pos}: {lst[pos-1]}"
+            else:
+                self.msg = f"{s} is out of the range of the queue"
         else:
-            sonos_actions.play_from_queue(pos)
-            self.msg = f"I will play {q[pos][1]}"
+            q = list(enumerate(lst, 1))
+            q.append((0, "Do nothing"))
+            pos = self.select(q, "Which track? ")
+
+            if pos:
+                sonos_actions.play_from_queue(pos-1)
+                self.msg = f"I will play track {pos}: {lst[pos-1]}"
+            else:
+                self.msg = "OK, I won't play anything."
 
     def do_clear(self, s):
         sonos_actions.clear_queue()
