@@ -254,14 +254,12 @@ def play_station(station):
 def list_queue():
     queue = master.get_queue()
 
-    if len(queue) == 0:
-        response = "There is nothing in the queue"
-    else:
-        response = ""
-        for track in queue: # just pulling first 10
-            response+=f"{track.title} from {track.album} by {track.creator}, "
+    #if len(queue) == 0:
+    #    response = None
+    #else:
+    #    response = [f"{t.title} from {t.album} by {t.creator}" for t in queue]
 
-        response = [f"{t.title} from {t.album} by {t.creator}" for t in queue]
+    response = [f"{t.title} from {t.album} by {t.creator}" for t in queue]
 
     return response
 
