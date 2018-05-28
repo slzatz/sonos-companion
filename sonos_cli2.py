@@ -165,14 +165,13 @@ class Sonos(Cmd):
 
     def __init__(self):
         self.raw = "Nothing"
-        self.shortcuts.update({'#': 'play', '@':'add'})
+        #self.shortcuts.update({'#': 'play', '@':'add'}) # I think alias better
         self.intro = "Welcome to sonos_cli"
         self.prompt = "sonos[]> "
         self.quit = False
         self.msg = ''
 
-        # Set use_ipython to True to enable the "ipy" command which embeds and interactive IPython shell
-        super().__init__(use_ipython=False)
+        super().__init__(use_ipython=False, startup_script='sonos_cli2_startup')
 
     def preparse(self, s):
         # this is only so when you do a track with no cmd it works
