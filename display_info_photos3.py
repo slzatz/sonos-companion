@@ -110,8 +110,8 @@ MAX_HEIGHTS = {
 7:400, #artist image
 8:700, #lyrics
 9:200, #track_info broadcast by sonos_track_info.py
-10:200 #sonos status (PLAYING, TRANSITIONING, STOPPED
-11:500,#sales top opportunities
+10:200,#sonos status (PLAYING, TRANSITIONING, STOPPED
+11:100,#sales top opportunities
 12:300,#Reminders (alarms)
 13:500,#Poems
 14:150,#Facts
