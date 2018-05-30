@@ -99,6 +99,26 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
+MAX_HEIGHTS = {
+0:200, #temp sensors (CT, NYC)
+1:400, #news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
+2:300, #stock quote
+3:500, #ToDos
+4:600, #gmail and google calendar
+5:250, #sales forecast
+6:500, #outlook_schedule
+7:400, #artist image
+8:700, #lyrics
+9:200, #track_info broadcast by sonos_track_info.py
+10:200 #sonos status (PLAYING, TRANSITIONING, STOPPED
+11:500,#sales top opportunities
+12:300,#Reminders (alarms)
+13:500,#Poems
+14:150,#Facts
+15:300,#weather/tides
+16:600,#Industry
+17:200 #temp sensor
+}
 NUM_BOXES = 18 
 positions = []
 foos = [] 
@@ -106,7 +126,7 @@ sizes = []
 timing = []
 colors = [(0,255,0), (0,255,255), (255,255,0), (255,0,255), (127,127,127)] # (255,255,255)] # blue too dark and red for alerts
 color = cycle(colors)
-MAX_HEIGHT = screen_height - 50 #875
+#MAX_HEIGHT = screen_height - 50 #875
 MAX_WIDTH = 665 # with max char/line =  75 and sans font size of 18 this usually works but lines will be truncated to MAX_WIDTH
 MIN_WIDTH = 275
 on_top = [7, 8, 12]
@@ -332,7 +352,7 @@ def on_message(client, userdata, msg):
     #if topic in (info_topic, image_topic):
 
     new_screen = pygame.Surface.copy(screen_image) # screen image is the clean background image
-    k = z.get('pos',0)
+    k = z.get('pos', 0)
 
     # because of changes this erases the whole screen until the next box is drawn
     if z.get('erase'):
@@ -360,7 +380,8 @@ def on_message(client, userdata, msg):
     if topic==info_topic:
 
         #foo is the surface that we 'paint' the text and rectangles on
-        foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHT)) # (800,800)
+        #foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHT)) # (800,800)
+        foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHTS[k])) # (800,800)
         foo.fill((0,0,0))
         foo.set_alpha(175) #125
         #font = pygame.font.SysFont('Sans', 16) #18 changed 05212017
@@ -392,7 +413,8 @@ def on_message(client, userdata, msg):
             indent = 17
             n+=4 if bullets else 0 # makes multi-line bullets more separated from prev and next bullet
 
-            if n+line_height > MAX_HEIGHT:
+            #if n+line_height > MAX_HEIGHT:
+            if n+line_height > MAX_HEIGHTS[k]:
                 break
 
             if item[0] == '#':
@@ -414,7 +436,8 @@ def on_message(client, userdata, msg):
 
             for l,line in enumerate(lines):
 
-                if n+line_height > MAX_HEIGHT: #20
+                #if n+line_height > MAX_HEIGHT: #20
+                if n+line_height > MAX_HEIGHTS[k]: #20
                     break
 
                 if l:
@@ -445,7 +468,8 @@ def on_message(client, userdata, msg):
         # item is the last item and if the last item is white space n gets incremented unnecessarily and this 'un'increments it
         if not item.strip():
             n-=line_height
-        height = min(n+12, MAX_HEIGHT)
+        #height = min(n+12, MAX_HEIGHT)
+        height = min(n+12, MAX_HEIGHTS[k])
         new_size = (max_line+18,height)
         pygame.draw.rect(foo, col, ((0,0), new_size), 3)
 
