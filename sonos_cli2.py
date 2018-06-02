@@ -264,8 +264,8 @@ class Sonos(Cmd):
         artist1, artist2 = s.split(' and ')
         self.msg = mix(artist1, artist2)
 
-    def do_station(self, s):
-        self.msg = play_station(s)
+    #def do_station(self, s):
+    #    self.msg = play_station(s)
         
     def default(self, s):
         if 'by' in self.raw:
@@ -375,6 +375,31 @@ class Sonos(Cmd):
         uri = self.select([(t.get('uri'), t.get('title', '')+" from "+t.get('album', '')) for t in tracks], "Which track? ")
         sonos_actions.play(True, [uri])
         self.msg = uri
+
+    def do_station(self, s):
+        if s:
+            self.msg = sonos_actions.play_station(s)
+        else:
+            stations = sonos_actions.STATIONS
+            #lst = [(z[1], z[0]) for z in stations.values()] #works and produces uri
+            lst = [(z[0], z[1][0]) for z in stations.items()]
+            lst.append((0, "Do nothing"))
+            station = self.select(lst, "Which station? ")
+            self.msg = sonos_actions.play_station(station)
+
+    def do_deb(self, s):
+        if s:
+            album = s+' (c)'
+        else:
+            #result = solr.search('album:(c)', **{'fl':'album', 'rows':20, 'group':'true', 'group.field':'album'})
+            result = solr.search(**{'q':'album:(c)', 'fl':'album', 'rows':200, 'group':'true', 'group.field':'album'})
+            lst = [z['doclist']['docs'][0]['album'] for z in result.grouped['album']['groups']]
+            select_lst = list(zip(lst, lst))
+            select_lst.append((0, "Do nothing"))
+            album = self.select(select_lst, "Which album? ")
+
+        self.do_album(album)
+
 
     def postcmd(self, stop, s):
         if self.quit:

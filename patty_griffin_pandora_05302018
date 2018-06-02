@@ -1,3 +1,23 @@
 This was taken from wireshark running on the windows x1 carbon which was used to play patty griffin pandora radio and this was the DIDL that was produced:
 
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-sonosapi-radio:ST%3a52876609482614338?sid=236&amp;flags=8300&amp;sn=2</CurrentURI><CurrentURIMetaData>&lt;DIDL-Lite xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot; xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot; xmlns:r=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot; xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot;&gt;&lt;item id=&quot;100c206cST%3a52876609482614338&quot; parentID=&quot;10082064myStations&quot; restricted=&quot;true&quot;&gt;&lt;dc:title&gt;Patty Griffin Radio&lt;/dc:title&gt;&lt;upnp:class&gt;object.item.audioItem.audioBroadcast.#station.sonos-favorite&lt;/upnp:class&gt;&lt;desc id=&quot;cdudn&quot; nameSpace=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot;&gt;SA_RINCON60423_X_#Svc60423-0-Token&lt;/desc&gt;&lt;/item&gt;&lt;/DIDL-Lite&gt;</CurrentURIMetaData></u:SetAVTransportURI></s:Body></s:Envelope>
+
+
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+
+  <s:Body>
+
+    <u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
+
+      <InstanceID>0</InstanceID>
+
+      <CurrentURI>x-sonosapi-radio:ST%3a52876609482614338?sid=236&amp;flags=8300&amp;sn=2</CurrentURI>
+
+      <CurrentURIMetaData>&lt;DIDL-Lite xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot; xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot; xmlns:r=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot; xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot;&gt;&lt;item id=&quot;100c206cST%3a52876609482614338&quot; parentID=&quot;10082064myStations&quot; restricted=&quot;true&quot;&gt;&lt;dc:title&gt;Patty Griffin Radio&lt;/dc:title&gt;&lt;upnp:class&gt;object.item.audioItem.audioBroadcast.#station.sonos-favorite&lt;/upnp:class&gt;&lt;desc id=&quot;cdudn&quot; nameSpace=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot;&gt;SA_RINCON60423_X_#Svc60423-0-Token&lt;/desc&gt;&lt;/item&gt;&lt;/DIDL-Lite&gt;
+</CurrentURIMetaData>
+
+    </u:SetAVTransportURI>
+
+  </s:Body>
+
+</s:Envelope>

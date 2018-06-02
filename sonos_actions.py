@@ -226,6 +226,7 @@ def play(add, uris):
         #print('meta: ',meta)
         #print('---------------------------------------------------------------')
 
+        # could not uri be why static:library (Amazon Prime not bought) doesn't work???
         if not playlist:
             my_add_to_queue('', meta)
         else:
@@ -243,13 +244,10 @@ def play_station(station):
     station = STATIONS.get(station.lower())
     if station:
         uri = station[1]
-        print("radio station uri=",uri)
+        #print("radio station uri=",uri)
         if uri.startswith('x-sonosapi-radio'):
             meta = meta_format_pandora.format(title=station[0])
-            #master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
         elif uri.startswith('x-sonosapi-stream'):
-            #uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
-            #meta = meta_format_radio.format(title=station[0], service=station[2])
             meta = meta_format_radio.format(title=station[0])
 
         master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
