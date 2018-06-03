@@ -144,6 +144,23 @@ def what_is_playing():
 
     return response
 
+def current():
+    try:
+        state = master.get_current_transport_info()['current_transport_state']
+    except Exception as e:
+        print("Encountered error in state = master.get_current_transport_info(): ", e)
+        state = 'error'
+
+    # check if sonos is playing something
+    if state == 'PLAYING':
+        try:
+            track = master.get_current_track_info()
+        except Exception as e:
+            print("Encountered error in track = master.get_current_track_info(): ", e)
+            return
+
+        return track
+
 def turn_volume(volume):
     for s in master.group.members:
         s.volume = s.volume - 10 if volume=='quieter' else s.volume + 10
