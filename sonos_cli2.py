@@ -4,6 +4,8 @@ python3 script that imports sonos_actions.py and is the all-in-one sonos cli
 script.
 Config file inludes the aws solr uri and the local raspberry pi uri
 Uses cmd2 (but not sure I'm using any cmd2 capabilities
+modified cmd2 because the following line means entering 0 on a select chooses
+the last item:  result = fulloptions[response - 1][0]
 '''
 
 import random
@@ -62,11 +64,9 @@ def play_album(album, artist, add=False):
         selected_tracks = [t for t in tracks if t['album']==selected_album]
         uris = [t.get('uri') for t in selected_tracks]
         sonos_actions.play(False, uris)
-        #titles = ', '.join([t.get('title', '') for t in selected_tracks])
         titles = [t.get('title', '')+'-'+t.get('artist', '') for t in selected_tracks]
         title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
         return f"I will play {len(uris)} tracks from {selected_album}:\n{title_list}."
-        #return f"I will play {len(uris)} tracks from {selected_album}: {titles}"
     else:
         return f"I couldn't find any tracks from album {album}."
 
@@ -75,7 +75,6 @@ def shuffle(artist):
         return "I couldn't find the artist you were looking for.  Sorry."
 
     s = 'artist:' + ' AND artist:'.join(artist.split())
-    #result = solr.search(s, fl='artist,title,uri', rows=500) 
     result = solr.search(s, fl='album,title,uri', rows=500) 
     count = len(result)
     if not count:
@@ -118,9 +117,6 @@ def mix(artist1, artist2):
     titles = [t.get('title', '')+'-'+t.get('artist', '') for t in selected_tracks]
     title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
     return f"The mix for {artist1} and {artist2}:\n{title_list}."
-
-    #titles_artists = ', '.join([t.get('title')+' - '+t.get('artist') for t in mix])
-    #return f"I will shuffle {titles_artists}."
 
 def turn_volume(volume):
     if volume in ('increase','louder','higher','up'):
@@ -217,8 +213,7 @@ class Sonos(Cmd):
         else:
             title, artist = s, ''
 
-        # changed the below so play adds to queue and doesn't erase it
-        #self.msg = play_track(title, artist, False)
+        # play adds to queue and doesn't erase it
         self.msg = play_track(title, artist, True)
         lst = sonos_actions.list_queue()
         sonos_actions.play_from_queue(len(lst)-1)
@@ -264,9 +259,6 @@ class Sonos(Cmd):
         artist1, artist2 = s.split(' and ')
         self.msg = mix(artist1, artist2)
 
-    #def do_station(self, s):
-    #    self.msg = play_station(s)
-        
     def default(self, s):
         if 'by' in self.raw:
             title, artist = self.raw.split(' by ')
@@ -312,6 +304,9 @@ class Sonos(Cmd):
     def do_what(self, s):
         self.msg = sonos_actions.what_is_playing()
 
+    def do_current(self, s):
+        self.msg = sonos_actions.current()
+
     def do_queue(self, s):
         lst = sonos_actions.list_queue()
         if not lst:
@@ -332,7 +327,11 @@ class Sonos(Cmd):
                 self.msg = f"{s} is out of the range of the queue"
         else:
             q = list(enumerate(lst, 1))
-            q.append((0, "Do nothing"))
+            track_info = sonos_actions.current()
+            if track_info:
+                cur_pos = int(track_info['playlist_position'])
+                q[cur_pos-1] = (cur_pos,self.colorize(q[cur_pos-1][1], 'red'))
+            #q.append((0, "Do nothing"))
             pos = self.select(q, "Which track? ")
 
             if pos:
@@ -381,25 +380,30 @@ class Sonos(Cmd):
             self.msg = sonos_actions.play_station(s)
         else:
             stations = sonos_actions.STATIONS
-            #lst = [(z[1], z[0]) for z in stations.values()] #works and produces uri
             lst = [(z[0], z[1][0]) for z in stations.items()]
-            lst.append((0, "Do nothing"))
+            #lst.append((0, "Do nothing"))
             station = self.select(lst, "Which station? ")
-            self.msg = sonos_actions.play_station(station)
+            if station:
+                sonos_actions.play_station(station)
+                self.msg = self.colorize(f"I'll play {station} now", 'green')
+            else:
+                self.msg = self.colorize("OK, I won't play anything.", 'red')
 
     def do_deb(self, s):
         if s:
             album = s+' (c)'
         else:
+            # either below should work
             #result = solr.search('album:(c)', **{'fl':'album', 'rows':20, 'group':'true', 'group.field':'album'})
             result = solr.search(**{'q':'album:(c)', 'fl':'album', 'rows':200, 'group':'true', 'group.field':'album'})
             lst = [z['doclist']['docs'][0]['album'] for z in result.grouped['album']['groups']]
-            select_lst = list(zip(lst, lst))
-            select_lst.append((0, "Do nothing"))
-            album = self.select(select_lst, "Which album? ")
+            #lst.append((0, "Do nothing"))
+            album = self.select(lst, "Which album? ")
 
-        self.do_album(album)
-
+        if album:
+            self.do_album(album)
+        else:
+            self.msg = "OK, I won't play anything."
 
     def postcmd(self, stop, s):
         if self.quit:
