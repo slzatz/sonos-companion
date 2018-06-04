@@ -18,6 +18,7 @@ import soco
 from soco import config as soco_config
 import paho.mqtt.client as mqtt
 from config import aws_mqtt_uri, location
+import sonos_actions
 
 soco_config.CACHE_ENABLED = False
 
@@ -38,7 +39,7 @@ for s in sp:
     print("{} -- coordinator:{}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore'))) 
 
 master_name = input("Which speaker do you want to be master? ")
-master = speakers.get(master_name)
+master = sonos_actions.master = speakers.get(master_name)
 if master:
     print("Master speaker is: {}".format(master.player_name))
     sp = [s for s in sp if s.group.coordinator is master]
@@ -49,19 +50,6 @@ if master:
 else:
     print("Somehow you didn't pick a master or spell it correctly (case matters)")
     sys.exit(1)
-
-meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
-
-wnyc_station = ["WNYC-FM", "x-sonosapi-stream:s21606?sid=254&flags=32", "SA_RINCON65031_"] 
-wnyc_uri = wnyc_station[1].replace('&', '&amp')
-#uri = uri.replace('&', '&amp;') # need to escape '&' in radio URIs
-wnyc_meta = meta_format_radio.format(title=wnyc_station[0], service=wnyc_station[2])
-
-meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="OOOX52876609482614338" parentID="0" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
-
-patty_griffin_pandora = ["Patty Griffin Radio", "pndrradio:52876609482614338", "SA_RINCON3_slzatz@gmail.com"]
-patty_uri = patty_griffin_pandora[1]
-patty_meta = meta_format_pandora.format(title=patty_griffin_pandora[0], service=patty_griffin_pandora[2])
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -121,11 +109,16 @@ def on_message(client, userdata, msg):
             print("Volume was too high:", level)
 
     elif action == "play_wnyc":
-        
-        master.play_uri(wnyc_uri, wnyc_meta, wnyc_station[0]) # station[0] is the title of the station
+        sonos_actions.play_station('wnyc')
 
-    elif action == 'patty griffin pandora':
-        master.play_uri(patty_uri, patty_meta, patty_griffin_pandora[0]) # station[0] is the title of the station
+    elif action.startswith("station"):
+        station = action[8:]
+        sonos_actions.play_station(station)
+
+    elif action.startswith("shuffle"):
+        artist = action[8:]
+        sonos_actions.shuffle(artist)
+
     elif action == "play_queue":
         queue = master.get_queue()
         if len(queue) != 0:
