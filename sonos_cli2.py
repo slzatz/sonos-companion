@@ -246,14 +246,15 @@ class Sonos(Cmd):
         '''
         Selects random tracks from artist
         '''
-        self.msg = shuffle(s)
+        #self.msg = shuffle(s)
+        self.msg = sonos_actions.shuffle(s)
 
     def do_mix(self, s):
         '''
         Mix artist_a and artist_b
         '''
         if ' and ' not in s:
-            self.msg = "command is: mix artistA and artistB"
+            self.msg = self.colorize("The command is: mix artistA and artistB", 'red')
             return
 
         artist1, artist2 = s.split(' and ')
@@ -403,7 +404,7 @@ class Sonos(Cmd):
         if album:
             self.do_album(album)
         else:
-            self.msg = "OK, I won't play anything."
+            self.msg = self.colorize("OK, I won't play anything.", 'red')
 
     def postcmd(self, stop, s):
         if self.quit:
