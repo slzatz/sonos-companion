@@ -29,16 +29,20 @@ import os
 from time import time, sleep
 import json
 import sys
+import random
+import pysolr
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
-from config import user_id
+from config import solr_uri
 
 soco_config.CACHE_ENABLED = False
 
+solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
+
 #last.fm 
-base_url = "http://ws.audioscrobbler.com/2.0/"
+#base_url = "http://ws.audioscrobbler.com/2.0/"
 
 # pandora format changed at some point and was updated on 05302018 using wireshark
 # format is "x-sonosapi-radio:ST:138764603804051010?sid=236&amp;flags=8300&amp;sn=2"
@@ -280,3 +284,22 @@ def clear_queue():
     except Exception as e:
         print("Encountered exception when trying to clear the queue:",e)
 
+def shuffle(artist):
+    if not artist:
+        return
+
+    s = 'artist:' + ' AND artist:'.join(artist.split())
+    result = solr.search(s, fl='album,title,uri', rows=500) 
+    count = len(result)
+    if not count:
+        return f"I couldn't find any tracks for {artist}"
+
+    print(f"Total track count for {artist} was {count}")
+    tracks = result.docs
+    k = 10 if count >= 10 else count
+    selected_tracks = random.sample(tracks, k)
+    uris = [t.get('uri') for t in selected_tracks]
+    play(False, uris)
+    titles = [t.get('title', '')+'-'+t.get('album', '') for t in selected_tracks]
+    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+    return f"I will shuffle:\n{title_list}."
