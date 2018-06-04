@@ -99,25 +99,25 @@ screen.fill((0,0,0))
 screen_image = pygame.Surface((screen_width, screen_height))
 
 #Globals
-MAX_HEIGHTS = {
-0:200, #temp sensors (CT, NYC)
-1:400, #news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
-2:300, #stock quote
-3:500, #ToDos
-4:600, #gmail and google calendar
-5:250, #sales forecast
-6:500, #outlook_schedule
-7:400, #artist image
-8:700, #lyrics
-9:200, #track_info broadcast by sonos_track_info.py
-10:200,#sonos status (PLAYING, TRANSITIONING, STOPPED
-11:100,#sales top opportunities
-12:300,#Reminders (alarms)
-13:500,#Poems
-14:150,#Facts
-15:300,#weather/tides
-16:600,#Industry
-17:200 #temp sensor
+LAYOUT = {
+0:{'height':200, 'location':None}, #temp sensors (CT, NYC)
+1:{'height':400, 'location':None}, #news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
+2:{'height':300, 'location':None}, #stock quote
+3:{'height':500, 'location':None}, #ToDos
+4:{'height':600, 'location':(-600,400)}, #gmail and google calendar
+5:{'height':250, 'location':None}, #sales forecast
+6:{'height':500, 'location':(-600,-550)}, #outlook_schedule
+7:{'height':400, 'location':None}, #artist image
+8:{'height':700, 'location':None}, #lyrics
+9:{'height':200, 'location':None}, #track_info broadcast by sonos_track_info.py
+10:{'height':200, 'location':None},#sonos status (PLAYING, TRANSITIONING, STOPPED
+11:{'height':500, 'location':None},#sales top opportunities
+12:{'height':300, 'location':None},#Reminders (alarms)
+13:{'height':500, 'location':None},#Poems
+14:{'height':150, 'location':None},#Facts
+15:{'height':300, 'location':None},#weather/tides
+16:{'height':600, 'location':None},#Industry
+17:{'height':200, 'location':None} #temp sensor
 }
 NUM_BOXES = 18 
 positions = []
@@ -375,13 +375,14 @@ def on_message(client, userdata, msg):
         return
 
     col = z.get('color', next(color))
-    dest = z.get('dest')
+    dest = LAYOUT[k].get('location')
+    dest = dest if dest else  z.get('dest')
 
     if topic==info_topic:
 
         #foo is the surface that we 'paint' the text and rectangles on
         #foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHT)) # (800,800)
-        foo = pygame.Surface((MAX_WIDTH,MAX_HEIGHTS[k])) # (800,800)
+        foo = pygame.Surface((MAX_WIDTH,LAYOUT[k]['height'])) # (800,800)
         foo.fill((0,0,0))
         foo.set_alpha(175) #125
         #font = pygame.font.SysFont('Sans', 16) #18 changed 05212017
@@ -414,7 +415,7 @@ def on_message(client, userdata, msg):
             n+=4 if bullets else 0 # makes multi-line bullets more separated from prev and next bullet
 
             #if n+line_height > MAX_HEIGHT:
-            if n+line_height > MAX_HEIGHTS[k]:
+            if n+line_height > LAYOUT[k]['height']:
                 break
 
             if item[0] == '#':
@@ -437,7 +438,7 @@ def on_message(client, userdata, msg):
             for l,line in enumerate(lines):
 
                 #if n+line_height > MAX_HEIGHT: #20
-                if n+line_height > MAX_HEIGHTS[k]: #20
+                if n+line_height > LAYOUT[k]['height']: #20
                     break
 
                 if l:
@@ -469,7 +470,7 @@ def on_message(client, userdata, msg):
         if not item.strip():
             n-=line_height
         #height = min(n+12, MAX_HEIGHT)
-        height = min(n+12, MAX_HEIGHTS[k])
+        height = min(n+12, LAYOUT[k]['height'])
         new_size = (max_line+18,height)
         pygame.draw.rect(foo, col, ((0,0), new_size), 3)
 
