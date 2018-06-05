@@ -24,10 +24,11 @@ import sonos_actions
 
 soco_config.CACHE_ENABLED = False
 
-sp = sonos_actions.get_sonos_players()
-text = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}" for s in sp]
+sp = list(sonos_actions.get_sonos_players())
+#text = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}" for s in sp]
+text = [f"{s.player_name} <-- {s.group.coordinator.player_name}" for s in sp]
 
-for (idx, line)) in enumerate(text)
+for idx, line in enumerate(text):
     print('  %2d. %s' % (idx + 1, line))
 
 while True:
