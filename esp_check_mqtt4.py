@@ -101,8 +101,11 @@ def on_message(client, userdata, msg):
         else:
             print("Volume was too high:", level)
 
-    elif action == "play_wnyc":
-        sonos_actions.play_station('wnyc')
+    #elif action == "play_wnyc":
+    #    sonos_actions.play_station('wnyc')
+
+    elif action == 'next':
+        sonos_actions.playback('next')
 
     elif action.startswith("station"):
         station = action[8:]
