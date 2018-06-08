@@ -68,7 +68,7 @@ while True:
 
     try:
         response = int(response)
-        master = sonos_actions.master = sp[response - 1]
+        master = sp[response - 1]
         break
     except (ValueError, IndexError):
         print("{!r} isn't a valid choice. Pick a number between 1 and {}:\n".format(response,
