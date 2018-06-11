@@ -42,38 +42,39 @@ print("sonos_volume_topic =", sonos_volume_topic)
 soco_config.CACHE_ENABLED = False
 
 n = 0
-while 1:
+sp = None
+while n < 10:
     n+=1
-    print("attempt "+str(n))
+    print("attempt "+str(n)) 
     try:
-        sp = soco.discover(timeout=2)
-        speakers = {s.player_name:s for s in sp}
+        sp = list(soco.discover(timeout=2))
     except TypeError as e:    
         print(e) 
         sleep(1)       
     else:
         break 
-    
-for s in sp:
-    print("{} -- coordinator:{}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore'))) 
 
-master_name = input("Which speaker do you want to be master? ")
-master = speakers.get(master_name)
-###########################################################################
-for s in sp:
-    print(s.player_name.encode('ascii', 'ignore'), s.group.coordinator,'*')
-###########################################################################
-if master:
-    print("Master speaker is: {}".format(master.player_name))
-    m_group = [s for s in sp if s.group is not None and s.group.coordinator is master] #not None should not be necessary but iS
-    print("Master group:")
-    for s in m_group:
-        print("{} -- coordinator:{}".format(s.player_name.encode('ascii', 'ignore'), s.group.coordinator.player_name.encode('ascii', 'ignore')))
-        print("{} -- coordinator:{}".format(s.player_name, s.group.coordinator.player_name))
+if not sp:
+    print("Could not discover the speakers")
+    sys.exit()
 
-else:
-    print("Somehow you didn't pick a master or spell it correctly (case matters)")
-    sys.exit(1)
+text = [f"{s.player_name} <-- {s.group.coordinator.player_name}" for s in sp]
+
+for idx, line in enumerate(text):
+    print('  %2d. %s' % (idx + 1, line))
+
+while True:
+    response = input("Which speaker do you want to become the master speaker? ")
+
+    try:
+        response = int(response)
+        master = sp[response - 1]
+        break
+    except (ValueError, IndexError):
+        print("{!r} isn't a valid choice. Pick a number between 1 and {}:\n".format(response,
+      len(text)))
+
+print("Master speaker is: {}".format(master.player_name))
 
 print("\nprogram running ...")
 
