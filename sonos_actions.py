@@ -1,5 +1,5 @@
 '''
-This is a python 3 script that is imported by sonos_cli2.py
+This is a python 3 script that is imported by sonos_cli2.py and sonos_server.py
 and contains the SoCo functionality that the importing script needs
 
 current_track = master.get_current_track_info() --> {
@@ -303,3 +303,17 @@ def shuffle(artist):
     titles = [t.get('title', '')+'-'+t.get('album', '') for t in selected_tracks]
     title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
     return f"I will shuffle:\n{title_list}."
+
+
+def play_pause():
+    try:
+        state = master.get_current_transport_info()['current_transport_state']
+    except Exception as e:
+        print("Encountered error in state = master.get_current_transport_info(): ", e)
+        state = 'ERROR'
+
+    # check if sonos is playing music
+    if state == 'PLAYING':
+        master.pause()
+    elif state!='ERROR':
+        master.play()
