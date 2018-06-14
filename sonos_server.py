@@ -43,7 +43,7 @@ def process_message():
         sonos_actions.play_pause()
 
     elif action in ('quieter','louder'):
-        sonos_actions.turn_volume(action):
+        sonos_actions.turn_volume(action)
         
     elif action == 'next':
         sonos_actions.playback('next')
@@ -56,8 +56,10 @@ def process_message():
         artist = action[8:]
         sonos_actions.shuffle(artist)
 
-    elif action == "play_queue":
-        sonos_actions.play_from_queue(0):
+    elif action.startswith("play_queue"):
+        pos = action[11:]
+        pos = int(pos) if pos else 0
+        sonos_actions.play_from_queue(pos)
 
     else:
         print("I don't recognize that action")
