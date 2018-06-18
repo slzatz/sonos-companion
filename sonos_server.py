@@ -61,6 +61,12 @@ def process_message():
         pos = int(pos) if pos else 0
         sonos_actions.play_from_queue(pos)
 
+    elif action == 'mute':
+        sonos_actions.mute(True)
+
+    elif action == 'unmute':
+        sonos_actions.mute(False)
+
     else:
         print("I don't recognize that action")
 
