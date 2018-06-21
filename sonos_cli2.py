@@ -246,8 +246,17 @@ class Sonos(Cmd):
         '''
         Selects random tracks from artist
         '''
-        #self.msg = shuffle(s)
-        self.msg = sonos_actions.shuffle(s)
+
+        if s:
+            self.msg = sonos_actions.shuffle(s)
+        else:
+            artists = sonos_actions.ARTISTS
+            artist = self.select(artists, "Which artist? ")
+            if artist:
+                sonos_actions.shuffle(artist)
+                self.msg = self.colorize(f"I'll play {artist} now", 'green')
+            else:
+                self.msg = self.colorize("OK, I won't play anything.", 'red')
 
     def do_mix(self, s):
         '''
@@ -331,15 +340,15 @@ class Sonos(Cmd):
             track_info = sonos_actions.current()
             if track_info:
                 cur_pos = int(track_info['playlist_position'])
-                q[cur_pos-1] = (cur_pos,self.colorize(q[cur_pos-1][1], 'red'))
-            #q.append((0, "Do nothing"))
+                q[cur_pos-1] = (cur_pos,self.colorize(q[cur_pos-1][1], 'green'))
+
             pos = self.select(q, "Which track? ")
 
             if pos:
                 sonos_actions.play_from_queue(pos-1)
-                self.msg = f"I will play track {pos}: {lst[pos-1]}"
+                self.msg = self.colorize(f"I will play track {pos}: {lst[pos-1]}", 'green')
             else:
-                self.msg = "OK, I won't play anything."
+                self.msg = self.colorize("OK, I won't play anything.", 'red')
 
     def do_clear(self, s):
         sonos_actions.clear_queue()

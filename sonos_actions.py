@@ -74,6 +74,11 @@ with open('stations') as f:
 
 STATIONS = json.loads(z)
 
+with open('artists') as f:
+    zz = f.read()
+
+ARTISTS = json.loads(zz)
+
 def get_sonos_players():
     # master is assigned in sonos_cli2.py
     n = 0
