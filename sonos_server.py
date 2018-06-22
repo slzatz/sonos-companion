@@ -1,6 +1,6 @@
 #!bin/python
 '''
-python3 script that imports sonos_actions.py and currently support m5sonos_menu5.py
+python3 script that imports sonos_actions.py and currently support m5sonos_menuX.py
 using urequests, the m5 sends json in the form of:{'action':'list_queue'}
 '''
 
@@ -38,6 +38,9 @@ def process_message():
     if action == 'list_queue':
         queue = sonos_actions.list_queue()
         return json.dumps(queue)
+
+    elif action == 'list_artists':
+        return json.dumps(sonos_actions.ARTISTS)
 
     elif action == 'play_pause':
         sonos_actions.play_pause()
