@@ -129,12 +129,12 @@ def my_add_playlist_to_queue(uri, metadata):
         return int(qnumber)
 
 # the 'action' functions
-def what_is_playing():
+def what_is_playing(text=True):
     try:
         state = master.get_current_transport_info()['current_transport_state']
     except Exception as e:
         print("Encountered error in state = master.get_current_transport_info(): ", e)
-        state = 'error'
+        state = 'ERROR'
 
     # check if sonos is playing something
     if state == 'PLAYING':
@@ -147,9 +147,13 @@ def what_is_playing():
             title = track.get('title', '')
             artist = track.get('artist', '')
             album = track.get('album', '')
-            response = f"The track is {title}, the artist is {artist} and the album is {album}."
+            if text:
+                response = f"The track is {title}, the artist is {artist} and the album is {album}."
+            else:
+                response = {'title':title, 'artist':artist, 'album':album}
     else:
-        response = "Nothing appears to be playing right now, Steve"
+        #response = "Nothing appears to be playing right now, Steve"
+        response = None
 
     return response
 
