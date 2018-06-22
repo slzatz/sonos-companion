@@ -13,6 +13,7 @@ from operator import itemgetter
 import pysolr
 from cmd2 import Cmd
 import sonos_actions
+import lyrics
 from config import solr_uri 
 
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
@@ -312,7 +313,11 @@ class Sonos(Cmd):
         self.msg = f"Master speaker {sonos_actions.master.player_name} now has no members"
 
     def do_what(self, s):
-        self.msg = sonos_actions.what_is_playing()
+        response = sonos_actions.what_is_playing()
+        if response:
+            self.msg = self.colorize(sonos_actions.what_is_playing(), 'green')
+        else:
+            self.msg = self.colorize("Nothing appears to be playing", 'red')
 
     def do_current(self, s):
         self.msg = sonos_actions.current()
@@ -415,6 +420,14 @@ class Sonos(Cmd):
         else:
             self.msg = self.colorize("OK, I won't play anything.", 'red')
 
+    def do_lyrics(self, s):
+        track = sonos_actions.what_is_playing(text=False)
+        if track:
+            lyric = lyrics.get_lyrics(track['artist'], track['title'])
+            self.msg = "\n"+"\n".join(lyric)
+        else:
+            self.msg = self.colorize("Nothing appears to be playing or there was another problem", 'red')
+        
     def postcmd(self, stop, s):
         if self.quit:
             return True
