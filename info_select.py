@@ -13,6 +13,7 @@ from datetime import datetime
 import time
 import re
 
+# can only navigate via numbers to 0-9 but can use 'h' and 'l' to get to any number
 info_boxes = {
 0:"temp sensors (CT, NYC)",
 1:"news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)",
@@ -20,7 +21,7 @@ info_boxes = {
 3:"ToDos",
 4:"gmail and google calendar",
 5:"sales forecast",
-6:"outlook_schedule",
+6:"outlook_schedule",#6 no longer exists
 7:"artist image",
 8:"lyrics",
 9:"track_info broadcast by sonos_track_info.py",
@@ -53,7 +54,6 @@ curses.use_default_colors()
 curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
 curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
 curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_WHITE)
-#curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
 curses.init_pair(4, 15, -1)
 color_map = {'{blue}':3, '{red}':1, '{green}':2,'{white}':4}
 curses.curs_set(0)
@@ -207,14 +207,13 @@ screen.clear()
 screen.addstr(0,0, f"Hello Steve. screen size = x:{size[1]},y:{size[0]}", curses.A_BOLD)
 screen.addstr(6, 2, f"No content received yet for {selected_pos}", 
                 curses.color_pair(3)|curses.A_BOLD) 
-s = "1:news 2:quote 3:todos 4:gmail 5:sales forecast, 6:outlook schedule, 7:artist image 8:lyrics 9:track info"
+s = "0:temp 1:news 2:quote 3:todos 4:gmail 5:sales forecast 6:blank 7:artist image 8:lyrics 9:track info"
 if len(s) > size[1]:
     s = s[:size[1]-1]
 screen.addstr(size[0]-1, 0, s, curses.color_pair(3)|curses.A_BOLD)
 screen.refresh()
 
 while 1:
-    #client.loop(timeout = 1.0)
     client.loop(timeout = 0.25) #was 1.0
     redraw = False
     n = screen.getch()
