@@ -162,7 +162,6 @@ class Sonos(Cmd):
 
     def __init__(self):
         self.raw = "Nothing"
-        #self.shortcuts.update({'#': 'play', '@':'add'}) # I think alias better
         self.intro = "Welcome to sonos_cli"
         self.prompt = "sonos[]> "
         self.quit = False
