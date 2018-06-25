@@ -2,6 +2,8 @@
 This is a python 3 script that is imported by sonos_cli2.py and sonos_server.py
 and contains the SoCo functionality that the importing script needs
 
+it uses the xml format that sonos uses to interact with Amazon music
+
 current_track = master.get_current_track_info() --> {
             u'album': 'We Walked In Song', 
             u'artist': 'The Innocence Mission', 
@@ -51,29 +53,20 @@ solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10)
 #last.fm 
 #base_url = "http://ws.audioscrobbler.com/2.0/"
 
-# pandora format changed at some point and was updated on 05302018 using wireshark
+# pandora format changed at some point and was updated on 05302018
 # format is "x-sonosapi-radio:ST:138764603804051010?sid=236&amp;flags=8300&amp;sn=2"
-# numeric part is the url of the station if you go to the pandora site
-# the parameters appear to be important
+# numeric part is the url of the station if you access through pandora web site
+# note that the parameters following the ? appear to be necessary
 meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c206cST:52876609482614338" parentID="10082064myStations" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-0-Token</desc></item></DIDL-Lite>'''
 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>'''
 
-#main format in use
-#uri = "x-sonos-http:library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f.mp4?sid=201&flags=8224&sn=5"
-#id_ = "library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f"
-didl_library = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00032020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
-
-#uri = "x-rincon-cpcontainer:0006206clibrary%2fplaylists%2f7c7704e9-04b6-431a-afe6-c5db44cb77f1%2f%23library_playlist"
-#id_ = "0006206clibrary%2fplaylists%2f7c7704e9-04b6-431a-afe6-c5db44cb77f1%2f%23library_playlist"
-#for playlists metadata does not need to include any value for title or parent but unlike tracks, you do need to pass the uri to add_playlist_to_queue
-#for the record for An Unarmorial Age, the parentID was "00082064library%2fplaylists%2f%23library_playlists"
+# a few songs were moved off playlist that I should just get rid of
 didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.container.playlistContainer</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
 
-#didl_amazon and didl_catalog are the same
+#this is the current format (06252018) that works for my uploaded music and
+#music bought from Amazon and for music moved from prime and left in prime
 didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10030000{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
-
-didl_catalog = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10030000{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
 
 with open('stations') as f:
     z = f.read()
@@ -232,34 +225,30 @@ def play(add, uris):
         #print("---------------------------------------------------------------")
 
         requires_uri = False
-        # a few songs from Deborah album live you've never seen water are a playlist
+        # a few songs from Deborah album Like You've Never Seen Water are a playlist
         if 'library_playlist' in uri:
             i = uri.find(':')
             id_ = uri[i+1:]
             meta = didl_library_playlist.format(id_=id_)
             requires_uri = True
         elif 'library' in uri and not 'static' in uri:
-            # this is a bought track
+            # this is a bought track and question uploaded one?
             i = uri.find('library')
             ii = uri.find('.')
             id_ = uri[i:ii]
-            #meta = didl_library.format(id_=id_)
             meta = didl_amazon.format(id_=id_)
         elif 'static:library' in uri: # and 'static' in uri:
-            # this is a track moved from prime into my account but not paid for
-            # baffling but this sometimes generates correct meta data and sometimes doesn't
+            # track moved from Prime into my account but not paid for
             i = uri.find('library')
             ii = uri.find('?')
             id_ = uri[i:ii]
-            #meta = didl_library.format(id_=id_)
             meta = didl_amazon.format(id_=id_)
         elif 'static:catalog' in uri: # and 'catalog' in uri:
+            # track sitting in Prime not moved to my music
             i = uri.find('catalog')
             ii = uri.find('?')
             id_ = uri[i:ii]
-            #meta = didl_catalog.format(id_=id_)
             meta = didl_amazon.format(id_=id_)
-            #requires_uri = True #would have thought this would be necessary but not
         else:
             print(f'The uri:{uri} was not recognized')
             continue
@@ -267,7 +256,6 @@ def play(add, uris):
         #print('meta: ',meta)
         #print('---------------------------------------------------------------')
 
-        # could not uri be why static:library (Amazon Prime not bought) doesn't work???
         if requires_uri:
             my_add_to_queue('uri', meta)
         else:
