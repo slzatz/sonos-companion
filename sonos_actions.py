@@ -14,12 +14,19 @@ current_track = master.get_current_track_info() --> {
 
 If track is Prime, then url is:
 x-sonosapi-hls-static:catalog%2ftracks%2fB01E0N3W66%2f%3falbumAsin%3dB01E0N386A?sid=201&flags=0&sn=1
+x-sonosapi-hls-static:catalog/tracks/B01E0N3W66/?albumAsin?B01E0N386A?sid=201&flags=0&sn=1
 
 If track is Prime but moved to my music (but not purchased) then url is (and generally metadata works):
 x-sonosapi-hls-static:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f?sid=201&flags=0&sn=1' 
 
 If track has been purchased from Amazon:
 x-sonos-http:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f.mp3?sid=201&flags=0&sn=1' 
+x-sonos-http:library/artists/The_20Avett_20Brothers/I_20And_20Love_20And_20You/f9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f.mp3?sid=201&flags=0&sn=1' 
+
+if track was put on queue as part of a playlist
+x-sonos-http:library%2fplaylist%2f28f452a4-3414-456d-9146-9e9063868963%2f067b7994-615b-4f12-850b-4f12-850b-...mp3?sid...
+x-sonos-http:library/playlist/28f452a4-3414-456d-9146-9e9063868963%2f067b7994-615b-4f12-850b-4f12-850b-...mp3?sid...
+
 
 actions = {'play':play, 'turn_volume':turn_volume, 'set_volume':set_volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue': list_queue, 'clear_queue':clear_queue, 'mute':mute} 
 
@@ -52,12 +59,6 @@ meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" 
 
 meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>'''
 
-#meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">{service}</desc></item></DIDL-Lite>'''
-
-#uri = "x-sonos-http:amz%3atr%3a6b5d9c09-7dbe-44bc-89e1-85ac5ed45093.mp3?sid=26&flags=8224&sn=1",
-#id_ = "amz%3atr%3a6b5d9c09-7dbe-44bc-89e1-85ac5ed45093
-#didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="00030020{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON6663_X_#Svc6663-0-Token</desc></item></DIDL-Lite>'''
-
 #main format in use
 #uri = "x-sonos-http:library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f.mp4?sid=201&flags=8224&sn=5"
 #id_ = "library%2fartists%2fAmanda%252520Shires%2fCarrying%252520Lightning%2fca20888a-1a68-484a-ac90-058e53b13084%2f"
@@ -68,6 +69,11 @@ didl_library = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:u
 #for playlists metadata does not need to include any value for title or parent but unlike tracks, you do need to pass the uri to add_playlist_to_queue
 #for the record for An Unarmorial Age, the parentID was "00082064library%2fplaylists%2f%23library_playlists"
 didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.container.playlistContainer</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
+
+#didl_amazon and didl_catalog are the same
+didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10030000{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
+
+didl_catalog = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10030000{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
 
 with open('stations') as f:
     z = f.read()
@@ -225,30 +231,35 @@ def play(add, uris):
         #print('uri: ' + uri)
         #print("---------------------------------------------------------------")
 
-        playlist = False
+        requires_uri = False
+        # a few songs from Deborah album live you've never seen water are a playlist
         if 'library_playlist' in uri:
             i = uri.find(':')
             id_ = uri[i+1:]
             meta = didl_library_playlist.format(id_=id_)
-            playlist = True
+            requires_uri = True
         elif 'library' in uri and not 'static' in uri:
             # this is a bought track
             i = uri.find('library')
             ii = uri.find('.')
             id_ = uri[i:ii]
-            meta = didl_library.format(id_=id_)
+            #meta = didl_library.format(id_=id_)
+            meta = didl_amazon.format(id_=id_)
         elif 'static:library' in uri: # and 'static' in uri:
             # this is a track moved from prime into my account but not paid for
             # baffling but this sometimes generates correct meta data and sometimes doesn't
             i = uri.find('library')
             ii = uri.find('?')
             id_ = uri[i:ii]
-            meta = didl_library.format(id_=id_)
+            #meta = didl_library.format(id_=id_)
+            meta = didl_amazon.format(id_=id_)
         elif 'static:catalog' in uri: # and 'catalog' in uri:
-            # this is a track sitting in prime -- queues it up but right now
-            #I can't generate metadata
-            master.add_uri_to_queue(uri)
-            continue
+            i = uri.find('catalog')
+            ii = uri.find('?')
+            id_ = uri[i:ii]
+            #meta = didl_catalog.format(id_=id_)
+            meta = didl_amazon.format(id_=id_)
+            #requires_uri = True #would have thought this would be necessary but not
         else:
             print(f'The uri:{uri} was not recognized')
             continue
@@ -257,11 +268,10 @@ def play(add, uris):
         #print('---------------------------------------------------------------')
 
         # could not uri be why static:library (Amazon Prime not bought) doesn't work???
-        if not playlist:
-            my_add_to_queue('', meta)
+        if requires_uri:
+            my_add_to_queue('uri', meta)
         else:
-            # unlike adding a track to the queue, you need the uri
-            my_add_playlist_to_queue(uri, meta)
+            my_add_to_queue('', meta)
 
     if not add:
         # with check on is_coordinator may not need the try/except
