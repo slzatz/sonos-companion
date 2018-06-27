@@ -71,26 +71,6 @@ def play_album(album, artist, add=False):
     else:
         return f"I couldn't find any tracks from album {album}."
 
-def shuffle(artist):
-    if not artist:
-        return "I couldn't find the artist you were looking for.  Sorry."
-
-    s = 'artist:' + ' AND artist:'.join(artist.split())
-    result = solr.search(s, fl='album,title,uri', rows=500) 
-    count = len(result)
-    if not count:
-        return f"I couldn't find any tracks for {artist}"
-
-    print(f"Total track count for {artist} was {count}")
-    tracks = result.docs
-    k = 10 if count >= 10 else count
-    selected_tracks = random.sample(tracks, k)
-    uris = [t.get('uri') for t in selected_tracks]
-    sonos_actions.play(False, uris)
-    titles = [t.get('title', '')+'-'+t.get('album', '') for t in selected_tracks]
-    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
-    return f"I will shuffle:\n{title_list}."
-
 def mix(artist1, artist2):
     all_tracks = [] 
     for artist in (artist1, artist2):
@@ -178,29 +158,34 @@ class Sonos(Cmd):
     def do_master(self, s):
         '''Select the master speaker that will be controlled; no arguments'''
         sp = sonos_actions.get_sonos_players()
-        sp_names = {s.player_name.lower():s for s in sp}
+        if not sp:
+            self.msg = "Could not find a master"
+            return
+        #sp_names = {s.player_name.lower():s for s in sp}
+        sp_names = {s.player_name:s for s in sp}
 
         if s:
-            master = sonos_actions.master = sp_names.get(s.lower())
+            #master = sonos_actions.master = sp_names.get(s.lower())
+            master = sonos_actions.master = sp_names.get(s)
             if master is None:
                 self.msg = "Whatever you typed is not a speaker name"
                 return
-            new_master_name = s
+            master_name = s
         else:
             lst = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}"\
                for s in sp]
             z = list(zip(sp_names, lst))
-            new_master_name = self.select(z, "Which speaker do you want to become the master speaker? ")
-            master = sonos_actions.master = sp_names.get(new_master_name)
+            master_name = self.select(z, "Which speaker do you want to become the master speaker? ")
+            master = sonos_actions.master = sp_names.get(master_name)
 
         members = "+".join([s.player_name for s in sonos_actions.master.group if s!=master])
-        self.prompt = f"sonos[{new_master_name}{'+'+members if members else ''}]> "
-        self.msg = f"New master is {new_master_name}"
+        self.prompt = f"sonos[{master_name}{'+'+members if members else ''}]> "
+        self.msg = f"New master is {master_name}"
 
     def do_play(self, s):
         '''
-        With a phrase like 'Harvest by Neil Young' will find best match
-        and replace the queue with the selected track
+        Enter a phrase like 'Harvest by Neil Young' and the selected track
+        will replace whatever was in the queue
 
         With no phrase, will resume playing
         '''
@@ -222,8 +207,8 @@ class Sonos(Cmd):
 
     def do_add(self, s):
         '''
-        With a phrase like 'Harvest by Neil Young' will find best match
-        and add the selected track to the queue
+        Enter a phrase like 'Harvest by Neil Young' and the selected track
+        will be added to the end of the queue
         '''
         if 'by' in s:
             title, artist = s.split(' by ')
@@ -312,9 +297,13 @@ class Sonos(Cmd):
         self.msg = f"Master speaker {sonos_actions.master.player_name} now has no members"
 
     def do_what(self, s):
-        response = sonos_actions.what_is_playing()
+        '''
+        Short for what is playing?
+        '''
+
+        response = sonos_actions.current_track_info()
         if response:
-            self.msg = self.colorize(sonos_actions.what_is_playing(), 'green')
+            self.msg = self.colorize(sonos_actions.current_track_info(), 'green')
         else:
             self.msg = self.colorize("Nothing appears to be playing", 'red')
 
@@ -390,6 +379,10 @@ class Sonos(Cmd):
         self.msg = uri
 
     def do_station(self, s):
+        '''
+        play station entered; if no station entered
+        show available stations
+        '''
         if s:
             self.msg = sonos_actions.play_station(s)
         else:
@@ -420,10 +413,13 @@ class Sonos(Cmd):
             self.msg = self.colorize("OK, I won't play anything.", 'red')
 
     def do_lyrics(self, s):
-        track = sonos_actions.what_is_playing(text=False)
+        track = sonos_actions.current_track_info(text=False)
         if track:
             lyric = lyrics.get_lyrics(track['artist'], track['title'])
-            self.msg = "\n"+"\n".join(lyric)
+            if lyric:
+                self.msg = "\n"+"\n".join(lyric)
+            else:
+                self.msg = self.colorize(f"The track {track['title']} does not have lyrics available", 'red')
         else:
             self.msg = self.colorize("Nothing appears to be playing or there was another problem", 'red')
         

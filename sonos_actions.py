@@ -128,7 +128,7 @@ def my_add_playlist_to_queue(uri, metadata):
         return int(qnumber)
 
 # the 'action' functions
-def what_is_playing(text=True):
+def current_track_info(text=True):
     try:
         state = master.get_current_transport_info()['current_transport_state']
     except Exception as e:
