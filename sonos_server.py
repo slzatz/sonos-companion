@@ -36,8 +36,18 @@ def process_message():
     print("action =", action)
 
     if action == 'list_queue':
-        queue = sonos_actions.list_queue()
-        return json.dumps(queue)
+        q = sonos_actions.list_queue()
+        return json.dumps(q)
+
+    elif action == 'track_pos':
+        track_info = sonos_actions.current()
+        if track_info:
+            #p = int(track_info['playlist_position'])
+            p = track_info['playlist_position']
+        else:
+            p = "-1"
+        #return json.dumps([p])
+        return p
 
     elif action == 'list_artists':
         return json.dumps(sonos_actions.ARTISTS)
