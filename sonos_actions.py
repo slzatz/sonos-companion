@@ -96,6 +96,7 @@ def get_sonos_players():
     return sp    
 
 def my_add_to_queue(uri, metadata):
+    # generally don't need the uri (can be passed as '') although passing it in
     try:
         response = master.avTransport.AddURIToQueue([
                 ('InstanceID', 0),
@@ -106,26 +107,28 @@ def my_add_to_queue(uri, metadata):
                 ])
     except soco.exceptions.SoCoUPnPException as e:
         print("my_add_to_queue exception:", e)
+        print("uri:", uri)
+        print("metadata:", metadata)
         return 0
     else:
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
 
-def my_add_playlist_to_queue(uri, metadata):
-    try:
-        response = master.avTransport.AddURIToQueue([
-                ('InstanceID', 0),
-                ('EnqueuedURI', uri), #x-rincon-cpcontainer:0006206clibrary
-                ('EnqueuedURIMetaData', metadata),
-                ('DesiredFirstTrackNumberEnqueued', 0),
-                ('EnqueueAsNext', 0) #0
-                ])
-    except soco.exceptions.SoCoUPnPException as e:
-        print("my_add_to_queue exception:", e)
-        return 0
-    else:
-        qnumber = response['FirstTrackNumberEnqueued']
-        return int(qnumber)
+#def my_add_playlist_to_queue(uri, metadata):
+#    try:
+#        response = master.avTransport.AddURIToQueue([
+#                ('InstanceID', 0),
+#                ('EnqueuedURI', uri), #x-rincon-cpcontainer:0006206clibrary
+#                ('EnqueuedURIMetaData', metadata),
+#                ('DesiredFirstTrackNumberEnqueued', 0),
+#                ('EnqueueAsNext', 0) #0
+#                ])
+#    except soco.exceptions.SoCoUPnPException as e:
+#        print("my_add_to_queue exception:", e)
+#        return 0
+#    else:
+#        qnumber = response['FirstTrackNumberEnqueued']
+#        return int(qnumber)
 
 # the 'action' functions
 def current_track_info(text=True):
@@ -224,13 +227,11 @@ def play(add, uris):
         #print('uri: ' + uri)
         #print("---------------------------------------------------------------")
 
-        requires_uri = False
         # a few songs from Deborah album Like You've Never Seen Water are a playlist
         if 'library_playlist' in uri:
             i = uri.find(':')
             id_ = uri[i+1:]
             meta = didl_library_playlist.format(id_=id_)
-            requires_uri = True
         elif 'library' in uri and not 'static' in uri:
             # this is a bought track and question uploaded one?
             i = uri.find('library')
@@ -256,10 +257,7 @@ def play(add, uris):
         #print('meta: ',meta)
         #print('---------------------------------------------------------------')
 
-        if requires_uri:
-            my_add_to_queue('uri', meta)
-        else:
-            my_add_to_queue('', meta)
+        my_add_to_queue(uri, meta)
 
     if not add:
         # with check on is_coordinator may not need the try/except
