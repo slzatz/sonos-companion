@@ -150,8 +150,11 @@ class Sonos(Cmd):
         super().__init__(use_ipython=False, startup_script='sonos_cli2_startup')
 
     def preparse(self, s):
-        # this is only so when you do a track with no cmd it works
+        # this is supposed to be called before any parsing of input
+        # apparently do to a bug this is never called
+        print("1:preparse:self.raw =",s)
         self.raw = s
+        print("2:preparse:self.raw =",s)
         self.msg = ''
         return s
 
@@ -255,6 +258,7 @@ class Sonos(Cmd):
         self.msg = mix(artist1, artist2)
 
     def default(self, s):
+        self.raw = s
         if 'by' in self.raw:
             title, artist = self.raw.split(' by ')
         else:
