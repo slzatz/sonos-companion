@@ -18,6 +18,9 @@ from config import solr_uri
 
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
 
+def bold(text):
+    return "\033[1m" + text + "\033[0m"
+
 def play_track(title, artist, add): #note the decorator will set add to None
     # title must be present; artist is optional
 
@@ -312,9 +315,16 @@ class Sonos(Cmd):
             self.msg = self.colorize("Nothing appears to be playing", 'red')
 
     def do_current(self, s):
-        self.msg = sonos_actions.current()
+        '''Show the information that is contained in current_track_info'''
+        track_info = sonos_actions.current()
+        if track_info:
+            self.msg = "\n"+"\n\n".join([f"{bold(self.colorize(x, 'magenta'))}: {self.colorize(y, 'bold')}" for x,y in track_info.items()])+"\n"
+        else:
+            self.msg = "Nothing appears to be playing"
 
     def do_queue(self, s):
+        '''Show the queue and the currently playing track'''
+
         lst = sonos_actions.list_queue()
         if not lst:
             self.msg = "The queue is empty"
