@@ -15,6 +15,7 @@ from cmd2 import Cmd
 import sonos_actions
 import lyrics
 from config import solr_uri 
+from track_display import track_display
 
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
 
@@ -425,6 +426,14 @@ class Sonos(Cmd):
             self.do_album(album)
         else:
             self.msg = self.colorize("OK, I won't play anything.", 'red')
+
+    def do_browse(self, s):
+        uris = track_display(s)
+        if uris:
+            sonos_actions.play(False, uris)
+            self.onecmd_plus_hooks("queue")
+        else:
+            self.msg = "You didn't select anything"
 
     def do_lyrics(self, s):
         track = sonos_actions.current_track_info(text=False)
