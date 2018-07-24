@@ -29,9 +29,9 @@ solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10)
 
 actions = {'n':'note', 't':'title', 's':'select'}
 keys = {'B':'j', 'A':'k', 'C':'l', 'D':'h'}
-#uris = []
-queue = []
+
 def track_display(artist):
+    queue = [] #needs to be in function or only set to [] the first time function is called
     screen = curses.initscr()
     curses.start_color()
     curses.use_default_colors()
