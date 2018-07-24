@@ -430,7 +430,7 @@ class Sonos(Cmd):
     def do_browse(self, s):
         uris = track_display(s)
         if uris:
-            sonos_actions.play(False, uris)
+            sonos_actions.play(True, uris)
             self.onecmd_plus_hooks("queue")
         else:
             self.msg = "You didn't select anything"
