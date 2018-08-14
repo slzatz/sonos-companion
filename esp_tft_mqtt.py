@@ -48,7 +48,7 @@ import json
 import schedule
 from time import time,sleep
 import twitter
-from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET, intrinio_username, intrinio_password, exch_name, exch_pw, email
+from config import tide_key, news_key, aws_mqtt_uri as aws_host, slz_twitter_oauth_token, slz_twitter_oauth_token_secret, slz_twitter_CONSUMER_KEY, slz_twitter_CONSUMER_SECRET, intrinio_username, intrinio_password #exch_name, exch_pw, email
 from lmdb_p import * 
 import html
 from functools import partial
