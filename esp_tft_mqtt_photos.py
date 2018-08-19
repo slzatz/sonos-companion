@@ -91,9 +91,13 @@ def get_url(artist, title):
         url = None
          
     else:        
-        q = r.json()
-        
-        url = q['url'] if 'url' in q else None
+        try:
+            q = r.json()
+        except ValueError as e:
+            print e
+            url = None
+        else:
+            url = q['url'] if 'url' in q else None
         
         if url and url.find("action=edit") != -1: 
             url = None 
