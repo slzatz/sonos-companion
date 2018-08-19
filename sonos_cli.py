@@ -432,6 +432,7 @@ class Sonos(Cmd):
         if uris:
             sonos_actions.play(True, uris)
             self.onecmd_plus_hooks("queue")
+            self.msg = ''
         else:
             self.msg = "You didn't select anything"
 

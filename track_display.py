@@ -28,7 +28,7 @@ from config import solr_uri
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
 
 actions = {'n':'note', 't':'title', 's':'select'}
-keys = {'B':'j', 'A':'k', 'C':'l', 'D':'h'}
+keymap = {258:'j', 259:'k', 260:'h', 261:'l'}
 
 def track_display(artist):
     queue = [] #needs to be in function or only set to [] the first time function is called
@@ -41,6 +41,7 @@ def track_display(artist):
     curses.init_pair(4, 15, -1)
     color_map = {'{blue}':3, '{red}':1, '{green}':2,'{white}':4}
     curses.curs_set(0)
+    screen.keypad(True) #claims to catch arrow keys -- we'll see
     curses.cbreak() # respond to keys without needing Enter
     curses.noecho()
     size = screen.getmaxyx()
@@ -57,9 +58,10 @@ def track_display(artist):
     s = 'artist:' + ' AND artist:'.join(artist.split())
     result = solr.search(s, fl='album,title,uri', rows=500) 
     count = len(result)
-    last_page = count//max_rows
     if not count:
         return f"I couldn't find any tracks for {artist}"
+    last_page = count//max_rows
+    last_page_max_rows = count%max_rows
 
     print(f"Total track count for {artist} was {count}")
     tracks = result.docs
@@ -105,72 +107,61 @@ def track_display(artist):
     draw()
     win.addstr(row_num, 1, ">")  #j
     win.refresh()
-    accum = []
-    arrow = False
+
+    page_max_rows = max_rows if last_page else last_page_max_rows
     while 1:
         n = screen.getch()
         if n == -1:
             continue
 
-        c = chr(n)
-        if arrow:
-            accum.append(c)
-            if len(accum) == 2:
-                c = keys.get(accum[-1], 'z')
-                accum = []
-                arrow = False
+        c = keymap.get(n, chr(n))
 
-        elif c == '\x1b': #o33:
-            arrow = True
-            continue
-
-        elif c == '\n': #10:
+        if c in ['\n', 'q']:
             curses.nocbreak()
             screen.keypad(False)
             curses.echo()
             curses.endwin()
-            return 
+            if c == '\n':
+                return [tracks[i]['uri'] for i in queue]
+            else:
+                return
 
-        elif c == 'q': #10:
-            curses.nocbreak()
-            screen.keypad(False)
-            curses.echo()
-            curses.endwin()
-            uris = [tracks[i]['uri'] for i in queue]
-            return uris
-
-
-        if c == 's': #needs to be if and not elif
-            #track = tracks[page*max_rows+row_num-1 # remove
+        elif c == 's': 
             track_num = (page*max_rows)+row_num-1
             track = tracks[track_num]
             if track_num in queue:
                 queue.remove(track_num)
-                win.addstr(row_num, 2, f"{track_num+1}. {track.get('title', '')[:max_chars_line]} {track.get('album', '')}")  #(y,x)
+                win.addstr(row_num, 2, 
+                           f"{track_num+1}. {track.get('title', '')[:max_chars_line]}"\
+                           f" {track.get('album', '')}")  #(y,x)
             else:
                 queue.append(track_num)
-                win.addstr(row_num, 2, f"{track_num+1}. {track.get('title', '')[:max_chars_line]} {track.get('album', '')}", curses.color_pair(1)|curses.A_BOLD)  #(y,x)
+                win.addstr(row_num, 2, 
+                           f"{track_num+1}. {track.get('title', '')[:max_chars_line]}"\
+                           f" {track.get('album', '')}", curses.color_pair(1)|curses.A_BOLD)  #(y,x)
                 
-            #uris.append(track.get('uri')) # remove
             win.refresh()
             
         elif c == 'k':
+
             win.addstr(row_num, 1, " ")  #k
             row_num-=1
             if row_num==0:
                 page = (page - 1) if page > 0 else last_page
-                row_num = max_rows
                 draw()  
+                page_max_rows = max_rows if not page==last_page else last_page_max_rows
+                row_num = page_max_rows
             win.addstr(row_num, 1, ">")  #k
             win.refresh()
 
         elif c == 'j':
             win.addstr(row_num, 1, " ")  #j
             row_num+=1
-            if row_num==max_rows+1:
+            if row_num==page_max_rows+1:
                 page = (page + 1) if page < last_page else 0
-                row_num = 1
                 draw()  
+                row_num = 1
+                page_max_rows = max_rows if not page==last_page else last_page_max_rows
             win.addstr(row_num, 1, ">")  #j
             win.refresh()
 
@@ -181,17 +172,16 @@ def track_display(artist):
             row_num = 1
             win.addstr(row_num, 1, ">")  #j
             win.refresh()
+            page_max_rows = max_rows if not page==last_page else last_page_max_rows
 
         elif c == 'l':
             win.addstr(row_num, 1, " ")  #j
             page = (page + 1) if page < last_page else 0
-            # decided at moment not to implement changes that handle last page
-            #if page==last_page:
-            #    page_max_rows = len(tasks)%last_page
             draw()  
             row_num = 1
             win.addstr(row_num, 1, ">")  #j
             win.refresh()
+            page_max_rows = max_rows if not page==last_page else last_page_max_rows
 
         screen.move(0, size[1]-50)
         screen.clrtoeol()
