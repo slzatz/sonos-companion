@@ -12,6 +12,7 @@ pi to AWS mqtt broker under the topic sonos/{loc}/track
 import paho.mqtt.client as mqtt
 import json
 import time
+import threading
 import wand.image
 import requests
 from io import BytesIO
@@ -20,6 +21,17 @@ import httplib2 #needed by the google custom search engine module apiclient
 from config import aws_mqtt_uri, google_api_key
 from artist_images_db import *
 
+def check():
+    while 1:
+        c = session.connection() #########
+        try:
+            c.execute("select 1")
+        except (sqla_exc.ResourceClosedError, sqla_exc.StatementError) as e:
+            print(f"{datetime.datetime.now()} - {e}")
+        time.sleep(500)
+
+th = threading.Thread(target=check, daemon=True)
+th.start()
 trackinfo = {"artist":None, "track_title":None, "lyrics":None, "images":[]}
 new_track_info = False
 
@@ -72,7 +84,10 @@ def display_image(image):
     ww = img.width
     hh = img.height
     sq = ww if ww <= hh else hh
-    t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
+    if ww > hh:
+        t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
+    else:
+        t= ((ww-sq)//2, 0, (ww+sq)//2, sq)
     img.crop(*t)
     # resize should take the image and enlarge it without cropping 
     img.resize(800,800) #400x400
@@ -122,7 +137,7 @@ def get_artist_images(name):
     return images 
 
 def on_connect(client, userdata, flags, rc):
-    print("(Re)Connected with result code "+str(rc)) 
+    print(f"(Re)Connected with result code {rc}") 
 
     # Subscribing in on_connect() means that if we lose the 
     # connection and reconnect then subscriptions will be renewed.
@@ -169,7 +184,7 @@ def on_message(client, userdata, msg):
             print("fewer than 5 images so getting new set of images for artist")
             images = get_artist_images(artist)
             if not images:
-                print "Could not find images for {}".format(artist)
+                print(f"Could not find images for {artist}")
 
     new_track_info = True
     trackinfo.update({"artist":artist, "track_title":track_title, "images":images})
