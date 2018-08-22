@@ -153,9 +153,64 @@ class Sonos(Cmd):
 
         super().__init__(use_ipython=False, startup_script='sonos_cli2_startup')
 
-    def preparse(self, s):
+    def select2(self, opts, prompt="Your choice? "):
+    #def select2(self, opts: Union[str, List[str], List[Tuple[str, Optional[str]]]], prompt: str='Your choice? ') -> str:
+        """Presents a numbered menu to the user.  Modelled after
+           the bash shell's SELECT.  Returns the item chosen.
+
+           Argument ``opts`` can be:
+
+             | a single string -> will be split into one-word options
+             | a list of strings -> will be offered as options
+             | a list of tuples -> interpreted as (value, text), so
+                                   that the return value can differ from
+                                   the text advertised to the user """
+        local_opts = opts
+        if isinstance(opts, str):
+            local_opts = list(zip(opts.split(), opts.split()))
+        fulloptions = []
+        for opt in local_opts:
+            if isinstance(opt, str):
+                fulloptions.append((opt, opt))
+            else:
+                try:
+                    fulloptions.append((opt[0], opt[1]))
+                except IndexError:
+                    fulloptions.append((opt[0], opt[0]))
+        ###############################################
+        self.poutput('\n')
+        ###############################################
+        for (idx, (_, text)) in enumerate(fulloptions):
+            self.poutput('  %2d. %s\n' % (idx + 1, text))
+        while True:
+            response = input(prompt)
+
+            #if rl_type != RlType.NONE:
+            #    hlen = readline.get_current_history_length()
+            #    if hlen >= 1 and response != '':
+            #        readline.remove_history_item(hlen - 1)
+            ##############################################
+            if not response:
+                return
+            ##############################################
+            # below probably doesn't work but was added to help advance pages
+            if response == 'q':
+                return -1
+            ##############################################
+
+            try:
+                choice = int(response)
+                result = fulloptions[choice - 1][0]
+                break
+            except (ValueError, IndexError):
+                self.poutput("{!r} isn't a valid choice. Pick a number between 1 and {}:\n".format(response,
+                                                                                                   len(fulloptions)))
+        return result
+
+    def preparse___(self, s):
         # this is supposed to be called before any parsing of input
         # apparently do to a bug this is never called
+        # bug fixed, can't remember what I wanted to do 
         print("1:preparse:self.raw =",s)
         self.raw = s
         print("2:preparse:self.raw =",s)
@@ -243,7 +298,7 @@ class Sonos(Cmd):
             self.msg = sonos_actions.shuffle(s)
         else:
             artists = sonos_actions.ARTISTS
-            artist = self.select(artists, "Which artist? ")
+            artist = self.select2(artists, "Which artist? ")
             if artist:
                 sonos_actions.shuffle(artist)
                 self.msg = self.colorize(f"I'll play {artist} now", 'green')
@@ -350,7 +405,7 @@ class Sonos(Cmd):
                 cur_pos = int(track_info['playlist_position'])
                 q[cur_pos-1] = (cur_pos,self.colorize(q[cur_pos-1][1], 'green'))
 
-            pos = self.select(q, "Which track? ")
+            pos = self.select2(q, "Which track? ")
 
             if pos:
                 sonos_actions.play_from_queue(pos-1)
@@ -389,7 +444,7 @@ class Sonos(Cmd):
         tracks = result.docs
         # list of tuples to select is [(uri, title from album),
         # (uri2, title2 from album2) ...]
-        uri = self.select([(t.get('uri'), t.get('title', '')+" from "+t.get('album', '')) for t in tracks], "Which track? ")
+        uri = self.select2([(t.get('uri'), t.get('title', '')+" from "+t.get('album', '')) for t in tracks], "Which track? ")
         sonos_actions.play(True, [uri])
         self.msg = uri
 
@@ -404,7 +459,7 @@ class Sonos(Cmd):
             stations = sonos_actions.STATIONS
             lst = [(z[0], z[1][0]) for z in stations.items()]
             #lst.append((0, "Do nothing"))
-            station = self.select(lst, "Which station? ")
+            station = self.select2(lst, "Which station? ")
             if station:
                 sonos_actions.play_station(station)
                 self.msg = self.colorize(f"I'll play {station} now", 'green')
@@ -420,7 +475,7 @@ class Sonos(Cmd):
             result = solr.search(**{'q':'album:(c)', 'fl':'album', 'rows':200, 'group':'true', 'group.field':'album'})
             lst = [z['doclist']['docs'][0]['album'] for z in result.grouped['album']['groups']]
             #lst.append((0, "Do nothing"))
-            album = self.select(lst, "Which album? ")
+            album = self.select2(lst, "Which album? ")
 
         if album:
             self.do_album(album)
