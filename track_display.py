@@ -88,14 +88,16 @@ def track_display(artist):
                 break
 
             try:
-                #z = '+' if i-1 in queue else '-'
-                #screen.addstr(size[0]-1, 0, s, curses.color_pair(3)|curses.A_BOLD)
                 if i-1 in queue:
-                    win.addstr(n, 2, f"{i}. {track.get('title', '')[:max_chars_line]} {track.get('album', '')}", curses.color_pair(1)|curses.A_BOLD)  #(y,x)
+                    win.addstr(n, 2, 
+                        f"{i}. {track.get('title', '')[:max_chars_line]} "\
+                        f"<{track.get('album', '')}>",
+                        curses.color_pair(1)|curses.A_BOLD)  #(y,x)
                 else:
-                    win.addstr(n, 2, f"{i}. {track.get('title', '')[:max_chars_line]} {track.get('album', '')}")  #(y,x)
+                    win.addstr(n, 2, 
+                        f"{i}. {track.get('title', '')[:max_chars_line]} "\
+                        f"<{track.get('album', '')}>")  #(y,x)
                     
-                #win.addstr(n, 2, f"{i}. {task.title[:max_chars_line]} {'[c]' if task.completed else ''}")  #(y,x)
             except Exception as e:
                  pass
 
@@ -132,13 +134,14 @@ def track_display(artist):
             if track_num in queue:
                 queue.remove(track_num)
                 win.addstr(row_num, 2, 
-                           f"{track_num+1}. {track.get('title', '')[:max_chars_line]}"\
-                           f" {track.get('album', '')}")  #(y,x)
+                      f"{track_num+1}. {track.get('title', '')[:max_chars_line]} "\
+                      f"<{track.get('album', '')}>")  #(y,x)
             else:
                 queue.append(track_num)
                 win.addstr(row_num, 2, 
-                           f"{track_num+1}. {track.get('title', '')[:max_chars_line]}"\
-                           f" {track.get('album', '')}", curses.color_pair(1)|curses.A_BOLD)  #(y,x)
+                      f"{track_num+1}. {track.get('title', '')[:max_chars_line]} "\
+                      f"<{track.get('album', '')}>",
+                      curses.color_pair(1)|curses.A_BOLD)  #(y,x)
                 
             win.refresh()
             
