@@ -37,6 +37,8 @@ def display_image(image):
         return
 
     print(f"status code = {response.status_code}")
+    print(f"encoding = {response.encoding}")
+    print(f"is ascii = {response.content.isascii()}")
     if response.status_code != 200:
         print(f"{image.link} returned a {response.status_code}")
         image.ok = False
@@ -44,8 +46,10 @@ def display_image(image):
         print(f"{image.link} ok set to False")
         return
         
-    if response.content.isascii():
-        print(f"{image.link} returned ascii text and not an image")
+    # it is possible to have encoding == None and ascii == True
+    if response.encoding or response.content.isascii():
+        print(f"{image.link} returned ascii={response.content.isascii()} "\
+              f"and encoding={response.encoding} and is not an image")
         image.ok = False
         session.commit()
         print(f"{image.link} ok set to False")
@@ -127,4 +131,4 @@ while 1:
             # need to delete the bad ones and get new ones
             get_artist_images(artist)
         
-    time.sleep(3)
+    time.sleep(10)
