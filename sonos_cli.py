@@ -151,7 +151,7 @@ class Sonos(Cmd):
         self.quit = False
         self.msg = ''
 
-        super().__init__(use_ipython=False, startup_script='sonos_cli2_startup')
+        super().__init__(use_ipython=False, startup_script='sonos_cli_startup')
 
     def select2(self, opts, prompt="Your choice? "):
     #def select2(self, opts: Union[str, List[str], List[Tuple[str, Optional[str]]]], prompt: str='Your choice? ') -> str:
