@@ -63,7 +63,8 @@ def display_image(image):
         print(f"{image.link} ok set to False")
         return
         
-    if response.content.isascii():
+    # it is possible to have encoding == None and ascii == True
+    if response.encoding or response.content.isascii():
         print(f"{image.link} returned ascii text and not an image")
         image.ok = False
         session.commit()
