@@ -45,6 +45,7 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
 from config import solr_uri
+from sonos_config import STATIONS
 
 soco_config.CACHE_ENABLED = False
 
@@ -53,6 +54,7 @@ solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10)
 #last.fm 
 #base_url = "http://ws.audioscrobbler.com/2.0/"
 
+# the meta formats should be imported from sonos_config
 # pandora format changed at some point and was updated on 05302018
 # format is "x-sonosapi-radio:ST:138764603804051010?sid=236&amp;flags=8300&amp;sn=2"
 # numeric part is the url of the station if you access through pandora web site
@@ -67,16 +69,6 @@ didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/
 #this is the current format (06252018) that works for my uploaded music and
 #music bought from Amazon and for music moved from prime and left in prime
 didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10030000{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
-
-with open('stations') as f:
-    z = f.read()
-
-STATIONS = json.loads(z)
-
-with open('artists') as f:
-    zz = f.read()
-
-ARTISTS = json.loads(zz)
 
 def get_sonos_players():
     # master is assigned in sonos_cli2.py
