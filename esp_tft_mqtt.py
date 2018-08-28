@@ -1,3 +1,4 @@
+#!bin/python
 '''
 python3
 This script gathers information about things like weather and tides using Web apis
@@ -36,9 +37,9 @@ sequence:1
 reminders:{'useDefault': True}
 '''
 import os
-import sys
-home = os.path.split(os.getcwd())[0]
-sys.path =  sys.path + [os.path.join(home,'sqlalchemy','lib')] + [os.path.join(home, 'twitter')] + [os.path.join(home, 'mylistmanager3')]
+#import sys
+#home = os.path.split(os.getcwd())[0]
+#sys.path =  sys.path + [os.path.join(home,'sqlalchemy','lib')] + [os.path.join(home, 'twitter')] + [os.path.join(home, 'mylistmanager3')]
 from operator import itemgetter
 from itertools import cycle
 import requests
