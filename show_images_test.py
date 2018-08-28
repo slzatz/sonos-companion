@@ -15,7 +15,8 @@ from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from config import google_api_key
 from artist_images_db import *
-from artists import artists
+#from artists import artists
+from sonos_config import ARTISTS as artists
 import random
 
 num_artists = session.query(Artist).count()
