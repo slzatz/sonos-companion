@@ -52,11 +52,11 @@ def track_display(artist):
 
     page = 0
     row_num = 1
-    max_chars_line = size[1] - 10
+    max_chars_line = size[1] - 2
     max_rows = size[0]-4
 
     s = 'artist:' + ' AND artist:'.join(artist.split())
-    result = solr.search(s, fl='album,title,uri', rows=500) 
+    result = solr.search(s, fl='album,title,uri', rows=750) 
     count = len(result)
     if not count:
         return f"I couldn't find any tracks for {artist}"
@@ -88,15 +88,20 @@ def track_display(artist):
                 break
 
             try:
+                title = track.get('title', '')[:max_chars_line-14]
+                r = max_chars_line - len(title)
                 if i-1 in queue:
                     win.addstr(n, 2, 
-                        f"{i}. {track.get('title', '')[:max_chars_line]} "\
-                        f"<{track.get('album', '')}>",
+                        #f"{i}. {track.get('title', '')[:max_chars_line-14]} "\
+                        f"{i}. {title} <{track.get('album', '')[:r-9]}>",
                         curses.color_pair(1)|curses.A_BOLD)  #(y,x)
+                        #f"<{track.get('album', '')[:8]}>",
                 else:
                     win.addstr(n, 2, 
-                        f"{i}. {track.get('title', '')[:max_chars_line]} "\
-                        f"<{track.get('album', '')}>")  #(y,x)
+                        #f"{i}. {track.get('title', '')[:max_chars_line-14]} "\
+                        f"{i}. {title} <{track.get('album', '')[:r-9]}>")
+                        #f"<{track.get('album', '')[:r-4]}>")
+                        #f"<{track.get('album', '')[:8]}>",
                     
             except Exception as e:
                  pass

@@ -34,14 +34,15 @@ def play_track(title, artist, add): #note the decorator will set add to None
 
     result = solr.search(s, rows=1) 
     if not len(result):
-        return f"I couldn't find the track {title} by {artist}."
+        #return f"I couldn't find the track {title}{' by'+artist if artist else ''}."
+        return
 
     track = result.docs[0]
     uri = track['uri']
     sonos_actions.play(add, [uri])
-    action = 'add' if add else 'play'
-    return f"I will {action} {track.get('title', '')} by " \
-            f"{track.get('artist', '')} from album {track.get('album', '')}"
+    #action = 'add' if add else 'play'
+    return f"{track.get('title', '')} by {track.get('artist', '')} " \
+            f"from album {track.get('album', '')}"
 
 def play_album(album, artist, add=False):
     # album must be present; artist is optional
@@ -58,22 +59,23 @@ def play_album(album, artist, add=False):
                          sort='score desc', rows=25) 
 
     tracks = result.docs
-    if  tracks:
-        selected_album = tracks[0]['album']
-        try:
-            tracks = sorted([t for t in tracks],key=itemgetter('track'))
-        except KeyError:
-            pass
-        # The if t['album']==selected_album only comes into play
-        # if we retrieved more than one album
-        selected_tracks = [t for t in tracks if t['album']==selected_album]
-        uris = [t.get('uri') for t in selected_tracks]
-        sonos_actions.play(False, uris)
-        titles = [t.get('title', '')+'-'+t.get('artist', '') for t in selected_tracks]
-        title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
-        return f"I will play {len(uris)} tracks from {selected_album}:\n{title_list}."
-    else:
-        return f"I couldn't find any tracks from album {album}."
+    if  not tracks:
+        return
+        
+    selected_album = tracks[0]['album']
+    try:
+        tracks = sorted([t for t in tracks],key=itemgetter('track'))
+    except KeyError:
+        pass
+    # The if t['album']==selected_album only comes into play
+    # if we retrieved more than one album
+    selected_tracks = [t for t in tracks if t['album']==selected_album]
+    uris = [t.get('uri') for t in selected_tracks]
+    sonos_actions.play(False, uris)
+    titles = [t.get('title', '')+'-'+t.get('artist', '') for t in selected_tracks]
+    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+    #return f"I will play {len(uris)} tracks from {selected_album}:\n{title_list}."
+    return f"{len(uris)} tracks from {selected_album}:\n{title_list}"
 
 def mix(artist1, artist2):
     all_tracks = [] 
@@ -260,12 +262,17 @@ class Sonos(Cmd):
         else:
             title, artist = s, ''
 
-        # play adds to queue and doesn't erase it
-        self.msg = play_track(title, artist, True)
-        lst = sonos_actions.list_queue()
-        sonos_actions.play_from_queue(len(lst)-1)
-        self.msg.replace('add', 'play', 1)
-        self.msg = self.msg+f", which is {len(lst)} in the queue"
+        # play adds to queue and doesn't erase it and doesn't actually play it
+        # should be add to queue
+        #return f"I couldn't find the track {title}{' by'+artist if artist else ''}."
+        #self.msg = play_track(title, artist, True)
+        response = play_track(title, artist, True)
+        if response:
+            lst = sonos_actions.list_queue()
+            sonos_actions.play_from_queue(len(lst)-1)
+            self.msg = f"I'll play {response}, which is {len(lst)} in the queue"
+        else:
+            self.msg = f"I couldn't find {s}."
 
     def do_add(self, s):
         '''
@@ -276,7 +283,12 @@ class Sonos(Cmd):
             title, artist = s.split(' by ')
         else:
             title, artist = s ,''
-        self.msg = play_track(title, artist, True)
+        response = play_track(title, artist, True)
+        if response:
+            lst = sonos_actions.list_queue()
+            self.msg = f"I'll add {response}, which is {len(lst)} in the queue"
+        else:
+            self.msg = f"I couldn't find {s}."
 
     def do_album(self, s):
         '''
@@ -287,7 +299,12 @@ class Sonos(Cmd):
             album, artist = s.split(' by ')
         else:
             album, artist = s, ''
-        self.msg = play_album(album, artist)
+        # album is actually played in play_album method
+        response = play_album(album, artist)
+        if response:
+            self.msg = f"I'll play {response}"
+        else:
+            self.msg = f"I couldn't find {s}."
 
     def do_shuffle(self, s):
         '''
