@@ -101,8 +101,8 @@ def get_artist_images(name):
     http = httplib2.Http()
     service = discovery.build('customsearch', 'v1',
                               developerKey=google_api_key, http=http)
-    z = service.cse().list(q=name, searchType='image', imgType='face',
-                           imgSize='xlarge', num=10,
+    z = service.cse().list(q=name, searchType='image', imgType='face', #alternative type is photo
+                           imgSize='xlarge', num=10, 
                            cx='007924195092800608279:0o2y8a3v-kw').execute() 
 
     try:
