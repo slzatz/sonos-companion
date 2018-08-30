@@ -1,19 +1,12 @@
+#!bin/python
 '''
 This script is imported to enable access now to the AWS EC2 artist_images db
 The lines below may be better way to pull images (uses xlarge and face)
 service = discovery.build('customsearch', 'v1',  developerKey=g_api_key, http=http)
 z = service.cse().list(q=artist, start=1, imgType='face', searchType='image', imgSize='xlarge', num=10, cx='007924195092800608279:0o2y8a3v-kw').execute() 
 '''
-#Need to put sqlalchemy on the sys.path
-import os
-import sys
 import random
-#from config import RDS_URI
-from config import ec_id, ec_pw, ec_host
-home = os.path.split(os.getcwd())[0]
-sqla_dir = os.path.join(home,'sqlalchemy','lib')
-sys.path = [sqla_dir] + sys.path
-
+from config import RDS_URI
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
@@ -50,7 +43,7 @@ class Image(Base):
     def __repr__(self):
         return "<artist_id={}; link={}; ({},{})>".format(self.artist_id, self.link, self.width, self.height)
 
-engine = create_engine('postgresql+psycopg2://{}:{}@{}:5432/artist_images'.format(ec_id, ec_pw, ec_host), echo=False)
+engine = create_engine(f"{RDS_URI}/artist_images", echo=False)
 #Base.metadata.create_all(engine) # only creates tables if they don't exist
 
 #conn = engine.connect()
@@ -68,7 +61,7 @@ if __name__ == '__main__':
     rows = session.query(Artist).count()
     print("Number of artists", rows)
 
-    for n in range(5):
+    for n in range(2):
         r = random.randint(1, rows)
         artist = session.query(Artist).get(r)
         if artist:
