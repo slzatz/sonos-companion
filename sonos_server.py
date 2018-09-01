@@ -1,7 +1,11 @@
 #!bin/python
 '''
-python3 script that imports sonos_actions.py and currently support m5sonos_menuX.py
-using urequests, the m5 sends json in the form of:{'action':'list_queue'}
+python3.x script running on local raspberry pi -- listens to
+and interacts with whatever master speaker is selected.
+Flask-based web app that receives json requests in the form of
+the form of:{'action':'list_queue'}
+Imports sonos_actions.py and supports m5sonos_menuX.py (a sonos remote)
+running on an m5stack and using urequests. 
 '''
 
 from flask import Flask, request #Response
@@ -41,12 +45,7 @@ def process_message():
 
     elif action == 'track_pos':
         track_info = sonos_actions.current()
-        if track_info:
-            #p = int(track_info['playlist_position'])
-            p = track_info['playlist_position']
-        else:
-            p = "-1"
-        #return json.dumps([p])
+        p = track_info['playlist_position'] if track_info else "-1"
         return p
 
     elif action == 'list_artists':
