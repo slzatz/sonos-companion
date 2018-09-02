@@ -45,7 +45,8 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
 from config import solr_uri
-from sonos_config import STATIONS
+from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO, \
+                         DIDL_LIBRARY_PLAYLIST, DIDL_AMAZON, ARTISTS
 
 soco_config.CACHE_ENABLED = False
 
@@ -223,25 +224,25 @@ def play(add, uris):
         if 'library_playlist' in uri:
             i = uri.find(':')
             id_ = uri[i+1:]
-            meta = didl_library_playlist.format(id_=id_)
+            meta = DIDL_LIBRARY_PLAYLIST.format(id_=id_)
         elif 'library' in uri and not 'static' in uri:
             # this is a bought track and question uploaded one?
             i = uri.find('library')
             ii = uri.find('.')
             id_ = uri[i:ii]
-            meta = didl_amazon.format(id_=id_)
+            meta = DIDL_AMAZON.format(id_=id_)
         elif 'static:library' in uri: # and 'static' in uri:
             # track moved from Prime into my account but not paid for
             i = uri.find('library')
             ii = uri.find('?')
             id_ = uri[i:ii]
-            meta = didl_amazon.format(id_=id_)
+            meta = DIDL_AMAZON.format(id_=id_)
         elif 'static:catalog' in uri: # and 'catalog' in uri:
             # track sitting in Prime not moved to my music
             i = uri.find('catalog')
             ii = uri.find('?')
             id_ = uri[i:ii]
-            meta = didl_amazon.format(id_=id_)
+            meta = DIDL_AMAZON.format(id_=id_)
         else:
             print(f'The uri:{uri} was not recognized')
             continue
@@ -266,7 +267,7 @@ def play_station(station):
         if uri.startswith('x-sonosapi-radio'):
             meta = meta_format_pandora.format(title=station[0])
         elif uri.startswith('x-sonosapi-stream'):
-            meta = meta_format_radio.format(title=station[0])
+            meta = META_FORMAT_RADIO.format(title=station[0])
 
         master.play_uri(uri, meta, station[0]) # station[0] is the title of the station
 
