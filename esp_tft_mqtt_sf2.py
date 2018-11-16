@@ -1,3 +1,4 @@
+#!bin/python
 '''
 python3
 This script gathers information about things like weather and tides using Web apis
