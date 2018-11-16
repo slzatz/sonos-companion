@@ -273,7 +273,15 @@ def play_station(station):
 
 def list_queue():
     queue = master.get_queue()
-    response = [f"{t.title} from {t.album} by {t.creator}" for t in queue]
+    response = []
+    for t in queue:
+        if type(t) == soco.data_structures.DidlMusicTrack:
+            response.append(f"{t.title} from {t.album} by {t.creator}")
+        else:
+            response.append(f"{t.metadata['title']} (MSTrack)")
+    #response = [f"{t.title} by {t.artist}" for t in queue]
+    #response = [f"{t}" for t in queue]
+    #response = [f"{type(t)} -- {dir(t)}" for t in queue]
     return response
 
 def clear_queue():
