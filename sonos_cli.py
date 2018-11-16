@@ -347,8 +347,8 @@ class Sonos(Cmd):
     def do_quieter(self, s):
         self.msg = turn_volume('quieter')
 
-    def do_set(self, s):
-        self.msg = set_volume(int(s))
+    #def do_set(self, s):
+    #    self.msg = set_volume(int(s))
 
     def do_pause(self, s):
         sonos_actions.playback('pause')
@@ -431,6 +431,7 @@ class Sonos(Cmd):
                 self.msg = self.colorize("OK, I won't play anything.", 'red')
 
     def do_clear(self, s):
+        '''Clear the queue'''
         sonos_actions.clear_queue()
         self.msg = "The queue has been cleared."
 
