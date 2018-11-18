@@ -115,7 +115,7 @@ def twitter_feed():
     tweets = ["{} - {}".format(x['user']['screen_name'],html.unescape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
-    data = {"header":"twitter", "text":tweets, "pos":1, "font size":14, "dest":(25,725)} #expects a list
+    data = {"header":"twitter", "text":tweets, "pos":1, "font size":14, "dest":(25,800)} #expects a list
     publish(payload=json.dumps(data))
 
 def news():
@@ -259,6 +259,18 @@ def stock_quote():
     publish(payload=json.dumps(data))
 
 
+def todo():
+    #pos = 3
+    #tasks = session.query(Task).join(Context).filter(Context.title=='work', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(desc(Task.star))
+    tasks = session.query(Task).join(Context).filter(Context.title=='todo', Task.star==True, Task.completed==None, Task.deleted==False)
+    titles = ['*'+task.title if task.star else task.title for task in tasks]
+    #shuffle(titles)
+    print(datetime.datetime.now())
+    print(repr(titles).encode('ascii', 'ignore'))
+
+    data = {"header":"Things you better do", "text":titles, "pos":3, "dest":(1075,10)} #expects a list
+    publish(payload=json.dumps(data))
+
 def work_stuff():
     #pos = 3
     #tasks = session.query(Task).join(Context).filter(Context.title=='work', Task.priority==3, Task.completed==None, Task.deleted==False).order_by(desc(Task.star))
@@ -272,7 +284,7 @@ def work_stuff():
     publish(payload=json.dumps(data))
 
 def google_calendar():
-    #pos = 4
+    #pos = 6
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
@@ -311,7 +323,7 @@ def google_calendar():
 
         text.append(item)
 
-    data = {"header":"Google Calendar", "text":text, "pos":4, "dest":(-600,-800)} #expects a list
+    data = {"header":"Google Calendar", "text":text, "pos":6, "dest":(-600, 50)} #expects a list
     publish(payload=json.dumps(data))
 
 def gmail():
@@ -336,7 +348,7 @@ def gmail():
 
     if not text:
         text = ['#There are no unread messages in Micropython or Deborah']
-    data = {"header":"Gmail", "text":text, "pos":4, "dest":(-600,-800), "bullets":False} #expects a list
+    data = {"header":"Gmail", "text":text, "pos":4, "font size":12, "dest":(-600,-800), "bullets":False} #expects a list
     publish(payload=json.dumps(data))
 
 def facts():
@@ -383,7 +395,7 @@ def facts():
     
     publish(payload=json.dumps(data))
 
-def ticklers(): 
+def poems(): 
     # for the moment quotations and poems are in test and I am appropriating this since Tickler isn't really doing anything useful for me
     #pos = 13
     #task = session.query(Task).join(Context).filter(or_(Context.title=='work', Context.title=='programming'), Task.star==True, Task.completed==None, Task.deleted==False).order_by(func.random()).first()
@@ -403,7 +415,7 @@ def ticklers():
 
     text.extend(note.split("\n"))
 
-    data.update({"header":"Poems ...", "text":text[:40], "pos":13, "bullets":False, "font size":16, "dest":(450,-800)}) #text expects a list
+    data.update({"header":"Poems ...", "text":text[:40], "pos":13, "bullets":False, "font size":14, "dest":(450,100)}) #text expects a list
     publish(payload=json.dumps(data))
 
 def industry(): 
@@ -517,12 +529,20 @@ schedule.every().hour.at(':30').do(twitter_feed)
 schedule.every().hour.at(':40').do(twitter_feed)
 schedule.every().hour.at(':50').do(twitter_feed)
 
-schedule.every().hour.at(':01').do(work_stuff)
-schedule.every().hour.at(':11').do(work_stuff)
-schedule.every().hour.at(':21').do(work_stuff)
-schedule.every().hour.at(':31').do(work_stuff)
-schedule.every().hour.at(':41').do(work_stuff)
-schedule.every().hour.at(':51').do(work_stuff)
+if 0:
+    schedule.every().hour.at(':01').do(work_stuff)
+    schedule.every().hour.at(':11').do(work_stuff)
+    schedule.every().hour.at(':21').do(work_stuff)
+    schedule.every().hour.at(':31').do(work_stuff)
+    schedule.every().hour.at(':41').do(work_stuff)
+    schedule.every().hour.at(':51').do(work_stuff)
+
+schedule.every().hour.at(':01').do(todo)
+schedule.every().hour.at(':11').do(todo)
+schedule.every().hour.at(':21').do(todo)
+schedule.every().hour.at(':31').do(todo)
+schedule.every().hour.at(':41').do(todo)
+schedule.every().hour.at(':51').do(todo)
 
 schedule.every().hour.at(':08').do(facts)
 schedule.every().hour.at(':18').do(facts)
@@ -531,12 +551,12 @@ schedule.every().hour.at(':38').do(facts)
 schedule.every().hour.at(':48').do(facts)
 schedule.every().hour.at(':58').do(facts)
 
-schedule.every().hour.at(':00').do(ticklers)
-schedule.every().hour.at(':10').do(ticklers)
-schedule.every().hour.at(':20').do(ticklers)
-schedule.every().hour.at(':30').do(ticklers)
-schedule.every().hour.at(':40').do(ticklers)
-schedule.every().hour.at(':50').do(ticklers)
+schedule.every().hour.at(':00').do(poems)
+schedule.every().hour.at(':10').do(poems)
+schedule.every().hour.at(':20').do(poems)
+schedule.every().hour.at(':30').do(poems)
+schedule.every().hour.at(':40').do(poems)
+schedule.every().hour.at(':50').do(poems)
 
 schedule.every().hour.at(':04').do(industry)
 schedule.every().hour.at(':14').do(industry)
