@@ -1,5 +1,4 @@
 '''
-Currently a python 2.7 program but needs to be re-written as python 3 since pygame now runs on 3
 This is the current script that runs on a raspberry pi or on Windows that displays
 rotating background images from unsplash, info boxes that can display weather, news, twitter, stock prices,, outlook schedule, sales force numbers etc.
 When sonos is playing, it displays lyrics and artists pictures - now in a 400 x 400 box 
@@ -17,9 +16,9 @@ esp_tft_mqtt_photos.py message: {"pos":7, "uri":"https://s-media-cache-ak0.pinim
 1=news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2=stock quote
 3=ToDos
-4=sonos status (PLAYING, TRANSITIONING, STOPPED) broadcast by sonos_track_info on topic esp_tft and also on sonos/{loc}/status for esp_tft_mqtt_photos(and lyrics) 
+4=gmail
 5=sales forecast
-6=outlook_schedule
+6=google calendar
 7=artist image
 8=lyrics
 9=track_info broadcast by sonos_track_info.py
@@ -104,9 +103,11 @@ LAYOUT = {
 1:{'height':400, 'location':None}, #news feeds (WSJ, NYT, ArsTechnica, Reddit All, Twitter)
 2:{'height':300, 'location':None}, #stock quote
 3:{'height':500, 'location':None}, #ToDos
-4:{'height':600, 'location':(-600,400)}, #gmail and google calendar
+#4:{'height':600, 'location':(-600,400)}, #gmail and google calendar; note can override esp_tft_mqtt.py locs
+4:{'height':700, 'location':None}, #gmail
 5:{'height':250, 'location':None}, #sales forecast
-6:{'height':500, 'location':(-600,-550)}, #outlook_schedule
+#6:{'height':500, 'location':(-600,-550)}, #outlook_schedule
+6:{'height':500, 'location':None}, #google calendar
 7:{'height':400, 'location':None}, #artist image
 8:{'height':700, 'location':None}, #lyrics
 9:{'height':200, 'location':None}, #track_info broadcast by sonos_track_info.py
@@ -410,7 +411,8 @@ def on_message(client, userdata, msg):
                 n+=line_height
                 continue
             font.set_bold(False)
-            max_chars_line = 66        
+            #max_chars_line = 66        
+            max_chars_line = int(66*16/font_size)        
             indent = 17
             n+=4 if bullets else 0 # makes multi-line bullets more separated from prev and next bullet
 
