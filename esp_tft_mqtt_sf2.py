@@ -179,7 +179,7 @@ if 0:
     schedule.every().hour.at(':51').do(top_opportunities)
     schedule.every().hour.at(':56').do(top_opportunities)
 
-schedule.every().day.at("1:30").do(get_prev_day)
+schedule.every().day.at("01:30").do(get_prev_day)
 #schedule.run_all()
 
 while True:
