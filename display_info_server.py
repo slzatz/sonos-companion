@@ -586,11 +586,13 @@ pos = 0
 for i in range(6):
     schedule.every().hour.at(f":{i}0").do(weather, pos = 0)
     schedule.every().hour.at(f":{i}1").do(todo, pos = 1)
-    schedule.every().hour.at(f":{i}3").do(gmail, pos = 2)
-    schedule.every().hour.at(f":{i}5").do(context, pos = 3)
-    schedule.every().hour.at(f":{i}6").do(poems, pos = 4)
-    schedule.every().hour.at(f":{i}7").do(stock_quote, pos = 5)
-    schedule.every().hour.at(f":{i}8").do(google_calendar, pos = 6)
+    schedule.every().hour.at(f":{i}2").do(twitter_feed, pos = 2)
+    schedule.every().hour.at(f":{i}3").do(gmail, pos = 3)
+    schedule.every().hour.at(f":{i}4").do(news, pos = 4)
+    schedule.every().hour.at(f":{i}5").do(context, pos = 5)
+    schedule.every().hour.at(f":{i}6").do(poems, pos = 6)
+    schedule.every().hour.at(f":{i}7").do(stock_quote, pos = 7)
+    schedule.every().hour.at(f":{i}8").do(google_calendar, pos = 8)
 
 while True:
     schedule.run_pending()
