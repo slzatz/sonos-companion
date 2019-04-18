@@ -120,7 +120,7 @@ def check():
         return False
     return True
 
-def twitter_feed():
+def twitter_feed(pos):
     #pos = 1
     try:
         z = twit.statuses.home_timeline()[:5]
@@ -130,10 +130,10 @@ def twitter_feed():
     tweets = ["{} - {}".format(x['user']['screen_name'],html.escape(x['text'].split('https')[0])) for x in z] #could just use ['user']['name']
     print(datetime.datetime.now())
     print(repr(tweets).encode('ascii', 'ignore'))
-    data = {"header":"twitter", "text":tweets, "pos":1, "font size":14, "dest":(25,800)} #expects a list
+    data = {"header":"twitter", "text":tweets, "pos":pos, "font size":14, "dest":(25,800)} #expects a list
     publish(payload=json.dumps(data))
 
-def news():
+def news(pos):
     #pos = 1
     #https://newsapi.org/v1/articles?source=techcrunch&apiKey=...
     #source = 'the-wall-street-journal'
@@ -152,7 +152,7 @@ def news():
     print(datetime.datetime.now())
     print(repr(articles).encode('ascii', 'ignore'))
     header = z.get('source', 'no source').replace('-', ' ').title()
-    data = {"header":header,"text":articles, "pos":1, "font size":14, "dest":(12,725)} #expects a list
+    data = {"header":header,"text":articles, "pos":pos, "font size":14, "dest":(12,725)} #expects a list
     publish(payload=json.dumps(data))
 
 # this was for weatherunderground - IBM disconontinued free access
@@ -301,7 +301,7 @@ def stock_quote(pos):
     # doesn't seem worth it for volume but here it is: format(int(float('4893848.4')), ',d')
     print(datetime.datetime.now())
     print(repr(stock_info).encode('ascii', 'ignore'))
-    data = {"header":"SPY", "text":stock_info, "pos":2, "dest":(25,40)} #expects a list
+    data = {"header":"SPY", "text":stock_info, "pos":pos, "dest":(25,40)} #expects a list
     publish(payload=json.dumps(data))
 
 
