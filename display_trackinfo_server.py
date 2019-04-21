@@ -20,7 +20,6 @@ from artist_images_db import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 import requests
-import lxml.html
 import re
 import urllib.request
 from bs4 import BeautifulSoup
@@ -36,7 +35,16 @@ sonos_status = ['STOPPED']
 sonos_topic = 'display_artist'
 publish_images = partial(mqtt_publish.single, sonos_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 publish_lyrics = partial(mqtt_publish.single, info_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
-trackinfo = {"artist":None, "track_title":None, "lyrics":None}
+trackinfo = {"artist":None, "track_title":None} #, "lyrics":None}
+
+phrases =  ["Sit and know you are sitting",
+           "May you be free from suffering",
+           "Happiness is available.  Please help yourself to it.",
+           "Be simple and easy", "It's already here (p. 117 Mindfulness)",
+           "I am practicing being aware and not clinging",
+           "When you realize that you've been lost in thought simply acknowledge it and begin again"]
+
+phrase = cycle(phrases)
 
 def get_artist_images(name):
 
@@ -80,74 +88,13 @@ def get_artist_images(name):
     print(f"images = {images}")
     return images 
 
-
-def get_url(artist, title):
-
+def search_url(artist, title):
+    '''get the url for azlyrics.com if guess doesn't work'''
     if artist is None or title is None:
         return None
 
-    payload = {'func': 'getSong', 'artist': artist, 'song': title, 'fmt': 'realjson'}
-
-    artist = artist.title()
-    artist = artist.replace(' ', '_')
-
-    title = title.title()
-    title = title.replace(' ', '_')
-
-    print("https://lyrics.fandom.com/wiki/" + artist + ":" + title)
-
-    return "https://lyrics.fandom.com/wiki/" + artist + ":" + title
-    
-    try:
-         #r = requests.get("http://lyrics.wikia.com/api.php", params=payload)
-         r = requests.get("http://lyrics.fandom.com/wiki/" + artist + ":" + title)
-    except:
-        print("Problem retrieving lyrics")
-        url = None
-         
-    else:        
-        try:
-            q = r.json()
-        except ValueError as e:
-            print(e)
-            url = None
-        else:
-            url = q['url'] if 'url' in q else None
-        
-        if url and url.find("action=edit") != -1: 
-            url = None 
-            
-    return url
-
-def get_lyrics(artist, title):
     artist = artist.lower()
     title = title.lower()
-    # remove all except alphanumeric characters from artist and song_title
-    artist_ = re.sub('[^A-Za-z0-9]+', "", artist)
-    title_ = re.sub('[^A-Za-z0-9]+', "", title)
-    if artist_.startswith("the"):    # remove starting 'the' from artist e.g. the who -> who
-        artist_ = artist_[3:]
-    url = "http://azlyrics.com/lyrics/"+artist_+"/"+title_+".html"
-    
-    try:
-        content = urllib.request.urlopen(url).read()
-        soup = BeautifulSoup(content, 'html.parser')
-        lyrics = str(soup)
-        # lyrics lies between up_partition and down_partition
-        up_partition = '<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->'
-        down_partition = '<!-- MxM banner -->'
-        lyrics = lyrics.split(up_partition)[1]
-        lyrics = lyrics.split(down_partition)[0]
-        lyrics = lyrics.replace('<br>','').replace('</br>','').replace('</div>','').strip()
-        lyrics = lyrics.replace('\n', '').replace('\r', '')
-        print(f"lyrics: {artist} {title} \n {lyrics}")
-        return [lyrics]
-        #lyrics = lyrics.split("<br/>\r\n")
-        #print(lyrics)
-        #return lyrics
-    except Exception as e:
-        print("Exception occured \n" + str(e))
-        print(f"/{artist}/{title} did not return anything from azlyrics.com")
 
     print(f"******** Google Custom Search for {artist} {title} lyrics *********")
     http = httplib2.Http()
@@ -160,8 +107,22 @@ def get_lyrics(artist, title):
         url = z.get('items')[0]['link']
         print(f"google search for: '{artist} {title} lyrics' returned '{url}'")
     else:
+        url = None
         print(f"google search for: '{artist} {title} lyrics' did not return anything")
-        return ["Could not find lyrics"]
+            
+    return url
+
+def guess_url(artist, title):
+    artist = artist.lower()
+    title = title.lower()
+    # remove all except alphanumeric characters from artist and song_title
+    artist_ = re.sub('[^A-Za-z0-9]+', "", artist)
+    title_ = re.sub('[^A-Za-z0-9]+', "", title)
+    if artist_.startswith("the"):    # remove starting 'the' from artist e.g. the who -> who
+        artist_ = artist_[3:]
+    return "http://azlyrics.com/lyrics/"+artist_+"/"+title_+".html"
+
+def get_lyrics(url):
     
     try:
         content = urllib.request.urlopen(url).read()
@@ -174,52 +135,33 @@ def get_lyrics(artist, title):
         lyrics = lyrics.split(down_partition)[0]
         lyrics = lyrics.replace('<br>','').replace('</br>','').replace('</div>','').strip()
         lyrics = lyrics.replace('\n', '').replace('\r', '')
-        print(f"lyrics: {artist} {title} \n {lyrics}")
+        print(f"lyrics:\n{lyrics}")
         return [lyrics]
     except Exception as e:
         print("Exception occured \n" + str(e))
-        print(f"{artist} {title} lyrics did not return anything from google on azlyrics.com")
-        return ["Could not find lyrics"]
-
-def get_lyrics_(artist,title):
-
-    if artist is None or title is None:
-        print("No artist or title")
         return None
 
-    print(f"{artist} - {title}")
-    
-    url = get_url(artist, title)
-    if not url:
-        return None
-    
+def check_image_url(url):
     try:
-        r = requests.get(url)
-        #doc = lxml.html.parse(url)
-        doc = lxml.html.document_fromstring(r.text)
-    except IOError as e:
-        print(e)
-        return None
+        response = requests.get(url, timeout=3.0)
+    except Exception as e:
+        print("response = requests.get(url) generated exception: ", e)
+        # in some future better world may indicate that the image was bad
+        return False
 
-    try:
-        lyricbox = doc.getroot().cssselect(".lyricbox")[0]        
-    except IndexError as e:
-        print(e)
-        return None
+    if response.headers is None:
+        return False
 
-    # look for a sign that it's instrumental
-    if len(doc.getroot().cssselect(".lyricbox a[title=\"Instrumental\"]")):
-        print("appears to be instrumental")
-        return None
+    if response.status_code == 404:
+        return False
 
-    lyrics = []
-    if lyricbox.text is not None:
-        lyrics.append(lyricbox.text)
-    for node in lyricbox:
-        if node.tail is not None:
-            lyrics.append(node.tail)
+    if response.headers.get("content-type") is None:
+        return False
 
-    return lyrics
+    if response.headers.get("content-type").find("jpeg") == -1:
+        return False
+
+    return True
 
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
@@ -273,8 +215,22 @@ while 1:
     artist = trackinfo['artist']
     track = trackinfo['track_title']
     state = sonos_status[0]
+    print(f"state: {state}")
 
     if prev_artist != artist:
+
+        data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":"searching", "pos":7, "dest":(-410,30), "type":"image"} 
+        try:
+            publish_images(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
+
+        data = {"header":artist+"-"+track, "text":[f"Looking for images of {artist}"], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
+        try:
+            publish_lyrics(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
+
         prev_artist = artist
 
         if not artist:
@@ -297,14 +253,8 @@ while 1:
 
         good_images = []
         for image in images:
-            # check if image is good - how?
-            try:
-                response = requests.get(image.link, timeout=3.0)
-            except Exception as e:
-                print("response = requests.get(url) generated exception: ", e)
-                # in some future better world may indicate that the image was bad
-
-            else:
+            # check if image is good
+            if check_image_url(image.link):
                 good_images.append(image)
 
         if len(good_images) < 5:
@@ -315,27 +265,23 @@ while 1:
                 print(f"Could not find images for {artist}")
                 uris = []
                 continue
+
             good_images = []
             for image in images:
-                # check if image is good - how?
-                try:
-                    response = requests.get(image.link, timeout=3.0)
-                except Exception as e:
-                    print("response = requests.get(url) generated exception: ", e)
-                    # in some future better world may indicate that the image was bad
-
-                else:
+                # check if image is good
+                if check_image_url(image.link):
                     good_images.append(image)
 
-        #uris = [image.link for image in images if image.ok] ########### unindented on 4-15-2017
-        uris = [image.link for image in good_images] ########### unindented on 4-15-2017
-        print(f"273: {uris}")
+        uris = [image.link for image in good_images] 
         uri = cycle(uris)
 
-        #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
+        # sending uris of artist images because artist changed
         data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30), "type":"image"} 
         print(data)
-        publish_images(payload=json.dumps(data))
+        try:
+            publish_images(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
         t1 = time()
         print(t1)
         sonos_status[0] = 'PLAYING' # if we switched the picture and posted lyrics we're playing because there may be a lag in getting state/status info
@@ -343,20 +289,35 @@ while 1:
         continue
 
     if prev_track != track:
+
+        data = {"header":artist+"-"+track, "text":[f"Looking for lyrics to {track}"], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
+        try:
+            publish_lyrics(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
+
         prev_track = track
 
         if not track:
             continue
 
-        lyrics = get_lyrics(artist, track)
+        url = guess_url(artist, track)
+        lyrics = get_lyrics(url)
+        if lyrics is None:
+            url = search_url(artist, track)
+            lyrics = get_lyrics(url)
 
         if not lyrics:
-            data = {"pos":8, "erase":True}
+            # previously was erasing lyrics when no lyrics -- need to revisit 04192019
+            data = {"pos":8, "text":["Could not find the lyrics"]}
             publish_lyrics(payload=json.dumps(data))
             continue
 
         data = {"header":artist+"-"+track, "text":lyrics, "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
-        publish_lyrics(payload=json.dumps(data))
+        try:
+            publish_lyrics(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
         t1 = time()
         print(t1)
         sonos_status[0] = 'PLAYING' # if we switched the picture and posted lyrics we're playing because there may be a lag in getting state/status info
@@ -368,13 +329,24 @@ while 1:
         prev_state = state
 
         if state != 'PLAYING':
-            # erase artist image box and lyrics box
-            data = {"pos":7, "erase":True}
-            publish_images(payload=json.dumps(data))
-            data = {"pos":8, "erase":True}
-            publish_lyrics(payload=json.dumps(data))
+            if state == 'STOPPED':
+                # now would want it to send some goldstein quotations 
+                data = {"pos":7, "uri":"stopped"}
+                try:
+                    publish_images(payload=json.dumps(data))
+                except Exception as e:
+                    print(e)
+                sleep(1)
+                data = {"pos":8, "text":[f"<header>{next(phrase)}</header>"], "bullets":False}
+                try:
+                    publish_lyrics(payload=json.dumps(data))
+                except Exception as e:
+                    print(e)
 
             uris = []
+            prev_track = None #04192019 
+            prev_artist = None #04192019
+            trackinfo = {"artist":None, "track_title":None}
 
             t1 = time()
             print(t1)
@@ -386,16 +358,28 @@ while 1:
         sleep(1)
         continue
 
+    if state == 'STOPPED':
+        print("howdy")
+        data = {"pos":8, "text":[next(phrase)], "bullets":False}
+        try:
+            publish_lyrics(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
+
     # there may be situations in which state is PLAYING but uris have not been obtained yet
-    if not uris:
-        sleep(1)
-        continue
+    #if not uris:
+    #    sleep(1)
+    #    continue
 
     # only gets here if status is PLAYING
     #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
-    data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30)} 
-    print(data)
-    publish_images(payload=json.dumps(data))
+    if uris:
+        data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30)} 
+        print(data)
+        try:
+            publish_images(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
 
     t1 = time()
     print(t1)
