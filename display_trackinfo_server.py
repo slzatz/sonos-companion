@@ -3,10 +3,14 @@
 '''
 python 3.x
 This script gets artists images and lyrics when sonos is playing
-Relies on sonos_track_info.py for artist and track
+Relies on sonos_track_info3.py for artist and track, which is
+currently generally running on the same computer (may be a raspi)
 
-location = the sonos system that is being listened to looking for what sonos is playing
-so that pictures and lyrics and status can be presented to display_info_photos.py running wherever
+location = the sonos system that is being listened to
+
+sonos status, artist images and lyrics are generate mqtt messages
+that are listened to by openframeworks retrieve_google_images_N 
+which is usually running on intel nuc as well as laptop
 '''
 from operator import itemgetter
 from itertools import cycle
