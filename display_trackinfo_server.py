@@ -305,7 +305,10 @@ while 1:
         lyrics = get_lyrics(url)
         if lyrics is None:
             url = search_url(artist, track)
-            lyrics = get_lyrics(url)
+            if url:
+                lyrics = get_lyrics(url)
+            else:
+                lyrics = None
 
         if not lyrics:
             # previously was erasing lyrics when no lyrics -- need to revisit 04192019
