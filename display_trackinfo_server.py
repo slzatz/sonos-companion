@@ -225,7 +225,7 @@ while 1:
         except Exception as e:
             print(e)
 
-        data = {"header":artist+"-"+track, "text":[f"Looking for images of {artist}"], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
+        data = {"header":artist+"-"+track, "text":['<bodyItalic>'] + [f"Looking for images of {artist}"] + ['</bodyItalic>'], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -290,7 +290,7 @@ while 1:
 
     if prev_track != track:
 
-        data = {"header":artist+"-"+track, "text":[f"Looking for lyrics to {track}"], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
+        data = {"header":artist+"-"+track, "text":['<bodyItalic>'] + [f"Looking for lyrics to {track}"] + ['</bodyItalic>'], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -309,11 +309,11 @@ while 1:
 
         if not lyrics:
             # previously was erasing lyrics when no lyrics -- need to revisit 04192019
-            data = {"pos":8, "text":["Could not find the lyrics"]}
+            data = {"pos":8, "text":['<bodyItalic>'] + ["Could not find the lyrics"] + ['</bodyItalic>'], "bullets":False}
             publish_lyrics(payload=json.dumps(data))
             continue
 
-        data = {"header":artist+"-"+track, "text":lyrics, "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
+        data = {"header":artist + "<br/>" + track, "text":['<lyrics>'] + lyrics + ['</lyrics>'], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -329,7 +329,7 @@ while 1:
         prev_state = state
 
         if state != 'PLAYING':
-            if state == 'STOPPED':
+            if state in ['STOPPED', 'PAUSED_PLAYBACK']:
                 # now would want it to send some goldstein quotations 
                 data = {"pos":7, "uri":"stopped"}
                 try:
@@ -337,7 +337,7 @@ while 1:
                 except Exception as e:
                     print(e)
                 sleep(1)
-                data = {"pos":8, "text":[f"<header>{next(phrase)}</header>"], "bullets":False}
+                data = {"pos":8, "text":[f"<phrases>{next(phrase)}</phrases>"], "bullets":False}
                 try:
                     publish_lyrics(payload=json.dumps(data))
                 except Exception as e:
@@ -358,21 +358,15 @@ while 1:
         sleep(1)
         continue
 
-    if state == 'STOPPED':
-        print("howdy")
-        data = {"pos":8, "text":[next(phrase)], "bullets":False}
+    if state in ['STOPPED', 'PAUSED_PLAYBACK']:
+        data = {"pos":8, "text":[f"<phrases>{next(phrase)}</phrases>"], "bullets":False}
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
             print(e)
 
-    # there may be situations in which state is PLAYING but uris have not been obtained yet
-    #if not uris:
-    #    sleep(1)
-    #    continue
-
-    # only gets here if status is PLAYING
-    #{"pos":7, "uri":"https://s-media-cache-ak0.pinimg.com/originals/cb/e8/9d/cbe89da159842dd218ec722082ab50c5.jpg"}
+    # Right now gets here no matter what state is but STOPPED and PAUSED_PLAYBACK have set uris = 0
+    # uris could be empty although doesn't seem likely unless there was a timing issue where they hadn't been populated yet
     if uris:
         data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30)} 
         print(data)
