@@ -1,6 +1,6 @@
 #!bin/python
 '''
-curses script that is called by listmanager_cli.py do_open method
+curses script that is called by sonos_cli.py do_open method
 To handle the edge case of the last page, we could add page_max_rows
 which would always be the same as max_rows except for the last page
 Not sure it's worth it so haven't implemented it
