@@ -6,44 +6,51 @@ from config import genius_token
 
 api_url = "https://api.genius.com"
 
-def request_song_info(song_title, artist_name):
+def search_db(title, artist):
     headers = {'Authorization': 'Bearer ' + genius_token}
     search_url = api_url + '/search'
-    print(search_url)
-    data = {'q': song_title + ' ' + artist_name}
-    print(data)
-    response = requests.get(search_url, data=data, headers=headers)
+    data = {'q': title + ' ' + artist}
+    try:
+        response = requests.get(search_url, data=data, headers=headers)
+    except Exception as e:
+        print(f"Exception searching genius db for {title} by {artist}")
+        return
 
     return response
 
-def scrape_song_url(url):
-    page = requests.get(url)
+def retrieve_lyrics(url):
+    try:
+        page = requests.get(url)
+    except Exception as e:
+        print(f"Exception retrieving page for {title} by {artist}")
+        return
     html = BeautifulSoup(page.text, 'html.parser')
     [h.extract() for h in html('script')]
     lyrics = html.find('div', class_='lyrics').get_text()
 
     return lyrics
 
-def get_lyrics_genius(artist, title):
+def get_lyrics(artist, title):
 
     #print('{} by {}'.format(title, artist))
 
     # Search for matches in request response
-    response = request_song_info(title, artist)
-    z = response.json()
-    remote_song_info = None
+    response = search_db(title, artist)
+    if response is None:
+        return
 
-    #print(z['response']['hits'])
+    z = response.json()
+    match = False
 
     for hit in z['response']['hits']:
         if artist.lower() in hit['result']['primary_artist']['name'].lower():
-            remote_song_info = hit
+            match = True
             break
 
     # Extract lyrics from URL if song was found
-    if remote_song_info:
-        song_url = remote_song_info['result']['url']
-        lyrics = scrape_song_url(song_url)
+    if match:
+        url = hit['result']['url']
+        lyrics = retrieve_lyrics(url)
 
         #write_lyrics_to_file(lyrics, song_title, artist_name)
 
@@ -51,7 +58,7 @@ def get_lyrics_genius(artist, title):
         return [lyrics]
     else:
         print("could not find (genius) lyrics")
-        return None
+        return
 
 def write_lyrics_to_file (lyrics, song, artist):
     f = open('lyric-view.txt', 'w')
