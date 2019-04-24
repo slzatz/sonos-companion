@@ -1,16 +1,17 @@
 #!bin/python
 
 '''
-python 3.x
 This script gets artists images and lyrics when sonos is playing
 Relies on sonos_track_info3.py for artist and track, which is
-currently generally running on the same computer (may be a raspi)
+currently generally running on a local raspberry pi
 
 location = the sonos system that is being listened to
 
 sonos status, artist images and lyrics are generate mqtt messages
 that are listened to by openframeworks retrieve_google_images_N 
 which is usually running on intel nuc as well as laptop
+
+mqtt broker running on aws ec2 instance
 '''
 from operator import itemgetter
 from itertools import cycle
@@ -27,6 +28,7 @@ import requests
 import re
 import urllib.request
 from bs4 import BeautifulSoup
+from get_lyrics import get_lyrics #uses genius.com
 
 with open('location') as f:
     location = f.read().strip()
@@ -52,7 +54,7 @@ phrase = cycle(phrases)
 
 def get_artist_images(name):
 
-    print(f"**************Google Custom Search Engine Request for {name} **************")
+    print(f"**************Google Custom Search Engine Request for for images for {name} **************")
     http = httplib2.Http()
     service = discovery.build('customsearch', 'v1',
                               developerKey=google_api_key, http=http)
@@ -116,7 +118,7 @@ def search_url(artist, title):
             
     return url
 
-def guess_url(artist, title):
+def guess_url__(artist, title): #was used for azlyrics
     artist = artist.lower()
     title = title.lower()
     # remove all except alphanumeric characters from artist and song_title
@@ -126,7 +128,7 @@ def guess_url(artist, title):
         artist_ = artist_[3:]
     return "http://azlyrics.com/lyrics/"+artist_+"/"+title_+".html"
 
-def get_lyrics(url):
+def get_lyrics__(url): #azlyrics not currently in use and blocks aws
     
     try:
         content = urllib.request.urlopen(url).read()
@@ -162,7 +164,8 @@ def check_image_url(url):
     if response.headers.get("content-type") is None:
         return False
 
-    if response.headers.get("content-type").find("jpeg") == -1:
+    if not (response.headers.get("content-type").lower() in ['image/jpeg', 'image/png', 'application/octet-stream']):
+        print(f"{response.headers.get('content-type').lower()}")
         return False
 
     return True
@@ -245,6 +248,7 @@ while 1:
         try:
             a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
         except NoResultFound:
+            print(f"No images in db for {artist}")
             images = get_artist_images(artist)
             if not images:
                 print(f"Could not find images for {artist}")
@@ -262,7 +266,7 @@ while 1:
                 good_images.append(image)
 
         if len(good_images) < 5:
-            print("fewer than 5 images so getting new set of images for artist")
+            print(f"Only found {len(good_images)} images for {artist} - getting new images")
             # vetting these new ones but taking whatever is good
             images = get_artist_images(artist)
             if not images:
@@ -305,15 +309,20 @@ while 1:
         if not track:
             continue
 
-        url = guess_url(artist, track)
-        lyrics = get_lyrics(url)
-        if lyrics is None:
-            url = search_url(artist, track)
-            if url:
-                lyrics = get_lyrics(url)
-            else:
-                lyrics = None
-
+        #url = guess_url(artist, track)
+        #lyrics = get_lyrics(url)
+        #if lyrics is None:
+        #    url = search_url(artist, track)
+        #    if url:
+        #        lyrics = get_lyrics(url)
+        #    else:
+        #        if genius:
+        #            lyrics = get_lyrics_genius(artist, track)
+        #        else:
+        #            lyrics = None
+        
+        lyrics = get_lyrics(artist, track)
+   
         if not lyrics:
             # previously was erasing lyrics when no lyrics -- need to revisit 04192019
             data = {"pos":8, "text":['<bodyItalic>'] + ["Could not find the lyrics"] + ['</bodyItalic>'], "bullets":False}
