@@ -124,6 +124,9 @@ def check_image_url(url):
     if response.headers.get("content-type") is None:
         return False
 
+    if url[-4:] == ".jpg" or url[-4:] = ".png": #added under assumption that if url ends in .jpg that's what it is
+        return True
+
     if not (response.headers.get("content-type").lower() in ['image/jpeg', 'image/png', 'application/octet-stream']):
         print(f"{response.headers.get('content-type').lower()}")
         return False
