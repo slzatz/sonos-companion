@@ -25,8 +25,6 @@ from lmdb_p import *
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 import requests
-#import re #azlyrics
-#import urllib.request #azlyrics
 from bs4 import BeautifulSoup
 from get_lyrics import get_lyrics #uses genius.com
 from random import shuffle
@@ -45,14 +43,6 @@ publish_images = partial(mqtt_publish.single, sonos_topic, hostname=aws_mqtt_uri
 publish_lyrics = partial(mqtt_publish.single, info_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 trackinfo = {"artist":None, "track_title":None} #, "lyrics":None}
 
-#phrases =  ["Sit and know you are sitting",
-#           "May you be free from suffering",
-#           "Happiness is available.  Please help yourself to it.",
-#           "Be simple and easy", "It's already here (p. 117 Mindfulness)",
-#           "I am practicing being aware and not clinging",
-#           "When you realize that you've been lost in thought simply acknowledge it and begin again"]
-
-#phrase = cycle(phrases)
 tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', Task.star==True, Task.completed==None, Task.deleted==False).all()
 shuffle(tasks)
 
@@ -116,59 +106,6 @@ def get_artist_images(name):
             
     print(f"images = {images}")
     return images 
-
-def search_url__(artist, title):
-    '''get the url for azlyrics.com if guess doesn't work'''
-    if artist is None or title is None:
-        return None
-
-    artist = artist.lower()
-    title = title.lower()
-
-    print(f"******** Google Custom Search for {artist} {title} lyrics *********")
-    http = httplib2.Http()
-    service = discovery.build('customsearch', 'v1',  developerKey=google_api_key, http=http)
-    z = service.cse().list(q=f"{artist} {title} lyrics",
-                           siteSearch='azlyrics.com', num=1,
-                           cx='007924195092800608279:0o2y8a3v-kw').execute() 
-
-    if z.get('items'): 
-        url = z.get('items')[0]['link']
-        print(f"google search for: '{artist} {title} lyrics' returned '{url}'")
-    else:
-        url = None
-        print(f"google search for: '{artist} {title} lyrics' did not return anything")
-            
-    return url
-
-def guess_url__(artist, title): #was used for azlyrics
-    artist = artist.lower()
-    title = title.lower()
-    # remove all except alphanumeric characters from artist and song_title
-    artist_ = re.sub('[^A-Za-z0-9]+', "", artist)
-    title_ = re.sub('[^A-Za-z0-9]+', "", title)
-    if artist_.startswith("the"):    # remove starting 'the' from artist e.g. the who -> who
-        artist_ = artist_[3:]
-    return "http://azlyrics.com/lyrics/"+artist_+"/"+title_+".html"
-
-def get_lyrics__(url): #azlyrics not currently in use and blocks aws
-    
-    try:
-        content = urllib.request.urlopen(url).read()
-        soup = BeautifulSoup(content, 'html.parser')
-        lyrics = str(soup)
-        # lyrics lies between up_partition and down_partition
-        up_partition = '<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->'
-        down_partition = '<!-- MxM banner -->'
-        lyrics = lyrics.split(up_partition)[1]
-        lyrics = lyrics.split(down_partition)[0]
-        lyrics = lyrics.replace('<br>','').replace('</br>','').replace('</div>','').strip()
-        lyrics = lyrics.replace('\n', '').replace('\r', '')
-        print(f"lyrics:\n{lyrics}")
-        return [lyrics]
-    except Exception as e:
-        print("Exception occured \n" + str(e))
-        return None
 
 def check_image_url(url):
     try:
@@ -332,18 +269,6 @@ while 1:
         if not track:
             continue
 
-        #url = guess_url(artist, track)
-        #lyrics = get_lyrics(url)
-        #if lyrics is None:
-        #    url = search_url(artist, track)
-        #    if url:
-        #        lyrics = get_lyrics(url)
-        #    else:
-        #        if genius:
-        #            lyrics = get_lyrics_genius(artist, track)
-        #        else:
-        #            lyrics = None
-        
         lyrics = get_lyrics(artist, track)
    
         if not lyrics:
@@ -376,12 +301,6 @@ while 1:
                 except Exception as e:
                     print(e)
                 sleep(1)
-                #data = {"pos":8, "text":[f"<phrases>{next(phrase)}</phrases>"], "bullets":False}
-                #try:
-                #    publish_lyrics(payload=json.dumps(data))
-                #except Exception as e:
-                #    print(e)
-                #next(wisdom)
                 try:
                     next(wisdom)
                 except StopIteration:
@@ -404,11 +323,6 @@ while 1:
         continue
 
     if state in ['STOPPED', 'PAUSED_PLAYBACK']:
-        #data = {"pos":8, "text":[f"<phrases>{next(phrase)}</phrases>"], "bullets":False}
-        #try:
-        #    publish_lyrics(payload=json.dumps(data))
-        #except Exception as e:
-        #    print(e)
         try:
             next(wisdom)
         except StopIteration:
