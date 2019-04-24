@@ -13,7 +13,6 @@ which is usually running on intel nuc as well as laptop
 
 mqtt broker running on aws ec2 instance
 '''
-from operator import itemgetter
 from itertools import cycle
 import paho.mqtt.publish as mqtt_publish
 import paho.mqtt.client as mqtt
@@ -22,13 +21,16 @@ from time import time,sleep
 from config import aws_mqtt_uri, google_api_key
 from functools import partial
 from artist_images_db import *
+from lmdb_p import * 
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 import requests
-import re
-import urllib.request
+#import re #azlyrics
+#import urllib.request #azlyrics
 from bs4 import BeautifulSoup
 from get_lyrics import get_lyrics #uses genius.com
+from random import shuffle
+import html
 
 with open('location') as f:
     location = f.read().strip()
@@ -43,14 +45,35 @@ publish_images = partial(mqtt_publish.single, sonos_topic, hostname=aws_mqtt_uri
 publish_lyrics = partial(mqtt_publish.single, info_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 trackinfo = {"artist":None, "track_title":None} #, "lyrics":None}
 
-phrases =  ["Sit and know you are sitting",
-           "May you be free from suffering",
-           "Happiness is available.  Please help yourself to it.",
-           "Be simple and easy", "It's already here (p. 117 Mindfulness)",
-           "I am practicing being aware and not clinging",
-           "When you realize that you've been lost in thought simply acknowledge it and begin again"]
+#phrases =  ["Sit and know you are sitting",
+#           "May you be free from suffering",
+#           "Happiness is available.  Please help yourself to it.",
+#           "Be simple and easy", "It's already here (p. 117 Mindfulness)",
+#           "I am practicing being aware and not clinging",
+#           "When you realize that you've been lost in thought simply acknowledge it and begin again"]
 
-phrase = cycle(phrases)
+#phrase = cycle(phrases)
+tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', Task.star==True, Task.completed==None, Task.deleted==False).all()
+shuffle(tasks)
+
+def get_wisdom():
+    for task in tasks:
+        text = [f"[{task.context.title.capitalize()}] <bodyBold>{task.title}</bodyBold>"]
+        note = html.escape(task.note) if task.note else '' # would be nice to truncate on a word
+        #text.extend(note.split("\n"))
+        #note = note.split("\n")[:40]
+
+        text = f"<phrases>{task.title}</phrases><br/><bodyItalic>{note}</bodyItalic>"
+
+        data = {"pos":8, "text":[text], "bullets":False}
+        try:
+            publish_lyrics(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
+        print(task.title)
+        yield
+
+wisdom = get_wisdom()
 
 def get_artist_images(name):
 
@@ -94,7 +117,7 @@ def get_artist_images(name):
     print(f"images = {images}")
     return images 
 
-def search_url(artist, title):
+def search_url__(artist, title):
     '''get the url for azlyrics.com if guess doesn't work'''
     if artist is None or title is None:
         return None
@@ -353,11 +376,17 @@ while 1:
                 except Exception as e:
                     print(e)
                 sleep(1)
-                data = {"pos":8, "text":[f"<phrases>{next(phrase)}</phrases>"], "bullets":False}
+                #data = {"pos":8, "text":[f"<phrases>{next(phrase)}</phrases>"], "bullets":False}
+                #try:
+                #    publish_lyrics(payload=json.dumps(data))
+                #except Exception as e:
+                #    print(e)
+                #next(wisdom)
                 try:
-                    publish_lyrics(payload=json.dumps(data))
-                except Exception as e:
-                    print(e)
+                    next(wisdom)
+                except StopIteration:
+                    shuffle(tasks)
+                    wisdom = get_wisdom()
 
             uris = []
             prev_track = None #04192019 
@@ -375,11 +404,16 @@ while 1:
         continue
 
     if state in ['STOPPED', 'PAUSED_PLAYBACK']:
-        data = {"pos":8, "text":[f"<phrases>{next(phrase)}</phrases>"], "bullets":False}
+        #data = {"pos":8, "text":[f"<phrases>{next(phrase)}</phrases>"], "bullets":False}
+        #try:
+        #    publish_lyrics(payload=json.dumps(data))
+        #except Exception as e:
+        #    print(e)
         try:
-            publish_lyrics(payload=json.dumps(data))
-        except Exception as e:
-            print(e)
+            next(wisdom)
+        except StopIteration:
+            shuffle(tasks)
+            wisdom = get_wisdom()
 
     # Right now gets here no matter what state is but STOPPED and PAUSED_PLAYBACK have set uris = 0
     # uris could be empty although doesn't seem likely unless there was a timing issue where they hadn't been populated yet
