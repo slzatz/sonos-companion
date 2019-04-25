@@ -50,20 +50,13 @@ def get_wisdom():
     for task in tasks:
         text = [f"[{task.context.title.capitalize()}] <bodyBold>{task.title}</bodyBold>"]
         note = html.escape(task.note) if task.note else '' # would be nice to truncate on a word
-        #text.extend(note.split("\n"))
-        #note = note.split("\n")[:40]
+
+        print(task.title)
 
         text = f"<phrases>{task.title}</phrases><br/><bodyItalic>{note}</bodyItalic>"
+        yield text
 
-        data = {"pos":8, "text":[text], "bullets":False}
-        try:
-            publish_lyrics(payload=json.dumps(data))
-        except Exception as e:
-            print(e)
-        print(task.title)
-        yield
-
-wisdom = get_wisdom()
+wisdom = get_wisdom() #generator
 
 def get_artist_images(name):
 
@@ -178,6 +171,7 @@ uris = []
 prev_artist = None
 prev_track = None
 prev_state = None
+n = 0 # factor to slow down wisdom publishing
 while 1:
 
     client.loop()
@@ -304,11 +298,23 @@ while 1:
                 except Exception as e:
                     print(e)
                 sleep(1)
+
                 try:
-                    next(wisdom)
+                    text = next(wisdom)
                 except StopIteration:
+                    tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', 
+                                                                            Task.star==True,
+                                                                            Task.completed==None,
+                                                                            Task.deleted==False).all()
                     shuffle(tasks)
-                    wisdom = get_wisdom()
+                    wisdom = get_wisdom() # generator
+                    text = next(wisdom)
+
+                data = {"pos":8, "text":[text], "bullets":False}
+                try:
+                    publish_lyrics(payload=json.dumps(data))
+                except Exception as e:
+                    print(e)
 
             uris = []
             prev_track = None #04192019 
@@ -326,15 +332,33 @@ while 1:
         continue
 
     if state in ['STOPPED', 'PAUSED_PLAYBACK']:
-        try:
-            next(wisdom)
-        except StopIteration:
-            shuffle(tasks)
-            wisdom = get_wisdom()
+        if n < 2:
+            n += 1
+        else:
+            try:
+                text = next(wisdom)
+            except StopIteration:
+                tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', 
+                                                                        Task.star==True,
+                                                                        Task.completed==None,
+                                                                        Task.deleted==False).all()
+                shuffle(tasks)
+                wisdom = get_wisdom() #generator
+                text = next(wisdom)
+
+            data = {"pos":8, "text":[text], "bullets":False}
+            try:
+                publish_lyrics(payload=json.dumps(data))
+            except Exception as e:
+                print(e)
+            
+            n = 0
 
     # Right now gets here no matter what state is but STOPPED and PAUSED_PLAYBACK have set uris = 0
     # uris could be empty although doesn't seem likely unless there was a timing issue where they hadn't been populated yet
-    if uris:
+    # more clear if below was just an else
+    #if uris:
+    else:
         data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30)} 
         print(data)
         try:
