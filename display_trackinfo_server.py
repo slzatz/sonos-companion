@@ -302,10 +302,11 @@ while 1:
                 try:
                     text = next(wisdom)
                 except StopIteration:
-                    tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', 
-                                                                            Task.star==True,
-                                                                            Task.completed==None,
-                                                                            Task.deleted==False).all()
+                    #tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', 
+                    #                                                        Task.star==True,
+                    #                                                        Task.completed==None,
+                    #                                                        Task.deleted==False).all()
+                    remote_session.expire_all()
                     shuffle(tasks)
                     wisdom = get_wisdom() # generator
                     text = next(wisdom)
@@ -338,10 +339,11 @@ while 1:
             try:
                 text = next(wisdom)
             except StopIteration:
-                tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', 
-                                                                        Task.star==True,
-                                                                        Task.completed==None,
-                                                                        Task.deleted==False).all()
+                #tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', 
+                #                                                       Task.star==True,
+                #                                                       Task.completed==None,
+                #                                                       Task.deleted==False).all()
+                remote_session.expire_all()
                 shuffle(tasks)
                 wisdom = get_wisdom() #generator
                 text = next(wisdom)
