@@ -1,6 +1,8 @@
 '''(barely) modified from script by Will Soares'''
 
-import sys, requests
+import sys
+import requests
+import re
 from bs4 import BeautifulSoup
 from config import genius_token
 
@@ -9,9 +11,11 @@ api_url = "https://api.genius.com"
 def search_db(title, artist):
     headers = {'Authorization': 'Bearer ' + genius_token}
     search_url = api_url + '/search'
-    data = {'q': title + ' ' + artist}
+    #remove () or [] which seem to sometimes confuse lyric search
+    q = re.sub("[\(\[].*?[\)\]]", "", title + ' ' + artist)
+    #data = {'q': title + ' ' + artist}
     try:
-        response = requests.get(search_url, data=data, headers=headers)
+        response = requests.get(search_url, data={'q':q}, headers=headers)
     except Exception as e:
         print(f"Exception searching genius db for {title} by {artist}")
         return
