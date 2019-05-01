@@ -11,9 +11,10 @@ api_url = "https://api.genius.com"
 def search_db(title, artist):
     headers = {'Authorization': 'Bearer ' + genius_token}
     search_url = api_url + '/search'
+
     #remove () or [] which seem to sometimes confuse lyric search
     q = re.sub("[\(\[].*?[\)\]]", "", title + ' ' + artist)
-    #data = {'q': title + ' ' + artist}
+
     try:
         response = requests.get(search_url, data={'q':q}, headers=headers)
     except Exception as e:
@@ -59,11 +60,12 @@ def get_lyrics(artist, title):
         #write_lyrics_to_file(lyrics, song_title, artist_name)
 
         print(lyrics)
-        return [lyrics]
+        return lyrics
     else:
         print("could not find (genius) lyrics")
         return
 
+# not in use
 def write_lyrics_to_file (lyrics, song, artist):
     f = open('lyric-view.txt', 'w')
     f.write('{} by {}'.format(song, artist))

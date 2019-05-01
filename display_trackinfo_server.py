@@ -29,18 +29,20 @@ from bs4 import BeautifulSoup
 from get_lyrics import get_lyrics #uses genius.com
 from random import shuffle
 import html
+import wikipedia
 
 with open('location') as f:
     location = f.read().strip()
 
 sonos_track_topic = "sonos/{}/track".format(location)
 sonos_status_topic = "sonos/{}/status".format(location)
-info_topic = "display_lyrics"
+lyric_topic = "display_lyrics2"
+sonos_topic = 'display_artist2'
+bio_topic = "display_bio"
 sonos_status = ['STOPPED']
-
-sonos_topic = 'display_artist'
 publish_images = partial(mqtt_publish.single, sonos_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
-publish_lyrics = partial(mqtt_publish.single, info_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+publish_lyrics = partial(mqtt_publish.single, lyric_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
+publish_bio = partial(mqtt_publish.single, bio_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 trackinfo = {"artist":None, "track_title":None} #, "lyrics":None}
 
 tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', Task.star==True, Task.completed==None, Task.deleted==False).all()
@@ -48,7 +50,7 @@ shuffle(tasks)
 
 def get_wisdom():
     for task in tasks:
-        text = [f"[{task.context.title.capitalize()}] <bodyBold>{task.title}</bodyBold>"]
+        #text = [f"[{task.context.title.capitalize()}] <bodyBold>{task.title}</bodyBold>"]
         note = html.escape(task.note) if task.note else '' # would be nice to truncate on a word
 
         print(task.title)
@@ -189,7 +191,7 @@ while 1:
         except Exception as e:
             print(e)
 
-        data = {"header":artist+"-"+track, "text":['<bodyItalic>'] + [f"Looking for images of {artist}"] + ['</bodyItalic>'], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
+        data = {"header":artist+"-"+track, "text":f"<bodyItalic>Looking for images of {artist}</bodyItalic>"}
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -239,14 +241,18 @@ while 1:
 
         uris = [image.link for image in good_images] 
         uri = cycle(uris)
-
-        # sending uris of artist images because artist changed
-        data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30), "type":"image"} 
+        data = {"header":f"{artist}-{track}", "uri":next(uri), "type":"image"} 
         print(data)
         try:
             publish_images(payload=json.dumps(data))
         except Exception as e:
             print(e)
+
+        #data = {"pos":10, "header":artist, "bullets":False, "text":['<lyrics>'] + [wikipedia.summary(artist)] + ['</lyrics>']}
+        data = {"header":artist, "text":f"<br/><lyrics>{wikipedia.summary(artist)}</lyrics>"}
+        publish_bio(payload=json.dumps(data))
+        print(wikipedia.summary(artist))
+
         t1 = time()
         print(t1)
         sonos_status[0] = 'PLAYING' # if we switched the picture and posted lyrics we're playing because there may be a lag in getting state/status info
@@ -255,7 +261,7 @@ while 1:
 
     if prev_track != track:
 
-        data = {"header":artist+"-"+track, "text":['<bodyItalic>'] + [f"Looking for lyrics to {track}"] + ['</bodyItalic>'], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
+        data = {"header":f"{artist}-{track}", "text":f"<bodyItalic>Looking for lyrics to {track}</bodyItalic>"} 
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -270,11 +276,11 @@ while 1:
    
         if not lyrics:
             # previously was erasing lyrics when no lyrics -- need to revisit 04192019
-            data = {"pos":8, "text":['<bodyItalic>'] + ["Could not find the lyrics"] + ['</bodyItalic>'], "bullets":False}
+            data = {"header":f"{artist}-{track}", "text":f"<bodyItalic>Could not find the lyrics to {track}</bodyItalic>"} 
             publish_lyrics(payload=json.dumps(data))
             continue
 
-        data = {"header":artist + "<br/>" + track, "text":['<lyrics>'] + lyrics + ['</lyrics>'], "pos":8, "bullets":False, "font size":14, "dest":(-800,30)} #expects a list
+        data = {"header":f"{artist}<br/>{track}", "text":f"<lyrics>{lyrics}</lyrics>"}
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -311,7 +317,7 @@ while 1:
                     wisdom = get_wisdom() # generator
                     text = next(wisdom)
 
-                data = {"pos":8, "text":[text], "bullets":False}
+                data = {"pos":8, "text":text, "bullets":False}
                 try:
                     publish_lyrics(payload=json.dumps(data))
                 except Exception as e:
@@ -348,7 +354,7 @@ while 1:
                 wisdom = get_wisdom() #generator
                 text = next(wisdom)
 
-            data = {"pos":8, "text":[text], "bullets":False}
+            data = {"pos":8, "text":text}
             try:
                 publish_lyrics(payload=json.dumps(data))
             except Exception as e:
