@@ -30,6 +30,9 @@ from get_lyrics import get_lyrics #uses genius.com
 from random import shuffle
 import html
 import wikipedia
+import textwrap
+
+max_chars_line = 50
 
 with open('location') as f:
     location = f.read().strip()
@@ -248,8 +251,17 @@ while 1:
         except Exception as e:
             print(e)
 
-        #data = {"pos":10, "header":artist, "bullets":False, "text":['<lyrics>'] + [wikipedia.summary(artist)] + ['</lyrics>']}
-        data = {"header":artist, "text":f"<br/><lyrics>{wikipedia.summary(artist)}</lyrics>"}
+        try:
+            bio = wikipedia.summary(artist)
+        except Exception as e:
+            print("wikipedia: " + e)
+            bio_wrap = f"Could not retrieve {artist} bio"
+        else:
+            bio_lines = textwrap.wrap(bio, max_chars_line)
+            bio_wrap = "<br/>".join(bio_lines)
+
+        #data = {"header":artist, "text":f"<br/><lyrics>{wikipedia.summary(artist)}</lyrics>"}
+        data = {"header":artist, "text":f"<br/><lyrics>{bio_wrap}</lyrics>"}
         publish_bio(payload=json.dumps(data))
         print(wikipedia.summary(artist))
 
