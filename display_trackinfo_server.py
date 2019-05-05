@@ -194,7 +194,7 @@ while 1:
         except Exception as e:
             print(e)
 
-        data = {"header":artist+"-"+track, "text":f"<bodyItalic>Looking for images of {artist}</bodyItalic>"}
+        data = {"header":f"{artist}-{track}<br/>", "text":f"<bodyItalic>Looking for images of {artist}</bodyItalic>"}
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -261,7 +261,7 @@ while 1:
             bio_wrap = "<br/>".join(bio_lines)
 
         #data = {"header":artist, "text":f"<br/><lyrics>{wikipedia.summary(artist)}</lyrics>"}
-        data = {"header":artist, "text":f"<br/><lyrics>{bio_wrap}</lyrics>"}
+        data = {"header":f"{artist}<br/>", "text":bio_wrap}
         publish_bio(payload=json.dumps(data))
         print(wikipedia.summary(artist))
 
@@ -273,7 +273,7 @@ while 1:
 
     if prev_track != track:
 
-        data = {"header":f"{artist}-{track}", "text":f"<bodyItalic>Looking for lyrics to {track}</bodyItalic>"} 
+        data = {"header":f"{artist}-{track}<br/>", "text":f"Looking for lyrics to {track}"} 
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -288,11 +288,11 @@ while 1:
    
         if not lyrics:
             # previously was erasing lyrics when no lyrics -- need to revisit 04192019
-            data = {"header":f"{artist}-{track}", "text":f"<bodyItalic>Could not find the lyrics to {track}</bodyItalic>"} 
+            data = {"header":f"{artist}-{track}<br/>", "text":f"Could not find the lyrics to {track}"} 
             publish_lyrics(payload=json.dumps(data))
             continue
 
-        data = {"header":f"{artist}<br/>{track}", "text":f"<lyrics>{lyrics}</lyrics>"}
+        data = {"header":f"{artist}<br/>{track}<br/>", "text":lyrics}
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -378,8 +378,8 @@ while 1:
     # uris could be empty although doesn't seem likely unless there was a timing issue where they hadn't been populated yet
     # more clear if below was just an else
     #if uris:
-    else:
-        data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":next(uri), "pos":7, "dest":(-410,30)} 
+    elif uris:
+        data = {f"header":f"{artist} - {track}", "uri":next(uri)} 
         print(data)
         try:
             publish_images(payload=json.dumps(data))
