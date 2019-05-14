@@ -27,10 +27,13 @@ import httplib2 #needed by the google custom search engine module apiclient
 import requests
 from bs4 import BeautifulSoup
 from get_lyrics import get_lyrics #uses genius.com
-from random import shuffle
+from random import shuffle, choice
 import html
 import wikipedia
+import wikiquote
 import textwrap
+
+authors = ["Seneca the Younger", "Albert Einstein", "Epictetus", "Michel de Montaigne", "Richard Feynman", "Gautama Buddha", "Samuel Johnson", "Winston Churchill", "Friedrich Nietzsche", "Abraham Lincoln"]
 
 max_chars_line = 50
 
@@ -62,6 +65,61 @@ def get_wisdom():
         yield text
 
 wisdom = get_wisdom() #generator
+
+def get_quotation():
+    author = choice(authors)
+    try:
+        quote = choice(wikiquote.quotes(author))
+    except Exception as e:
+        print(e)
+
+    lines = textwrap.wrap(quote, max_chars_line)
+    text = "<br/>".join(lines)
+    data = {"text":f"{text}<br/>", "footer":author }
+
+    try:
+        publish_lyrics(payload=json.dumps(data))
+    except Exception as e:
+        print(e)
+
+    try:
+        bio = wikipedia.summary(author)
+    except Exception as e:
+        print("wikipedia: " + e)
+        text = f"Could not retrieve {author} bio"
+    else:
+        index = bio.find(".", 400)
+        if index != -1:
+            bio = bio[:index + 1]
+        lines = textwrap.wrap(bio, max_chars_line)
+        text = "<br/>".join(lines)
+
+    data = {"header":f"{author}<br/>", "text":text}
+
+    try:
+        publish_bio(payload=json.dumps(data))
+    except Exception as e:
+        print(e)
+
+    print(wikipedia.summary(author))
+
+    page = wikipedia.page(author)
+    images = page.images
+
+    while 1:
+        uri = choice(images)
+        if uri[-4:] == ".svg":
+            images.remove(uri)
+        else:
+            break
+            
+    data = {"header":author, "uri":uri, "type":"image"} 
+    print(data)
+    try:
+        publish_images(payload=json.dumps(data))
+    except Exception as e:
+        print(e)
+
 
 def get_artist_images(name):
 
@@ -188,22 +246,34 @@ while 1:
 
     if prev_artist != artist:
 
-        data = {"header":"{} - {}".format(artist.encode('ascii', 'ignore'), track.encode('ascii', 'ignore')), "uri":"searching", "pos":7, "dest":(-410,30), "type":"image"} 
+        prev_artist = artist
+
+        if not artist:
+            continue
+
+        data = {"uri":"searching"}
         try:
             publish_images(payload=json.dumps(data))
         except Exception as e:
             print(e)
 
-        data = {"header":f"{artist}-{track}<br/>", "text":f"<bodyItalic>Looking for images of {artist}</bodyItalic>"}
+        data = {"header":f"{artist}-{track}<br/>", "text":f"Looking for images of {artist}"}
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
             print(e)
 
-        prev_artist = artist
+        data = {"header":f"{artist}-{track}<br/>", "text":f"Looking for bio of {artist}"}
+        try:
+            publish_bio(payload=json.dumps(data))
+        except Exception as e:
+            print(e)
 
-        if not artist:
-            continue
+        # moved above 05132019
+        #prev_artist = artist
+
+        #if not artist:
+        #    continue
 
         print(f"about to query image database for artist: {artist}")
 
@@ -251,6 +321,8 @@ while 1:
         except Exception as e:
             print(e)
 
+        # I believe this retrieval of bio from wikipedia is slow
+        # and slows down getting lyrics
         try:
             bio = wikipedia.summary(artist)
         except Exception as e:
@@ -260,7 +332,6 @@ while 1:
             bio_lines = textwrap.wrap(bio, max_chars_line)
             bio_wrap = "<br/>".join(bio_lines)
 
-        #data = {"header":artist, "text":f"<br/><lyrics>{wikipedia.summary(artist)}</lyrics>"}
         data = {"header":f"{artist}<br/>", "text":bio_wrap}
         publish_bio(payload=json.dumps(data))
         print(wikipedia.summary(artist))
@@ -292,7 +363,8 @@ while 1:
             publish_lyrics(payload=json.dumps(data))
             continue
 
-        data = {"header":f"{artist}<br/>{track}<br/>", "text":lyrics}
+        text = lyrics.replace("\n", "<br/>")
+        data = {"header":f"{artist}<br/>{track}", "text":text}
         try:
             publish_lyrics(payload=json.dumps(data))
         except Exception as e:
@@ -309,31 +381,7 @@ while 1:
 
         if state != 'PLAYING':
             if state in ['STOPPED', 'PAUSED_PLAYBACK']:
-                # now would want it to send some goldstein quotations 
-                data = {"pos":7, "uri":"stopped"}
-                try:
-                    publish_images(payload=json.dumps(data))
-                except Exception as e:
-                    print(e)
-                sleep(1)
-
-                try:
-                    text = next(wisdom)
-                except StopIteration:
-                    #tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', 
-                    #                                                        Task.star==True,
-                    #                                                        Task.completed==None,
-                    #                                                        Task.deleted==False).all()
-                    remote_session.expire_all()
-                    shuffle(tasks)
-                    wisdom = get_wisdom() # generator
-                    text = next(wisdom)
-
-                data = {"pos":8, "text":text, "bullets":False}
-                try:
-                    publish_lyrics(payload=json.dumps(data))
-                except Exception as e:
-                    print(e)
+                get_quotation()
 
             uris = []
             prev_track = None #04192019 
@@ -354,24 +402,7 @@ while 1:
         if n < 2:
             n += 1
         else:
-            try:
-                text = next(wisdom)
-            except StopIteration:
-                #tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', 
-                #                                                       Task.star==True,
-                #                                                       Task.completed==None,
-                #                                                       Task.deleted==False).all()
-                remote_session.expire_all()
-                shuffle(tasks)
-                wisdom = get_wisdom() #generator
-                text = next(wisdom)
-
-            data = {"pos":8, "text":text}
-            try:
-                publish_lyrics(payload=json.dumps(data))
-            except Exception as e:
-                print(e)
-            
+            get_quotation()
             n = 0
 
     # Right now gets here no matter what state is but STOPPED and PAUSED_PLAYBACK have set uris = 0
