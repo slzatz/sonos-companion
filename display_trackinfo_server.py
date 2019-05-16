@@ -72,6 +72,9 @@ def get_quotation():
         quote = choice(wikiquote.quotes(author))
     except Exception as e:
         print(e)
+        quote = f"Couldn't retrieve the quotation from {author}"
+
+    quote = quote.replace(chr(173), "") # appears to be extended ascii 173 in Churchil quotes (? others):w
 
     lines = textwrap.wrap(quote, max_chars_line)
     text = "<br/>".join(lines)
@@ -108,10 +111,10 @@ def get_quotation():
 
     while 1:
         uri = choice(images)
-        if uri[-4:] == ".svg":
-            images.remove(uri)
-        else:
+        if uri[-4:].lower() in [".jpg", ".png"]:
             break
+        else:
+            images.remove(uri)
             
     data = {"header":author, "uri":uri, "type":"image"} 
     print(data)
