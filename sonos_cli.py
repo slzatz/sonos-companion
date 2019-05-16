@@ -22,6 +22,16 @@ solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10)
 def bold(text):
     return "\033[1m" + text + "\033[0m"
 
+def colorize(text, color):
+    if color == "red":
+        return "\033[31m" + text + "\033[0m"
+    elif color == "green":
+        return "\033[32m" + text + "\033[0m"
+    elif color == "magenta":
+        return "\033[35m" + text + "\033[0m"
+    else:
+        return text
+
 def play_track(title, artist, add): #note the decorator will set add to None
     # title must be present; artist is optional
 
@@ -318,16 +328,16 @@ class Sonos(Cmd):
             artist = self.select2(artists, "Which artist? ")
             if artist:
                 sonos_actions.shuffle(artist)
-                self.msg = self.colorize(f"I'll play {artist} now", 'green')
+                self.msg = colorize(f"I'll play {artist} now", 'green')
             else:
-                self.msg = self.colorize("OK, I won't play anything.", 'red')
+                self.msg = colorize("OK, I won't play anything.", 'red')
 
     def do_mix(self, s):
         '''
         Mix artist_a and artist_b
         '''
         if ' and ' not in s:
-            self.msg = self.colorize("The command is: mix artistA and artistB", 'red')
+            self.msg = colorize("The command is: mix artistA and artistB", 'red')
             return
 
         artist1, artist2 = s.split(' and ')
@@ -383,15 +393,15 @@ class Sonos(Cmd):
 
         response = sonos_actions.current_track_info()
         if response:
-            self.msg = self.colorize(sonos_actions.current_track_info(), 'green')
+            self.msg = colorize(sonos_actions.current_track_info(), 'green')
         else:
-            self.msg = self.colorize("Nothing appears to be playing", 'red')
+            self.msg = colorize("Nothing appears to be playing", 'red')
 
     def do_current(self, s):
         '''Show the information that is contained in current_track_info'''
         track_info = sonos_actions.current()
         if track_info:
-            self.msg = "\n"+"\n\n".join([f"{bold(self.colorize(x, 'magenta'))}: {self.colorize(y, 'bold')}" for x,y in track_info.items()])+"\n"
+            self.msg = "\n"+"\n\n".join([f"{bold(colorize(x, 'magenta'))}: {colorize(y, 'bold')}" for x,y in track_info.items()])+"\n"
         else:
             self.msg = "Nothing appears to be playing"
 
@@ -420,15 +430,15 @@ class Sonos(Cmd):
             track_info = sonos_actions.current()
             if track_info:
                 cur_pos = int(track_info['playlist_position'])
-                q[cur_pos-1] = (cur_pos,self.colorize(q[cur_pos-1][1], 'green'))
+                q[cur_pos-1] = (cur_pos, colorize(q[cur_pos-1][1], 'green'))
 
             pos = self.select2(q, "Which track? ")
 
             if pos:
                 sonos_actions.play_from_queue(pos-1)
-                self.msg = self.colorize(f"I will play track {pos}: {lst[pos-1]}", 'green')
+                self.msg = colorize(f"I will play track {pos}: {lst[pos-1]}", 'green')
             else:
-                self.msg = self.colorize("OK, I won't play anything.", 'red')
+                self.msg = colorize("OK, I won't play anything.", 'red')
 
     def do_clear(self, s):
         '''Clear the queue'''
@@ -480,9 +490,9 @@ class Sonos(Cmd):
             station = self.select2(lst, "Which station? ")
             if station:
                 sonos_actions.play_station(station)
-                self.msg = self.colorize(f"I'll play {station} now", 'green')
+                self.msg = colorize(f"I'll play {station} now", 'green')
             else:
-                self.msg = self.colorize("OK, I won't play anything.", 'red')
+                self.msg = colorize("OK, I won't play anything.", 'red')
 
     def do_deb(self, s):
         if s:
@@ -498,7 +508,7 @@ class Sonos(Cmd):
         if album:
             self.do_album(album)
         else:
-            self.msg = self.colorize("OK, I won't play anything.", 'red')
+            self.msg = colorize("OK, I won't play anything.", 'red')
 
     def do_browse(self, s):
         uris = track_display(s)
@@ -516,9 +526,9 @@ class Sonos(Cmd):
             if lyric:
                 self.msg = "\n"+"\n".join(lyric)
             else:
-                self.msg = self.colorize(f"The track {track['title']} does not have lyrics available", 'red')
+                self.msg = colorize(f"The track {track['title']} does not have lyrics available", 'red')
         else:
-            self.msg = self.colorize("Nothing appears to be playing or there was another problem", 'red')
+            self.msg = colorize("Nothing appears to be playing or there was another problem", 'red')
         
     def postcmd(self, stop, s):
         if self.quit:
