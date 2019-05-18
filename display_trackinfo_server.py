@@ -106,17 +106,24 @@ def get_quotation():
 
     print(wikipedia.summary(author))
 
-    page = wikipedia.page(author)
-    images = page.images
+    try:
+        page = wikipedia.page(author)
+        images = page.images
+    except Exception as e:
+        print(e)
+        print(f"Could not retrieve page/images for {author}")
+        data = {"uri":"searching"}
 
-    while 1:
-        uri = choice(images)
-        if uri[-4:].lower() in [".jpg", ".png"]:
-            break
-        else:
-            images.remove(uri)
+    else:
+        while 1:
+            uri = choice(images)
+            if uri[-4:].lower() in [".jpg", ".png"]:
+                break
+            else:
+                images.remove(uri)
             
-    data = {"header":author, "uri":uri, "type":"image"} 
+        data = {"header":author, "uri":uri, "type":"image"} 
+
     print(data)
     try:
         publish_images(payload=json.dumps(data))
