@@ -32,8 +32,9 @@ import html
 import wikipedia
 import wikiquote
 import textwrap
+from authors import authors
 
-authors = ["Seneca the Younger", "Albert Einstein", "Epictetus", "Michel de Montaigne", "Richard Feynman", "Gautama Buddha", "Samuel Johnson", "Winston Churchill", "Friedrich Nietzsche", "Abraham Lincoln"]
+#authors = ["Seneca the Younger", "Albert Einstein", "Epictetus", "Michel de Montaigne", "Richard Feynman", "Gautama Buddha", "Samuel Johnson", "Winston Churchill", "Friedrich Nietzsche", "Abraham Lincoln"]
 
 max_chars_line = 50
 
