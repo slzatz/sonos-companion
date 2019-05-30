@@ -8,10 +8,12 @@ authors = [
 "Samuel Johnson", 
 "Winston Churchill", 
 "Friedrich Nietzsche", 
-"Abraham Lincoln"
+"Abraham Lincoln",
 "Paul Dirac",
-"Nils Bohr",
+"Niels Bohr",
 "John von Neumann",
 "Edward Teller",
-"Eleanor Roosevelt"
+"Jean-Paul Sartre",
+"Eleanor Roosevelt",
+"Sam Harris"
 ]

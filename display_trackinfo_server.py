@@ -5,20 +5,26 @@ This script gets artists images and lyrics when sonos is playing
 Relies on sonos_track_info3.py for artist and track, which is
 currently generally running on a local raspberry pi
 
-location = the sonos system that is being listened to
-
-sonos status, artist images and lyrics are generate mqtt messages
+sonos status, artist images and lyrics generate mqtt messages
 that are listened to by openframeworks retrieve_google_images_N 
-which is usually running on intel nuc as well as laptop
+which is usually running on intel nuc as well as laptop.
+
+Artist images are stored in aws database and provided updated by google
+image search.
 
 mqtt broker running on aws ec2 instance
+
+Added in this version: when sonos not playing, gets random quotations
+from wikiquote along with bios and images from wikipedia. If quotation
+is not in English, using Google Cloud Translage v3beta (has free tier)
+to translate the quotation.
 '''
 from itertools import cycle
 import paho.mqtt.publish as mqtt_publish
 import paho.mqtt.client as mqtt
 import json
 from time import time,sleep
-from config import aws_mqtt_uri, google_api_key
+from config import aws_mqtt_uri, google_api_key, google_translate_project_id, detectlanguage_key, time_offset
 from functools import partial
 from artist_images_db import *
 from lmdb_p import * 
@@ -32,9 +38,22 @@ import html
 import wikipedia
 import wikiquote
 import textwrap
+import detectlanguage
 from authors import authors
+from google.cloud import translate_v3beta1 as translate # the v3 api has a free tier
+from datetime import datetime
 
-#authors = ["Seneca the Younger", "Albert Einstein", "Epictetus", "Michel de Montaigne", "Richard Feynman", "Gautama Buddha", "Samuel Johnson", "Winston Churchill", "Friedrich Nietzsche", "Abraham Lincoln"]
+translate_client = translate.TranslationServiceClient()
+# not sure correct value but docs say for non-regionalized requests
+# use global and their example uses global
+location = "global" 
+parent = translate_client.location_path(google_translate_project_id, location)
+
+detectlanguage.configuration.api_key = detectlanguage_key
+
+lang_map = dict()
+for x in detectlanguage.languages():
+    lang_map[x["code"]] = x["name"]
 
 max_chars_line = 50
 
@@ -52,10 +71,10 @@ publish_lyrics = partial(mqtt_publish.single, lyric_topic, hostname=aws_mqtt_uri
 publish_bio = partial(mqtt_publish.single, bio_topic, hostname=aws_mqtt_uri, retain=False, port=1883, keepalive=60)
 trackinfo = {"artist":None, "track_title":None} #, "lyrics":None}
 
-tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', Task.star==True, Task.completed==None, Task.deleted==False).all()
-shuffle(tasks)
+#tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', Task.star==True, Task.completed==None, Task.deleted==False).all()
+#shuffle(tasks)
 
-def get_wisdom():
+def get_wisdom____():
     for task in tasks:
         #text = [f"[{task.context.title.capitalize()}] <bodyBold>{task.title}</bodyBold>"]
         note = html.escape(task.note) if task.note else '' # would be nice to truncate on a word
@@ -65,21 +84,44 @@ def get_wisdom():
         text = f"<phrases>{task.title}</phrases><br/><bodyItalic>{note}</bodyItalic>"
         yield text
 
-wisdom = get_wisdom() #generator
+#wisdom = get_wisdom() #generator
 
 def get_quotation():
     author = choice(authors)
     try:
         quote = choice(wikiquote.quotes(author))
     except Exception as e:
-        print(e)
-        quote = f"Couldn't retrieve the quotation from {author}"
+        print(f"Exception retrieving from wikiquote: {e}")
+        quote = f"Couldn't retrieve the quotation from {author}. Received exception: {e}"
 
     quote = quote.replace(chr(173), "") # appears to be extended ascii 173 in Churchil quotes (? others):w
+    lang_code = detectlanguage.simple_detect(quote)
+    if lang_code != "en":
+        language = lang_map.get(lang_code, "No language code match")
+        #translation = translate_client.translate(quote, "en")
+        response = translate_client.translate_text(
+                                         parent=parent,
+                                         contents=[quote],
+                                         mime_type='text/plain',  # mime types: text/plain, text/html
+                                         #source_language_code=lang_code+'-'+language,
+                                         source_language_code=lang_code,
+                                         #target_language_code='en-US')
+                                         target_language_code='en')
 
-    lines = textwrap.wrap(quote, max_chars_line)
+        translation = response.translations[0]
+        translation = f"{translation}".replace("translated_text: ", "").replace('"', '')
+        print(translation)
+    else:
+        language = ""
+        translation = ""
+
+    s = f"Translated from {language}<br/>" if language else ""
+    z = " \n \n" if translation else ""
+
+    #lines = textwrap.wrap(repr(translation) quote + "\n" + repr(translation), max_chars_line)
+    lines = textwrap.wrap(f"{translation}{z}{quote}", max_chars_line)
     text = "<br/>".join(lines)
-    data = {"text":f"{text}<br/>", "footer":author }
+    data = {"text":f"{s}{text}<br/>", "footer":author }
 
     try:
         publish_lyrics(payload=json.dumps(data))
@@ -89,8 +131,8 @@ def get_quotation():
     try:
         bio = wikipedia.summary(author)
     except Exception as e:
-        print("wikipedia: " + e)
-        text = f"Could not retrieve {author} bio"
+        print(f"Couldn't retrieve {author} bio from wikipedia: {e}")
+        text = f"Couldn't retrieve {author} bio from wikipedia: {e}"
     else:
         index = bio.find(".", 400)
         if index != -1:
@@ -111,8 +153,8 @@ def get_quotation():
         page = wikipedia.page(author)
         images = page.images
     except Exception as e:
-        print(e)
         print(f"Could not retrieve page/images for {author}")
+        print(f"Exception retrieving from wikipedia: {e}")
         data = {"uri":"searching"}
 
     else:
@@ -337,8 +379,8 @@ while 1:
         try:
             bio = wikipedia.summary(artist)
         except Exception as e:
-            print("wikipedia: " + e)
-            bio_wrap = f"Could not retrieve {artist} bio"
+            print(f"Couldn't retrieve {artist} bio from wikipedia: {e}")
+            bio_wrap = f"Couldn't retrieve {artist} bio from wikipedia: {e}"
         else:
             bio_lines = textwrap.wrap(bio, max_chars_line)
             bio_wrap = "<br/>".join(bio_lines)
@@ -405,12 +447,18 @@ while 1:
             sleep(1)
             continue
 
+    now = datetime.now()
+    if now.hour + time_offset > 21 or now.hour + time_offset < 6:
+        print(f"{now.hour + time_offset}:{now.minute} - we are getting some rest")
+        sleep(60)
+        continue
+
     if time() < t1+15:
         sleep(1)
         continue
 
     if state in ['STOPPED', 'PAUSED_PLAYBACK']:
-        if n < 2:
+        if n < 4: # was 2 but slowing it down
             n += 1
         else:
             get_quotation()
