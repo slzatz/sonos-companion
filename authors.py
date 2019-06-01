@@ -1,4 +1,4 @@
-authors = [
+authors__ = [
 "Seneca the Younger", 
 "Albert Einstein", 
 "Epictetus", 
@@ -15,5 +15,32 @@ authors = [
 "Edward Teller",
 "Jean-Paul Sartre",
 "Eleanor Roosevelt",
-"Sam Harris"
+"Sam Harris",
+"Daniel Dennett",
+"Christopher Hitchens",
+"Richard Dawkins"
+]
+
+# the boolean is whether they might need translation
+authors = [
+("Seneca the Younger", True), 
+("Albert Einstein", True), 
+("Epictetus", True),
+("Michel de Montaigne", True),
+("Richard Feynman", False), 
+("Gautama Buddha", False),
+("Samuel Johnson", False),
+("Winston Churchill", False),
+("Friedrich Nietzsche", True),
+("Abraham Lincoln", False),
+("Paul Dirac", True),
+("Niels Bohr", True),
+("John von Neumann", True),
+("Edward Teller", False),
+("Jean-Paul Sartre", True),
+("Eleanor Roosevelt", False),
+("Sam Harris", False),
+("Daniel Dennett", False),
+("Christopher Hitchens", False),
+("Richard Dawkins", False)
 ]

@@ -41,7 +41,7 @@ import textwrap
 import detectlanguage
 from authors import authors
 from google.cloud import translate_v3beta1 as translate # the v3 api has a free tier
-from datetime import datetime
+from datetime import datetime, timedelta
 
 translate_client = translate.TranslationServiceClient()
 # not sure correct value but docs say for non-regionalized requests
@@ -87,7 +87,7 @@ def get_wisdom____():
 #wisdom = get_wisdom() #generator
 
 def get_quotation():
-    author = choice(authors)
+    author,may_require_translation = choice(authors)
     try:
         quote = choice(wikiquote.quotes(author))
     except Exception as e:
@@ -95,22 +95,26 @@ def get_quotation():
         quote = f"Couldn't retrieve the quotation from {author}. Received exception: {e}"
 
     quote = quote.replace(chr(173), "") # appears to be extended ascii 173 in Churchil quotes (? others):w
-    lang_code = detectlanguage.simple_detect(quote)
-    if lang_code != "en":
-        language = lang_map.get(lang_code, "No language code match")
-        #translation = translate_client.translate(quote, "en")
-        response = translate_client.translate_text(
-                                         parent=parent,
-                                         contents=[quote],
-                                         mime_type='text/plain',  # mime types: text/plain, text/html
-                                         #source_language_code=lang_code+'-'+language,
-                                         source_language_code=lang_code,
-                                         #target_language_code='en-US')
-                                         target_language_code='en')
+    if may_require_translation:
+        lang_code = detectlanguage.simple_detect(quote)
+        if lang_code != "en":
+            language = lang_map.get(lang_code, "No language code match")
+            #translation = translate_client.translate(quote, "en")
+            response = translate_client.translate_text(
+                                             parent=parent,
+                                             contents=[quote],
+                                             mime_type='text/plain',  # mime types: text/plain, text/html
+                                             #source_language_code=lang_code+'-'+language,
+                                             source_language_code=lang_code,
+                                             #target_language_code='en-US')
+                                             target_language_code='en')
 
-        translation = response.translations[0]
-        translation = f"{translation}".replace("translated_text: ", "").replace('"', '')
-        print(translation)
+            translation = response.translations[0]
+            translation = f"{translation}".replace("translated_text: ", "").replace('"', '')
+            print(translation)
+        else:
+            language = ""
+            translation = ""
     else:
         language = ""
         translation = ""
@@ -448,7 +452,8 @@ while 1:
             continue
 
     now = datetime.now()
-    if now.hour + time_offset > 21 or now.hour + time_offset < 6:
+    #if now.hour + time_offset > 21 or now.hour + time_offset < 6:
+    if (now + timedelta(hours=time_offset)).hour > 21 or (now + timedelta(hours=time_offset)).hour < 6:
         print(f"{now.hour + time_offset}:{now.minute} - we are getting some rest")
         sleep(60)
         continue
@@ -458,7 +463,7 @@ while 1:
         continue
 
     if state in ['STOPPED', 'PAUSED_PLAYBACK']:
-        if n < 4: # was 2 but slowing it down
+        if n < 2: # was 2 but slowing it down
             n += 1
         else:
             get_quotation()
