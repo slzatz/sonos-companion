@@ -42,5 +42,13 @@ authors = [
 ("Sam Harris", False),
 ("Daniel Dennett", False),
 ("Christopher Hitchens", False),
-("Richard Dawkins", False)
+("Richard Dawkins", False),
+#("Socrates", True), some problem with Socrates bio
+("Plato", True),
+("Franklin D. Roosevelt", False),
+("Adam Smith", False),
+("Lee Smolin", False),
+("Charles Darwin", False),
+("Henry David Thoreau", False),
+("Ada Lovelace", False)
 ]
