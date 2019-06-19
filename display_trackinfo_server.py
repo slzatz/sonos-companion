@@ -92,7 +92,7 @@ def get_quotation():
         quote = choice(wikiquote.quotes(author))
     except Exception as e:
         print(f"Exception retrieving from wikiquote: {e}")
-        quote = f"Couldn't retrieve the quotation from {author}. Received exception: {html.escape(e)}"
+        quote = f"Couldn't retrieve the quotation from {author}. Received exception: {html.escape(repr(e))}"
 
     quote = quote.replace(chr(173), "") # appears to be extended ascii 173 in Churchil quotes (? others):w
     if may_require_translation:
@@ -136,7 +136,7 @@ def get_quotation():
         bio = wikipedia.summary(author)
     except Exception as e:
         print(f"Couldn't retrieve {author} bio from wikipedia: {e}")
-        text = f"Couldn't retrieve {author} bio from wikipedia: {html.escape(e)}"
+        text = f"Couldn't retrieve {author} bio from wikipedia: {html.escape(repr(e))}"
     else:
         index = bio.find(".", 400)
         if index != -1:
@@ -384,7 +384,7 @@ while 1:
             bio = wikipedia.summary(artist)
         except Exception as e:
             print(f"Couldn't retrieve {artist} bio from wikipedia: {e}")
-            bio_wrap = f"Couldn't retrieve {artist} bio from wikipedia: {html.escape(e)}"
+            bio_wrap = f"Couldn't retrieve {artist} bio from wikipedia: {html.escape(repr(e))}"
         else:
             bio_lines = textwrap.wrap(bio, max_chars_line)
             bio_wrap = "<br/>".join(bio_lines)
