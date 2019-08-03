@@ -50,5 +50,11 @@ authors = [
 ("Lee Smolin", False),
 ("Charles Darwin", False),
 ("Henry David Thoreau", False),
+("David Hume", False),
+("Charles Dickens", False),
+("Emily Dickinson", False),
+("Philip Larkin", False),
+("Max Tegmark", False),
+("Nick Bostrom", False),
 ("Ada Lovelace", False)
 ]

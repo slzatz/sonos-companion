@@ -74,6 +74,8 @@ trackinfo = {"artist":None, "track_title":None} #, "lyrics":None}
 #tasks = remote_session.query(Task).join(Context).filter(Context.title=='wisdom', Task.star==True, Task.completed==None, Task.deleted==False).all()
 #shuffle(tasks)
 
+authors_left = authors[:]
+
 def get_wisdom____():
     for task in tasks:
         #text = [f"[{task.context.title.capitalize()}] <bodyBold>{task.title}</bodyBold>"]
@@ -87,7 +89,8 @@ def get_wisdom____():
 #wisdom = get_wisdom() #generator
 
 def get_quotation():
-    author,may_require_translation = choice(authors)
+    global authors_left
+    author,may_require_translation = choice(authors_left)
     try:
         quote = choice(wikiquote.quotes(author))
     except Exception as e:
@@ -177,6 +180,12 @@ def get_quotation():
     except Exception as e:
         print(e)
 
+    authors_left.remove((author, may_require_translation))
+    if not authors_left:
+        authors_left = authors[:]
+        print("Starting author cycle again")
+    else:
+        print(f"Number of authors left is {len(authors_left)}")
 
 def get_artist_images(name):
 
