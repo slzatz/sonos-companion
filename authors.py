@@ -56,5 +56,7 @@ authors = [
 ("Philip Larkin", False),
 ("Max Tegmark", False),
 ("Nick Bostrom", False),
+("William James", False),
+("William Shakespeare", False),
 ("Ada Lovelace", False)
 ]
