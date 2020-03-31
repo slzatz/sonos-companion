@@ -276,7 +276,8 @@ def list_queue():
     response = []
     for t in queue:
         if type(t) == soco.data_structures.DidlMusicTrack:
-            response.append(f"{t.title} from {t.album} by {t.creator}")
+            #response.append(f"{t.title} from {t.album} by {t.creator}")
+            response.append(f"{t.title}")
         else:
             response.append(f"{t.metadata['title']} (MSTrack)")
     #response = [f"{t.title} by {t.artist}" for t in queue]
@@ -300,7 +301,7 @@ def shuffle(artist):
     if not count:
         return f"I couldn't find any tracks for {artist}"
 
-    print(f"Total track count for {artist} was {count}")
+    #print(f"Total track count for {artist} was {count}")
     tracks = result.docs
     k = 10 if count >= 10 else count
     selected_tracks = random.sample(tracks, k)
@@ -308,8 +309,7 @@ def shuffle(artist):
     play(False, uris)
     titles = [t.get('title', '')+'-'+t.get('album', '') for t in selected_tracks]
     title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
-    return f"I will shuffle:\n{title_list}."
-
+    return f"Total track count for {artist} was {count}:\n{title_list}."
 
 def play_pause():
     try:

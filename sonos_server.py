@@ -1,6 +1,7 @@
 #!bin/python
 '''
-python3.x script running on local raspberry pi -- listens to
+python3.x script running on some local machine (nuc, raspi)
+-- listens to
 and interacts with whatever master speaker is selected.
 Flask-based web app that receives json requests in the form of
 the form of:{'action':'list_queue'}
