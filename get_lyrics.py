@@ -35,7 +35,7 @@ def retrieve_lyrics(url):
 
     return lyrics
 
-def get_lyrics(artist, title):
+def get_lyrics(artist, title, display=False):
 
     #print('{} by {}'.format(title, artist))
 
@@ -59,10 +59,12 @@ def get_lyrics(artist, title):
 
         #write_lyrics_to_file(lyrics, song_title, artist_name)
 
-        print(lyrics)
+        if display:
+            print(lyrics)
         return lyrics
     else:
-        print("could not find (genius) lyrics")
+        if display:
+            print("could not find (genius) lyrics")
         return
 
 # not in use
