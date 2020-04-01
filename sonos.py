@@ -56,10 +56,35 @@ def cli(config, master, verbose):
 @cli.command()
 @click.argument('station', default="wnyc", required=False)
 #@click.option("--station", default="wnyc", help="examples: 'Neil Young', 'Patty Griffin'... default: 'wnyc'")
-def play(station):
+def playstation(station):
     """Play a station (currently a pandora station (eg 'Neil Young') or 'wnyc'
     The default is 'wnyc'"""
     sonos_actions.play_station(station)
+
+@cli.command()
+@click.argument('track_artist', required=True)
+@pass_config
+def playtrack(config, track_artist):
+    if 'by' in track_artist:
+        title, artist = track_artist.split(' by ')
+    else:
+        title, artist = track_artist, ''
+
+    s = 'title:' + ' AND title:'.join(title.split())
+    if artist:
+        s = s + ' artist:' + ' AND artist:'.join(artist.split())
+
+    result = config.solr.search(s, rows=1) 
+    if not len(result):
+        #return f"I couldn't find the track {title}{' by'+artist if artist else ''}."
+        click.echo(f"Couldn't find track {title}{' by'+artist if artist else ''}")
+        return
+
+    track = result.docs[0]
+    uri = track['uri']
+    sonos_actions.play(True, [uri]) # add
+    click.echo(f"{track.get('title', '')} by {track.get('artist', '')} " \
+            f"from album {track.get('album', '')}")
 
 @cli.command()
 def louder():
@@ -88,7 +113,7 @@ def next():
 
 @cli.command()
 def trackinfo():
-    '''Show info for the currently playing track'''
+    '''Detailed info for the currently playing track'''
     track_info = sonos_actions.current()
     if track_info:
         msg = "\n"+"\n\n".join([f"{bold(colorize(x, 'magenta'))}: {colorize(y, 'bold')}" for x,y in track_info.items()])+"\n"
@@ -96,6 +121,15 @@ def trackinfo():
         msg = "Nothing appears to be playing"
 
     click.echo(msg)
+
+@cli.command()
+def what():
+    '''Track, artist and album for the currently playing track'''
+    response = sonos_actions.current_track_info()
+    if response:
+        click.echo(colorize(response, 'green'))
+    else:
+        click.echo(colorize("Nothing appears to be playing", 'red'))
 
 @cli.command()
 def showqueue():

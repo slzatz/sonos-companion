@@ -252,12 +252,12 @@ def play(add, uris):
 
         my_add_to_queue(uri, meta)
 
-    if not add:
+    queue = master.get_queue()
         # with check on is_coordinator may not need the try/except
-        try:
-            master.play_from_queue(0)
-        except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
-            print("master.play_from_queue exception:", e)
+    try:
+        master.play_from_queue(len(queue) - 1)
+    except (soco.exceptions.SoCoUPnPException, soco.exceptions.SoCoSlaveException) as e:
+        print("master.play_from_queue exception:", e)
 
 def play_station(station):
     station = STATIONS.get(station.lower())

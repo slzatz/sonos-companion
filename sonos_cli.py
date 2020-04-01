@@ -393,7 +393,7 @@ class Sonos(Cmd):
 
         response = sonos_actions.current_track_info()
         if response:
-            self.msg = colorize(sonos_actions.current_track_info(), 'green')
+            self.msg = colorize(response, 'green')
         else:
             self.msg = colorize("Nothing appears to be playing", 'red')
 
