@@ -1,5 +1,9 @@
 #!bin/python
 
+'''Click-based command line script to control sonos.
+There are a bunch of aliases in .bashrc'''
+
+import random
 from operator import itemgetter 
 import click
 from soco import SoCo
@@ -30,32 +34,41 @@ class Config():
 pass_config = click.make_pass_decorator(Config, ensure=True)
 
 @click.group()
-@click.option("--master", help="The name of the master speaker")
-@click.option("--verbose", is_flag=True, help="Display additional information")
+@click.option("-m", "--master", help="The name of the master speaker")
+@click.option("-v", "--verbose", is_flag=True, help="Display additional information")
 @pass_config
 def cli(config, master, verbose):
+    '''Sonos command line app; master defaults to "Office2"; verbose defaults to False '''
     config.verbose = verbose
     solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
     config.solr = solr
 
-    master = master if master else "Office2"
+    if not master:
+        sp = SoCo("192.168.86.23")
+        if sp._player_name: # in case Office2 ip address changes
+            sonos_actions.master = sp
+            if verbose:
+                click.echo(f"Master speaker is {sp._player_name: sp.ip_address}")
+            return
+        else:
+            master = "Office2"
 
-    #if config.master:
-    sp = sonos_actions.get_sonos_players()
-    if not sp:
+    #master = master if master else "Office2"
+
+    sps = sonos_actions.get_sonos_players()
+    if not sps:
         click.echo("Could not find Sonos speakers")
         return
-    sp_names = {s.player_name:s for s in sp}
+    sp_names = {s.player_name:s for s in sps}
     sonos_actions.master = sp_names.get(master)
 
     #sonos_actions.master = SoCo("192.168.86.23")
 
     if verbose:
-        click.echo(f"Master speaker is {master}")
+        click.echo(f"Master speaker is {master}: {sonos_actions.master.ip_address}")
 
 @cli.command()
 @click.argument('station', default="wnyc", required=False)
-#@click.option("--station", default="wnyc", help="examples: 'Neil Young', 'Patty Griffin'... default: 'wnyc'")
 def playstation(station):
     """Play a station (currently a pandora station (eg 'Neil Young') or 'wnyc'
     The default is 'wnyc'"""
@@ -65,6 +78,7 @@ def playstation(station):
 @click.argument('track_artist', required=True)
 @pass_config
 def playtrack(config, track_artist):
+    '''Play a track: sonos playtrack "harvest by neil young"'''
     if 'by' in track_artist:
         title, artist = track_artist.split(' by ')
     else:
@@ -137,8 +151,17 @@ def showqueue():
     lst = sonos_actions.list_queue()
     if not lst:
         click.echo("The queue is empty")
+        return
     else:
-        click.echo("\n".join(lst))
+        q = list(enumerate(lst, 1))
+        track_info = sonos_actions.current()
+
+        if track_info:
+            cur_pos = int(track_info['playlist_position'])
+            q[cur_pos-1] = (cur_pos, colorize(q[cur_pos-1][1], 'green'))
+
+        for num,track in q:
+            click.echo(f"{num}. {track}")
 
 @cli.command()
 def clearqueue():
@@ -201,6 +224,48 @@ def playalbum(config, album_artist):
     title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
     #return f"I will play {len(uris)} tracks from {selected_album}:\n{title_list}."
     click.echo(f"{len(uris)} tracks from {selected_album}:\n{title_list}")
+
+@cli.command()
+@click.argument('pos', type=click.INT, required=True)
+@pass_config
+def playfromqueue(config, pos):
+    '''Play track from queue position - top of list is position #1'''
+    lst = sonos_actions.list_queue()
+    if 0 < pos <= len(lst):
+        sonos_actions.play_from_queue(pos-1)
+        if config.verbose:
+            click.echo(f"Playing track {pos}: {lst[pos-1]}")
+    else:
+        click.echo(f"{s} is out of the range of the queue")
+
+@cli.command()
+@click.argument('artists', type=click.STRING, required=True, nargs=-1)
+@pass_config
+def mix(config, artists):
+    '''Mix as many artists as you'd like:  sonos mix "Neil Young" "Jason Isbell" "Patty Griffin"'''
+    tracklist = []
+    for artist in artists:
+        s = 'artist:' + ' AND artist:'.join(artist.split())
+        result = config.solr.search(s, fl='artist,title,uri', rows=500) 
+        count = len(result)
+        if count:
+            print(f"Total track count for {artist} was {count}")
+            tracks = result.docs
+            k = 5 if count >= 5 else count
+            random_tracks = random.sample(tracks, k)
+            tracklist.extend(random_tracks)
+        else:
+            click.echo(f"I couldn't find any tracks for {artist}")
+            return
+
+    random.shuffle(tracklist)
+    uris = [t.get('uri') for t in tracklist]
+    sonos_actions.play(False, uris)
+    
+    #random.shuffle(tracks)
+    titles = [t.get('title', '')+'-'+t.get('artist', '') for t in tracklist]
+    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+    click.echo(f"The mix for {' and '.join(artists)}:\n{title_list}")
 
 if __name__ == "__main__":
     play_station()
