@@ -35,10 +35,12 @@ actions = {'play':play, 'turn_volume':turn_volume, 'set_volume':set_volume, 'pla
 '''
 
 import os
-from time import time, sleep
+from ipaddress import ip_address
+from time import sleep
 import json
 import sys
 import random
+from operator import itemgetter 
 import pysolr
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
@@ -46,7 +48,7 @@ import soco
 from soco import config as soco_config
 from config import solr_uri
 from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO, \
-                         DIDL_LIBRARY_PLAYLIST, DIDL_AMAZON, ARTISTS
+                         DIDL_LIBRARY_PLAYLIST, DIDL_AMAZON
 
 soco_config.CACHE_ENABLED = False
 
@@ -88,6 +90,21 @@ def get_sonos_players():
             break 
     return sp    
 
+def set_master(speaker):
+    try:
+        ip_address(speaker)
+    except ValueError:
+        pass
+    else:
+        return soco.SoCo(speaker)
+
+    sps = get_sonos_players()
+    if not sps:
+        return None
+
+    sp_names = {s.player_name:s for s in sps}
+    return sp_names.get(speaker)
+    
 def my_add_to_queue(uri, metadata):
     # generally don't need the uri (can be passed as '') although passing it in
     try:
@@ -265,7 +282,8 @@ def play_station(station):
         uri = station[1]
         #print("radio station uri=",uri)
         if uri.startswith('x-sonosapi-radio'):
-            meta = meta_format_pandora.format(title=station[0])
+            #meta = meta_format_pandora.format(title=station[0])
+            meta = META_FORMAT_PANDORA.format(title=station[0])
         elif uri.startswith('x-sonosapi-stream'):
             meta = META_FORMAT_RADIO.format(title=station[0])
 
@@ -291,26 +309,33 @@ def clear_queue():
     except Exception as e:
         print("Encountered exception when trying to clear the queue:",e)
 
-def shuffle(artist):
-    if not artist:
-        return
+def shuffle(artists):
+    tracklist = []
+    msg = ""
+    for artist in artists:
+        s = 'artist:' + ' AND artist:'.join(artist.split())
+        result = solr.search(s, fl='artist,title,uri', rows=500) 
+        count = len(result)
+        num_tracks = int(10/len(artists))
+        if count:
+            msg += f"Total track count for {artist} was {count}\n"
+            tracks = result.docs
+            k = num_tracks if count >= num_tracks else count
+            random_tracks = random.sample(tracks, k)
+            tracklist.extend(random_tracks)
+        else:
+            msg += f"I couldn't find any tracks for {artist}\n"
 
-    s = 'artist:' + ' AND artist:'.join(artist.split())
-    result = solr.search(s, fl='album,title,uri', rows=500) 
-    count = len(result)
-    if not count:
-        return f"I couldn't find any tracks for {artist}"
-
-    #print(f"Total track count for {artist} was {count}")
-    tracks = result.docs
-    k = 10 if count >= 10 else count
-    selected_tracks = random.sample(tracks, k)
-    uris = [t.get('uri') for t in selected_tracks]
+    random.shuffle(tracklist)
+    uris = [t.get('uri') for t in tracklist]
     play(False, uris)
-    titles = [t.get('title', '')+'-'+t.get('album', '') for t in selected_tracks]
-    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
-    return f"Total track count for {artist} was {count}:\n{title_list}."
 
+    titles = [t.get('title', '')+'-'+t.get('artist', '') for t in tracklist]
+    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+    msg += f"The mix for {' and '.join(artists)}:\n{title_list}"
+
+    return msg
+    
 def play_pause():
     try:
         state = master.get_current_transport_info()['current_transport_state']
@@ -323,3 +348,50 @@ def play_pause():
         master.pause()
     elif state!='ERROR':
         master.play()
+
+def play_track(title, artist=None):
+    s = 'title:' + ' AND title:'.join(title.split())
+    if artist:
+        s = s + ' artist:' + ' AND artist:'.join(artist.split())
+
+    result = solr.search(s, rows=1)
+
+    if result:
+        track = result.docs[0]
+        uri = track['uri']
+        play(True, [uri]) # add
+        msg = f"{track.get('title', '')} by {track.get('artist', '')} " \
+            f"from album {track.get('album', '')}"
+    else:
+        msg = f"Couldn't find track {title}{' by'+artist if artist else ''}"
+
+    return msg
+
+def play_album(album, artist=None):
+    s = 'album:' + ' AND album:'.join(album.split())
+    if artist:
+        s = s + ' artist:' + ' AND artist:'.join(artist.split())
+
+    #only brings back actual matches but 25 seems like max for most albums
+    result = solr.search(s, fl='score,track,uri,artist,title,album',
+                         sort='score desc', rows=25) 
+
+    tracks = result.docs
+    if tracks:
+        selected_album = tracks[0]['album']
+        try:
+            tracks = sorted([t for t in tracks],key=itemgetter('track'))
+        except KeyError:
+            pass
+        # The if t['album']==selected_album only comes into play
+        # if we retrieved more than one album
+        selected_tracks = [t for t in tracks if t['album']==selected_album]
+        uris = [t.get('uri') for t in selected_tracks]
+        play(False, uris)
+        titles = [t.get('title', '')+'-'+t.get('artist', '') for t in selected_tracks]
+        title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+        msg = f"{len(uris)} tracks from {selected_album}:\n{title_list}"
+    else:
+        msg = f"I couldn't find {album}{ 'by {artist}' if artist else ''}"
+        
+    return msg
