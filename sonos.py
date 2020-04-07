@@ -6,6 +6,9 @@ There are a bunch of aliases in .bashrc'''
 import click
 import sonos_actions
 from get_lyrics import get_lyrics #uses genius.com
+from artist_images_db import *
+import random
+from display_images import display_image
 
 def bold(text):
     return "\033[1m" + text + "\033[0m"
@@ -166,6 +169,14 @@ def playfromqueue(config, pos):
             click.echo(f"Playing track {pos}: {lst[pos-1]}")
     else:
         click.echo(f"{s} is out of the range of the queue")
+
+@cli.command()
+@click.argument('artist', type=click.STRING, required=True)
+def image(artist):
+    a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
+    images = [im for im in a.images if im.ok]
+    image = random.choice(images)
+    display_image(image)
 
 if __name__ == "__main__":
     play_station()
