@@ -6,9 +6,7 @@ There are a bunch of aliases in .bashrc'''
 import click
 import sonos_actions
 from get_lyrics import get_lyrics #uses genius.com
-from artist_images_db import *
-import random
-from display_images import display_image
+from display_image import display_image
 
 def bold(text):
     return "\033[1m" + text + "\033[0m"
@@ -58,7 +56,7 @@ def playstation(station):
 @click.argument('title', required=True)
 @click.option("-a", "--artist", help="The artist for the track to be played")
 def playtrack(title, artist):
-    '''Play a track: sonos playtrack "harvest" -a "neil young"'''
+    '''Play a track -> sonos playtrack "harvest" -a "neil young"'''
     msg = sonos_actions.play_track(title, artist)
     click.echo(msg)
 
@@ -100,12 +98,22 @@ def trackinfo():
 
 @cli.command()
 def what():
-    '''Track, artist and album for the currently playing track'''
-    response = sonos_actions.current_track_info()
-    if response:
-        click.echo(colorize(response, 'green'))
+    '''Image, title, artist and album for the currently playing track'''
+    track = sonos_actions.current_track_info(False) #False = don't return text; return a dictionary
+
+    if track:
+        display_image(track['artist'])
+
+        click.secho("\nartist: ", nl=False, fg='cyan', bold=True)
+        click.echo(f"{track['artist']}")
+        click.secho("title: ", nl=False, fg='cyan', bold=True)
+        click.echo(f"{track['title']}")
+        click.secho("album: ", nl=False, fg='cyan', bold=True)
+        click.echo(f"{track['album']}\n")
     else:
-        click.echo(colorize("Nothing appears to be playing", 'red'))
+        click.secho("Nothing appears to be playing! ", nl=False, fg='red', bold=True)
+
+    
 
 @cli.command()
 def showqueue():
@@ -133,9 +141,10 @@ def clearqueue():
 @cli.command()
 def lyrics():
     '''Retrieve lyrics for the current track'''
-    track = sonos_actions.current()['title']
+    title = sonos_actions.current()['title']
     artist = sonos_actions.current()['artist']
-    lyrics = get_lyrics(artist, track)
+    lyrics = get_lyrics(artist, title)
+    click.secho(f"\n{title} by {artist}", fg='cyan', bold=True, nl=False)
   
     if not lyrics:
         click.echo("Couldn't retrieve lyrics")
@@ -153,7 +162,7 @@ def shuffle(artists):
 @click.argument('album', type=click.STRING, required=True)
 @click.option('-a', '--artist', help="Artist to help find album to be played")
 def playalbum(album, artist=None):
-    '''Play an album: sonos playalbum "A man needs a maid" -a "neil young"'''
+    '''Play an album -> sonos playalbum "A man needs a maid" -a "neil young"'''
     msg = sonos_actions.play_album(album, artist)
     click.echo(msg)
 
@@ -173,10 +182,8 @@ def playfromqueue(config, pos):
 @cli.command()
 @click.argument('artist', type=click.STRING, required=True)
 def image(artist):
-    a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
-    images = [im for im in a.images if im.ok]
-    image = random.choice(images)
-    display_image(image)
+    '''Display image of artist -> sonos image "neil young"'''
+    display_image(artist)
 
 if __name__ == "__main__":
     play_station()

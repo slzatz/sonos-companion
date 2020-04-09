@@ -3,6 +3,8 @@ import wand.image
 import requests
 from io import BytesIO
 from base64 import standard_b64encode
+from artist_images_db import *
+import random
 
 def serialize_gr_command(cmd, payload=None):
     cmd = ','.join('{}={}'.format(k, v) for k, v in cmd.items())
@@ -26,8 +28,10 @@ def write_chunked(cmd, data):
         sys.stdout.flush()
         cmd.clear()
 
-def display_image(image):
+def display_image(artist):
     '''image = sqlalchemy image object'''
+    a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
+    image = random.choice(a.images)
     print("\n*****\n", image.link)
     try:
         response = requests.get(image.link, timeout=5.0)
