@@ -118,13 +118,11 @@ def display_image(uri):
     img.save(filename = "images/zzzz")
     img.close()
 
-    #with open("images/zzzz", 'rb') as f:
-    #    write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
+    with open("images/zzzz", 'rb') as f:
+        write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
 
-    #print("\x1b[0;50H")
-
-def get_quotation():
-    author,may_require_translation = choice(authors)
+def get_quotation(author, may_require_translation):
+    #author,may_require_translation = choice(authors)
     try:
         quote = choice(wikiquote.quotes(author))
     except Exception as e:
@@ -173,6 +171,7 @@ def get_quotation():
             bio = bio[:index + 1]
         bio = textwrap.wrap(bio, max_chars_line, initial_indent="                                                   ")
         bio = "\n".join(bio)
+
     try:
         page = wikipedia.page(author)
         images = page.images
@@ -190,20 +189,45 @@ def get_quotation():
                 images.remove(uri)
             
         #data = {"header":author, "uri":uri, "type":"image"} 
-        display_image(uri)
+        #display_image(uri)
     
     return lines + "\n" + bio[:100]
 
+def get_wikipedia_image_uri(author):
+
+    try:
+        page = wikipedia.page(author)
+        images = page.images
+    except Exception as e:
+        print(f"Could not retrieve page/images for {author}")
+        print(f"Exception retrieving from wikipedia: {e}")
+        data = {"uri":"searching"}
+
+    else:
+        while 1:
+            uri = choice(images)
+            if uri[-4:].lower() in [".jpg", ".png"]:
+                break
+            else:
+                images.remove(uri)
+            
+        #data = {"header":author, "uri":uri, "type":"image"} 
+        #display_image(uri)
+    return uri
 
 if __name__ == "__main__":
-    sys.stdout.write("\x1b[2J")
-    sys.stdout.write("\x1b[0;0H")
+    #sys.stdout.write("\x1b[2J")
+    #sys.stdout.write("\x1b[0;0H")
     sys.stdout.write("\x1b[s")
-    q = get_quotation()
+    #z = sys.stdout.write("\x1b6n")
+    #print(z)
+    author,may_require_translation = choice(authors)
+    q = get_quotation(author, may_require_translation)
     print(q)
     sys.stdout.write("\x1b[u")
-    sys.stdout.write("\x1b[1B")
-    #print("\x1b[0;0H")
-    with open("images/zzzz", 'rb') as f:
-        write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
-    print("\n")
+    #sys.stdout.write("\x1b[1B")
+    uri = get_wikipedia_image_uri(author)
+    display_image(uri)    
+    #with open("images/zzzz", 'rb') as f:
+    #    write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
+    print(f"\n{uri}")
