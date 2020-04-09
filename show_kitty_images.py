@@ -31,7 +31,7 @@ def serialize_gr_command(cmd, payload=None):
     return b''.join(ans)
 
 def write_chunked(cmd, data):
-    print("In write_chunked\n") 
+    #print("In write_chunked\n") 
     data = standard_b64encode(data)
     while data:
         chunk, data = data[:4096], data[4096:]
@@ -62,7 +62,7 @@ sonos_track_topic = "sonos/{}/track".format(location)
 
 def display_image(image):
     '''image = sqlalchemy image object'''
-    print(image.link)
+    #print(image.link)
     try:
         response = requests.get(image.link, timeout=5.0)
     except (requests.exceptions.ConnectionError,
@@ -122,6 +122,8 @@ def display_image(image):
     with open("images/zzzz", 'rb') as f:
         write_chunked({'a': 'T', 'f': 100}, f.read())
 
+    print(f"\n{trackinfo['artist']} {trackinfo['track_title']}\n{image.link}")
+    #print(f"\n{image.link}")
 
 def get_artist_images(name):
 
@@ -179,7 +181,7 @@ def on_message(client, userdata, msg):
     global new_track_info
     topic = msg.topic
     body = msg.payload
-    print(topic+": "+str(body))
+    #print(topic+": "+str(body))
 
     try:
         z = json.loads(body)
@@ -187,13 +189,13 @@ def on_message(client, userdata, msg):
         print("error reading the mqtt message body: ", e)
         return
 
-    print("z = json.loads(body) =",z)
+    #print("z = json.loads(body) =",z)
 
     artist = z.get("artist", "")
     track_title = z.get("title", "")
 
-    print("artist =",artist)
-    print("track_title =",track_title)
+    #print("artist =",artist)
+    #print("track_title =",track_title)
 
     try:
         a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
@@ -234,6 +236,10 @@ while 1:
         new_track_info = False
     if images:
         if time.time() > t0 + 10:
+            #sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image  
+            sys.stdout.write("\x1b[2J") #clear screen - go home ??? seems to need a print to show next image
+            print(" ") # seems to need this
+            #sys.stdout.write("\x1b[0;0H")
             display_image(images.pop())
             t0 = time.time()
     else:
