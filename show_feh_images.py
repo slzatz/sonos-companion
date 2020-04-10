@@ -20,6 +20,9 @@ from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from config import aws_mqtt_uri, google_api_key
 from artist_images_db import *
+import subprocess
+
+viewer = None
 
 def check():
     while 1:
@@ -42,6 +45,7 @@ sonos_track_topic = "sonos/{}/track".format(location)
 
 def display_image(image):
     '''image = sqlalchemy image object'''
+    global viewer
     print(image.link)
     try:
         response = requests.get(image.link, timeout=5.0)
@@ -94,6 +98,14 @@ def display_image(image):
     img.resize(800,800) #400x400
     img.save(filename = "images/zzzz")
     img.close()
+    #im = Image.open("images/zzzz")
+    #im.show()
+    if viewer:
+        viewer.terminate()
+        viewer.kill()
+
+    viewer = subprocess.Popen(['feh', "images/zzzz"])
+
 
 def get_artist_images(name):
 
