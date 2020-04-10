@@ -17,12 +17,13 @@ int nchars = snprintf(lf_ret, sizeof(lf_ret), "\r\n\x1b[%dC", EDITOR_LEFT_MARGIN
 \x1b(0 - enter line drawing mode
 \033[s or \0337 - save cursor position
 \033[u or \0338 - restore cursor position
-  Below is how icat does the cursor position
+
+Below is how icat does the cursor position:
   sys.stdout.buffer.write("\033[{};{}H".format(place.top + 1, x + extra_cells).encode("ascii"))
   sys.stdout.buffer.write(b"\0337") - save cursor
   sys.stdout.buffer.write(b"\0338") - restore cursor
 '''
-from itertools import cycle
+#from itertools import cycle
 from config import google_api_key, google_translate_project_id, detectlanguage_key
 import requests
 from random import choice
@@ -88,8 +89,7 @@ def display_image(uri):
         return
 
     if response.status_code != 200:
-        print(f"status code = {response.status_code}")
-        #print(f"{uri} returned a {response.status_code}")
+        print(f"{uri} returned a {response.status_code}")
         return
         
     # it is possible to have encoding == None and ascii == True
@@ -158,11 +158,12 @@ def get_quotation(author, may_require_translation):
         language = ""
         translation = ""
 
-    s = f"Translated from {language}<br/>" if language else ""
+    s = f"Translated from {language}\n" if language else ""
     z = " \n \n" if translation else ""
 
     #lines = textwrap.wrap(repr(translation) quote + "\n" + repr(translation), max_chars_line)
-    lines = textwrap.wrap(f"{translation}{z}{quote}", max_chars_line, initial_indent="                                                   ", subsequent_indent="                                                   ")
+    indent = 45*" "
+    lines = textwrap.wrap(f"{translation}{z}{quote}", max_chars_line, initial_indent=indent, subsequent_indent=indent)
     lines = "\n".join(lines)
 
     try:
@@ -174,7 +175,8 @@ def get_quotation(author, may_require_translation):
         index = bio.find(".", 400)
         if index != -1:
             bio = bio[:index + 1]
-        bio = textwrap.wrap(bio, max_chars_line, initial_indent="                                                   ")
+        bio = bio[:400] + "..."
+        bio = textwrap.wrap(bio, max_chars_line, initial_indent=indent, subsequent_indent=indent)
         bio = "\n".join(bio)
 
     try:
@@ -193,10 +195,8 @@ def get_quotation(author, may_require_translation):
             else:
                 images.remove(uri)
             
-        #data = {"header":author, "uri":uri, "type":"image"} 
-        #display_image(uri)
-    
-    return lines + "\n" + bio[:100]
+    #return "\x1b[3m" + lines + "\x1b[0m\n" + indent + "-- " +  "\x1b[1m" + author + "\x1b[0m\n\n" + bio
+    return f"\x1b[3m{lines}\x1b[0m\n{indent}-- \x1b[1m{author}\x1b[0m\n\n{bio}"
 
 def get_wikipedia_image_uri(author):
 
@@ -216,16 +216,13 @@ def get_wikipedia_image_uri(author):
             else:
                 images.remove(uri)
             
-        #data = {"header":author, "uri":uri, "type":"image"} 
-        #display_image(uri)
     return uri
 
 if __name__ == "__main__":
     #sys.stdout.write("\x1b[2J")
     #sys.stdout.write("\x1b[0;0H")
+    print("\n")
     sys.stdout.buffer.write(b"\0337") #[s
-    #z = sys.stdout.write("\x1b6n")
-    #print(z)
     author,may_require_translation = choice(authors)
     q = get_quotation(author, may_require_translation)
     print(q)
@@ -234,6 +231,5 @@ if __name__ == "__main__":
     #sys.stdout.write("\x1b[1B")
     uri = get_wikipedia_image_uri(author)
     display_image(uri)    
-    #with open("images/zzzz", 'rb') as f:
-    #    write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
-    print(f"\n{uri}")
+    print("\n")
+    #print(f"\n{uri}")
