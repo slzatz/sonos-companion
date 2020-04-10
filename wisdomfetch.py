@@ -4,20 +4,23 @@
 Gets random quotations from wikiquote along with bios and images from wikipedia.
 If quotation is not in English, using Google Cloud Translage v3beta (has free tier)
 to translate the quotation.
-
+Note hex 1b = octal 33 = decimal 27 = ESCAPE
 \x1b[NC moves cursor forward by N columns
-write(STDOUT_FILENO, "\x1b[2J", 4); //clears the screen
-write(STDOUT_FILENO, "\x1b[H", 3); //send cursor home
+\x1b[2J - erase screen
+\x1b[J - erase down
+\x1b[1J - erase up
+\x1b[H - send cursor home
 int nchars = snprintf(lf_ret, sizeof(lf_ret), "\r\n\x1b[%dC", EDITOR_LEFT_MARGIN);
-ab.append("\x1b[7m", 4); //switches to inverted colors
-write(STDOUT_FILENO, "\x1b[37;1mw", 8); //'T' corner
-write(STDOUT_FILENO, "\x1b[0m", 4); // return background to normal (? necessary)
-  write(STDOUT_FILENO, "\x1b(B", 3); //exit line drawing mode
-  write(STDOUT_FILENO, "\x1b(0", 3); // Enter line drawing mode
-   Save cursor position:
-  \033[s
-- Restore cursor position:
-  \033[u
+\x1b[7m - switches to inverted colors
+\x1b[0m - return background to normal
+\x1b(B - exit line drawing mode
+\x1b(0 - enter line drawing mode
+\033[s or \0337 - save cursor position
+\033[u or \0338 - restore cursor position
+  Below is how icat does the cursor position
+  sys.stdout.buffer.write("\033[{};{}H".format(place.top + 1, x + extra_cells).encode("ascii"))
+  sys.stdout.buffer.write(b"\0337") - save cursor
+  sys.stdout.buffer.write(b"\0338") - restore cursor
 '''
 from itertools import cycle
 from config import google_api_key, google_translate_project_id, detectlanguage_key
@@ -115,11 +118,13 @@ def display_image(uri):
     img.crop(*t)
     # resize should take the image and enlarge it without cropping 
     img.resize(400,400) #400x400
-    img.save(filename = "images/zzzz")
-    img.close()
 
-    with open("images/zzzz", 'rb') as f:
-        write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
+    f = BytesIO()
+    img.save(f)
+    img.close()
+    f.seek(0)
+
+    write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
 
 def get_quotation(author, may_require_translation):
     #author,may_require_translation = choice(authors)
@@ -218,13 +223,14 @@ def get_wikipedia_image_uri(author):
 if __name__ == "__main__":
     #sys.stdout.write("\x1b[2J")
     #sys.stdout.write("\x1b[0;0H")
-    sys.stdout.write("\x1b[s")
+    sys.stdout.buffer.write(b"\0337") #[s
     #z = sys.stdout.write("\x1b6n")
     #print(z)
     author,may_require_translation = choice(authors)
     q = get_quotation(author, may_require_translation)
     print(q)
-    sys.stdout.write("\x1b[u")
+    sys.stdout.buffer.write(b"\0338") #[u
+    #sys.stdout.write("\x1b[u")
     #sys.stdout.write("\x1b[1B")
     uri = get_wikipedia_image_uri(author)
     display_image(uri)    
