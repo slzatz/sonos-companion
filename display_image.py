@@ -40,25 +40,19 @@ def display_image(artist):
             requests.exceptions.ChunkedEncodingError,
             requests.exceptions.ReadTimeout) as e:
         print(f"requests.get({image.link}) generated exception:\n{e}")
-        #image.ok = False
-        #session.commit()
-        #print(f"{image.link} ok set to False")
+        display_image(artist)
         return
 
     print(f"status code = {response.status_code}")
     if response.status_code != 200:
         print(f"{image.link} returned a {response.status_code}")
-        #image.ok = False
-        #session.commit()
-        #print(f"{image.link} ok set to False")
+        display_image(artist)
         return
         
     # it is possible to have encoding == None and ascii == True
     if response.encoding or response.content.isascii():
         print(f"{image.link} returned ascii text and not an image")
-        #image.ok = False
-        #session.commit()
-        #print(f"{image.link} ok set to False")
+        display_image(artist)
         return
 
     # this try/except is needed for occasional bad/unknown file format
@@ -67,9 +61,7 @@ def display_image(artist):
     except Exception as e:
         print(f"wand.image.Image(file=BytesIO(response.content))"\
               f"generated exception from {image.link} {e}")
-        #image.ok = False
-        #session.commit()
-        #print(f"{image.link} ok set to False")
+        display_image(artist)
         return
 
     if img.format == 'JPEG':
@@ -85,8 +77,10 @@ def display_image(artist):
     img.crop(*t)
     # resize should take the image and enlarge it without cropping 
     img.resize(400,400) #400x400
-    img.save(filename = "images/zzzz")
-    img.close()
 
-    with open("images/zzzz", 'rb') as f:
-        write_chunked({'a': 'T', 'f': 100}, f.read())
+    f = BytesIO()
+    img.save(f)
+    img.close()
+    f.seek(0)
+
+    write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
