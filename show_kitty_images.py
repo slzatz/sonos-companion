@@ -116,14 +116,19 @@ def display_image(image):
     img.crop(*t)
     # resize should take the image and enlarge it without cropping 
     img.resize(800,800) #400x400
-    img.save(filename = "images/zzzz")
-    img.close()
 
-    with open("images/zzzz", 'rb') as f:
-        write_chunked({'a': 'T', 'f': 100}, f.read())
+    f = BytesIO()
+    img.save(f)
+    img.close()
+    f.seek(0)
+            
+    sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image - works but doesn't delete old text - kitty graphics command
+    sys.stdout.write("\x1b[1J") # - erase up
+    print(" ") # for some reason this is necessary or images are not displayed
+
+    write_chunked({'a': 'T', 'f': 100}, f.read())
 
     print(f"\n{trackinfo['artist']} {trackinfo['track_title']}\n{image.link}")
-    #print(f"\n{image.link}")
 
 def get_artist_images(name):
 
@@ -236,10 +241,10 @@ while 1:
         new_track_info = False
     if images:
         if time.time() > t0 + 10:
-            #sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image  
-            sys.stdout.write("\x1b[2J") #clear screen - go home ??? seems to need a print to show next image
-            print(" ") # seems to need this
-            #sys.stdout.write("\x1b[0;0H")
+            # the 3 lines below now appear in display_image to shorten the time between erasing and printing new image
+            #sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image - works but doesn't delete old text - kitty graphics command
+            #sys.stdout.write("\x1b[1J") # - erase up
+            #print(" ") # for some reason this is necessary or images are not displayed
             display_image(images.pop())
             t0 = time.time()
     else:
