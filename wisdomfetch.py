@@ -5,12 +5,12 @@ Gets random quotations from wikiquote along with bios and images from wikipedia.
 If quotation is not in English, using Google Cloud Translage v3beta (has free tier)
 to translate the quotation.
 Note hex 1b = octal 33 = decimal 27 = ESCAPE
-\x1b[NC moves cursor forward by N columns
-\x1b[2J - erase screen
+\x1b[NC [ND moves cursor forward/back by N columns
+\x1b[NA [NB moves cursor up/down by N rows
+\x1b[2J - erase entire screen and go home
 \x1b[J - erase down
 \x1b[1J - erase up
 \x1b[H - send cursor home
-int nchars = snprintf(lf_ret, sizeof(lf_ret), "\r\n\x1b[%dC", EDITOR_LEFT_MARGIN);
 \x1b[7m - switches to inverted colors
 \x1b[0m - return background to normal
 \x1b(B - exit line drawing mode
@@ -33,7 +33,8 @@ import wikiquote
 import textwrap
 import detectlanguage
 from authors import authors
-from google.cloud import translate_v3beta1 as translate # the v3 api has a free tier
+#from google.cloud import translate_v3beta1 as translate # the v3 api has a free tier
+from google.cloud import translate # the v3 api has a free tier
 import sys
 import wand.image
 from io import BytesIO
@@ -161,9 +162,11 @@ def get_quotation(author, may_require_translation):
     s = f"Translated from {language}\n" if language else ""
     z = " \n \n" if translation else ""
 
-    #lines = textwrap.wrap(repr(translation) quote + "\n" + repr(translation), max_chars_line)
+    # at current screen mag and font a 400 x 400 picture = 22 lines
+    line_count = 2
     indent = 45*" "
     lines = textwrap.wrap(f"{translation}{z}{quote}", max_chars_line, initial_indent=indent, subsequent_indent=indent)
+    line_count += len(lines)
     lines = "\n".join(lines)
 
     try:
@@ -177,6 +180,7 @@ def get_quotation(author, may_require_translation):
             bio = bio[:index + 1]
         bio = bio[:400] + "..."
         bio = textwrap.wrap(bio, max_chars_line, initial_indent=indent, subsequent_indent=indent)
+        line_count += len(bio)
         bio = "\n".join(bio)
 
     try:
@@ -195,8 +199,7 @@ def get_quotation(author, may_require_translation):
             else:
                 images.remove(uri)
             
-    #return "\x1b[3m" + lines + "\x1b[0m\n" + indent + "-- " +  "\x1b[1m" + author + "\x1b[0m\n\n" + bio
-    return f"\x1b[3m{lines}\x1b[0m\n{indent}-- \x1b[1m{author}\x1b[0m\n\n{bio}"
+    return f"\x1b[3m{lines}\x1b[0m\n{indent}-- \x1b[1m{author}\x1b[0m\n\n{bio}", line_count
 
 def get_wikipedia_image_uri(author):
 
@@ -219,17 +222,17 @@ def get_wikipedia_image_uri(author):
     return uri
 
 if __name__ == "__main__":
-    #sys.stdout.write("\x1b[2J")
-    #sys.stdout.write("\x1b[0;0H")
-    print("\n")
-    sys.stdout.buffer.write(b"\0337") #[s
+    print("") # line feed
+    sys.stdout.buffer.write(b"\0337") #save cursor position
     author,may_require_translation = choice(authors)
-    q = get_quotation(author, may_require_translation)
+    q,line_count = get_quotation(author, may_require_translation)
     print(q)
-    sys.stdout.buffer.write(b"\0338") #[u
-    #sys.stdout.write("\x1b[u")
-    #sys.stdout.write("\x1b[1B")
+    sys.stdout.buffer.write(b"\0338") #restore cursor position
+    sys.stdout.buffer.write(b"\x1b[8B") #move down 8 lines to near middle of image
+    print("  retrieving photo ...")
+    sys.stdout.buffer.write(b"\x1b[9A")
     uri = get_wikipedia_image_uri(author)
     display_image(uri)    
-    print("\n")
-    #print(f"\n{uri}")
+    print("")
+    if line_count > 22: 
+        print((line_count-22)*"\n")
