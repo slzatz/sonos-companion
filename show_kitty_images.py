@@ -124,7 +124,7 @@ def display_image(image):
             
     sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image - works but doesn't delete old text - kitty graphics command
     sys.stdout.write("\x1b[1J") # - erase up
-    print(" ") # for some reason this is necessary or images are not displayed
+    print() # for some reason this is necessary or images are not displayed
 
     write_chunked({'a': 'T', 'f': 100}, f.read())
 

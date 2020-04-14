@@ -170,15 +170,11 @@ def get_quotation(author, may_require_translation):
     lines = "\n".join(lines)
 
     try:
-        bio = wikipedia.summary(author)
+        bio = wikipedia.summary(author, sentences=3)
     except Exception as e:
         print(f"Couldn't retrieve {author} bio from wikipedia: {e}")
         text = f"Couldn't retrieve {author} bio from wikipedia: {html.escape(repr(e))}"
     else:
-        index = bio.find(".", 400)
-        if index != -1:
-            bio = bio[:index + 1]
-        bio = bio[:400] + "..."
         bio = textwrap.wrap(bio, max_chars_line, initial_indent=indent, subsequent_indent=indent)
         line_count += len(bio)
         bio = "\n".join(bio)
