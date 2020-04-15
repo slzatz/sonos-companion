@@ -15,28 +15,18 @@ from config import aws_mqtt_uri, google_api_key
 from artist_images_db import *
 from show_png_jpg import display_image
 
+# keep the postgres session alive
 def check():
     while 1:
-        c = session.connection() #########
+        c = session.connection() 
         try:
             c.execute("select 1")
         except (sqla_exc.ResourceClosedError, sqla_exc.StatementError) as e:
             print(f"{datetime.datetime.now()} - {e}")
         time.sleep(500)
 
-th = threading.Thread(target=check, daemon=True)
-th.start()
-trackinfo = {"artist":None, "track_title":None, "lyrics":None, "images":[]}
-new_track_info = False
-
-with open('location') as f:
-    location = f.read().strip()
-
-sonos_track_topic = "sonos/{}/track".format(location)
-
 
 def get_artist_images(name):
-
     print(f"**************Google Custom Search Engine Request for {name} **************")
     http = httplib2.Http()
     service = discovery.build('customsearch', 'v1',
@@ -128,32 +118,42 @@ def on_message(client, userdata, msg):
     new_track_info = True
     trackinfo.update({"artist":artist, "track_title":track_title, "images":images})
 
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-client.connect(aws_mqtt_uri, 1883, 60)
-# brief loop below lets the mqtt client connect to the broker
-t0 = time.time()
-while time.time() < t0 + 10:
-    client.loop(timeout = 1.0)
-    time.sleep(1)
-
-images = []
-while 1:
-    client.loop(timeout = 0.25) #was 1.0
-    if new_track_info:
-        images = trackinfo["images"][::]
-        new_track_info = False
-    if images:
-        if time.time() > t0 + 10:
-            image = images.pop()
-            display_image(images.link)
-            print(f"\n{trackinfo['artist']} {trackinfo['track_title']}\n{image.link}")
-            t0 = time.time()
-    else:
-        images = trackinfo["images"][::]
-    time.sleep(.1)
-
-
 if __name__ == "__main__":
+
+    th = threading.Thread(target=check, daemon=True)
+    th.start()
+    trackinfo = {"artist":None, "track_title":None, "lyrics":None, "images":[]}
+    new_track_info = False
+
+    with open('location') as f:
+        location = f.read().strip()
+
+    sonos_track_topic = "sonos/{}/track".format(location)
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect(aws_mqtt_uri, 1883, 60)
+    # brief loop below lets the mqtt client connect to the broker
+    t0 = time.time()
+    while time.time() < t0 + 10:
+        client.loop(timeout = 1.0)
+        time.sleep(1)
+
+    images = []
+    while 1:
+        client.loop(timeout = 0.25) #was 1.0
+        if new_track_info:
+            images = trackinfo["images"][::]
+            new_track_info = False
+        if images:
+            if time.time() > t0 + 10:
+                image = images.pop()
+                display_image(image.link, 600, 600)
+                print(f"\n{trackinfo['artist']}: {trackinfo['track_title']}\n{image.link}")
+                t0 = time.time()
+        else:
+            images = trackinfo["images"][::]
+        time.sleep(.1)
+
 

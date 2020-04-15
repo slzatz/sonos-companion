@@ -11,21 +11,16 @@ Note hex 1b = octal 33 = decimal 27 = ESCAPE
 \x1b[J - erase down
 \x1b[1J - erase up
 \x1b[H - send cursor home
+\x1b[{};{}H".format(place.top + 1, x + extra_cells).encode("ascii")
 \x1b[7m - switches to inverted colors
 \x1b[0m - return background to normal
 \x1b(B - exit line drawing mode
 \x1b(0 - enter line drawing mode
-\033[s or \0337 - save cursor position
-\033[u or \0338 - restore cursor position
-
-Below is how icat does the cursor position:
-  sys.stdout.buffer.write("\033[{};{}H".format(place.top + 1, x + extra_cells).encode("ascii"))
-  sys.stdout.buffer.write(b"\0337") - save cursor
-  sys.stdout.buffer.write(b"\0338") - restore cursor
+\x1b[s or \x1b7 - save cursor position
+\x1b[u or \x1b8 - restore cursor position
 '''
-#from itertools import cycle
-from config import google_api_key, google_translate_project_id, detectlanguage_key
-import requests
+
+from config import google_translate_project_id, detectlanguage_key
 from random import choice
 import html
 import wikipedia
@@ -36,9 +31,7 @@ from authors import authors
 #from google.cloud import translate_v3beta1 as translate # the v3 api has a free tier
 from google.cloud import translate # the v3 api has a free tier
 import sys
-import wand.image
-from io import BytesIO
-from base64 import standard_b64encode
+from show_png_jpg import display_image
 
 translate_client = translate.TranslationServiceClient()
 # not sure correct value but docs say for non-regionalized requests
@@ -53,79 +46,6 @@ for x in detectlanguage.languages():
     lang_map[x["code"]] = x["name"]
 
 max_chars_line = 100
-
-# functions to draw graphs to kitty terminal window
-def serialize_gr_command(cmd, payload=None):
-    cmd = ','.join('{}={}'.format(k, v) for k, v in cmd.items())
-    ans = []
-    w = ans.append
-    w(b'\033_G'), w(cmd.encode('ascii'))
-    if payload:
-       w(b';')
-       w(payload)
-    w(b'\033\\')
-    return b''.join(ans)
-
-def write_chunked(cmd, data):
-    #print("In write_chunked\n") 
-    data = standard_b64encode(data)
-    while data:
-        chunk, data = data[:4096], data[4096:]
-        m = 1 if data else 0
-        cmd['m'] = m
-        sys.stdout.buffer.write(serialize_gr_command(cmd, chunk))
-        sys.stdout.flush()
-        cmd.clear()
-
-def display_image(uri):
-    '''image = sqlalchemy image object'''
-    #print(uri)
-    try:
-        response = requests.get(uri, timeout=5.0)
-    except (requests.exceptions.ConnectionError,
-            requests.exceptions.TooManyRedirects,
-            requests.exceptions.ChunkedEncodingError,
-            requests.exceptions.ReadTimeout) as e:
-        print(f"requests.get({uri}) generated exception:\n{e}")
-        return
-
-    if response.status_code != 200:
-        print(f"{uri} returned a {response.status_code}")
-        return
-        
-    # it is possible to have encoding == None and ascii == True
-    if response.encoding or response.content.isascii():
-        print(f"{uri} returned ascii text and not an image")
-        return
-
-    # this try/except is needed for occasional bad/unknown file format
-    try:
-        img = wand.image.Image(file=BytesIO(response.content))
-    except Exception as e:
-        print(f"wand.image.Image(file=BytesIO(response.content))"\
-              f"generated exception from {uri} {e}")
-        return
-
-    if img.format == 'JPEG':
-        img.format = 'png'
-
-    ww = img.width
-    hh = img.height
-    sq = ww if ww <= hh else hh
-    if ww > hh:
-        t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
-    else:
-        t= ((ww-sq)//2, 0, (ww+sq)//2, sq)
-    img.crop(*t)
-    # resize should take the image and enlarge it without cropping 
-    img.resize(400,400) #400x400
-
-    f = BytesIO()
-    img.save(f)
-    img.close()
-    f.seek(0)
-
-    write_chunked({'a': 'T', 'f': 100}, f.read()) #f=100 is png;f=24->24bitRGB and f=32->32bit RGBA
 
 def get_quotation(author, may_require_translation):
     #author,may_require_translation = choice(authors)
@@ -218,17 +138,20 @@ def get_wikipedia_image_uri(author):
     return uri
 
 if __name__ == "__main__":
-    print("") # line feed
+    print() # line feed
     sys.stdout.buffer.write(b"\0337") #save cursor position
-    author,may_require_translation = choice(authors)
+    if not sys.argv[1]:
+        author,may_require_translation = choice(authors)
+    else:
+        author, may_require_translation = sys.argv[1], False
     q,line_count = get_quotation(author, may_require_translation)
     print(q)
     sys.stdout.buffer.write(b"\0338") #restore cursor position
-    sys.stdout.buffer.write(b"\x1b[8B") #move down 8 lines to near middle of image
+    sys.stdout.buffer.write(b"\x1b[7B") #move down 8 lines to near middle of image
     print("  retrieving photo ...")
     sys.stdout.buffer.write(b"\x1b[9A")
-    uri = get_wikipedia_image_uri(author)
-    display_image(uri)    
-    print("")
+    uri = get_wikipedia_image_uri(author) # move back up 9 lines
+    display_image(uri, 400, 400, erase=False)    
+    print()
     if line_count > 22: 
         print((line_count-22)*"\n")

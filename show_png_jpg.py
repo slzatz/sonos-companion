@@ -101,7 +101,7 @@ def write_chunked(cmd, data):
         sys.stdout.flush()
         cmd.clear()
 
-def display_image(uri):
+def display_image(uri, w=None, h=None, erase=True):
     global can_transfer_with_files
     try:
         response = requests.get(uri, timeout=5.0)
@@ -138,14 +138,18 @@ def display_image(uri):
         t= ((ww-sq)//2, 0, (ww+sq)//2, sq)
     img.crop(*t)
     # resize should take the image and enlarge it without cropping 
-    img.resize(100,100) #400x400
+    if w and h:
+        img.resize(w,h) #400x400
 
     # right now only able to send .png to kitty but kitty supports jpeg too
     #if img.format == 'JPEG':
     #    img.format = 'PNG'
 
-    sys.stdout.write("\x1b[1J") # - erase up
-    sys.stdout.flush()
+    if erase:
+        sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image - note doesn't delete text
+        sys.stdout.write("\x1b[1J") # - erase text up from cursor
+        sys.stdout.flush()
+
     print() # for some reason this is necessary or images are not displayed
     #set_cursor(cmd2, 100,100, 'center')
 
