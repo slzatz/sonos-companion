@@ -147,7 +147,6 @@ def display_image(uri):
     sys.stdout.write("\x1b[1J") # - erase up
     sys.stdout.flush()
     print() # for some reason this is necessary or images are not displayed
-    #sys.stdout.buffer.write(b'\033[J'), sys.stdout.flush()
     #set_cursor(cmd2, 100,100, 'center')
 
     if img.format == 'JPEG':

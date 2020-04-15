@@ -5,41 +5,15 @@ then open image for display on kitty terminal
 should not have to save the image to disk
 
 '''
-import sys
-from base64 import standard_b64encode
 import paho.mqtt.client as mqtt
 import json
 import time
 import threading
-import wand.image
-import requests
-from io import BytesIO
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from config import aws_mqtt_uri, google_api_key
 from artist_images_db import *
-
-def serialize_gr_command(cmd, payload=None):
-    cmd = ','.join('{}={}'.format(k, v) for k, v in cmd.items())
-    ans = []
-    w = ans.append
-    w(b'\033_G'), w(cmd.encode('ascii'))
-    if payload:
-       w(b';')
-       w(payload)
-    w(b'\033\\')
-    return b''.join(ans)
-
-def write_chunked(cmd, data):
-    #print("In write_chunked\n") 
-    data = standard_b64encode(data)
-    while data:
-        chunk, data = data[:4096], data[4096:]
-        m = 1 if data else 0
-        cmd['m'] = m
-        sys.stdout.buffer.write(serialize_gr_command(cmd, chunk))
-        sys.stdout.flush()
-        cmd.clear()
+from show_png_jpg import display_image
 
 def check():
     while 1:
@@ -60,75 +34,6 @@ with open('location') as f:
 
 sonos_track_topic = "sonos/{}/track".format(location)
 
-def display_image(image):
-    '''image = sqlalchemy image object'''
-    #print(image.link)
-    try:
-        response = requests.get(image.link, timeout=5.0)
-    except (requests.exceptions.ConnectionError,
-            requests.exceptions.TooManyRedirects,
-            requests.exceptions.ChunkedEncodingError,
-            requests.exceptions.ReadTimeout) as e:
-        print(f"requests.get({image.link}) generated exception:\n{e}")
-        image.ok = False
-        session.commit()
-        print(f"{image.link} ok set to False")
-        return
-
-    if response.status_code != 200:
-        print(f"status code = {response.status_code}")
-        #print(f"{image.link} returned a {response.status_code}")
-        image.ok = False
-        session.commit()
-        print(f"{image.link} ok set to False")
-        return
-        
-    # it is possible to have encoding == None and ascii == True
-    if response.encoding or response.content.isascii():
-        print(f"{image.link} returned ascii text and not an image")
-        image.ok = False
-        session.commit()
-        print(f"{image.link} ok set to False")
-        return
-
-    # this try/except is needed for occasional bad/unknown file format
-    try:
-        img = wand.image.Image(file=BytesIO(response.content))
-    except Exception as e:
-        print(f"wand.image.Image(file=BytesIO(response.content))"\
-              f"generated exception from {image.link} {e}")
-        image.ok = False
-        session.commit()
-        print(f"{image.link} ok set to False")
-        return
-
-    # right now only able to send .png to kitty but kitty supports jpeg too
-    if img.format == 'JPEG':
-        img.format = 'png'
-
-    ww = img.width
-    hh = img.height
-    sq = ww if ww <= hh else hh
-    if ww > hh:
-        t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
-    else:
-        t= ((ww-sq)//2, 0, (ww+sq)//2, sq)
-    img.crop(*t)
-    # resize should take the image and enlarge it without cropping 
-    img.resize(800,800) #400x400
-
-    f = BytesIO()
-    img.save(f)
-    img.close()
-    f.seek(0)
-            
-    sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image - works but doesn't delete old text - kitty graphics command
-    sys.stdout.write("\x1b[1J") # - erase up
-    print() # for some reason this is necessary or images are not displayed
-
-    write_chunked({'a': 'T', 'f': 100}, f.read())
-
-    print(f"\n{trackinfo['artist']} {trackinfo['track_title']}\n{image.link}")
 
 def get_artist_images(name):
 
@@ -241,12 +146,14 @@ while 1:
         new_track_info = False
     if images:
         if time.time() > t0 + 10:
-            # the 3 lines below now appear in display_image to shorten the time between erasing and printing new image
-            #sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image - works but doesn't delete old text - kitty graphics command
-            #sys.stdout.write("\x1b[1J") # - erase up
-            #print(" ") # for some reason this is necessary or images are not displayed
-            display_image(images.pop())
+            image = images.pop()
+            display_image(images.link)
+            print(f"\n{trackinfo['artist']} {trackinfo['track_title']}\n{image.link}")
             t0 = time.time()
     else:
         images = trackinfo["images"][::]
     time.sleep(.1)
+
+
+if __name__ == "__main__":
+
