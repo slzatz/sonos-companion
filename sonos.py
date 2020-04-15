@@ -6,7 +6,9 @@ There are a bunch of aliases in .bashrc'''
 import click
 import sonos_actions
 from get_lyrics import get_lyrics #uses genius.com
-from display_image import display_image
+from show_png_jpg import display_image
+from artist_images_db import *
+import random
 
 def bold(text):
     return "\033[1m" + text + "\033[0m"
@@ -102,7 +104,9 @@ def what():
     track = sonos_actions.current_track_info(False) #False = don't return text; return a dictionary
 
     if track:
-        display_image(track['artist'])
+        a = session.query(Artist).filter(func.lower(Artist.name)==track['artist'].lower()).one()
+        image = random.choice(a.images)
+        display_image(image.link, 400, 400, erase=False)
 
         click.secho("\nartist: ", nl=False, fg='cyan', bold=True)
         click.echo(f"{track['artist']}")
@@ -183,7 +187,9 @@ def playfromqueue(config, pos):
 @click.argument('artist', type=click.STRING, required=True)
 def image(artist):
     '''Display image of artist -> sonos image "neil young"'''
-    display_image(artist)
+    a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
+    image = random.choice(a.images)
+    display_image(image.link, 400, 400, erase=False)
 
 if __name__ == "__main__":
     play_station()
