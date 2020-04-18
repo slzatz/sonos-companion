@@ -1,4 +1,4 @@
-#!bin/python
+#!/home/slzatz/sonos-companion/bin/python
 
 '''
 Gets random quotations from wikiquote along with bios and images from wikipedia.
@@ -31,7 +31,7 @@ from authors import authors
 #from google.cloud import translate_v3beta1 as translate # the v3 api has a free tier
 from google.cloud import translate # the v3 api has a free tier
 import sys
-from show_png_jpg import display_image
+from display_image import display_image
 
 translate_client = translate.TranslationServiceClient()
 # not sure correct value but docs say for non-regionalized requests
@@ -47,15 +47,18 @@ for x in detectlanguage.languages():
 
 max_chars_line = 100
 
+auto_suggest = True
+
 def get_quotation(author, may_require_translation):
     #author,may_require_translation = choice(authors)
+    global auto_suggest
     try:
         quote = choice(wikiquote.quotes(author))
     except Exception as e:
         print(f"Exception retrieving from wikiquote: {e}")
         quote = f"Couldn't retrieve the quotation from {author}. Received exception: {html.escape(repr(e))}"
 
-    quote = quote.replace(chr(173), "") # appears to be extended ascii 173 in Churchil quotes (? others):w
+    quote = quote.replace(chr(173), "") # appears to be extended ascii 173 in Churchil quotes (? others)
     if may_require_translation:
         lang_code = detectlanguage.simple_detect(quote)
         if lang_code != "en":
@@ -64,10 +67,8 @@ def get_quotation(author, may_require_translation):
             response = translate_client.translate_text(
                                              parent=parent,
                                              contents=[quote],
-                                             mime_type='text/plain',  # mime types: text/plain, text/html
-                                             #source_language_code=lang_code+'-'+language,
+                                             mime_type='text/plain', 
                                              source_language_code=lang_code,
-                                             #target_language_code='en-US')
                                              target_language_code='en')
 
             translation = response.translations[0]
@@ -80,7 +81,7 @@ def get_quotation(author, may_require_translation):
         translation = ""
 
     s = f"Translated from {language}\n" if language else ""
-    z = " \n \n" if translation else ""
+    z = f"\n\n{s}" if translation else ""
 
     # at current screen mag and font a 400 x 400 picture = 22 lines
     line_count = 2
@@ -92,35 +93,41 @@ def get_quotation(author, may_require_translation):
     try:
         bio = wikipedia.summary(author, sentences=3)
     except Exception as e:
-        print(f"Couldn't retrieve {author} bio from wikipedia: {e}")
-        text = f"Couldn't retrieve {author} bio from wikipedia: {html.escape(repr(e))}"
-    else:
-        bio = textwrap.wrap(bio, max_chars_line, initial_indent=indent, subsequent_indent=indent)
-        line_count += len(bio)
-        bio = "\n".join(bio)
+        #print(f"Couldn't retrieve {author} bio from wikipedia: {e}")
+        try:
+            auto_suggest = False
+            bio = wikipedia.summary(author, sentences=3, auto_suggest=auto_suggest)
+        except Exception as e:
+            print(f"Couldn't retrieve {author} bio from wikipedia with auto_suggest off: {e}")
+            return
+        #text = f"Couldn't retrieve {author} bio from wikipedia: {html.escape(repr(e))}"
 
-    try:
-        page = wikipedia.page(author)
-        images = page.images
-    except Exception as e:
-        print(f"Could not retrieve page/images for {author}")
-        print(f"Exception retrieving from wikipedia: {e}")
-        data = {"uri":"searching"}
+    bio = textwrap.wrap(bio, max_chars_line, initial_indent=indent, subsequent_indent=indent)
+    line_count += len(bio)
+    bio = "\n".join(bio)
 
-    else:
-        while 1:
-            uri = choice(images)
-            if uri[-4:].lower() in [".jpg", ".png"]:
-                break
-            else:
-                images.remove(uri)
+    #try:
+    #    page = wikipedia.page(author)
+    #    images = page.images
+    #except Exception as e:
+    #    print(f"Could not retrieve page/images for {author}")
+    #    print(f"Exception retrieving from wikipedia: {e}")
+    #    data = {"uri":"searching"}
+
+    #else:
+    #    while 1:
+    #        uri = choice(images)
+    #        if uri[-4:].lower() in [".jpg", ".png"]:
+    #            break
+    #        else:
+    #            images.remove(uri)
             
     return f"\x1b[3m{lines}\x1b[0m\n{indent}-- \x1b[1m{author}\x1b[0m\n\n{bio}", line_count
 
 def get_wikipedia_image_uri(author):
 
     try:
-        page = wikipedia.page(author)
+        page = wikipedia.page(author, auto_suggest=auto_suggest)
         images = page.images
     except Exception as e:
         print(f"Could not retrieve page/images for {author}")
@@ -139,18 +146,20 @@ def get_wikipedia_image_uri(author):
 
 if __name__ == "__main__":
     print() # line feed
-    sys.stdout.buffer.write(b"\0337") #save cursor position
-    if not sys.argv[1]:
+    # saving and restoring cursor position didn't work when there was scrolling
+    #sys.stdout.buffer.write(b"\0337") #save cursor position
+    if len(sys.argv) == 1:
         author,may_require_translation = choice(authors)
     else:
         author, may_require_translation = sys.argv[1], False
     q,line_count = get_quotation(author, may_require_translation)
     print(q)
-    sys.stdout.buffer.write(b"\0338") #restore cursor position
+    sys.stdout.buffer.write(f"\x1b[{line_count}A".encode('ascii')) # move back up 9 lines
+    #sys.stdout.buffer.write(b"\0338") #restore cursor position
     sys.stdout.buffer.write(b"\x1b[7B") #move down 8 lines to near middle of image
     print("  retrieving photo ...")
-    sys.stdout.buffer.write(b"\x1b[9A")
-    uri = get_wikipedia_image_uri(author) # move back up 9 lines
+    sys.stdout.buffer.write(b"\x1b[9A") # move back up 9 lines
+    uri = get_wikipedia_image_uri(author) 
     display_image(uri, 400, 400, erase=False)    
     print()
     if line_count > 22: 
