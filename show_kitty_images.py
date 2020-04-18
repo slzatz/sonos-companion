@@ -1,9 +1,8 @@
-#!bin/python
-'''
-python3 script: places images in sonos-companion/images 
-then open image for display on kitty terminal
-should not have to save the image to disk
+#!/home/slzatz/sonos-companion/bin/python
 
+'''
+Uses kitty graphics api to display either jpegs or png images from web
+search for artist whose music is playing on Sonos.
 '''
 import paho.mqtt.client as mqtt
 import json
@@ -13,7 +12,7 @@ from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from config import aws_mqtt_uri, google_api_key
 from artist_images_db import *
-from show_png_jpg import display_image
+from display_image import display_image
 
 # keep the postgres session alive
 def check():
@@ -125,9 +124,10 @@ if __name__ == "__main__":
     trackinfo = {"artist":None, "track_title":None, "lyrics":None, "images":[]}
     new_track_info = False
 
-    with open('location') as f:
-        location = f.read().strip()
+    #with open('location') as f:
+    #    location = f.read().strip()
 
+    location = "ct"
     sonos_track_topic = "sonos/{}/track".format(location)
 
     client = mqtt.Client()
