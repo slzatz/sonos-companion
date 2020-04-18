@@ -6,7 +6,7 @@ There are a bunch of aliases in .bashrc'''
 import click
 import sonos_actions
 from get_lyrics import get_lyrics #uses genius.com
-from show_png_jpg import display_image
+from display_image import display_image
 from artist_images_db import *
 import random
 
