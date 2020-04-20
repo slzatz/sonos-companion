@@ -93,35 +93,17 @@ def get_quotation(author, may_require_translation):
     try:
         bio = wikipedia.summary(author, sentences=3)
     except Exception as e:
-        #print(f"Couldn't retrieve {author} bio from wikipedia: {e}")
         try:
             auto_suggest = False
             bio = wikipedia.summary(author, sentences=3, auto_suggest=auto_suggest)
         except Exception as e:
             print(f"Couldn't retrieve {author} bio from wikipedia with auto_suggest off: {e}")
             return
-        #text = f"Couldn't retrieve {author} bio from wikipedia: {html.escape(repr(e))}"
 
     bio = textwrap.wrap(bio, max_chars_line, initial_indent=indent, subsequent_indent=indent)
     line_count += len(bio)
     bio = "\n".join(bio)
 
-    #try:
-    #    page = wikipedia.page(author)
-    #    images = page.images
-    #except Exception as e:
-    #    print(f"Could not retrieve page/images for {author}")
-    #    print(f"Exception retrieving from wikipedia: {e}")
-    #    data = {"uri":"searching"}
-
-    #else:
-    #    while 1:
-    #        uri = choice(images)
-    #        if uri[-4:].lower() in [".jpg", ".png"]:
-    #            break
-    #        else:
-    #            images.remove(uri)
-            
     return f"\x1b[3m{lines}\x1b[0m\n{indent}-- \x1b[1m{author}\x1b[0m\n\n{bio}", line_count
 
 def get_wikipedia_image_uri(author):
@@ -151,7 +133,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         author,may_require_translation = choice(authors)
     else:
-        author, may_require_translation = sys.argv[1], False
+        author, may_require_translation = sys.argv[1].title(), False
     q,line_count = get_quotation(author, may_require_translation)
     print(q)
     sys.stdout.buffer.write(f"\x1b[{line_count}A".encode('ascii')) # move back up 9 lines
