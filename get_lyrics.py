@@ -14,6 +14,9 @@ def search_db(title, artist):
 
     #remove () or [] which seem to sometimes confuse lyric search
     q = re.sub("[\(\[].*?[\)\]]", "", title + ' ' + artist)
+    # slz addition - explicit is fine but maybe some songs have live as a legitimate word
+    q = q.replace("Explicit", "").replace("Live", "")
+    q = q.strip()
 
     try:
         response = requests.get(search_url, data={'q':q}, headers=headers)
