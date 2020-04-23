@@ -4,22 +4,8 @@
 Gets random quotations from wikiquote along with bios and images from wikipedia.
 If quotation is not in English, using Google Cloud Translage v3beta (has free tier)
 to translate the quotation.
-Note hex 1b = octal 33 = decimal 27 = ESCAPE
-\x1b[NC [ND moves cursor forward/back by N columns
-\x1b[NA [NB moves cursor up/down by N rows
-\x1b[2J - erase entire screen and go home
-\x1b[J - erase down
-\x1b[1J - erase up
-\x1b[H - send cursor home
-\x1b[{};{}H".format(place.top + 1, x + extra_cells).encode("ascii")
-\x1b[7m - switches to inverted colors
-\x1b[0m - return background to normal
-\x1b(B - exit line drawing mode
-\x1b(0 - enter line drawing mode
-\x1b[s or \x1b7 - save cursor position
-\x1b[u or \x1b8 - restore cursor position
 '''
-
+import re
 from config import google_translate_project_id, detectlanguage_key
 from random import choice
 import html
@@ -46,8 +32,7 @@ for x in detectlanguage.languages():
     lang_map[x["code"]] = x["name"]
 
 max_chars_line = 100
-
-auto_suggest = True
+indent = 45*" "
 
 def get_quotation(author, may_require_translation):
     #author,may_require_translation = choice(authors)
@@ -84,49 +69,52 @@ def get_quotation(author, may_require_translation):
     z = f"\n\n{s}" if translation else ""
 
     # at current screen mag and font a 400 x 400 picture = 22 lines
-    line_count = 2
-    indent = 45*" "
+    #line_count = 2
+    #indent = 45*" "
     lines = textwrap.wrap(f"{translation}{z}{quote}", max_chars_line, initial_indent=indent, subsequent_indent=indent)
-    line_count += len(lines)
+    line_count = len(lines)
     lines = "\n".join(lines)
+    return lines, line_count 
 
+def get_page(topic):
     try:
-        bio = wikipedia.summary(author, sentences=3)
+        page = wikipedia.page(topic) # I changed auto_suggest = False to the default (I changed page function in wikipedia.py
     except Exception as e:
-        try:
-            auto_suggest = False
-            bio = wikipedia.summary(author, sentences=3, auto_suggest=auto_suggest)
-        except Exception as e:
-            print(f"Couldn't retrieve {author} bio from wikipedia with auto_suggest off: {e}")
-            return
+        print(f"Couldn't find {topic} wikipedia: {e}")
+        return
+    return page
 
-    bio = textwrap.wrap(bio, max_chars_line, initial_indent=indent, subsequent_indent=indent)
-    line_count += len(bio)
-    bio = "\n".join(bio)
+def format_summary(page):
+    # currently splits into 10 sentences
+    #line_count = 2
+    indent = 45*" "
+    summary = ' '.join(re.split(r'(?<=[.:;])\s', page.summary)[:10])
+    summary = textwrap.wrap(summary, max_chars_line, initial_indent=indent, subsequent_indent=indent)
+    line_count = len(summary)
+    summary = "\n".join(summary)
+    return summary, line_count
+    return f"{indent}\x1b[1m{page.title}\x1b[0m\n\n\x1b[3m{summary}\x1b[0m", line_count
 
-    return f"\x1b[3m{lines}\x1b[0m\n{indent}-- \x1b[1m{author}\x1b[0m\n\n{bio}", line_count
+def get_wikipedia_image_uri(page):
 
-def get_wikipedia_image_uri(author):
-
-    try:
-        page = wikipedia.page(author, auto_suggest=auto_suggest)
-        images = page.images
-    except Exception as e:
-        print(f"Could not retrieve page/images for {author}")
-        print(f"Exception retrieving from wikipedia: {e}")
-        data = {"uri":"searching"}
-
-    else:
+    images = page.images
+    if images:
         while 1:
+            if len(images) == 1:
+                uri = images[0]
+                break
             uri = choice(images)
-            if uri[-4:].lower() in [".jpg", ".png"]:
+            pos = uri.rfind('.')
+            if uri[pos:].lower() in [".jpg", ".jpeg"]:
                 break
             else:
                 images.remove(uri)
-            
-    return uri
+    else:
+        uri = None
 
+    return uri
 if __name__ == "__main__":
+    line_count = 2
     print() # line feed
     # saving and restoring cursor position didn't work when there was scrolling
     #sys.stdout.buffer.write(b"\0337") #save cursor position
@@ -134,14 +122,21 @@ if __name__ == "__main__":
         author,may_require_translation = choice(authors)
     else:
         author, may_require_translation = sys.argv[1].title(), False
-    q,line_count = get_quotation(author, may_require_translation)
+    quotation, cnt = get_quotation(author, may_require_translation)
+    line_count += cnt
+    wiki_page = get_page(author)
+    if not wiki_page:
+        wiki_page = ""
+    bio, cnt = format_summary(wiki_page)
+    line_count += cnt
+    q = f"\x1b[3m{quotation}\x1b[0m\n{indent}-- \x1b[1m{author}\x1b[0m\n\n{bio}"
     print(q)
     sys.stdout.buffer.write(f"\x1b[{line_count}A".encode('ascii')) # move back up 9 lines
     #sys.stdout.buffer.write(b"\0338") #restore cursor position
     sys.stdout.buffer.write(b"\x1b[7B") #move down 8 lines to near middle of image
     print("  retrieving photo ...")
     sys.stdout.buffer.write(b"\x1b[9A") # move back up 9 lines
-    uri = get_wikipedia_image_uri(author) 
+    uri = get_wikipedia_image_uri(wiki_page) 
     display_image(uri, 400, 400, erase=False)    
     print()
     if line_count > 22: 
