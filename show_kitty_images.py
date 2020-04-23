@@ -10,7 +10,7 @@ import sys
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from ipaddress import ip_address
-from config import google_api_key, speaker #speaker = "192.168.86.23" -> Office2
+from config import google_api_key, speaker, image_size #speaker = "192.168.86.23" -> Office2
 from artist_images_db import *
 from display_image import display_image
 home = os.path.split(os.getcwd())[0]
@@ -124,7 +124,7 @@ if __name__ == "__main__":
             if images:
                 if time.time() > t0 + 10:
                     image = images.pop()
-                    display_image(image.link, 600, 600)
+                    display_image(image.link, image_size, image_size)
                     print(f"\n{artist}: {title}\n{image.link}")
                     t0 = time.time()
             else:
