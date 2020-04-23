@@ -53,9 +53,12 @@ if __name__ == "__main__":
                 artist = track.get('artist', '')
                 prev_title = title
 
-                lyrics = get_lyrics(artist, title)
-                print(f"\n{title} by {artist}")
+                sys.stdout.write("\x1b[2J") #erase screen, go home
+                sys.stdout.write("\x1b[H")
+                sys.stdout.flush()
+                print(f"\n{title} by {artist}", end="")
       
+                lyrics = get_lyrics(artist, title)
                 if not lyrics:
                     print("Couldn't retrieve lyrics")
                 else:
