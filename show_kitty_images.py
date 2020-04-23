@@ -4,28 +4,23 @@
 Uses kitty graphics api to display either jpegs or png images from web
 search for artist whose music is playing on Sonos.
 '''
-import paho.mqtt.client as mqtt
-import json
 import time
-import threading
+import os
+import sys
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
-from config import aws_mqtt_uri, google_api_key
+from ipaddress import ip_address
+from config import google_api_key, speaker #speaker = "192.168.86.23" -> Office2
 from artist_images_db import *
 from display_image import display_image
-
-# keep the postgres session alive
-def check():
-    while 1:
-        c = session.connection() 
-        try:
-            c.execute("select 1")
-        except (sqla_exc.ResourceClosedError, sqla_exc.StatementError) as e:
-            print(f"{datetime.datetime.now()} - {e}")
-        time.sleep(500)
-
+home = os.path.split(os.getcwd())[0]
+sys.path = [os.path.join(home, 'SoCo')] + sys.path
+import soco
+#from soco import config as soco_config
 
 def get_artist_images(name):
+    '''Function if an artist is playing who has under 5 images'''
+
     print(f"**************Google Custom Search Engine Request for {name} **************")
     http = httplib2.Http()
     service = discovery.build('customsearch', 'v1',
@@ -47,12 +42,13 @@ def get_artist_images(name):
         return []
 
     # must delete images before you can add new whole new set of images
+    # but could just add to existing without deleting
     session.query(Image).filter_by(artist_id=a.id).delete()
     session.commit()
 
     images = []
 
-    for data in z.get('items', []): #['items']: # only empty search should be on artist='' and I think I am catching that but this makes sure
+    for data in z.get('items', []): 
         image=Image()
         image.link = data['link']
         image.width = data['image']['width']
@@ -66,94 +62,73 @@ def get_artist_images(name):
     print("images = ", images)
     return images 
 
-def on_connect(client, userdata, flags, rc):
-    print(f"(Re)Connected with result code {rc}") 
-
-    # Subscribing in on_connect() means that if we lose the 
-    # connection and reconnect then subscriptions will be renewed
-    client.subscribe([(sonos_track_topic, 0)])
-
-def on_disconnect():
-    print("Disconnected from mqtt broker")
-
-def on_message(client, userdata, msg):
-    global new_track_info
-    topic = msg.topic
-    body = msg.payload
-    #print(topic+": "+str(body))
-
-    try:
-        z = json.loads(body)
-    except Exception as e:
-        print("error reading the mqtt message body: ", e)
-        return
-
-    #print("z = json.loads(body) =",z)
-
-    artist = z.get("artist", "")
-    track_title = z.get("title", "")
-
-    #print("artist =",artist)
-    #print("track_title =",track_title)
-
-    try:
-        a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
-    except NoResultFound:
-        # must be new artist so get images
-        images = get_artist_images(artist)
-        if not images:
-            print("Could not find images for {}".format(artist))
-    except Exception as e:
-        print("error trying to find artist:", e)
-        images = []
-    else:
-        images = [im for im in a.images if im.ok]
-        if len(images) < 5:
-            print("fewer than 5 images so getting new set of images for artist")
-            images = get_artist_images(artist)
-            if not images:
-                print(f"Could not find images for {artist}")
-
-    new_track_info = True
-    trackinfo.update({"artist":artist, "track_title":track_title, "images":images})
 
 if __name__ == "__main__":
 
-    th = threading.Thread(target=check, daemon=True)
-    th.start()
-    trackinfo = {"artist":None, "track_title":None, "lyrics":None, "images":[]}
-    new_track_info = False
+    try:
+        ip_address(speaker)
+    except ValueError:
+        sys.exit(1)
+    else:
+        master = soco.SoCo(speaker)
 
-    #with open('location') as f:
-    #    location = f.read().strip()
-
-    location = "ct"
-    sonos_track_topic = "sonos/{}/track".format(location)
-
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.connect(aws_mqtt_uri, 1883, 60)
-    # brief loop below lets the mqtt client connect to the broker
+    prev_title = ""
     t0 = time.time()
-    while time.time() < t0 + 10:
-        client.loop(timeout = 1.0)
-        time.sleep(1)
-
     images = []
-    while 1:
-        client.loop(timeout = 0.25) #was 1.0
-        if new_track_info:
-            images = trackinfo["images"][::]
-            new_track_info = False
-        if images:
-            if time.time() > t0 + 10:
-                image = images.pop()
-                display_image(image.link, 600, 600)
-                print(f"\n{trackinfo['artist']}: {trackinfo['track_title']}\n{image.link}")
-                t0 = time.time()
-        else:
-            images = trackinfo["images"][::]
-        time.sleep(.1)
+    all_images = []
 
+    while 1:
+        try:
+            state = master.get_current_transport_info()['current_transport_state']
+        except Exception as e:
+            print(f"Encountered error in state = master.get_current_transport_info(): {e}")
+            state = 'ERROR'
+            time.sleep(1)
+            continue
+
+        if state == 'PLAYING':
+
+            try:
+                track = master.get_current_track_info()
+            except Exception as e:
+                print("Encountered error in track = master.get_current_track_info(): {e}")
+                time.sleep(1)
+                continue
+
+            title = track.get('title', '')
+            
+            if prev_title != title:
+                artist = track.get('artist', '')
+                prev_title = title
+
+                try:
+                    a = session.query(Artist).filter(func.lower(Artist.name)==artist.lower()).one()
+                except NoResultFound:
+                    # must be new artist so get images
+                    all_images = get_artist_images(artist)
+                    if not images:
+                        print("Could not find images for {}".format(artist))
+                except Exception as e:
+                    print("error trying to find artist:", e)
+                    all_images = []
+                else:
+                    all_images = [im for im in a.images if im.ok]
+                    if len(all_images) < 5:
+                        print("fewer than 5 images so getting new set of images for artist")
+                        all_images = get_artist_images(artist)
+                        if not all_images:
+                            print(f"Could not find images for {artist}")
+
+                images = all_images[::]
+
+            if images:
+                if time.time() > t0 + 10:
+                    image = images.pop()
+                    display_image(image.link, 600, 600)
+                    print(f"\n{artist}: {title}\n{image.link}")
+                    t0 = time.time()
+            else:
+                images = all_images[::]
+
+            time.sleep(.5) # was .1
 
