@@ -20,8 +20,9 @@ from tempfile import NamedTemporaryFile
 from math import ceil
 from images import GraphicsCommand, fsenc
 from kitty.utils import screen_size_function
+from PIL import Image
 
-can_transfer_with_files = False
+#can_transfer_with_files = False
 screen_size = None
 
 def calculate_in_cell_x_offset(width: int, cell_width: int, align: str):
@@ -102,7 +103,7 @@ def write_chunked(cmd, data):
         cmd.clear()
 
 def display_image(uri, w=None, h=None, erase=True):
-    global can_transfer_with_files
+    #global can_transfer_with_files
     try:
         response = requests.get(uri, timeout=5.0)
     except (requests.exceptions.ConnectionError,
@@ -173,7 +174,7 @@ def display_image(uri, w=None, h=None, erase=True):
     elif img.format == 'PNG':
 
         # PNG is [f]ormat = 100
-        # this will be used for png where you don't need a temp file
+        # PNG is working without saving a file to disk
         f = BytesIO()
         img.save(f)
         img.close()
@@ -184,5 +185,113 @@ def display_image(uri, w=None, h=None, erase=True):
     print()
     sys.stdout.flush()
 
+def display_blended_image(uri_0, uri_1, w=None, h=None, erase=True):
+    images = []
+    uris = [uri_0, uri_1]
+    i = 0
+    for uri in uris:
+        try:
+            response = requests.get(uri, timeout=5.0)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.TooManyRedirects,
+                requests.exceptions.ChunkedEncodingError,
+                requests.exceptions.ReadTimeout) as e:
+            print(f"requests.get({uri}) generated exception:\n{e}")
+            return
+
+        if response.status_code != 200:
+            print(f"status code = {response.status_code}")
+            return
+            
+        # it is possible to have encoding == None and ascii == True
+        if response.encoding or response.content.isascii():
+            print(f"{uri} returned ascii text and not an image")
+            return
+
+        # this try/except is needed for occasional bad/unknown file format
+        try:
+            img = wand.image.Image(file=BytesIO(response.content))
+        except Exception as e:
+            print(f"wand.image.Image(file=BytesIO(response.content))"\
+                  f"generated exception from {uri} {e}")
+            return
+
+        ww = img.width
+        hh = img.height
+        sq = ww if ww <= hh else hh
+        if ww > hh:
+            t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
+        else:
+            t= ((ww-sq)//2, 0, (ww+sq)//2, sq)
+        img.crop(*t)
+        # resize should take the image and enlarge it without cropping 
+        if w and h:
+            img.resize(w,h) #400x400
+
+        # right now only able to send .png to kitty but kitty supports jpeg too
+        if img.format == 'JPEG':
+            img.format = 'PNG'
+
+        #if erase:
+        if 0:
+            sys.stdout.write("\x1b_Ga=d\x1b\\") #delete image - note doesn't delete text
+            sys.stdout.write("\x1b[1J") # - erase text up from cursor
+            sys.stdout.flush()
+
+        print() # for some reason this is necessary or images are not displayed
+        #set_cursor(cmd2, 100,100, 'center')
+
+        if img.format == 'JPEG':
+
+            cmd = GraphicsCommand()
+
+            fmt = 32 if img.alpha_channel else 24 # right now not using because 0 seems to work
+            cmd.a = 'T'
+            cmd.f = 0 # 0 seems to work and ? same as 32
+            cmd.s = img.width
+            cmd.v = img.height
+            cmd.t = 't' # transmission media is [t]temporary file
+
+            tf = NamedTemporaryFile(suffix='.rgba', delete=False)
+            img.save(filename = tf.name)
+            img.close()
+
+            write_gr_cmd(cmd, standard_b64encode(os.path.abspath(tf.name).encode(fsenc)))
+
+        elif img.format == 'PNG':
+
+            # PNG is [f]ormat = 100
+            # PNG is working without saving a file to disk
+            f = BytesIO()
+            img.save(f)
+            img.close()
+            f.seek(0)
+            #images[i] = Image.open(f)
+            img = Image.open(f)
+            #print(f"{img.mode=}")
+            if img.mode != "L":
+                img = img.convert("L")
+            #print(f"{img=}")
+            images.append(img)
+            #i += 1
+
+    #print(f"{images=}")
+    #sys.exit(1)
+    #p_img_0 = Image.open(f) 
+    #p_img_2 = Image.blend(p_img_0, p_img_0, .5)
+    img = Image.blend(images[0], images[1], .5)
+
+    f2 = BytesIO()
+    #p_img_2.save(f2, format='png')
+    img.save(f2, format='png')
+    f2.seek(0)
+
+    write_chunked({'a':'T', 'f':100}, f2.read())
+
+    print()
+    sys.stdout.flush()
+
 if __name__ == "__main__":
     display_image(sys.argv[1])
+    display_blended_image(sys.argv[1], sys.argv[2])
+
