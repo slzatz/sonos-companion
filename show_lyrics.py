@@ -25,6 +25,9 @@ def findnth(haystack, needle, n):
 
 if __name__ == "__main__":
 
+    num_transport_errors = 0
+    num_track_errors = 0
+
     screen_rows = get_screen_size()[0]
 
     try:
@@ -40,20 +43,18 @@ if __name__ == "__main__":
     images = []
     all_images = []
 
-    #duration = 0
-    #position = 0
-    #need_scroll = False
-    #last_position = 0
-    #n = 2
-
     while 1:
         try:
             state = master.get_current_transport_info()['current_transport_state']
         except Exception as e:
             print(f"Encountered error in state = master.get_current_transport_info(): {e}")
             state = 'ERROR'
-            time.sleep(1)
-            continue
+            num_transport_errors += 1
+            if num_transport_errors < 3:
+                time.sleep(1)
+                continue
+            else:
+                sys.exit(1)
 
         if state == 'PLAYING':
 
@@ -61,8 +62,12 @@ if __name__ == "__main__":
                 track = master.get_current_track_info()
             except Exception as e:
                 print("Encountered error in track = master.get_current_track_info(): {e}")
-                time.sleep(1)
-                continue
+                num_track_errors += 1
+                if num_track_errors < 3:
+                    time.sleep(1)
+                    continue
+                else:
+                    sys.exit(1)
 
             title = track.get('title', '')
 
