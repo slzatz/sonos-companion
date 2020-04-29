@@ -35,6 +35,8 @@ def retrieve_lyrics(url):
     html = BeautifulSoup(page.text, 'html.parser')
     [h.extract() for h in html('script')]
     lyrics = html.find('div', class_='lyrics').get_text()
+    lyrics = re.sub("[\(\[].*?[\)\]]", "", lyrics) # genius has verse and chorus in brackets
+    lyrics = lyrics.replace("\n\n\n", "\n\n")
 
     return lyrics
 
