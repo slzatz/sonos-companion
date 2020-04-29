@@ -20,6 +20,9 @@ from tempfile import NamedTemporaryFile
 from math import ceil
 from images import GraphicsCommand, fsenc
 from kitty.utils import screen_size_function
+import array
+import fcntl
+import termios
 from PIL import Image
 
 #can_transfer_with_files = False
@@ -41,9 +44,16 @@ def get_screen_size_function():
         screen_size = screen_size_function()
     return screen_size
 
-def get_screen_size():
+def get_screen_size_():
     screen_size = get_screen_size_function()
     return screen_size()
+
+def get_screen_size():
+    #import array, fcntl, termios
+    buf = array.array('H', [0, 0, 0, 0])
+    fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
+    #print('number of columns: {}, number of rows: {}, screen width: {}, screen height: {}'.format(*buf))
+    return tuple(x for x in buf)
 
 def set_cursor(cmd, width: int, height: int, align: str):
     ss = get_screen_size()
@@ -271,6 +281,8 @@ def display_blended_image(uri_0, uri_1, w=None, h=None, erase=True):
             #print(f"{img.mode=}")
             if img.mode != "L":
                 img = img.convert("L")
+            #if img.mode != "RGB":
+            #    img = img.convert("RGB")
             #print(f"{img=}")
             images.append(img)
             #i += 1
@@ -290,6 +302,144 @@ def display_blended_image(uri_0, uri_1, w=None, h=None, erase=True):
 
     print()
     sys.stdout.flush()
+
+def blend_images(f1, f2, alpha):
+    img1 = Image.open(f1)
+    img2 = Image.open(f2)
+
+    if img1.mode != img2.mode:
+        print(img1)
+        print(img2)
+        sys.exit()
+        #return f1 if img1.mode == "RGB" else f2
+
+    try:
+        img = Image.blend(img1, img2, alpha)
+    except ValueError as e:
+        # ValueError is when modes don't match and that shouldn't happen
+        print()
+        print()
+        print(e)
+        print(f"{img1.mode=}")
+        print(f"{img2.mode=}")
+        sys.exit(1)
+        #return
+
+    f = BytesIO()
+    img.save(f, format='png')
+    f.seek(0)
+    return f
+
+def show_image(f):
+    #sys.stdout.buffer.write(b"\0337") #save cursor position
+    write_chunked({'a':'T', 'f':100}, f.read())
+    #sys.stdout.buffer.write(b"\x1b[9A") # move back up 9 lines
+    #sys.stdout.buffer.write(b"\x1b[H")
+    #sys.stdout.buffer.write(b"\0338") #save cursor position
+    #print()
+    #sys.stdout.flush()
+
+
+def generate_image(uri, w=None, h=None):
+
+    try:
+        response = requests.get(uri, timeout=5.0)
+    except (requests.exceptions.ConnectionError,
+            requests.exceptions.TooManyRedirects,
+            requests.exceptions.ChunkedEncodingError,
+            requests.exceptions.ReadTimeout) as e:
+        print(f"requests.get({uri}) generated exception:\n{e}")
+        return
+
+    if response.status_code != 200:
+        print(f"status code = {response.status_code}")
+        return
+        
+    # it is possible to have encoding == None and ascii == True
+    if response.encoding or response.content.isascii():
+        print(f"{uri} returned ascii text and not an image")
+        return
+
+    # this try/except is needed for occasional bad/unknown file format
+    try:
+        img = wand.image.Image(file=BytesIO(response.content))
+    except Exception as e:
+        print(f"wand.image.Image(file=BytesIO(response.content))"\
+              f"generated exception from {uri} {e}")
+        return
+
+    ww = img.width
+    hh = img.height
+    sq = ww if ww <= hh else hh
+    if ww > hh:
+        t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
+    else:
+        t= ((ww-sq)//2, 0, (ww+sq)//2, sq)
+    img.crop(*t)
+    # resize should take the image and enlarge it without cropping 
+    if w and h:
+        img.resize(w,h) #400x400
+
+    # wand/imagemagick converts from JPEG to PNG
+    # with the code below
+    # should probably look for PIL[LOW] equivalent
+    #if img.format == 'JPEG':
+    #    img.format = 'PNG'
+
+    if img.format != 'PNG':
+        img.format = 'PNG'
+
+    f = BytesIO()
+    img.save(f)
+    img.close()
+    f.seek(0)
+    img = Image.open(f)
+
+    #print(f"before {img=}")
+    if img.mode != "RGB":
+        img = img.convert("RGB")
+        f.seek(0)
+    #print(f"after {img=}")
+
+    img.save(f, format='png')
+    f.seek(0)
+    return f
+
+    # so right now this will never be true
+   # if img.format == 'JPEG':
+
+   #     cmd = GraphicsCommand()
+
+   #     fmt = 32 if img.alpha_channel else 24 # right now not using because 0 seems to work
+   #     cmd.a = 'T'
+   #     cmd.f = 0 # 0 seems to work and ? same as 32
+   #     cmd.s = img.width
+   #     cmd.v = img.height
+   #     cmd.t = 't' # transmission media is [t]temporary file
+
+   #     tf = NamedTemporaryFile(suffix='.rgba', delete=False)
+   #     img.save(filename = tf.name)
+   #     img.close()
+
+   #     write_gr_cmd(cmd, standard_b64encode(os.path.abspath(tf.name).encode(fsenc)))
+
+   # elif img.format == 'PNG':
+
+   #     f = BytesIO()
+   #     img.save(f)
+   #     img.close()
+   #     f.seek(0)
+   #     img = Image.open(f)
+
+   #     #print(f"before {img=}")
+   #     if img.mode != "RGB":
+   #         img = img.convert("RGB")
+   #         f.seek(0)
+   #     #print(f"after {img=}")
+
+   #     img.save(f, format='png')
+   #     f.seek(0)
+   #     return f
 
 if __name__ == "__main__":
     display_image(sys.argv[1])
