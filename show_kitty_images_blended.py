@@ -10,7 +10,7 @@ import sys
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from ipaddress import ip_address
-from config import google_api_key, speaker, image_size #speaker = "192.168.86.23" -> Office2
+from config import google_api_key, speaker, sonos_image_size #speaker = "192.168.86.23" -> Office2
 from artist_images_db import *
 from display_image import display_image, display_blended_image, generate_image, show_image, blend_images
 home = os.path.split(os.getcwd())[0]
@@ -73,10 +73,10 @@ if __name__ == "__main__":
         master = soco.SoCo(speaker)
 
     prev_title = ""
-    t0 = time.time()
     images = []
     all_images = []
     img_current = img_previous = image = None
+    alpha = 1.1
     #last_image = None # for blended images - not doing it now
 
     while 1:
@@ -135,31 +135,30 @@ if __name__ == "__main__":
 
 
             if images:
-                if time.time() > t0 + 25:
+                if alpha > 1.0:
                     img_previous = img_current
                     while 1:
                         image = images.pop()
                         #sys.stdout.buffer.write(b"\x1b[2J")
-                        img_current = generate_image(image.link, image_size, image_size)
+                        img_current = generate_image(image.link, sonos_image_size, sonos_image_size)
                         if img_current:
                             break
                         if not images:
                             images = all_images[::]
-                    t0 = time.time()
                     alpha = 0
 
                 if img_previous and img_current:
-                    alpha += .025
+                    alpha += .015 # .025 goes will with time.sleep(.05)
                     img_blend = blend_images(img_previous, img_current, alpha)
                     if img_blend:
                         sys.stdout.buffer.write(b"\x1b[H")
                         show_image(img_blend)
                 elif img_current:
+                    alpha = 1.1
                     #display_image(image.link, image_size, image_size)
                     sys.stdout.buffer.write(b"\x1b[H")
                     show_image(img_current)
 
-                # time.sleep(1)
                 #print(f"\n{artist}: {title}\n{image.link}")
 
                 
@@ -167,5 +166,5 @@ if __name__ == "__main__":
                 images = all_images[::]
 
 
-            time.sleep(.1) # was .1
+            time.sleep(.01) 
 

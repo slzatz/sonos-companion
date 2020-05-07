@@ -5,8 +5,11 @@ Gets random quotations from wikiquote along with bios and images from wikipedia.
 If quotation is not in English, using Google Cloud Translage v3beta (has free tier)
 to translate the quotation.
 '''
+
+import sys
 import re
-from config import google_translate_project_id, detectlanguage_key
+from config import google_translate_project_id, detectlanguage_key, author_image_size
+from math import ceil
 from random import choice
 import html
 import wikipedia
@@ -16,8 +19,7 @@ import detectlanguage
 from authors import authors
 #from google.cloud import translate_v3beta1 as translate # the v3 api has a free tier
 from google.cloud import translate # the v3 api has a free tier
-import sys
-from display_image import display_image
+from display_image import display_image, get_screen_size
 
 translate_client = translate.TranslationServiceClient()
 # not sure correct value but docs say for non-regionalized requests
@@ -31,8 +33,8 @@ lang_map = dict()
 for x in detectlanguage.languages():
     lang_map[x["code"]] = x["name"]
 
-max_chars_line = 100
-indent = 45*" "
+#max_chars_line = 100
+#indent = 45*" "
 
 def get_quotation(author, may_require_translation):
     #author,may_require_translation = choice(authors)
@@ -68,9 +70,6 @@ def get_quotation(author, may_require_translation):
     s = f"Translated from {language}\n" if language else ""
     z = f"\n\n{s}" if translation else ""
 
-    # at current screen mag and font a 400 x 400 picture = 22 lines
-    #line_count = 2
-    #indent = 45*" "
     lines = textwrap.wrap(f"{translation}{z}{quote}", max_chars_line, initial_indent=indent, subsequent_indent=indent)
     line_count = len(lines)
     lines = "\n".join(lines)
@@ -87,7 +86,7 @@ def get_page(topic):
 def format_summary(page):
     # currently splits into 10 sentences
     #line_count = 2
-    indent = 45*" "
+    #indent = 45*" "
     summary = ' '.join(re.split(r'(?<=[.:;])\s', page.summary)[:10])
     summary = textwrap.wrap(summary, max_chars_line, initial_indent=indent, subsequent_indent=indent)
     line_count = len(summary)
@@ -113,8 +112,14 @@ def get_wikipedia_image_uri(page):
         uri = None
 
     return uri
+
 if __name__ == "__main__":
     line_count = 2
+    x = get_screen_size()
+    indent_cols = ceil(author_image_size/x.cell_width)
+    indent = indent_cols * ' '
+    max_chars_line = x.cols - 5
+    #indent = ceil(author_image_size/x.cell_width) * ' '
     print() # line feed
     # saving and restoring cursor position didn't work when there was scrolling
     #sys.stdout.buffer.write(b"\0337") #save cursor position
@@ -137,7 +142,7 @@ if __name__ == "__main__":
     print("  retrieving photo ...")
     sys.stdout.buffer.write(b"\x1b[9A") # move back up 9 lines
     uri = get_wikipedia_image_uri(wiki_page) 
-    display_image(uri, 400, 400, erase=False)    
+    display_image(uri, author_image_size, author_image_size, erase=False)    
     print()
     if line_count > 22: 
         print((line_count-22)*"\n")

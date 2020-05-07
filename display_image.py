@@ -18,16 +18,81 @@ from io import BytesIO
 import os
 from tempfile import NamedTemporaryFile
 from math import ceil
-from images import GraphicsCommand, fsenc
-from kitty.utils import screen_size_function
+#from images import GraphicsCommand, fsenc
+#from kitty.utils import screen_size_function
 import array
 import fcntl
 import termios
 from PIL import Image
+from dataclasses import dataclass, fields
 
-#can_transfer_with_files = False
-screen_size = None
+try:
+    fsenc = sys.getfilesystemencoding() or 'utf-8'
+    codecs.lookup(fsenc)
+except Exception:
+    fsenc = 'utf-8'
 
+#@dataclassa # no real need to do this as dataclass since
+#getting the fields from a dataclass and just getting
+#the annotations seems superficially pretty similar
+class GraphicsCommand:
+    a: str = 't'      # GRT_a = 't'  # action
+    f: int = 32       #GRT_f = 32   # image data format
+    t: str  = 'd'     # GRT_t = 'd'  # transmission medium
+    s: int = 0        # sent image width
+    v: int = 0        # sent image height
+    S: int = 0        # size of data to read from file
+    O: int = 0        # offset of data to read from file
+    i: int = 0        # image id
+    o: None = None    #Optional[GRT_o] = None  # type of compression
+    m: int = 0        #GRT_m = 0    # 0 or 1 whether there is more chunked data
+    x: int = 0        # left edge of image area to display
+    y: int = 0        # top edge of image area to display
+    w: int = 0        # image width to display
+    h: int = 0        # image height to display
+    X: int = 0        # X-offset within cell
+    Y: int = 0        # Y-offset within cell
+    c: int = 0        # number of cols to display image over
+    r: int = 0        # number of rows to display image over
+    z: int = 0        # z-index
+    d: str = 'a'      #GRT_d = 'a'  # what to delete
+
+    def serialize(self, payload = b''):
+        items = []
+        # if dataclass something like:
+        #for k in fields(cmd):
+            #val = getattr(self, k.name) and so on ...
+        for k in GraphicsCommand.__annotations__:
+            val = getattr(self, k)
+            defval = getattr(GraphicsCommand, k)
+            if val != defval and val is not None:
+                items.append('{}={}'.format(k, val))
+
+        ans = []
+        w = ans.append
+        w(b'\033_G')
+        w(','.join(items).encode('ascii'))
+        if payload:
+            w(b';')
+            w(payload)
+        w(b'\033\\')
+        return b''.join(ans)
+
+    def clear(self):
+        for k in GraphicsCommand.__annotations__:
+            defval = getattr(GraphicsCommand, k)
+            setattr(self, k, defval)
+
+@dataclass
+class ScreenSize():
+    # @dataclass essentially creates an __init__ with these attributes
+    rows: int
+    cols: int
+    width: int
+    height: int
+    cell_width: int
+    cell_height: int
+    
 def calculate_in_cell_x_offset(width: int, cell_width: int, align: str):
     if align == 'left':
         return 0
@@ -38,22 +103,13 @@ def calculate_in_cell_x_offset(width: int, cell_width: int, align: str):
         return cell_width - extra_pixels
     return (cell_width - extra_pixels) // 2
 
-def get_screen_size_function():
-    global screen_size
-    if screen_size is None:
-        screen_size = screen_size_function()
-    return screen_size
-
-def get_screen_size_():
-    screen_size = get_screen_size_function()
-    return screen_size()
-
 def get_screen_size():
-    #import array, fcntl, termios
     buf = array.array('H', [0, 0, 0, 0])
     fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, buf)
-    #print('number of columns: {}, number of rows: {}, screen width: {}, screen height: {}'.format(*buf))
-    return tuple(x for x in buf)
+    rows, cols, width, height = tuple(buf)
+    cell_width = width//(cols or 1)
+    cell_height = height//(rows or 1)
+    return ScreenSize(rows, cols, width, height, cell_width, cell_height)
 
 def set_cursor(cmd, width: int, height: int, align: str):
     ss = get_screen_size()

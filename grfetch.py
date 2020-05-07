@@ -8,7 +8,7 @@ import sys
 import os
 import urllib.request
 from bs4 import BeautifulSoup
-from config import goodreads_key, goodreads_secret
+from config import goodreads_key, goodreads_secret, author_image_size
 from pathlib import Path
 home = str(Path.home())
 sys.path = [home] + sys.path
@@ -18,10 +18,10 @@ from random import choice
 import wikipedia
 import textwrap
 from authors import authors
-from display_image import display_image
+from display_image import display_image, get_screen_size
+from math import ceil
 
-max_chars_line = 100
-indent = 45*" "
+#max_chars_line = 100 # note this should be calculated from the screen width and char_width
     
 gr_url = 'https://www.goodreads.com/work/quotes/'
 
@@ -84,9 +84,7 @@ def get_wiki_page(topic):
     return page
 
 def format_wiki_summary(page):
-    # currently splits into 10 sentences
-    indent = 45*" "
-    summary = ' '.join(re.split(r'(?<=[.:;])\s', page.summary)[:10])
+    summary = ' '.join(re.split(r'(?<=[.:;])\s', page.summary)[:10]) # currently splits into 10 sentences
     summary = textwrap.wrap(summary, max_chars_line, initial_indent=indent, subsequent_indent=indent)
     line_count = len(summary)
     summary = "\n".join(summary)
@@ -113,6 +111,12 @@ def get_wikipedia_image_uri(page):
 
 if __name__ == "__main__":
     line_count = 2
+    x = get_screen_size()
+    indent_cols = ceil(author_image_size/x.cell_width)
+    #indent = ceil(author_image_size/x.cell_width) * ' '
+    indent = indent_cols * ' '
+    max_chars_line = x.cols - 5
+    #print(x)
     print() # line feed
     # saving and restoring cursor position didn't work when there was scrolling
     #sys.stdout.buffer.write(b"\0337") #save cursor position
@@ -138,7 +142,7 @@ if __name__ == "__main__":
     print("  retrieving photo ...")
     sys.stdout.buffer.write(b"\x1b[9A") # move back up 9 lines
     uri = get_wikipedia_image_uri(wiki_page) 
-    display_image(uri, 400, 400, erase=False)    
+    display_image(uri, author_image_size, author_image_size, erase=False)    
     print()
     if line_count > 22: 
         print((line_count-22)*"\n")
