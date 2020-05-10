@@ -25,9 +25,67 @@ from math import ceil
     
 gr_url = 'https://www.goodreads.com/work/quotes/'
 
+# checking if necessary
 def cleanedUpQuote(quote):              # To remove stray html tags from the retrieved results
-    quote = re.sub('<.*?>','',quote)
+    #quote = re.sub('<.*?>','',quote)
     return quote
+
+def get_all_book_ids(author):
+    gc = client.GoodreadsClient(goodreads_key, goodreads_secret)
+    book_ids = gc.search_books(author, search_field='author')
+    return book_ids
+
+def get_page_from_book_id(book_id): #page   ?page=2
+
+    try:
+        page = urllib.request.urlopen(gr_url + book_id).read()
+    except Exception as e:
+        print(f"Exception retrieving from goodreads: {e}")
+        return
+    soup = BeautifulSoup(page,"lxml")
+    return soup
+
+def get_quotes_from_page(soup):
+
+    quote_divs = soup.find_all("div",class_="quoteText")
+    if not quote_divs:
+        return
+
+    quotes = list()
+    for quote_div in quote_divs:
+        text = str(quote_div)
+        matchQ = re.search('“(.*)”',text) # finds all matches inside quotations
+        #quote = matchQ.group(0) # uses first match
+        quote = matchQ.group(0)[1:-1]
+        #quotes.append(matchQ.group(0))
+        quotes.append(quote)
+
+    return quotes 
+
+def get_quotes_from_book_id(book_id):
+
+    try:
+        page = urllib.request.urlopen(gr_url + book_id).read()
+    except Exception as e:
+        print(f"Exception retrieving from goodreads: {e}")
+        return None
+
+    soup = BeautifulSoup(page,"lxml")
+    quote_divs = soup.find_all("div",class_="quoteText")
+    if not quote_divs:
+        return
+
+    quotes = list()
+    for quote_div in quote_divs:
+        text = str(quote_div)
+        matchQ = re.search('“(.*)”',text) # finds all matches inside quotations
+        #quote = matchQ.group(0) # uses first match
+        #quote = matchQ.group(0).replace('“', '').replace('”', '')
+        quote = matchQ.group(0)[1:-1]
+        #quotes.append(matchQ.group(0))
+        quotes.append(quote)
+
+    return quotes 
 
 def get_gr_page(author):
 
@@ -36,12 +94,12 @@ def get_gr_page(author):
     book_ids = gc.search_books(author, search_field='author')
     # order seems to be driven by likelihood of quotes so
     book_ids = book_ids[:3]
-    print(book_ids)
+    #print(book_ids)
     #n = randrange(len(book_ids))
     #book_id = book_ids[n]
     while 1:
         book_id = choice(book_ids)
-        print(f"{book_id=}")
+        #print(f"{book_id=}")
 
         try:
             page = urllib.request.urlopen(gr_url + book_id).read()
@@ -61,13 +119,21 @@ def get_gr_quotation(soup):
     quote_divs = soup.find_all("div",class_="quoteText")
     quote_div = choice(quote_divs)
     text = str(quote_div)
-    matchQ = re.findall('“(.*)”',text) # finds all matches inside quotations
+    #matchQ = re.findall('“(.*)”',text) # finds all matches inside quotations
     matchQ = re.search('“(.*)”',text) # finds all matches inside quotations
     quote = cleanedUpQuote(matchQ.group(0)) # uses first match
     lines = textwrap.wrap(quote, max_chars_line, initial_indent=indent, subsequent_indent=indent)
     line_count = len(lines)
     lines = "\n".join(lines)
     return lines, line_count 
+
+def get_gr_raw_quotation(soup):
+    quote_divs = soup.find_all("div",class_="quoteText")
+    quote_div = choice(quote_divs)
+    text = str(quote_div)
+    #matchQ = re.findall('“(.*)”',text) # finds all matches inside quotations
+    matchQ = re.search('“(.*)”',text) # finds all matches inside quotations
+    return matchQ.group(0)
 
 def get_gr_title(soup):
     title_tag = soup.find("title")
@@ -89,6 +155,10 @@ def format_wiki_summary(page):
     line_count = len(summary)
     summary = "\n".join(summary)
     return summary, line_count
+
+def get_wiki_summary(page):
+    summary = ' '.join(re.split(r'(?<=[.:;])\s', page.summary)[:10]) # currently splits into 10 sentences
+    return summary
 
 def get_wikipedia_image_uri(page):
 
