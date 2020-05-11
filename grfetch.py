@@ -25,9 +25,10 @@ from math import ceil
     
 gr_url = 'https://www.goodreads.com/work/quotes/'
 
-# checking if necessary
-def cleanedUpQuote(quote):              # To remove stray html tags from the retrieved results
-    #quote = re.sub('<.*?>','',quote)
+# To remove stray html tags from the retrieved results
+# have seen stray <br/> but maybe best to look and substitute \n
+def cleanedUpQuote(quote):              
+    quote = re.sub('<.*?>','', quote)
     return quote
 
 def get_all_book_ids(author):
@@ -156,8 +157,9 @@ def format_wiki_summary(page):
     summary = "\n".join(summary)
     return summary, line_count
 
-def get_wiki_summary(page):
-    summary = ' '.join(re.split(r'(?<=[.:;])\s', page.summary)[:10]) # currently splits into 10 sentences
+def get_wiki_summary(page, lines=10):
+    #summary = ' '.join(re.split(r'(?<=[.:;])\s', page.summary)[:lines]) # default = 10
+    summary = ' '.join(page.summary.split()[:lines]) # default = 10
     return summary
 
 def get_wikipedia_image_uri(page):
