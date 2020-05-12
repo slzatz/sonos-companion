@@ -75,6 +75,47 @@ def get_quotation(author, may_require_translation):
     lines = "\n".join(lines)
     return lines, line_count 
 
+def get_all_quotations(author, may_require_translation):
+    #author,may_require_translation = choice(authors)
+    global auto_suggest
+    try:
+        quotes = wikiquote.quotes(author)
+    except Exception as e:
+        print(f"Exception retrieving from wikiquote: {e}")
+        return
+
+    quote_list = list()
+    for quote in quotes:
+
+        quote = quote.replace(chr(173), "") # appears to be extended ascii 173 in Churchil quotes (? others)
+        if may_require_translation:
+            lang_code = detectlanguage.simple_detect(quote)
+            if lang_code != "en":
+                language = lang_map.get(lang_code, "No language code match")
+                #translation = translate_client.translate(quote, "en")
+                response = translate_client.translate_text(
+                                                 parent=parent,
+                                                 contents=[quote],
+                                                 mime_type='text/plain', 
+                                                 source_language_code=lang_code,
+                                                 target_language_code='en')
+
+                translation = response.translations[0]
+                translation = f"{translation}".replace("translated_text: ", "").replace('"', '')
+            else:
+                language = ""
+                translation = ""
+        else:
+            language = ""
+            translation = ""
+
+        s = f"Translated from {language}\n" if language else ""
+        z = f"\n\n{s}" if translation else ""
+        quote_list.append(f"{translation}{z}{quote}")
+
+    # return a list of quotes
+    return quote_list
+
 def get_page(topic):
     try:
         page = wikipedia.page(topic) # I changed auto_suggest = False to the default (I changed page function in wikipedia.py
