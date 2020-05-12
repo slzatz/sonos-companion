@@ -70,9 +70,6 @@ if __name__ == "__main__":
     print(q)
 
     sys.stdout.buffer.write(f"\x1b[{line_count}A".encode('ascii')) # move back up line_count lines
-    sys.stdout.buffer.write(b"\x1b[7B") #move down 8 lines to near middle of image
-    print("  retrieving photo ...")
-    sys.stdout.buffer.write(b"\x1b[8A") # move back up 9 lines
 
     show_image(image)
     print()
