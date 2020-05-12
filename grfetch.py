@@ -159,8 +159,8 @@ def format_wiki_summary(page):
 
 def get_wiki_summary(page, lines=10):
     #summary = ' '.join(re.split(r'(?<=[.:;])\s', page.summary)[:lines]) # default = 10
-    summary = ' '.join(page.summary.split()[:lines]) # default = 10
-    return summary
+    summary = '.'.join(page.summary.split('.')[:lines]) # default = 10
+    return summary + '.'
 
 def get_wikipedia_image_uri(page):
 
