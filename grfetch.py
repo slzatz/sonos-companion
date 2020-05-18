@@ -181,6 +181,16 @@ def get_wikipedia_image_uri(page):
 
     return uri
 
+def get_all_wikipedia_image_uris(page):
+
+    uri_list = list()
+    for uri in page.images:        
+        pos = uri.rfind('.')
+        if uri[pos:].lower() in [".jpg", ".jpeg"]:
+            uri_list.append(uri)
+
+    return uri_list
+
 if __name__ == "__main__":
     line_count = 2
     x = get_screen_size()
