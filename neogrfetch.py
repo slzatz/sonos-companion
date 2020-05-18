@@ -47,7 +47,7 @@ if __name__ == "__main__":
         row = cur.fetchone()
         quote = row[0]
 
-    cur.execute("SELECT image,size FROM images WHERE author_id=?", (author_id,))
+    cur.execute("SELECT image,size FROM images WHERE author_id=? ORDER BY RANDOM() LIMIT 1;", (author_id,))
     row = cur.fetchone()
     image = BytesIO(row[0])
     author_image_size = row[1]
