@@ -177,16 +177,16 @@ def display_image(uri, w=None, h=None, erase=True):
             requests.exceptions.ChunkedEncodingError,
             requests.exceptions.ReadTimeout) as e:
         print(f"requests.get({uri}) generated exception:\n{e}")
-        return
+        return False
 
     if response.status_code != 200:
         print(f"status code = {response.status_code}")
-        return
+        return False
         
     # it is possible to have encoding == None and ascii == True
     if response.encoding or response.content.isascii():
         print(f"{uri} returned ascii text and not an image")
-        return
+        return False
 
     # this try/except is needed for occasional bad/unknown file format
     try:
@@ -194,7 +194,7 @@ def display_image(uri, w=None, h=None, erase=True):
     except Exception as e:
         print(f"wand.image.Image(file=BytesIO(response.content))"\
               f"generated exception from {uri} {e}")
-        return
+        return False
 
     ww = img.width
     hh = img.height
@@ -248,8 +248,13 @@ def display_image(uri, w=None, h=None, erase=True):
 
         write_chunked({'a':'T', 'f':100}, f.read())
 
+    else:
+        print("format is not JPEG or PNG")
+        return False
+
     print()
     sys.stdout.flush()
+    return True
 
 def display_blended_image(uri_0, uri_1, w=None, h=None, erase=True):
     images = []
@@ -496,6 +501,67 @@ def generate_image(uri, w=None, h=None):
    #     img.save(f, format='png')
    #     f.seek(0)
    #     return f
+
+def generate_image2(uri, w=None, h=None):
+
+    try:
+        response = requests.get(uri, timeout=5.0)
+    except (requests.exceptions.ConnectionError,
+            requests.exceptions.TooManyRedirects,
+            requests.exceptions.ChunkedEncodingError,
+            requests.exceptions.ReadTimeout) as e:
+        print(f"requests.get({uri}) generated exception:\n{e}")
+        return
+
+    if response.status_code != 200:
+        print(f"status code = {response.status_code}")
+        return
+        
+    # it is possible to have encoding == None and ascii == True
+    if response.encoding or response.content.isascii():
+        print(f"{uri} returned ascii text and not an image")
+        return
+
+    # this try/except is needed for occasional bad/unknown file format
+    try:
+        img = wand.image.Image(file=BytesIO(response.content))
+    except Exception as e:
+        print(f"wand.image.Image(file=BytesIO(response.content))"\
+              f"generated exception from {uri} {e}")
+        return
+
+    ww = img.width
+    hh = img.height
+    sq = ww if ww <= hh else hh
+    if ww > hh:
+        t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
+    else:
+        t= ((ww-sq)//2, 0, (ww+sq)//2, sq)
+    img.crop(*t)
+    # resize should take the image and enlarge it without cropping 
+    if w and h:
+        img.resize(w,h) #400x400
+
+    # wand/imagemagick converts from JPEG to PNG
+    # with the code below
+    # should probably look for PIL[LOW] equivalent
+
+    if img.format != 'PNG':
+        img.format = 'PNG'
+
+    f = BytesIO()
+    img.save(f)
+    img.close()
+    f.seek(0)
+    img = Image.open(f)
+
+    if img.mode != "RGB":
+        img = img.convert("RGB")
+        f.seek(0)
+
+    img.save(f, format='png')
+    f.seek(0)
+    return f,ww,hh
 
 if __name__ == "__main__":
     display_image(sys.argv[1])
