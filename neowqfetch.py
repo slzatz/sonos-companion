@@ -1,5 +1,12 @@
 #!/home/slzatz/sonos-companion/bin/python
 
+'''
+Uses wikiquote for quotes and wikipedia for bio and images
+Can be invoked with a name in quotes
+or without anything on command line and will pick random
+quote
+'''
+
 import sys
 from io import BytesIO
 from math import ceil
@@ -36,7 +43,7 @@ if __name__ == "__main__":
         row = cur.fetchone()
         author_id, name, bio, quote = row 
 
-    cur.execute("SELECT image,size FROM images WHERE author_id=?", (author_id,))
+    cur.execute("SELECT image,size FROM images WHERE author_id=? ORDER BY RANDOM() LIMIT 1;", (author_id,))
     row = cur.fetchone()
     image = BytesIO(row[0])
     author_image_size = row[1]
