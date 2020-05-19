@@ -1,8 +1,7 @@
 #!/home/slzatz/sonos-companion/bin/python
 
 '''
-Uses kitty graphics api to display either jpegs or png images from web
-search for artist whose music is playing on Sonos.
+Show lyrics for current sonos track
 '''
 import time
 import datetime
@@ -10,7 +9,7 @@ import os
 import sys
 from ipaddress import ip_address
 from get_lyrics import get_lyrics #uses genius.com
-from config import speaker, image_size #speaker = "192.168.86.23" -> Office2
+from config import speaker #speaker = "192.168.86.23" -> Office2
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
@@ -28,7 +27,7 @@ if __name__ == "__main__":
     num_transport_errors = 0
     num_track_errors = 0
 
-    screen_rows = get_screen_size()[0]
+    screen_rows = get_screen_size().rows
 
     try:
         ip_address(speaker)
