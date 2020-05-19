@@ -1,30 +1,29 @@
 #!/home/slzatz/sonos-companion/bin/python
 
 '''
-invoked by ./select_images.py "Samuel Johnson"
-and will show you images that you can select and
+invoked by ./select_music_images.py "Neil Young"
+and will:
+1) show existing artist images: in some cases we have stored the image
+   and in other cases just the url - will ask whether to keep/convert or toss
+2) go out to wikipedia to get images that you can accept/reject
+3) do a google image search to get images that you can accept/reject
+show you images that you can select and
 reject and will check to see if you already have
 the image
-
-1) includes the option to delete existing images
-2) option to do google image search in addition to wikipedia image search
 
 '''
 
 import sys
 from io import BytesIO
-import grfetch
-import wisdomfetch
+#import grfetch
+#import wisdomfetch
+import wikipedia
 from display_image import display_image, generate_image, generate_image2, show_image
-import sqlite3
 from apiclient import discovery #google custom search api
 import httplib2 #needed by the google custom search engine module apiclient
 from config import google_api_key, ec_id, ec_pw, ec_host, sonos_image_size
 import psycopg2
-#from artist_images_db import *
-from dataclasses import dataclass, fields
-
-author_image_size = 200
+from dataclasses import dataclass
 
 params = {
   'database': 'artist_images',
@@ -63,7 +62,7 @@ def store_image_file(conn, image_id, image):
     #return cur.lastrowid
     return
 
-def get_google_images_orig(name):
+def get_google_images(name):
     print(f"**************Google Custom Search Engine Request for {name} **************")
     http = httplib2.Http()
     service = discovery.build('customsearch', 'v1',
@@ -83,22 +82,22 @@ def get_google_images_orig(name):
 
     return images 
 
-def get_google_images(name):
+def get_page(topic):
+    try:
+        page = wikipedia.page(topic) # I changed auto_suggest = False to the default (I changed page function in wikipedia.py
+    except Exception as e:
+        print(f"Couldn't find {topic} wikipedia: {e}")
+        return
+    return page
 
-    print(f"**************Google Custom Search Engine Request for {name} **************")
-    http = httplib2.Http()
-    service = discovery.build('customsearch', 'v1',
-                              developerKey=google_api_key, http=http)
-    name = f'"{name}"' # ? better search with  name quoted
+def get_all_wikipedia_image_uris(page):
+    uri_list = list()
+    for uri in page.images:        
+        pos = uri.rfind('.')
+        if uri[pos:].lower() in [".jpg", ".jpeg"]:
+            uri_list.append(uri)
 
-    z = service.cse().list(q=name, searchType='image', imgType='face', #alternative type is photo
-                           #imgSize='xxlarge', num=10, 
-                           num=10, 
-                           cx='007924195092800608279:0o2y8a3v-kw').execute() 
-
-    uris = [data['link'] for data in z.get('items', [])]
-
-    return uris 
+    return uri_list
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -163,12 +162,14 @@ if __name__ == "__main__":
     if response[0].lower() != 'y':
         sys.exit()
 
-    wiki_page = wisdomfetch.get_page(name)
+    #wiki_page = wisdomfetch.get_page(name)
+    wiki_page = get_page(name)
     if not wiki_page:
         print(f"Could not find {name} page!")
         sys.exit(1)        
 
-    uris = grfetch.get_all_wikipedia_image_uris(wiki_page)
+    #uris = grfetch.get_all_wikipedia_image_uris(wiki_page)
+    uris = get_all_wikipedia_image_uris(wiki_page)
     if not uris:
         print(f"Could not find any images for {name} on their wiki page!")
 
@@ -190,7 +191,7 @@ if __name__ == "__main__":
     response = input("Do you want to do a google search for images? ")
     if response[0].lower() != 'y':
         sys.exit()
-    images = get_google_images_orig(name)
+    images = get_google_images(name)
     if not images:
         print(f"Could not find any google images for {name}!")
         sys.exit(1)        
