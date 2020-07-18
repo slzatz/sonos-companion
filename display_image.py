@@ -348,10 +348,6 @@ def display_blended_image(uri_0, uri_1, w=None, h=None, erase=True):
             images.append(img)
             #i += 1
 
-    #print(f"{images=}")
-    #sys.exit(1)
-    #p_img_0 = Image.open(f) 
-    #p_img_2 = Image.blend(p_img_0, p_img_0, .5)
     img = Image.blend(images[0], images[1], .5)
 
     f2 = BytesIO()
@@ -392,14 +388,15 @@ def blend_images(f1, f2, alpha):
     return f
 
 def show_image(f):
-    #sys.stdout.buffer.write(b"\0337") #save cursor position
     write_chunked({'a':'T', 'f':100}, f.read())
-    #sys.stdout.buffer.write(b"\x1b[9A") # move back up 9 lines
-    #sys.stdout.buffer.write(b"\x1b[H")
-    #sys.stdout.buffer.write(b"\0338") #save cursor position
-    #print()
-    #sys.stdout.flush()
 
+def resize_show_image(f, w, h):
+    img = Image.open(f) # PIL Image
+    img = img.resize((w, h))
+    g = BytesIO()
+    img.save(g, format='png')
+    g.seek(0)
+    write_chunked({'a':'T', 'f':100}, g.read())
 
 def generate_image(uri, w=None, h=None):
 
