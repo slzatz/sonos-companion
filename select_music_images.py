@@ -67,7 +67,7 @@ def get_google_images(name):
     http = httplib2.Http()
     service = discovery.build('customsearch', 'v1',
                               developerKey=google_api_key, http=http)
-    z = service.cse().list(q=name, searchType='image', imgType='face', #alternative type is photo
+    z = service.cse().list(q=f'"{name}" music', searchType='image', imgType='face', #alternative type is photo
                            imgSize='XXLARGE', num=10, 
                            cx='007924195092800608279:0o2y8a3v-kw').execute() 
 
@@ -104,30 +104,19 @@ if __name__ == "__main__":
         print("You need to supply a name!")
         sys.exit(1)
 
-    #sql = "SELECT authors.id,authors.name FROM authors " \
-    #      "INNER JOIN quotes ON authors.id=quotes.author_id AND authors.name=? ORDER BY RANDOM() LIMIT 1;"
-
-    #sql = f"SELECT id,name FROM artists WHERE name='{sys.argv[1].title()}'" 
-    sql = "SELECT id,name FROM artists WHERE name=%s OR name=%s;"
-    cur.execute(sql, (sys.argv[1], sys.argv[1].title()))
-    #cur.execute(sql)
+    sql = "SELECT id,name FROM artists WHERE LOWER(name)=LOWER(%s);"
+    cur.execute(sql, (sys.argv[1],))
     row = cur.fetchone()
     if row:
         artist_id, name = row
     else:
         print(f"Can't find {sys.argv[1]}!!")
         sys.exit(1)
-    #    sql = "SELECT id,name FROM artists WHERE name=?" 
-    #    cur.execute(sql, (sys.argv[1],))
-    #    row = cur.fetchone()
-    #    if row:
-    #        artist_id, name = row
-    #    else:
-    #        print(f"Can't find {sys.argv[1]}!!")
-
 
     print(f"\x1b[1m{artist_id} {name}\x1b[0m\n")
-    #cur.execute("SELECT link,width,height FROM images WHERE artist_id=?", (artist_id,))
+    cur.execute("SELECT pg_size_pretty(pg_total_relation_size('image_files'));")
+    pre_size = cur.fetchone()[0]
+
     response = input("Do you want to look at the images currently in the database? ")
     if response[0].lower() == 'y':
 
@@ -159,57 +148,53 @@ if __name__ == "__main__":
                     conn.commit()
 
     response = input("Do you want to look for images in the wikipedia? ")
-    if response[0].lower() != 'y':
-        sys.exit()
+    if response[0].lower() == 'y':
+        wiki_page = get_page(name)
+        if wiki_page:
+            uris = get_all_wikipedia_image_uris(wiki_page)
+            if not uris:
+                print(f"Could not find any images for {name} on their wiki page!")
 
-    #wiki_page = wisdomfetch.get_page(name)
-    wiki_page = get_page(name)
-    if not wiki_page:
-        print(f"Could not find {name} page!")
-        sys.exit(1)        
-
-    #uris = grfetch.get_all_wikipedia_image_uris(wiki_page)
-    uris = get_all_wikipedia_image_uris(wiki_page)
-    if not uris:
-        print(f"Could not find any images for {name} on their wiki page!")
-
-    for uri in uris:
-        display_image(uri, erase=False) # don't change size of image
-        cur.execute("SELECT COUNT(1) FROM images WHERE link=%s;", (uri,))
-        row = cur.fetchone()
-        if row[0] == 1:
-            print("We already have that url in the database!")
-            continue
-        response = input("Do you want to put this image into the database? ")
-        if response[0].lower() == 'y':
-            f,width,height = generate_image2(uri, sonos_image_size, sonos_image_size)
-            image_id = store_image(conn, artist_id, uri, width, height, True)
-            image = f.getvalue()
-            store_image_file(conn, image_id, image)
-            print("We stored the image data and the image file!")
+            for uri in uris:
+                display_image(uri, erase=False) # don't change size of image
+                cur.execute("SELECT COUNT(1) FROM images WHERE link=%s;", (uri,))
+                row = cur.fetchone()
+                if row[0] == 1:
+                    print("We already have that url in the database!")
+                    continue
+                response = input("Do you want to put this image into the database? ")
+                if response[0].lower() == 'y':
+                    f,width,height = generate_image2(uri, sonos_image_size, sonos_image_size)
+                    image_id = store_image(conn, artist_id, uri, width, height, True)
+                    image = f.getvalue()
+                    store_image_file(conn, image_id, image)
+                    print("We stored the image data and the image file!")
+        else:
+            print(f"Could not find {name} page!")
 
     response = input("Do you want to do a google search for images? ")
-    if response[0].lower() != 'y':
-        sys.exit()
-    images = get_google_images(name)
-    if not images:
-        print(f"Could not find any google images for {name}!")
-        sys.exit(1)        
-
-    for image in images:
-        result = display_image(image.link, erase=False) # don't change size of image
-        if not result:
-            continue
-        cur.execute("SELECT COUNT(1) FROM images WHERE link=%s;", (image.link,))
-        row = cur.fetchone()
-        if row[0] == 1:
-            print("We already have that url in the database!")
-            continue
-        response = input("Do you want to use this image? ")
-        if response[0].lower() == 'y':
-            image_id = store_image(conn, artist_id, image.link, image.width, image.height, True)
-            f = generate_image(image.link, sonos_image_size, sonos_image_size)
-            image = f.getvalue()
-            store_image_file(conn, image_id, image)
-            print("We stored the image data and the image file!")
-
+    if response[0].lower() == 'y':
+        images = get_google_images(name)
+        if images:
+            for image in images:
+                result = display_image(image.link, erase=False) # don't change size of image
+                if not result:
+                    continue
+                cur.execute("SELECT COUNT(1) FROM images WHERE link=%s;", (image.link,))
+                row = cur.fetchone()
+                if row[0] == 1:
+                    print("We already have that url in the database!")
+                    continue
+                response = input("Do you want to use this image? ")
+                if response[0].lower() == 'y':
+                    image_id = store_image(conn, artist_id, image.link, image.width, image.height, True)
+                    f = generate_image(image.link, sonos_image_size, sonos_image_size)
+                    image = f.getvalue()
+                    store_image_file(conn, image_id, image)
+                    print("We stored the image data and the image file!")
+        else:            
+            print(f"Could not find any google images for {name}!")
+    
+    cur.execute("SELECT pg_size_pretty(pg_total_relation_size('image_files'));")
+    post_size = cur.fetchone()[0]
+    print(f"Table image_files went from {pre_size} to {post_size}")
