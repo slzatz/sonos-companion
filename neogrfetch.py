@@ -5,9 +5,10 @@ from io import BytesIO
 from math import ceil
 import sqlite3
 import textwrap
-from display_image import show_image, get_screen_size
+from display_image import show_image, get_screen_size, resize_show_image
 
 db_file = "/home/slzatz/sonos-companion/gr.db"
+display_size = 100
 
 conn = sqlite3.connect(db_file)
 cur = conn.cursor()
@@ -19,6 +20,15 @@ if __name__ == "__main__":
 
     line_count = 2
     x = get_screen_size()
+    if x.cell_width == 0:
+        sys.exit(1)
+
+    # bug that values sometimes 2x what they should be
+    if x.cell_width > 12:
+        x.width = x.width//2
+        x.height = x.height//2
+        x.cell_width = x.cell_width//2
+        x.cell_height = x.cell_height//2
 
     if len(sys.argv) == 1:
 
@@ -50,8 +60,8 @@ if __name__ == "__main__":
     cur.execute("SELECT image,size FROM images WHERE author_id=? ORDER BY RANDOM() LIMIT 1;", (author_id,))
     row = cur.fetchone()
     image = BytesIO(row[0])
-    author_image_size = row[1]
-    indent_cols = ceil(author_image_size/x.cell_width)
+    image_size = row[1]
+    indent_cols = ceil(display_size/x.cell_width)
     indent = indent_cols * ' '
     max_chars_line = x.cols - 5
 
@@ -66,14 +76,17 @@ if __name__ == "__main__":
     bio = "\n".join(bio)
 
     print() # line feed
-    q = f"\x1b[3m{quote}\x1b[0m\n{indent}-- \x1b[1m{title} by {name}\x1b[0m\n\n{bio}"
+    q = f"\x1b[3m{quote}\x1b[0m\n{indent}-- \x1b[1m{title} by {name}\x1b[0m\n\n{bio} {indent_cols=} {x.width=} {x.height=} {x.cell_width=} {x.cell_height=}"
     print(q)
 
     sys.stdout.buffer.write(f"\x1b[{line_count}A".encode('ascii')) # move back up line_count lines
 
-    show_image(image)
+    if display_size == image_size:
+        show_image(image)
+    else:
+        resize_show_image(image, display_size, display_size)
     print()
 
-    image_rows = author_image_size//x.cell_height
+    image_rows = display_size//x.cell_height
     if line_count > image_rows:
         print((line_count-image_rows)*"\n")
