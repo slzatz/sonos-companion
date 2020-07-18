@@ -2,6 +2,7 @@
 
 '''
 Show lyrics for current sonos track
+It imports the url of the master speaker from config
 '''
 import time
 import datetime
@@ -27,8 +28,6 @@ if __name__ == "__main__":
     num_transport_errors = 0
     num_track_errors = 0
 
-    screen_rows = get_screen_size().rows
-
     try:
         ip_address(speaker)
     except ValueError:
@@ -41,6 +40,7 @@ if __name__ == "__main__":
     t0 = time.time()
     images = []
     all_images = []
+    need_scroll = False
 
     while 1:
         try:
@@ -73,6 +73,7 @@ if __name__ == "__main__":
             position = track.get('position', 0)
             
             if prev_title != title:
+                screen_rows = get_screen_size().rows
                 need_scroll = False
                 duration = track.get('duration', 0)
 
@@ -89,7 +90,7 @@ if __name__ == "__main__":
                     continue
 
                 line_count = lyrics.count('\n') 
-                if screen_rows -3 > line_count:
+                if screen_rows - 3 > line_count:
                     print(f"\n\x1b[0;31m{title} by {artist} page: 1/1\x1b[0m", end="")
                     print(lyrics)
                 else:
