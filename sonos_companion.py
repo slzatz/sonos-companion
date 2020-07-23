@@ -12,7 +12,8 @@ import sys
 from io import BytesIO
 from ipaddress import ip_address
 import psycopg2
-import textwrap
+#import textwrap
+from math import ceil
 from config import speaker, sonos_image_size, ec_id, ec_pw, ec_host #speaker = "192.168.86.23" -> Office2
 from display_image import display_image, display_blended_image, generate_image, show_image, blend_images, get_screen_size
 from get_lyrics import get_lyrics #uses genius.com
@@ -38,8 +39,8 @@ def findnth(haystack, needle, n):
         return -1
     return len(haystack)-len(parts[-1])-len(needle)
 
-indent = 110 * ' '
-#max_chars_line = 100
+display_size = 900
+#indent = 110 * ' '
 
 if __name__ == "__main__":
 
@@ -64,6 +65,12 @@ if __name__ == "__main__":
     s = ""
 
     while 1:
+        x = get_screen_size()
+        if x.cell_width > 12:
+            x.cell_width = x.cell_width//2
+        indent_cols = ceil(display_size/x.cell_width)
+        indent = (indent_cols + 1) * ' '
+
         try:
             state = master.get_current_transport_info()['current_transport_state']
         except Exception as e:
@@ -199,13 +206,13 @@ if __name__ == "__main__":
                     if img_blend:
                         sys.stdout.buffer.write(b"\x1b[H")
                         show_image(img_blend)
-                        print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s}")
+                        print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s} - {x.cell_width}")
                         alpha += .015 
                 # I believe this is the path when the title changes
                 elif img_current:
                     sys.stdout.buffer.write(b"\x1b[H")
                     show_image(img_current)
-                    print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s}")
+                    print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s} -  {x.cell_width}")
                     alpha += 0.25
                 
             else:
