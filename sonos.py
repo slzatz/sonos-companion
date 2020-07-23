@@ -58,18 +58,18 @@ def playstation(station):
 @click.argument('title', required=True)
 @click.option("-a", "--artist", help="The artist for the track to be played")
 def playtrack(title, artist):
-    '''Play a track -> sonos playtrack "harvest" -a "neil young"'''
+    '''[play] Play a track -> sonos playtrack "harvest" -a "neil young"'''
     msg = sonos_actions.play_track(title, artist)
     click.echo(msg)
 
 @cli.command()
 def louder():
-    '''Turn the volume higher'''
+    '''[[l]ouder] Turn the volume higher'''
     sonos_actions.turn_volume("louder")
 
 @cli.command()
 def quieter():
-    '''Turn the volume lower'''
+    '''[[q]ieter] Turn the volume lower'''
     sonos_actions.turn_volume("quieter")
 
 @cli.command()
@@ -121,7 +121,7 @@ def what():
 
 @cli.command()
 def showqueue():
-    '''Show the queue and the currently playing track'''
+    '''[showq] Show the queue and the currently playing track'''
     lst = sonos_actions.list_queue()
     if not lst:
         click.echo("The queue is empty")
@@ -139,7 +139,7 @@ def showqueue():
 
 @cli.command()
 def clearqueue():
-    '''Clear the queue'''
+    '''[clearq] Clear the queue'''
     sonos_actions.clear_queue()
 
 @cli.command()
@@ -174,7 +174,7 @@ def playalbum(album, artist=None):
 @click.argument('pos', type=click.INT, required=True)
 @pass_config
 def playfromqueue(config, pos):
-    '''Play track from queue position - top of list is position #1'''
+    '''[playq] Play track from queue position - top of list is position #1'''
     lst = sonos_actions.list_queue()
     if 0 < pos <= len(lst):
         sonos_actions.play_from_queue(pos-1)
@@ -191,5 +191,5 @@ def image(artist):
     image = random.choice(a.images)
     display_image(image.link, 400, 400, erase=False)
 
-if __name__ == "__main__":
-    play_station()
+#if __name__ == "__main__":
+#    playstation()

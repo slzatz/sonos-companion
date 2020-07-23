@@ -38,8 +38,6 @@ if __name__ == "__main__":
     prev_title = ""
     lyrics = ""
     t0 = time.time()
-    images = []
-    all_images = []
     need_scroll = False
 
     while 1:
