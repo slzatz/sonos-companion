@@ -12,10 +12,8 @@ import sys
 from io import BytesIO
 from ipaddress import ip_address
 import psycopg2
-#import textwrap
-from math import ceil
 from config import speaker, sonos_image_size, ec_id, ec_pw, ec_host #speaker = "192.168.86.23" -> Office2
-from display_image import display_image, display_blended_image, generate_image, show_image, blend_images, get_screen_size
+from display_image import generate_image, show_image, blend_images, get_screen_size
 from get_lyrics import get_lyrics #uses genius.com
 from pathlib import Path
 home = str(Path.home())
@@ -30,17 +28,11 @@ params = {
   'host': ec_host,
   'port': 5432
 }
+
 conn = psycopg2.connect(**params)
 cur = conn.cursor()
 
-def findnth(haystack, needle, n):
-    parts= haystack.split(needle, n+1)
-    if len(parts)<=n+1:
-        return -1
-    return len(haystack)-len(parts[-1])-len(needle)
-
-display_size = 900
-#indent = 110 * ' '
+display_size = sonos_image_size
 
 if __name__ == "__main__":
 
@@ -57,6 +49,7 @@ if __name__ == "__main__":
     prev_title = ""
     prev_artist = ""
     lyrics = ""
+    line_num = prev_line_num = 0
     rows = []
     all_rows = []
     img_current = img_previous = image = None
@@ -66,10 +59,8 @@ if __name__ == "__main__":
 
     while 1:
         x = get_screen_size()
-        if x.cell_width > 12:
-            x.cell_width = x.cell_width//2
-        indent_cols = ceil(display_size/x.cell_width)
-        indent = (indent_cols + 1) * ' '
+        indent_cols = display_size//x.cell_width
+        indent = (indent_cols + 2) * ' '
 
         try:
             state = master.get_current_transport_info()['current_transport_state']
@@ -115,26 +106,23 @@ if __name__ == "__main__":
                     lyrics = f"Couldn't retrieve lyrics for {title} by {artist}"
 
                 line_count = lyrics.count('\n') 
+                zz = lyrics.split("\n")
+
                 if screen_rows - 3 > line_count:
                     print(f"\n{indent}\x1b[0;31m{title} by {artist} page: 1/1\x1b[0m", end="")
-                    zz = lyrics.split("\n")
                     print(("\n" + indent).join(zz))
-                    #print(lyrics)
                 else:
-                    pages = int(line_count/screen_rows) + 1
-                    char = findnth(lyrics, '\n', screen_rows - 3)
-                    prev_char = char
+                    pages = line_count//screen_rows + 1
+                    line_num = screen_rows - 3
+                    prev_line_num = line_num
                     n = 2
                     last_position = 0
                     print(f"\n{indent}\x1b[0;31m{title} by {artist} page: 1/{pages}\x1b[0m", end="")
-                    zz = lyrics[:char].split("\n")
-                    print(("\n" + indent).join(zz))
-                    #print(lyrics[:char])
+                    print(("\n" + indent).join(zz[:line_num + 1]))
                     need_scroll = True
 
                     duration_dt = datetime.datetime.strptime(duration, "%H:%M:%S")    
                     duration_sec = duration_dt.minute*60 + duration_dt.second
-
 
                 if not artist:
                     rows = all_rows = []
@@ -160,22 +148,26 @@ if __name__ == "__main__":
             else:
                 if need_scroll:
                     position_dt = datetime.datetime.strptime(position, "%H:%M:%S")
-                    #position_sec = (position_dt - datetime.datetime(1900, 1, 1).total_seconds()
                     position_sec = position_dt.minute*60 + position_dt.second - last_position
                     if position_sec > duration_sec/pages:
                         sys.stdout.write("\x1b[2J") #erase screen, go home
                         sys.stdout.write("\x1b[H") #necessary - above doesn't go home
                         sys.stdout.flush()
-                        print(f"\n{indent}\x1b[0;31m{title} by {artist} page: {n}/{pages} \x1b[0;32m(cont.)\x1b[0m") #, end="")
-                        char = findnth(lyrics, '\n', n*(screen_rows - 3))
-                        zz = lyrics[prev_char:char].split("\n")
-                        print(("\n" + indent).join(zz))
-                        #print(lyrics[prev_char:char])
+                        print(f"\n{indent}\x1b[0;31m{title} by {artist}: {n}/{pages}\x1b[0m") #, end="")
                         last_position = position_sec
-                        prev_char = char
-                        n += 1
-                        if n > pages:
+                        line_num = prev_line_num + screen_rows - 3
+
+                        if n == pages:
+                            first_line = len(zz) - (screen_rows - 3)
+                            print(("\n" + indent).join(zz[first_line:]))
                             need_scroll = False
+                        else:
+                            print(("\n" + indent).join(zz[prev_line_num:line_num + 1]))
+                            prev_line_num = line_num
+                            n += 1
+                        
+
+
 
             if rows:
                 if alpha > 1.0:
@@ -183,17 +175,14 @@ if __name__ == "__main__":
                     img_previous = img_current
                     while 1:
                         row = rows.pop()
-                        #sys.stdout.buffer.write(b"\x1b[2J")
                         cur.execute("SELECT image FROM image_files WHERE image_id=%s", (row[0],))
                         r = cur.fetchone()
                         if r:
                             s = "This image is being stored as BYTES in the database"
                             img_current = BytesIO(r[0])
-                            print()
                         else:
-                            s = "This image is being stored as just a URL in the database"
+                            s = "This image is being stored as a URL in the database"
                             img_current = generate_image(row[1], sonos_image_size, sonos_image_size)
-                            print()
                         if img_current:
                             break
                         if not rows:
@@ -206,13 +195,12 @@ if __name__ == "__main__":
                     if img_blend:
                         sys.stdout.buffer.write(b"\x1b[H")
                         show_image(img_blend)
-                        print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s} - {x.cell_width}")
+                        print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s}")
                         alpha += .015 
-                # I believe this is the path when the title changes
                 elif img_current:
                     sys.stdout.buffer.write(b"\x1b[H")
                     show_image(img_current)
-                    print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s} -  {x.cell_width}")
+                    print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s}")
                     alpha += 0.25
                 
             else:
