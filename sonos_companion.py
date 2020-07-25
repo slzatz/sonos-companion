@@ -61,8 +61,6 @@ if __name__ == "__main__":
 
     while 1:
         x = get_screen_size()
-        #indent_cols = display_size//x.cell_width
-        #ret = f"\n\x1b[{indent_cols + 2}C"
         ret = f"\n\x1b[{(display_size//x.cell_width) + 2}C"
 
         try:
@@ -113,7 +111,6 @@ if __name__ == "__main__":
 
                 if screen_rows - 3 > line_count:
                     print(f"{ret}\x1b[0;31m{title} by {artist}: 1/1\x1b[0m", end="")
-                    #print(("\n" + indent).join(zz))
                     print(ret.join(zz))
                 else:
                     pages = line_count//screen_rows + 1
@@ -122,7 +119,6 @@ if __name__ == "__main__":
                     n = 2
                     last_position = 0
                     print(f"{ret}\x1b[0;31m{title} by {artist}: 1/{pages}\x1b[0m", end="")
-                    #print(("\n" + indent).join(zz[:line_num + 1]))
                     print(ret.join(zz[:line_num + 1]))
                     need_scroll = True
 
@@ -158,18 +154,15 @@ if __name__ == "__main__":
                         sys.stdout.write("\x1b[2J") #erase screen, go home
                         sys.stdout.write("\x1b[H") #necessary - above doesn't go home
                         sys.stdout.flush()
-                        #print(f"\n{indent}\x1b[0;31m{title} by {artist}: {n}/{pages}\x1b[0m") #, end="")
                         print(f"{ret}\x1b[0;31m{title} by {artist}: {n}/{pages}\x1b[0m") #, end="")
                         last_position = position_sec
                         line_num = prev_line_num + screen_rows - 3
 
                         if n == pages:
                             first_line = len(zz) - (screen_rows - 3)
-                            #print(("\n" + indent).join(zz[first_line:]))
                             print(ret.join(zz[first_line:]))
                             need_scroll = False
                         else:
-                            #print(("\n" + indent).join(zz[prev_line_num:line_num + 1]))
                             print(ret.join(zz[prev_line_num:line_num + 1]))
                             prev_line_num = line_num
                             n += 1
@@ -186,10 +179,10 @@ if __name__ == "__main__":
                         cur.execute("SELECT image FROM image_files WHERE image_id=%s", (row[0],))
                         r = cur.fetchone()
                         if r:
-                            s = "This image is being stored as BYTES in the database"
+                            s = "Image is being stored as BYTES in the database"
                             img_current = BytesIO(r[0])
                         else:
-                            s = "This image is being stored as a URL in the database"
+                            s = "Image is being stored as a URL in the database"
                             img_current = generate_image(row[1], sonos_image_size, sonos_image_size)
                         if img_current:
                             break
