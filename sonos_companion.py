@@ -57,10 +57,13 @@ if __name__ == "__main__":
     need_scroll = False
     s = ""
 
+    print("\x1b[?25l") # hide cursor
+
     while 1:
         x = get_screen_size()
-        indent_cols = display_size//x.cell_width
-        indent = (indent_cols + 2) * ' '
+        #indent_cols = display_size//x.cell_width
+        #ret = f"\n\x1b[{indent_cols + 2}C"
+        ret = f"\n\x1b[{(display_size//x.cell_width) + 2}C"
 
         try:
             state = master.get_current_transport_info()['current_transport_state']
@@ -109,16 +112,18 @@ if __name__ == "__main__":
                 zz = lyrics.split("\n")
 
                 if screen_rows - 3 > line_count:
-                    print(f"\n{indent}\x1b[0;31m{title} by {artist} page: 1/1\x1b[0m", end="")
-                    print(("\n" + indent).join(zz))
+                    print(f"{ret}\x1b[0;31m{title} by {artist}: 1/1\x1b[0m", end="")
+                    #print(("\n" + indent).join(zz))
+                    print(ret.join(zz))
                 else:
                     pages = line_count//screen_rows + 1
                     line_num = screen_rows - 3
                     prev_line_num = line_num
                     n = 2
                     last_position = 0
-                    print(f"\n{indent}\x1b[0;31m{title} by {artist} page: 1/{pages}\x1b[0m", end="")
-                    print(("\n" + indent).join(zz[:line_num + 1]))
+                    print(f"{ret}\x1b[0;31m{title} by {artist}: 1/{pages}\x1b[0m", end="")
+                    #print(("\n" + indent).join(zz[:line_num + 1]))
+                    print(ret.join(zz[:line_num + 1]))
                     need_scroll = True
 
                     duration_dt = datetime.datetime.strptime(duration, "%H:%M:%S")    
@@ -153,16 +158,19 @@ if __name__ == "__main__":
                         sys.stdout.write("\x1b[2J") #erase screen, go home
                         sys.stdout.write("\x1b[H") #necessary - above doesn't go home
                         sys.stdout.flush()
-                        print(f"\n{indent}\x1b[0;31m{title} by {artist}: {n}/{pages}\x1b[0m") #, end="")
+                        #print(f"\n{indent}\x1b[0;31m{title} by {artist}: {n}/{pages}\x1b[0m") #, end="")
+                        print(f"{ret}\x1b[0;31m{title} by {artist}: {n}/{pages}\x1b[0m") #, end="")
                         last_position = position_sec
                         line_num = prev_line_num + screen_rows - 3
 
                         if n == pages:
                             first_line = len(zz) - (screen_rows - 3)
-                            print(("\n" + indent).join(zz[first_line:]))
+                            #print(("\n" + indent).join(zz[first_line:]))
+                            print(ret.join(zz[first_line:]))
                             need_scroll = False
                         else:
-                            print(("\n" + indent).join(zz[prev_line_num:line_num + 1]))
+                            #print(("\n" + indent).join(zz[prev_line_num:line_num + 1]))
+                            print(ret.join(zz[prev_line_num:line_num + 1]))
                             prev_line_num = line_num
                             n += 1
                         
