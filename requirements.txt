@@ -57,7 +57,7 @@ SQLAlchemy==1.3.6
 tabulate==0.8.3
 twitter==1.18.0
 uritemplate==3.0.0
-urllib3==1.25.3
+urllib3==1.25.8
 Wand==0.5.5
 wcwidth==0.1.7
 Werkzeug==0.15.5
