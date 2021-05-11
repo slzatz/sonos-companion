@@ -110,7 +110,9 @@ if __name__ == "__main__":
                 zz = lyrics.split("\n")
 
                 if screen_rows - 3 > line_count:
-                    print(f"{ret}\x1b[0;31m{title} by {artist}: 1/1\x1b[0m", end="")
+                    #print(f"{ret}\x1b[0;31m{title} by {artist}: 1/1\x1b[0m", end="")
+                    print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
+                    print(f"\x1b[0;31m{title} by {artist}: 1/1\n{ret}\x1b[0m", end="")
                     print(ret.join(zz))
                 else:
                     pages = line_count//screen_rows + 1
@@ -118,7 +120,9 @@ if __name__ == "__main__":
                     prev_line_num = line_num
                     n = 2
                     last_position = 0
-                    print(f"{ret}\x1b[0;31m{title} by {artist}: 1/{pages}\x1b[0m", end="")
+                    #ret = f"\n\x1b[{(display_size//x.cell_width) + 2}C"
+                    print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
+                    print(f"\x1b[0;31m{title} by {artist}: 1/{pages}\n{ret}\x1b[0m", end="")
                     print(ret.join(zz[:line_num + 1]))
                     need_scroll = True
 

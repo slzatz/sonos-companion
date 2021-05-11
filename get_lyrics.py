@@ -32,13 +32,18 @@ def retrieve_lyrics(url):
     except Exception as e:
         print(f"Exception retrieving page for {title} by {artist}")
         return
-    html = BeautifulSoup(page.text, 'html.parser')
-    [h.extract() for h in html('script')]
-    lyrics = html.find('div', class_='lyrics').get_text()
-    lyrics = re.sub("[\(\[].*?[\)\]]", "", lyrics) # genius has verse and chorus in brackets
-    lyrics = lyrics.replace("\n\n\n", "\n\n")
 
-    return lyrics
+    # 2 lines below taken from https://github.com/johnwmillr/LyricsGenius/
+    html = BeautifulSoup(page.text.replace('<br/>', '\n'), 'html.parser')
+    div = html.find('div', class_=re.compile("^lyrics$|Lyrics__Root")) #changed 05112021
+
+    if div is None:
+        return 
+
+    lyrics = div.get_text()
+    lyrics = re.sub("[\(\[].*?[\)\]]", "", lyrics) # genius has verse and chorus in brackets
+
+    return lyrics.lstrip()
 
 def get_lyrics(artist, title, display=False):
 
