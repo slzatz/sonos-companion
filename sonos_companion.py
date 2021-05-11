@@ -110,20 +110,18 @@ if __name__ == "__main__":
                 zz = lyrics.split("\n")
 
                 if screen_rows - 3 > line_count:
-                    #print(f"{ret}\x1b[0;31m{title} by {artist}: 1/1\x1b[0m", end="")
                     print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
                     print(f"\x1b[0;31m{title} by {artist}: 1/1\n{ret}\x1b[0m", end="")
-                    print(ret.join(zz))
+                    print(ret.join(zz), end="")
                 else:
                     pages = line_count//screen_rows + 1
                     line_num = screen_rows - 3
                     prev_line_num = line_num
                     n = 2
                     last_position = 0
-                    #ret = f"\n\x1b[{(display_size//x.cell_width) + 2}C"
                     print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
                     print(f"\x1b[0;31m{title} by {artist}: 1/{pages}\n{ret}\x1b[0m", end="")
-                    print(ret.join(zz[:line_num + 1]))
+                    print(ret.join(zz[:line_num + 1]), end="")
                     need_scroll = True
 
                     duration_dt = datetime.datetime.strptime(duration, "%H:%M:%S")    
@@ -158,7 +156,8 @@ if __name__ == "__main__":
                         sys.stdout.write("\x1b[2J") #erase screen, go home
                         sys.stdout.write("\x1b[H") #necessary - above doesn't go home
                         sys.stdout.flush()
-                        print(f"{ret}\x1b[0;31m{title} by {artist}: {n}/{pages}\x1b[0m") #, end="")
+                        print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
+                        print(f"\x1b[0;31m{title} by {artist}: {n}/{pages}\n{ret}\x1b[0m", end="")
                         last_position = position_sec
                         line_num = prev_line_num + screen_rows - 3
 
