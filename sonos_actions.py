@@ -42,7 +42,9 @@ import sys
 import random
 from operator import itemgetter 
 import pysolr
-home = os.path.split(os.getcwd())[0]
+#home = os.path.split(os.getcwd())[0]
+from pathlib import Path
+home = str(Path.home())
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
