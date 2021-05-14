@@ -10,9 +10,9 @@ import datetime
 import os
 import sys
 from io import BytesIO
+import wikipedia
 from ipaddress import ip_address
-import psycopg2
-from config import speaker, sonos_image_size, ec_id, ec_pw, ec_host #speaker = "192.168.86.23" -> Office2
+from config import speaker, sonos_image_size #, ec_id, ec_pw, ec_host #speaker = "192.168.86.23" -> Office2
 from display_image import generate_image, show_image, blend_images, get_screen_size
 from get_lyrics import get_lyrics #uses genius.com
 from pathlib import Path
@@ -21,18 +21,28 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 #from soco import config as soco_config - needed this in early days
 
-params = {
-  'database': 'artist_images',
-  'user': ec_id,
-  'password': ec_pw,
-  'host': ec_host,
-  'port': 5432
-}
-
-conn = psycopg2.connect(**params)
-cur = conn.cursor()
 
 display_size = sonos_image_size
+
+def get_page(topic):
+    try:
+        #if nothing comes back could repeat with auto_suggest = True
+        page = wikipedia.page(topic, auto_suggest=False) # I changed auto_suggest = False to the default (I changed page function in wikipedia.py
+    except Exception as e:
+        print(f"Couldn't find {topic} wikipedia: {e}")
+        return
+    return page
+
+def get_all_wikipedia_image_uris(page):
+    if page is None:
+        return []
+    uri_list = list()
+    for uri in page.images:        
+        pos = uri.rfind('.')
+        if uri[pos:].lower() in [".jpg", ".jpeg"]:
+            uri_list.append(uri)
+
+    return uri_list
 
 if __name__ == "__main__":
 
@@ -132,17 +142,9 @@ if __name__ == "__main__":
                     time.sleep(5)
                     continue
 
-                sql = "SELECT id FROM artists WHERE LOWER(name)=LOWER(%s);"
-                cur.execute(sql, (artist,))
-                row = cur.fetchone()
-                if row:
-                    artist_id = row[0]
-                else:
-                    print(f"Can't find {artist}!!")
-                    continue
-
-                cur.execute(f"SELECT id,link FROM images WHERE artist_id={artist_id}")
-                all_rows = cur.fetchall()
+                wiki_page = get_page(artist)
+                all_rows = get_all_wikipedia_image_uris(wiki_page)
+                #all_rows = cur.fetchall()
                 rows = all_rows[::]
                 alpha = 1.1 
                 if artist != prev_artist:
@@ -179,14 +181,7 @@ if __name__ == "__main__":
                     img_previous = img_current
                     while 1:
                         row = rows.pop()
-                        cur.execute("SELECT image FROM image_files WHERE image_id=%s", (row[0],))
-                        r = cur.fetchone()
-                        if r:
-                            s = "Image is being stored as BYTES in the database"
-                            img_current = BytesIO(r[0])
-                        else:
-                            s = "Image is being stored as a URL in the database"
-                            img_current = generate_image(row[1], sonos_image_size, sonos_image_size)
+                        img_current = generate_image(row, sonos_image_size, sonos_image_size)
                         if img_current:
                             break
                         if not rows:

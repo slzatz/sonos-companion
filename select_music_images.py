@@ -19,8 +19,8 @@ from io import BytesIO
 #import wisdomfetch
 import wikipedia
 from display_image import display_image, generate_image, generate_image2, show_image
-from apiclient import discovery #google custom search api
-import httplib2 #needed by the google custom search engine module apiclient
+#from apiclient import discovery #google custom search api
+#import httplib2 #needed by the google custom search engine module apiclient
 from config import google_api_key, ec_id, ec_pw, ec_host, sonos_image_size
 import psycopg2
 from dataclasses import dataclass
@@ -84,7 +84,7 @@ def get_google_images(name):
 
 def get_page(topic):
     try:
-        page = wikipedia.page(topic) # I changed auto_suggest = False to the default (I changed page function in wikipedia.py
+        page = wikipedia.page(topic, auto_suggest=False) # I changed auto_suggest = False to the default (I changed page function in wikipedia.py
     except Exception as e:
         print(f"Couldn't find {topic} wikipedia: {e}")
         return
