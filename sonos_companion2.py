@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
                 if screen_rows - 3 > line_count:
                     print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
-                    print(f"\x1b[0;31m{title} by {artist}: 1/1\n{ret}\x1b[0m", end="")
+                    print(f"\x1b[1;31m{title} by {artist}: 1/1\n{ret}\x1b[0m", end="")
                     print(ret.join(zz), end="")
                 else:
                     pages = line_count//screen_rows + 1
@@ -131,7 +131,7 @@ if __name__ == "__main__":
                     n = 2
                     last_position = 0
                     print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
-                    print(f"\x1b[0;31m{title} by {artist}: 1/{pages}\n{ret}\x1b[0m", end="")
+                    print(f"\x1b[1;31m{title} by {artist}: 1/{pages}\n{ret}\x1b[0m", end="")
                     print(ret.join(zz[:line_num + 1]), end="")
                     need_scroll = True
 
@@ -160,7 +160,7 @@ if __name__ == "__main__":
                         sys.stdout.write("\x1b[H") #necessary - above doesn't go home
                         sys.stdout.flush()
                         print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
-                        print(f"\x1b[0;31m{title} by {artist}: {n}/{pages}\n{ret}\x1b[0m", end="")
+                        print(f"\x1b[1;31m{title} by {artist}: {n}/{pages}\n{ret}\x1b[0m", end="")
                         last_position = position_sec
                         line_num = prev_line_num + screen_rows - 3
 
