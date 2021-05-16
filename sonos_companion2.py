@@ -12,7 +12,7 @@ import sys
 from io import BytesIO
 import wikipedia
 from ipaddress import ip_address
-from config import speaker, sonos_image_size #, ec_id, ec_pw, ec_host #speaker = "192.168.86.23" -> Office2
+from config import speaker #, sonos_image_size, ec_id, ec_pw, ec_host #speaker = "192.168.86.23" -> Office2
 from display_image import generate_image, show_image, blend_images, get_screen_size
 from get_lyrics import get_lyrics #uses genius.com
 from pathlib import Path
@@ -22,14 +22,14 @@ import soco
 #from soco import config as soco_config - needed this in early days
 
 
-display_size = sonos_image_size
+#display_size = sonos_image_size
 
 def get_page(topic):
     try:
         #if nothing comes back could repeat with auto_suggest = True
         page = wikipedia.page(topic, auto_suggest=False) # I changed auto_suggest = False to the default (I changed page function in wikipedia.py
     except Exception as e:
-        print(f"Couldn't find {topic} wikipedia: {e}")
+        print(f"\x1b[3;1HCouldn't find \"{topic}\" in the wikipedia:\n\r {e}"[:-17])
         return
     return page
 
@@ -39,7 +39,7 @@ def get_all_wikipedia_image_uris(page):
     uri_list = list()
     for uri in page.images:        
         pos = uri.rfind('.')
-        if uri[pos:].lower() in [".jpg", ".jpeg"]:
+        if uri[pos:].lower() in [".jpg", ".jpeg", ".png"]:
             uri_list.append(uri)
 
     return uri_list
@@ -71,6 +71,7 @@ if __name__ == "__main__":
 
     while 1:
         x = get_screen_size()
+        display_size = x.width//2
         ret = f"\n\x1b[{(display_size//x.cell_width) + 2}C"
 
         try:
@@ -181,7 +182,7 @@ if __name__ == "__main__":
                     img_previous = img_current
                     while 1:
                         row = rows.pop()
-                        img_current = generate_image(row, sonos_image_size, sonos_image_size)
+                        img_current = generate_image(row, display_size, display_size)
                         if img_current:
                             break
                         if not rows:
