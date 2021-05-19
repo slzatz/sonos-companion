@@ -9,20 +9,15 @@ import time
 import datetime
 import os
 import sys
-from io import BytesIO
 import wikipedia
 from ipaddress import ip_address
-from config import speaker #, sonos_image_size, ec_id, ec_pw, ec_host #speaker = "192.168.86.23" -> Office2
+from config import speaker 
 from display_image import generate_image, show_image, blend_images, get_screen_size
 from get_lyrics import get_lyrics #uses genius.com
 from pathlib import Path
 home = str(Path.home())
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
-#from soco import config as soco_config - needed this in early days
-
-
-#display_size = sonos_image_size
 
 def get_page(topic):
     try:
@@ -46,6 +41,11 @@ def get_all_wikipedia_image_uris(page):
 
 if __name__ == "__main__":
 
+    if len(sys.argv) > 1:
+        bold_lyrics = sys.argv[1] == 'bold'
+    else:
+        bold_lyrics = False
+        
     num_transport_errors = 0
     num_track_errors = 0
 
@@ -123,7 +123,10 @@ if __name__ == "__main__":
                 if screen_rows - 3 > line_count:
                     print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
                     print(f"\x1b[1;31m{title} by {artist}: 1/1\n{ret}\x1b[0m", end="")
+                    if bold_lyrics:
+                        sys.stdout.write("\x1b[1m") #bold
                     print(ret.join(zz), end="")
+                    sys.stdout.write("\x1b[0m")
                 else:
                     pages = line_count//screen_rows + 1
                     line_num = screen_rows - 3
@@ -132,11 +135,16 @@ if __name__ == "__main__":
                     last_position = 0
                     print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
                     print(f"\x1b[1;31m{title} by {artist}: 1/{pages}\n{ret}\x1b[0m", end="")
+                    if bold_lyrics:
+                        sys.stdout.write("\x1b[1m") #bold
                     print(ret.join(zz[:line_num + 1]), end="")
+                    sys.stdout.write("\x1b[0m")
                     need_scroll = True
 
                     duration_dt = datetime.datetime.strptime(duration, "%H:%M:%S")    
                     duration_sec = duration_dt.minute*60 + duration_dt.second
+
+                sys.stdout.write("\x1b[0m") #bold
 
                 if not artist:
                     rows = all_rows = []
@@ -164,6 +172,8 @@ if __name__ == "__main__":
                         last_position = position_sec
                         line_num = prev_line_num + screen_rows - 3
 
+                        if bold_lyrics:
+                            sys.stdout.write("\x1b[1m") #bold
                         if n == pages:
                             first_line = len(zz) - (screen_rows - 3)
                             print(ret.join(zz[first_line:]))
@@ -173,6 +183,7 @@ if __name__ == "__main__":
                             prev_line_num = line_num
                             n += 1
                         
+                        sys.stdout.write("\x1b[0m") 
 
 
 
