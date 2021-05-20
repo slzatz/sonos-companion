@@ -12,13 +12,14 @@ import sys
 import wikipedia
 from ipaddress import ip_address
 from config import speaker 
-from display_image import generate_image, show_image, blend_images, get_screen_size
+from display_image import generate_image, generate_image_from_file, show_image, blend_images, get_screen_size
 from get_lyrics import get_lyrics #uses genius.com
 from pathlib import Path
 home = str(Path.home())
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 
+pt = Path('/home/slzatz/gdrive/artists')
 def get_page(topic):
     try:
         #if nothing comes back could repeat with auto_suggest = True
@@ -65,7 +66,6 @@ if __name__ == "__main__":
     img_current = img_previous = image = None
     alpha = 1.1
     need_scroll = False
-    s = ""
 
     print("\x1b[?25l") # hide cursor
 
@@ -152,9 +152,21 @@ if __name__ == "__main__":
                     continue
 
                 wiki_page = get_page(artist)
-                all_rows = get_all_wikipedia_image_uris(wiki_page)
-                #all_rows = cur.fetchall()
+                if wiki_page:
+                    all_rows = get_all_wikipedia_image_uris(wiki_page)
+                    if not all_rows:
+                        a = artist.lower().replace(' ', '_')
+                        all_rows = list(pt.glob(a+'*'))
+                        all_rows = [str(x) for x in all_rows]
+                        # print(all_rows) #debug
+                else:
+                    a = artist.lower().replace(' ', '_')
+                    all_rows = list(pt.glob(a+'*'))
+                    all_rows = [str(x) for x in all_rows]
+                    # print(all_rows) # debug
+
                 rows = all_rows[::]
+                # print(rows) #debug
                 alpha = 1.1 
                 if artist != prev_artist:
                     img_current = None
@@ -193,7 +205,11 @@ if __name__ == "__main__":
                     img_previous = img_current
                     while 1:
                         row = rows.pop()
-                        img_current = generate_image(row, display_size, display_size)
+                        #print(row) #debug
+                        if row.startswith("http"):
+                            img_current = generate_image(row, display_size, display_size)
+                        else:
+                            img_current = generate_image_from_file(row, display_size, display_size)
                         if img_current:
                             break
                         if not rows:
@@ -206,12 +222,12 @@ if __name__ == "__main__":
                     if img_blend:
                         sys.stdout.buffer.write(b"\x1b[H")
                         show_image(img_blend)
-                        print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s}")
+                        print(f"\n\x1b[1m{artist}\x1b[0m\n", end="")
                         alpha += .015 
                 elif img_current:
                     sys.stdout.buffer.write(b"\x1b[H")
                     show_image(img_current)
-                    print(f"\n\x1b[1m{title} {artist}\x1b[0m\n{s}")
+                    print(f"\n\x1b[1m{artist}\x1b[0m\n", end="")
                     alpha += 0.25
                 
             else:

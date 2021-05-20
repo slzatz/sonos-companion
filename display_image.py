@@ -463,6 +463,53 @@ def generate_image(uri, w=None, h=None):
     f.seek(0)
     return f
 
+def generate_image_from_file(fn, w=None, h=None):
+
+    # this try/except is needed for occasional bad/unknown file format
+    try:
+        img = wand.image.Image(filename=fn)
+    except Exception as e:
+        print(f"wand.image.Image(file=BytesIO(response.content))"\
+              f"generated exception from {fn} {e}")
+        return
+
+    ww = img.width
+    hh = img.height
+    sq = ww if ww <= hh else hh
+    if ww > hh:
+        t = ((ww-sq)//2,(hh-sq)//2,(ww+sq)//2,(hh+sq)//2) 
+    else:
+        t= ((ww-sq)//2, 0, (ww+sq)//2, sq)
+    img.crop(*t)
+    # resize should take the image and enlarge it without cropping 
+    if w and h:
+        img.resize(w,h) #400x400
+
+    # wand/imagemagick converts from JPEG to PNG
+    # with the code below
+    # should probably look for PIL[LOW] equivalent
+    #if img.format == 'JPEG':
+    #    img.format = 'PNG'
+
+    if img.format != 'PNG':
+        img.format = 'PNG'
+
+    f = BytesIO()
+    img.save(f)
+    img.close()
+    f.seek(0)
+    img = Image.open(f)
+
+    #print(f"before {img=}")
+    if img.mode != "RGB":
+        img = img.convert("RGB")
+        f.seek(0)
+    #print(f"after {img=}")
+
+    img.save(f, format='png')
+    f.seek(0)
+    return f
+
     # so right now this will never be true
    # if img.format == 'JPEG':
 
