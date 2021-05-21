@@ -159,17 +159,13 @@ if __name__ == "__main__":
                 wiki_page = get_page(artist)
                 if wiki_page:
                     all_rows = get_all_wikipedia_image_uris(wiki_page)
-                    if not all_rows:
-                        a = artist.lower().replace(' ', '_')
-                        all_rows = list(pt.glob(a+'*'))
-                        all_rows = [str(x) for x in all_rows]
-                        # print(all_rows) #debug
-                else:
-                    a = artist.lower().replace(' ', '_')
-                    all_rows = list(pt.glob(a+'*'))
-                    all_rows = [str(x) for x in all_rows]
-                    # print(all_rows) # debug
 
+                a = artist.lower().replace(' ', '_')
+                more_rows = list(pt.glob(a+'*'))
+                more_rows = [str(x) for x in more_rows]
+                # print(all_rows) # debug
+
+                all_rows.extend(more_rows)
                 rows = all_rows[::]
                 # print(rows) #debug
                 alpha = 1.1 
