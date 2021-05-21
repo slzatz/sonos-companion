@@ -9,6 +9,7 @@ from get_lyrics import get_lyrics #uses genius.com
 from display_image import display_image
 from artist_images_db import *
 import random
+from config import speaker
 
 def bold(text):
     return "\033[1m" + text + "\033[0m"
@@ -25,8 +26,6 @@ def colorize(text, color):
 
 class Config():
     def __init__(self):
-        #self.master = "Office2"
-        #self.master = ""
         pass
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
@@ -39,7 +38,7 @@ def cli(config, master, verbose):
     '''Sonos command line app; master defaults to "Office2"; verbose defaults to False '''
     config.verbose = verbose
     if not master:
-        sonos_actions.master = sonos_actions.set_master("192.168.86.23")
+        sonos_actions.master = sonos_actions.set_master(speaker)
         master = "Office2"
     else:
         sonos_actions.master = sonos_actions.set_master(master)
