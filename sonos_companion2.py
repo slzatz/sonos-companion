@@ -117,8 +117,13 @@ if __name__ == "__main__":
                 if not lyrics:
                     lyrics = f"Couldn't retrieve lyrics for {title} by {artist}"
 
-                line_count = lyrics.count('\n') 
-                zz = lyrics.split("\n")
+                zz = []
+                prev_line = None
+                for line in lyrics.split("\n"):
+                    if not(prev_line == "" and line == ""):
+                        zz.append(line)
+                        prev_line = line
+                line_count = len(zz) 
 
                 if screen_rows - 3 > line_count:
                     print(f"\x1b[0;{3 + display_size//x.cell_width}H", end="") 
