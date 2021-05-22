@@ -10,6 +10,8 @@ import datetime
 import os
 import sys
 import wikipedia
+from bs4 import BeautifulSoup
+import requests
 from ipaddress import ip_address
 from config import speaker 
 from display_image import generate_image, generate_image_from_file, show_image, blend_images, get_screen_size
@@ -20,6 +22,37 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 
 pt = Path('/home/slzatz/gdrive/artists')
+
+WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
+
+def get_wiki_images(search_term):
+    search_term = search_term.lower()
+    search_term = search_term.replace(' ', '+')
+    try:
+        response  = requests.get(WIKI_REQUEST+search_term+"%22")
+        #print(response)
+    except Exception as e:
+        print(e)
+        return []
+
+    html = BeautifulSoup(response.text, 'html.parser')
+    div = html.find('div', class_="wbmi-media-search-results__list wbmi-media-search-results__list--image")
+    zz = div.find_all('a')
+    uris = []
+    for i,link in enumerate(zz):
+        # print(f"{i}: {link.get('href')}")
+        try:
+            response = requests.get(link.get('href'))
+        except Exception as e:
+            print(e)
+            continue
+        html = BeautifulSoup(response.text, 'html.parser')
+        div = html.find('div', class_="fullImageLink")
+        img = div.a.get('href')
+        uris.append(img)
+
+    return uris
+
 def get_page(topic):
     try:
         #if nothing comes back could repeat with auto_suggest = True
@@ -156,9 +189,11 @@ if __name__ == "__main__":
                     time.sleep(5)
                     continue
 
-                wiki_page = get_page(artist)
-                if wiki_page:
-                    all_rows = get_all_wikipedia_image_uris(wiki_page)
+                all_rows = get_wiki_images(artist)
+
+                #wiki_page = get_page(artist)
+                #if wiki_page:
+                #    all_rows = get_all_wikipedia_image_uris(wiki_page)
 
                 a = artist.lower().replace(' ', '_')
                 more_rows = list(pt.glob(a+'*'))
