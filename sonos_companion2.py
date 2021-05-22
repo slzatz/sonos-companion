@@ -7,6 +7,7 @@ search for artist whose music is playing on Sonos.
 '''
 import time
 import datetime
+import random
 import os
 import sys
 import wikipedia
@@ -22,8 +23,10 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 
 pt = Path('/home/slzatz/gdrive/artists')
+artists = {}
 
 WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
+NUM_IMAGES = 8
 
 def get_wiki_images(search_term):
     search_term = search_term.lower()
@@ -38,9 +41,9 @@ def get_wiki_images(search_term):
     html = BeautifulSoup(response.text, 'html.parser')
     div = html.find('div', class_="wbmi-media-search-results__list wbmi-media-search-results__list--image")
     zz = div.find_all('a')
+    zz = random.sample(zz, NUM_IMAGES if len(zz) >= NUM_IMAGES else len(zz))
     uris = []
-    for i,link in enumerate(zz):
-        # print(f"{i}: {link.get('href')}")
+    for link in zz:
         try:
             response = requests.get(link.get('href'))
         except Exception as e:
@@ -189,7 +192,11 @@ if __name__ == "__main__":
                     time.sleep(5)
                     continue
 
-                all_rows = get_wiki_images(artist)
+                if artist in artists:
+                    all_rows = artists[artist]
+                else:
+                    all_rows = get_wiki_images(artist)
+                    artists[artist] = all_rows
 
                 #wiki_page = get_page(artist)
                 #if wiki_page:
