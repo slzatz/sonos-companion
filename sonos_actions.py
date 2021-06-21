@@ -1,6 +1,5 @@
 '''
-This is a python 3 script that is imported by sonos_cli2.py and sonos_server.py
-and contains the SoCo functionality that the importing script needs
+Script that is imported by sonos.py that deals with SoCo
 
 it uses the xml format that sonos uses to interact with Amazon music
 
@@ -14,12 +13,13 @@ current_track = master.get_current_track_info() --> {
             u'position': '0:02:38', 
             u'album_art': 'http://cont-ch1-2.pandora.com/images/public/amz/3/2/9/3/655037093923_500W_500H.jpg'}
 
-If track is Prime, then url is:
+If track is from Amazon Music (not purchased separately) the uri is:
 x-sonosapi-hls-static:catalog%2ftracks%2fB01E0N3W66%2f%3falbumAsin%3dB01E0N386A?sid=201&flags=0&sn=1
 x-sonosapi-hls-static:catalog/tracks/B01E0N3W66/?albumAsin?B01E0N386A?sid=201&flags=0&sn=1
 
-If track is Prime but moved to my music (but not purchased) then url is (and generally metadata works):
+If track is Prime but moved to my music (but not purchased) then url is (not sure this applies anymore):
 x-sonosapi-hls-static:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f?sid=201&flags=0&sn=1' 
+x-sonosapi-hls-static:library/artists/The_20Avett_20Brothers/I_20And_20Love_20And_20You/f9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f.mp3?sid=201&flags=0&sn=1' 
 
 If track has been purchased from Amazon:
 x-sonos-http:library%2fartists%2fThe_20Avett_20Brothers%2fI_20And_20Love_20And_20You%2ff9aa6eac-6707-44bc-99ff-3aa2e5938d12%2f.mp3?sid=201&flags=0&sn=1' 
@@ -28,7 +28,6 @@ x-sonos-http:library/artists/The_20Avett_20Brothers/I_20And_20Love_20And_20You/f
 if track was put on queue as part of a playlist
 x-sonos-http:library%2fplaylist%2f28f452a4-3414-456d-9146-9e9063868963%2f067b7994-615b-4f12-850b-4f12-850b-...mp3?sid...
 x-sonos-http:library/playlist/28f452a4-3414-456d-9146-9e9063868963%2f067b7994-615b-4f12-850b-4f12-850b-...mp3?sid...
-
 
 actions = {'play':play, 'turn_volume':turn_volume, 'set_volume':set_volume, 'playback':playback, 'what_is_playing':what_is_playing, 'recent_tracks':recent_tracks, 'play_station':play_station, 'list_queue': list_queue, 'clear_queue':clear_queue, 'mute':mute} 
 
@@ -55,25 +54,6 @@ from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO, \
 soco_config.CACHE_ENABLED = False
 
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
-
-#last.fm 
-#base_url = "http://ws.audioscrobbler.com/2.0/"
-
-# the meta formats should be imported from sonos_config
-# pandora format changed at some point and was updated on 05302018
-# format is "x-sonosapi-radio:ST:138764603804051010?sid=236&amp;flags=8300&amp;sn=2"
-# numeric part is the url of the station if you access through pandora web site
-# note that the parameters following the ? appear to be necessary
-meta_format_pandora = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c206cST:52876609482614338" parentID="10082064myStations" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-0-Token</desc></item></DIDL-Lite>'''
-
-meta_format_radio = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="-1" parentID="-1" restricted="true"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>'''
-
-# a few songs were moved off playlist that I should just get rid of
-didl_library_playlist = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.container.playlistContainer</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
-
-#this is the current format (06252018) that works for my uploaded music and
-#music bought from Amazon and for music moved from prime and left in prime
-didl_amazon = '''<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10030000{id_}" parentID="" restricted="true"><dc:title></dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON51463_X_#Svc51463-0-Token</desc></item></DIDL-Lite>'''
 
 def get_sonos_players():
     # master is assigned in sonos_cli2.py
@@ -126,22 +106,6 @@ def my_add_to_queue(uri, metadata):
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
 
-#def my_add_playlist_to_queue(uri, metadata):
-#    try:
-#        response = master.avTransport.AddURIToQueue([
-#                ('InstanceID', 0),
-#                ('EnqueuedURI', uri), #x-rincon-cpcontainer:0006206clibrary
-#                ('EnqueuedURIMetaData', metadata),
-#                ('DesiredFirstTrackNumberEnqueued', 0),
-#                ('EnqueueAsNext', 0) #0
-#                ])
-#    except soco.exceptions.SoCoUPnPException as e:
-#        print("my_add_to_queue exception:", e)
-#        return 0
-#    else:
-#        qnumber = response['FirstTrackNumberEnqueued']
-#        return int(qnumber)
-
 # the 'action' functions
 def current_track_info(text=True):
     try:
@@ -166,7 +130,6 @@ def current_track_info(text=True):
             else:
                 response = {'title':title, 'artist':artist, 'album':album}
     else:
-        #response = "Nothing appears to be playing right now, Steve"
         response = None
 
     return response
@@ -282,9 +245,7 @@ def play_station(station):
     station = STATIONS.get(station.lower())
     if station:
         uri = station[1]
-        #print("radio station uri=",uri)
         if uri.startswith('x-sonosapi-radio'):
-            #meta = meta_format_pandora.format(title=station[0])
             meta = META_FORMAT_PANDORA.format(title=station[0])
         elif uri.startswith('x-sonosapi-stream'):
             meta = META_FORMAT_RADIO.format(title=station[0])
@@ -296,13 +257,9 @@ def list_queue():
     response = []
     for t in queue:
         if type(t) == soco.data_structures.DidlMusicTrack:
-            #response.append(f"{t.title} from {t.album} by {t.creator}")
             response.append(f"{t.title}")
         else:
             response.append(f"{t.metadata['title']} (MSTrack)")
-    #response = [f"{t.title} by {t.artist}" for t in queue]
-    #response = [f"{t}" for t in queue]
-    #response = [f"{type(t)} -- {dir(t)}" for t in queue]
     return response
 
 def clear_queue():

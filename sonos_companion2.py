@@ -39,7 +39,9 @@ def get_wiki_images(search_term):
         return []
 
     html = BeautifulSoup(response.text, 'html.parser')
-    div = html.find('div', class_="wbmi-media-search-results__list wbmi-media-search-results__list--image")
+    #div = html.find('div', class_="wbmi-media-search-results__list wbmi-media-search-results__list--image")
+    # this change noted on 06/21/2021
+    div = html.find('div', class_="sdms-search-results__list sdms-search-results__list--image")
     zz = div.find_all('a')
     zz = random.sample(zz, NUM_IMAGES if len(zz) >= NUM_IMAGES else len(zz))
     uris = []
