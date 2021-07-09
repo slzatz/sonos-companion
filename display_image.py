@@ -7,8 +7,8 @@ There are three current possiblities for handling the image.
 1) If it's a PNG, "stream" the image and don't save it to disk.
 2) If it's a JPEG, can convert into a PNG and then stream
 3) Or if it's a JPEG, can save to a temporary file and display
-
 '''
+
 import sys
 from base64 import standard_b64encode
 import zlib
@@ -400,8 +400,12 @@ def resize_show_image(f, w, h):
 
 def generate_image(uri, w=None, h=None):
 
+    #headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+    # user agent necessary or get 429 to many requests
+    user_agent = "Mozilla/5.0 (Wayland; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    headers = {'User-Agent': user_agent}
     try:
-        response = requests.get(uri, timeout=5.0)
+        response = requests.get(uri, timeout=5.0, headers=headers)
     except (requests.exceptions.ConnectionError,
             requests.exceptions.TooManyRedirects,
             requests.exceptions.ChunkedEncodingError,
@@ -411,6 +415,7 @@ def generate_image(uri, w=None, h=None):
 
     if response.status_code != 200:
         print(f"status code = {response.status_code}")
+        #print(f"headers = {response.headers}") # debugging
         return
         
     # it is possible to have encoding == None and ascii == True

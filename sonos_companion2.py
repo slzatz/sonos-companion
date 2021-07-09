@@ -250,15 +250,18 @@ if __name__ == "__main__":
                     img_previous = img_current
                     while 1:
                         row = rows.pop()
-                        #print(row) #debug
                         if row.startswith("http"):
                             img_current = generate_image(row, display_size, display_size)
                         else:
                             img_current = generate_image_from_file(row, display_size, display_size)
                         if img_current:
                             break
+
                         if not rows:
                             rows = all_rows[::]
+
+                        time.sleep(10)
+
                     alpha = 0
 
                 if img_previous and img_current:

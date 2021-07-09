@@ -67,6 +67,10 @@ def get_lyrics(artist, title, display=False):
         url = hit['result']['url']
         lyrics = retrieve_lyrics(url)
 
+        # started showing up in lyrics 07092021
+        lyrics = lyrics.replace("EmbedShare", "")
+        lyrics = lyrics.replace("URLCopyEmbedCopy", "")
+
         #write_lyrics_to_file(lyrics, song_title, artist_name)
 
         if display:
