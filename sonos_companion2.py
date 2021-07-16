@@ -22,7 +22,9 @@ home = str(Path.home())
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 
-pt = Path('/home/slzatz/gdrive/artists')
+#pt = Path('/home/slzatz/gdrive/artists')
+
+# cache for image urls - ? should actually cache the images
 artists = {}
 
 WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
@@ -57,26 +59,6 @@ def get_wiki_images(search_term):
         uris.append(img)
 
     return uris
-
-def get_page(topic):
-    try:
-        #if nothing comes back could repeat with auto_suggest = True
-        page = wikipedia.page(topic, auto_suggest=False) # I changed auto_suggest = False to the default (I changed page function in wikipedia.py
-    except Exception as e:
-        print(f"\x1b[3;1HCouldn't find \"{topic}\" in the wikipedia:\n\r {e}"[:-17])
-        return
-    return page
-
-def get_all_wikipedia_image_uris(page):
-    if page is None:
-        return []
-    uri_list = list()
-    for uri in page.images:        
-        pos = uri.rfind('.')
-        if uri[pos:].lower() in [".jpg", ".jpeg", ".png"]:
-            uri_list.append(uri)
-
-    return uri_list
 
 if __name__ == "__main__":
 
@@ -200,16 +182,11 @@ if __name__ == "__main__":
                     all_rows = get_wiki_images(artist)
                     artists[artist] = all_rows
 
-                #wiki_page = get_page(artist)
-                #if wiki_page:
-                #    all_rows = get_all_wikipedia_image_uris(wiki_page)
+                #a = artist.lower().replace(' ', '_')
+                #more_rows = list(pt.glob(a+'*'))
+                #more_rows = [str(x) for x in more_rows]
+                #all_rows.extend(more_rows)
 
-                a = artist.lower().replace(' ', '_')
-                more_rows = list(pt.glob(a+'*'))
-                more_rows = [str(x) for x in more_rows]
-                # print(all_rows) # debug
-
-                all_rows.extend(more_rows)
                 rows = all_rows[::]
                 # print(rows) #debug
                 alpha = 1.1 
