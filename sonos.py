@@ -4,7 +4,7 @@
 There are a bunch of aliases in .bashrc'''
 
 import click
-import sonos_actions
+import sonos_actions2 as sonos_actions
 from get_lyrics import get_lyrics #uses genius.com
 from display_image import display_image
 from artist_images_db import *

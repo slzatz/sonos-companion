@@ -56,11 +56,25 @@ import soco
 #from soco import config as soco_config
 from config import solr_uri
 from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO, \
-                         DIDL_LIBRARY_PLAYLIST, DIDL_AMAZON
+                         DIDL_LIBRARY_PLAYLIST, DIDL_AMAZON, DIDL_SERVICE
 
+import re
 #soco_config.CACHE_ENABLED = False
 
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
+ 
+def extract(uri):
+    print(f"{uri=}")
+    #spotify_uri = canonical_uri(uri)
+    #uri = uri.replace("%3a", ":")
+    match = re.search(r"spotify.*[:/](album|track|playlist)[:/](\w+)", uri)
+    #match = re.search(r"spotify.*[%3a/](album|track|playlist)[%3a/](\w+)", uri)
+    spotify_uri = "spotify:" + match.group(1) + ":" + match.group(2)
+    print(f"{spotify_uri=}")
+    share_type = spotify_uri.split(":")[1]
+    encoded_uri = spotify_uri.replace(":", "%3a")
+    return (share_type, encoded_uri)
+
 
 def get_sonos_players():
     # master is assigned in sonos_cli2.py
@@ -208,7 +222,7 @@ def play(add, uris):
     for uri in uris:
         #print('uri: ' + uri)
         #print("---------------------------------------------------------------")
-
+    
         # a few songs from Deborah album Like You've Never Seen Water are a playlist
         if 'library_playlist' in uri:
             i = uri.find(':')
@@ -218,28 +232,49 @@ def play(add, uris):
             # this is a bought track and question uploaded one?
             i = uri.find('library')
             ii = uri.find('.')
-            id_ = uri[i:ii]
-            meta = DIDL_AMAZON.format(id_=id_)
+            encoded_uri = uri[i:ii]
+            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #interesting that id worked; from sharelink.py
+                    item_class = "object.item.audioItem.musicTrack",
+                    sn="51463")
+            my_add_to_queue(encoded_uri, meta)
         elif 'static:library' in uri: # and 'static' in uri:
             # track moved from Prime into my account but not paid for
             i = uri.find('library')
             ii = uri.find('?')
-            id_ = uri[i:ii]
-            meta = DIDL_AMAZON.format(id_=id_)
+            encoded_uri = uri[i:ii]
+            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #interesting that id worked; from sharelink.py
+                    item_class = "object.item.audioItem.musicTrack",
+                    sn="51463")
+            my_add_to_queue(encoded_uri, meta)
         elif 'static:catalog' in uri: # and 'catalog' in uri:
             # track sitting in Prime not moved to my music
             i = uri.find('catalog')
             ii = uri.find('?')
-            id_ = uri[i:ii]
-            meta = DIDL_AMAZON.format(id_=id_)
+            encoded_uri = uri[i:ii]
+            #iiii = uri.rfind("%")
+            #iii = uri.rfind("%2f", 0, iiii-1)
+            #encoded_uri = uri[iii+3:iiii]
+            #item_id = "00032020"+encoded_uri
+            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #interesting that id worked; from sharelink.py
+                    item_class = "object.item.audioItem.musicTrack",
+                    sn="51463")
+            my_add_to_queue(encoded_uri, meta)
+        elif 'spotify' in uri:
+            (share_type, encoded_uri) = extract(uri)
+            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #interesting that id worked; from sharelink.py
+                    item_class = "object.item.audioItem.musicTrack",
+                    sn="3079") #2311 is Spotify Europe
+            my_add_to_queue(encoded_uri, meta)
+
         else:
             print(f'The uri:{uri} was not recognized')
             continue
 
         #print('meta: ',meta)
         #print('---------------------------------------------------------------')
+        print(f"{encoded_uri=}\n") 
 
-        my_add_to_queue(uri, meta)
+        #my_add_to_queue(uri, meta)
 
     # need this because may have selected multiple tracks and want to start from the top (like shuffle)
     if not add:

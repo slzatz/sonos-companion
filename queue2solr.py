@@ -83,7 +83,10 @@ while cont:
         id_ = album + ' ' + title
         id_ = id_.replace(' ', '_')
         id_ = id_.lower()
-        document = {"id":id_, "title":title, "uri":track.resources[0].uri, "album":album, "artist":artist, "track":n}
+        uri = track.resources[0].uri
+        if "spotify" in uri:
+            uri = uri.replace("%3a", ":")
+        document = {"id":id_, "title":title, "uri":uri, "album":album, "artist":artist, "track":n}
         print(repr(document).encode('cp1252', errors='replace')) 
         for k in document:
             print(str(k+':'+str(document[k])).encode('cp1252', errors='ignore'))
