@@ -64,13 +64,11 @@ import re
 solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
  
 def extract(uri):
-    print(f"{uri=}")
-    #spotify_uri = canonical_uri(uri)
-    #uri = uri.replace("%3a", ":")
+    #print(f"{uri=}")
+    # I am storing Spotify uris with colons not %3a
     match = re.search(r"spotify.*[:/](album|track|playlist)[:/](\w+)", uri)
-    #match = re.search(r"spotify.*[%3a/](album|track|playlist)[%3a/](\w+)", uri)
     spotify_uri = "spotify:" + match.group(1) + ":" + match.group(2)
-    print(f"{spotify_uri=}")
+    #print(f"{spotify_uri=}")
     share_type = spotify_uri.split(":")[1]
     encoded_uri = spotify_uri.replace(":", "%3a")
     return (share_type, encoded_uri)
@@ -229,33 +227,30 @@ def play(add, uris):
             id_ = uri[i+1:]
             meta = DIDL_LIBRARY_PLAYLIST.format(id_=id_)
         elif 'library' in uri and not 'static' in uri:
-            # this is a bought track and question uploaded one?
+            # this is a bought track and question also one that was uploaded one?
             i = uri.find('library')
             ii = uri.find('.')
             encoded_uri = uri[i:ii]
-            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #interesting that id worked; from sharelink.py
-                    item_class = "object.item.audioItem.musicTrack",
-                    sn="51463")
-            my_add_to_queue(encoded_uri, meta)
+            meta = DIDL_AMAZON.format(id_=encoded_uri) #? if need parentID="" which isn't in DIDL_SERVICE
+            #meta = DIDL_SERVICE.format(item_id="10030000"+encoded_uri, #interesting that id worked; from sharelink.py
+            #        item_class = "object.item.audioItem.musicTrack",
+            #        sn="51463")
+            #my_add_to_queue(encoded_uri, meta)
         elif 'static:library' in uri: # and 'static' in uri:
-            # track moved from Prime into my account but not paid for
+            # track moved from Prime into my account but not paid for - there is no reason to do this
             i = uri.find('library')
             ii = uri.find('?')
             encoded_uri = uri[i:ii]
-            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #interesting that id worked; from sharelink.py
+            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #that number is the sharelink "track" "key"
                     item_class = "object.item.audioItem.musicTrack",
                     sn="51463")
             my_add_to_queue(encoded_uri, meta)
-        elif 'static:catalog' in uri: # and 'catalog' in uri:
-            # track sitting in Prime not moved to my music
+        elif 'static:catalog' in uri: 
+            # an Amazon music track
             i = uri.find('catalog')
             ii = uri.find('?')
             encoded_uri = uri[i:ii]
-            #iiii = uri.rfind("%")
-            #iii = uri.rfind("%2f", 0, iiii-1)
-            #encoded_uri = uri[iii+3:iiii]
-            #item_id = "00032020"+encoded_uri
-            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #interesting that id worked; from sharelink.py
+            meta = DIDL_SERVICE.format(item_id="00032020"+encoded_uri, #that number is the sharelink "track" "key"
                     item_class = "object.item.audioItem.musicTrack",
                     sn="51463")
             my_add_to_queue(encoded_uri, meta)
