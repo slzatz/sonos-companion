@@ -3,32 +3,33 @@
 '''
 02-27-2016
 THIS IS CURRENTLY THE SCRIPT TO USE TO MOVE TRACKS IN THE QUEUE INTO SOLR
-The solr database is determined by the solr_uri in config.py - right now ec2
+The solr database is determined by the solr_uri in config.py - currently a linode instance
 This works without having to play the tracks
 The script asks whether this is an album to know whether to assign track numbers
 from the queue positions or just default to track 1
-Note that if the solr document already exists, the add operation will replace it. 
-However, if you change the id at all by changing the album name or title it won't delete
-the older versions.
+Note that if the solr document already exists for that exact same album and track,
+the add operation will replace it. If you change the id at all by changing the album name or title
+it won't delete the exising version (and so you can delete it manually)
 The upload format for SolrClient (python3 solr client program) is jsonifying a list of dictionaries:
 [{'id':'After_The_Gold_Rush_Birds', 'artist':'Neil Young', 'title':'Birds', 'album':'After the Gold Rush',
 'uri':'x-sonos-http:amz%3atr%3a44ce93d2-4105-416a-a905-51fe0f38ed9a.mp4?sid=26&flags=8224&sn=2'...}{...
 '''
 
-from SolrClient import SolrClient
+import pysolr
 import sys
 import json
 import requests
 from config import solr_uri
-import os
+#import os
 from time import sleep
-import datetime
-home = os.path.split(os.getcwd())[0]
-sys.path = [os.path.join(home, 'SoCo')] + sys.path
+#import datetime
+#home = os.path.split(os.getcwd())[0]
+#sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
-from soco import config
+#from soco import config
 
-config.CACHE_ENABLED = False
+#config.CACHE_ENABLED = False
+solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', always_commit=True, timeout=10) 
 
 n = 0
 while 1:
@@ -94,16 +95,8 @@ while cont:
         if is_album:
             n+=1
 
-    solr = SolrClient(solr_uri+'/solr')
-    collection = 'sonos_companion'
-
-    response = solr.index_json(collection, json.dumps(documents))
-    print(response)
-
-    # Since solr.commit didn't seem to work, substituted the below, which works
-    url = solr_uri+"/solr/"+collection+"/update"
-    r = requests.post(url, data={"commit":"true"})
-    print(r.text)
+    #print(documents)
+    solr.add(documents)
 
     resp = input("Do you want to continue? (y or n) ")
     if resp not in ('y', 'yes'):
@@ -119,16 +112,6 @@ while cont:
 #    if not cur_documents:
 #        break
 #
-#    cur_documents = json.dumps(cur_documents) 
-#    response = solr.index_json(collection, cur_documents) 
-#    print(response)
-#    #The commit from SolrClient is not working
-#    #response = solr.commit(collection, waitSearcher=False)
-#    #print(response)
-#
-#    # Since solr.commit didn't seem to work, substituted the below, which works
-#    url = solr_uri+"/solr/"+collection+"/update"
-#    r = requests.post(url, data={"commit":"true"})
-#    print(r.text)
+#    solr.add(cur_documents) 
 #
 #    n+=100
