@@ -235,7 +235,7 @@ def play(add, uris):
             #meta = DIDL_SERVICE.format(item_id="10030000"+encoded_uri, #interesting that id worked; from sharelink.py
             #        item_class = "object.item.audioItem.musicTrack",
             #        sn="51463")
-            #my_add_to_queue(encoded_uri, meta)
+            my_add_to_queue(encoded_uri, meta)
         elif 'static:library' in uri: # and 'static' in uri:
             # track moved from Prime into my account but not paid for - there is no reason to do this
             i = uri.find('library')
