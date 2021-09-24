@@ -91,7 +91,7 @@ def trackinfo():
     '''Detailed info for the currently playing track'''
     track_info = sonos_actions.current()
     if track_info:
-        msg = "\n"+"\n\n".join([f"{bold(colorize(x, 'magenta'))}: {colorize(y, 'bold')}" for x,y in track_info.items()])+"\n"
+        msg = "\n"+"\n".join([f"{bold(colorize(x, 'magenta'))}: {colorize(y, 'bold')}" for x,y in track_info.items()])+"\n"
     else:
         msg = "Nothing appears to be playing"
 

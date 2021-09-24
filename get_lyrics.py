@@ -1,6 +1,7 @@
 '''(barely) modified from script by Will Soares'''
 
 import sys
+import json
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -18,6 +19,8 @@ def search_db(title, artist):
     q = q.replace("Explicit", "").replace("Live", "")
     q = q.strip()
 
+    print(f"{search_url=}; {q=}")
+
     try:
         response = requests.get(search_url, data={'q':q}, headers=headers)
     except Exception as e:
@@ -26,7 +29,7 @@ def search_db(title, artist):
 
     return response
 
-def retrieve_lyrics(url):
+def retrieve_lyrics_old(url): #09232021
     try:
         page = requests.get(url)
     except Exception as e:
@@ -45,16 +48,39 @@ def retrieve_lyrics(url):
 
     return lyrics.lstrip()
 
-def get_lyrics(artist, title, display=False):
+def retrieve_lyrics(url):
+    try:
+        page = requests.get(url).text
+    except Exception as e:
+        print(f"Exception retrieving page for {title} by {artist}")
+        return
+
+    m = re.search(r'window\.__PRELOADED_STATE__ = JSON\.parse(.*)', page)
+    if m is None:
+        print(m)
+        return
+
+    data = m.group(1)
+    data = data[2:-3]
+    data = data.replace("\\", "")
+    print(data)
+    data = json.loads(data)
+    lyrics = data["songPage"]["lyricsData"]["body"]["html"]
+    lyrics = lyrics.replace("<br>n", "\n")
+    return lyrics[3:]
+
+def get_lyrics2(artist, title, display=False):
 
     #print('{} by {}'.format(title, artist))
 
     # Search for matches in request response
     response = search_db(title, artist)
     if response is None:
+        print("No Response")
         return
 
     z = response.json()
+    print(z)
     match = False
 
     for hit in z['response']['hits']:
@@ -81,6 +107,11 @@ def get_lyrics(artist, title, display=False):
             print("could not find (genius) lyrics")
         return
 
+def get_lyrics(artist, title, display=False):
+    url = "https://genius.com/"+artist+"-"+title+"-"+"lyrics"
+    lyrics = retrieve_lyrics(url)
+    print(lyrics)
+
 # not in use
 def write_lyrics_to_file (lyrics, song, artist):
     f = open('lyric-view.txt', 'w')
@@ -93,6 +124,7 @@ if __name__ == '__main__':
     # Use input as song title and artist name
      title = sys.argv[1]
      artist = sys.argv[2]
-     get_lyrics_genius(artist, title)
+     print(f"{title=}; {artist=}")
+     get_lyrics(artist, title, True)
 
 
