@@ -62,14 +62,16 @@ def retrieve_lyrics(url):
 
     data = m.group(1)
     data = data[2:-3]
+    data = data.replace("\\\\\\", "123456789")
     data = data.replace("\\", "")
-    print(data)
+    data = data.replace("123456789", "\\")
+    #print(data)
     data = json.loads(data)
     lyrics = data["songPage"]["lyricsData"]["body"]["html"]
     lyrics = lyrics.replace("<br>n", "\n")
     return lyrics[3:]
 
-def get_lyrics2(artist, title, display=False):
+def get_lyrics_old(artist, title, display=False):
 
     #print('{} by {}'.format(title, artist))
 
@@ -126,5 +128,8 @@ if __name__ == '__main__':
      artist = sys.argv[2]
      print(f"{title=}; {artist=}")
      get_lyrics(artist, title, True)
+     #z = search_db(title, artist)
+     #print(z.json())
+     #retrieve_lyrics("https://genius.com/Jason-isbell-dress-blues-lyrics")
 
 
