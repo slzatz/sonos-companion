@@ -1,9 +1,8 @@
 #!/home/slzatz/sonos-companion/bin/python
 
 '''
-Uses kitty graphics api to display either jpegs or png images from web
-or display pngs stored in the database
-search for artist whose music is playing on Sonos.
+Uses kitty graphics api to display either jpegs or png images from wikimedia search
+for artist whose music is playing on Sonos.
 '''
 import time
 import datetime

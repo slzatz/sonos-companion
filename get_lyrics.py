@@ -4,11 +4,12 @@ import sys
 import json
 import requests
 import re
-from bs4 import BeautifulSoup
-from config import genius_token
+#from bs4 import BeautifulSoup
+#from config import genius_token
 
 api_url = "https://api.genius.com"
 
+# as of 09232021 doesn't work
 def search_db(title, artist):
     headers = {'Authorization': 'Bearer ' + genius_token}
     search_url = api_url + '/search'
@@ -57,7 +58,7 @@ def retrieve_lyrics(url):
 
     m = re.search(r'window\.__PRELOADED_STATE__ = JSON\.parse(.*)', page)
     if m is None:
-        print(m)
+        #print(m)
         return
 
     data = m.group(1)
@@ -65,12 +66,15 @@ def retrieve_lyrics(url):
     data = data.replace("\\\\\\", "123456789")
     data = data.replace("\\", "")
     data = data.replace("123456789", "\\")
-    #print(data)
     data = json.loads(data)
     lyrics = data["songPage"]["lyricsData"]["body"]["html"]
     lyrics = lyrics.replace("<br>n", "\n")
-    return lyrics[3:]
+    lyrics = re.sub(r"<a href.*\">", "", lyrics)
+    lyrics = lyrics.replace("</a>", "")
+    lyrics = re.sub(r"</?p>", "", lyrics)
+    return lyrics[:-2]
 
+# as of 09232021 not in use
 def get_lyrics_old(artist, title, display=False):
 
     #print('{} by {}'.format(title, artist))
@@ -110,9 +114,19 @@ def get_lyrics_old(artist, title, display=False):
         return
 
 def get_lyrics(artist, title, display=False):
-    url = "https://genius.com/"+artist+"-"+title+"-"+"lyrics"
+    artist = artist.capitalize().replace(" ", "-")
+    title = title.lower().replace(" ", "-")
+    url = f"https://genius.com/{artist}-{title}-lyrics"
+    url = url.replace("'", "")
+
     lyrics = retrieve_lyrics(url)
-    print(lyrics)
+    if lyrics is None:
+        lyrics = f"could not find (genius) lyrics\n{url}"
+
+    if display:
+        print(lyrics)
+
+    return lyrics
 
 # not in use
 def write_lyrics_to_file (lyrics, song, artist):
@@ -128,8 +142,5 @@ if __name__ == '__main__':
      artist = sys.argv[2]
      print(f"{title=}; {artist=}")
      get_lyrics(artist, title, True)
-     #z = search_db(title, artist)
-     #print(z.json())
-     #retrieve_lyrics("https://genius.com/Jason-isbell-dress-blues-lyrics")
 
 
