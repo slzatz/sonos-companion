@@ -7,11 +7,12 @@ import re
 #from bs4 import BeautifulSoup
 #from config import genius_token
 
-api_url = "https://api.genius.com"
+#api_url = "https://api.genius.com"
+api_url = "https://genius.com/api"
 
 # as of 09232021 doesn't work
 def search_db(title, artist):
-    headers = {'Authorization': 'Bearer ' + genius_token}
+    #headers = {'Authorization': 'Bearer ' + genius_token}
     search_url = api_url + '/search'
 
     #remove () or [] which seem to sometimes confuse lyric search
@@ -20,10 +21,11 @@ def search_db(title, artist):
     q = q.replace("Explicit", "").replace("Live", "")
     q = q.strip()
 
-    print(f"{search_url=}; {q=}")
+    #print(f"{search_url=}; {q=}")
 
     try:
-        response = requests.get(search_url, data={'q':q}, headers=headers)
+        #response = requests.get(search_url, params={'q':q}, headers=headers)
+        response = requests.get(search_url, params={'q':q})
     except Exception as e:
         print(f"Exception searching genius db for {title} by {artist}")
         return
@@ -53,13 +55,11 @@ def retrieve_lyrics(url):
     try:
         page = requests.get(url).text
     except Exception as e:
-        print(f"Exception retrieving page for {title} by {artist}")
-        return
+        return f"Exception retrieving page for\n{url}"
 
     m = re.search(r'window\.__PRELOADED_STATE__ = JSON\.parse(.*)', page)
     if m is None:
-        #print(m)
-        return
+        return f"Could not scrape\n{url}"
 
     data = m.group(1)
     data = data[2:-3]
@@ -75,7 +75,7 @@ def retrieve_lyrics(url):
     return lyrics[:-2]
 
 # as of 09232021 not in use
-def get_lyrics_old(artist, title, display=False):
+def get_lyrics(artist, title, display=False):
 
     #print('{} by {}'.format(title, artist))
 
@@ -86,24 +86,23 @@ def get_lyrics_old(artist, title, display=False):
         return
 
     z = response.json()
-    print(z)
+    #print(z)
     match = False
 
+    # a check on whether song is from the artist we were looking for
     for hit in z['response']['hits']:
-        if artist.lower() in hit['result']['primary_artist']['name'].lower():
+        if artist.lower().split()[0] in hit['result']['primary_artist']['name'].lower():
             match = True
             break
+    #else:
+    #    if z['response']['hits']:
+    #        hit = z['response']['hits'][0]
+    #        match = True
 
     # Extract lyrics from URL if song was found
     if match:
         url = hit['result']['url']
         lyrics = retrieve_lyrics(url)
-
-        # started showing up in lyrics 07092021
-        lyrics = lyrics.replace("EmbedShare", "")
-        lyrics = lyrics.replace("URLCopyEmbedCopy", "")
-
-        #write_lyrics_to_file(lyrics, song_title, artist_name)
 
         if display:
             print(lyrics)
@@ -113,11 +112,22 @@ def get_lyrics_old(artist, title, display=False):
             print("could not find (genius) lyrics")
         return
 
-def get_lyrics(artist, title, display=False):
+def get_lyrics_too_new(artist, title, display=False):
     artist = artist.capitalize().replace(" ", "-")
     title = title.lower().replace(" ", "-")
-    url = f"https://genius.com/{artist}-{title}-lyrics"
+    url = f"https://genius.com/{artist}-{title}"
+    idx = url.find("live")
+    if idx != -1:
+        url = url[:idx]
+    url = url.strip()
     url = url.replace("'", "")
+    url = url.replace(".", "")
+    url = url.replace(",", "")
+    url = re.sub(r"\([^)]*\)", "", url)
+    url = url.replace("--", "-")
+    url = url.replace("&", "and")
+    url = url.rstrip("-")
+    url = url + "-lyrics"
 
     lyrics = retrieve_lyrics(url)
     if lyrics is None:

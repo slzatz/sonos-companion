@@ -134,7 +134,7 @@ if __name__ == "__main__":
                 sys.stdout.flush()
                 lyrics = get_lyrics(artist, title)
                 if not lyrics:
-                    lyrics = f"Couldn't retrieve lyrics for {title} by {artist}"
+                    lyrics = f"Couldn't retrieve lyrics for:\n{title} by {artist}"
 
                 zz = []
                 prev_line = None
