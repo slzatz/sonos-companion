@@ -125,7 +125,7 @@ if __name__ == "__main__":
                 prev_title = title
                 # should erase last artist
 
-                screen_rows = get_screen_size().rows
+                screen_rows = get_screen_size().rows - 3 ###
                 need_scroll = False
                 duration = track.get('duration', 0)
                 artist = track.get('artist', '')
