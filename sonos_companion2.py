@@ -26,14 +26,16 @@ import soco
 # cache for image urls - ? should actually cache the images
 artists = {}
 
-WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
+#WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
+WIKI_REQUEST = "https://commons.wikimedia.org/w/index.php?search={search_term}&title=Special:MediaSearch&go=Go&type=image&uselang=en"
 NUM_IMAGES = 8
 
 def get_wiki_images(search_term):
     search_term = search_term.lower()
     search_term = search_term.replace(' ', '+')
     try:
-        response  = requests.get(WIKI_REQUEST+search_term+"%22")
+        #response  = requests.get(WIKI_REQUEST+search_term+"%22")
+        response  = requests.get(WIKI_REQUEST.format(search_term=search_term))
         #print(response)
     except Exception as e:
         print(e)
@@ -222,14 +224,15 @@ if __name__ == "__main__":
 
             if rows:
                 if alpha > 1.0:
-                    # first time through with  new track img_current is None
+                    # first time through with new track img_current is None
                     img_previous = img_current
                     while 1:
                         row = rows.pop()
-                        if row.startswith("http"):
-                            img_current = generate_image(row, display_size, display_size)
-                        else:
-                            img_current = generate_image_from_file(row, display_size, display_size)
+                        #if row.startswith("http"):
+                        #    img_current = generate_image(row, display_size, display_size)
+                        #else:
+                        #    img_current = generate_image_from_file(row, display_size, display_size)
+                        img_current = generate_image(row, display_size, display_size)
                         if img_current:
                             break
 
@@ -246,12 +249,12 @@ if __name__ == "__main__":
                     if img_blend:
                         sys.stdout.buffer.write(b"\x1b[H")
                         show_image(img_blend)
-                        print(f"\n\x1b[1m{artist}\x1b[0m\n", end="")
+                        print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
                         alpha += .015 
                 elif img_current:
                     sys.stdout.buffer.write(b"\x1b[H")
                     show_image(img_current)
-                    print(f"\n\x1b[1m{artist}\x1b[0m\n", end="")
+                    print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
                     alpha += 0.25
                 
             else:
