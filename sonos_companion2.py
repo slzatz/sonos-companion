@@ -28,6 +28,7 @@ artists = {}
 
 #WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
 WIKI_REQUEST = "https://commons.wikimedia.org/w/index.php?search={search_term}&title=Special:MediaSearch&go=Go&type=image&uselang=en"
+WIKI_FILE = "https://commons.wikimedia.org/wiki/File:" #Bob_Dylan_portrait.jpg
 NUM_IMAGES = 8
 
 def get_wiki_images(search_term):
@@ -60,6 +61,30 @@ def get_wiki_images(search_term):
         uris.append(img)
 
     return uris
+
+def filter_wiki_images(artist, uris):
+    a = artist.lower().replace(" ", "_")
+    b = artist.lower().replace(" ", "")
+    filtered_uris = []
+    for uri in uris:
+        if a in uri.lower().replace("-", "_"):
+            filtered_uris.append(uri) 
+            #print(x, "Good url 1")
+        elif b in uri.lower():
+            filtered_uris.append(uri) 
+            #print(x, "Good url 2") # this situation where there is no space between names is rare and may not be worth it`
+        else:
+            #print(x, "Bad url")
+            zz = uri.split("/")[-1]
+            xx = WIKI_FILE+zz
+            response = requests.get(xx)
+            html = BeautifulSoup(response.text, 'html.parser')
+            td = html.find('td', class_="description")
+            if td:
+                if artist.lower() in td.get_text().lower().replace("_", " ").replace("-", " ")[:50]:
+                    filtered_uris.append(uri) 
+                    # print(xx, "Good description")
+    return filtered_uris
 
 if __name__ == "__main__":
 
@@ -181,12 +206,8 @@ if __name__ == "__main__":
                     all_rows = artists[artist]
                 else:
                     all_rows = get_wiki_images(artist)
+                    all_rows = filter_wiki_images(artist, all_rows)
                     artists[artist] = all_rows
-
-                #a = artist.lower().replace(' ', '_')
-                #more_rows = list(pt.glob(a+'*'))
-                #more_rows = [str(x) for x in more_rows]
-                #all_rows.extend(more_rows)
 
                 rows = all_rows[::]
                 # print(rows) #debug
@@ -220,18 +241,12 @@ if __name__ == "__main__":
                         
                         sys.stdout.write("\x1b[0m") 
 
-
-
             if rows:
                 if alpha > 1.0:
                     # first time through with new track img_current is None
                     img_previous = img_current
                     while 1:
                         row = rows.pop()
-                        #if row.startswith("http"):
-                        #    img_current = generate_image(row, display_size, display_size)
-                        #else:
-                        #    img_current = generate_image_from_file(row, display_size, display_size)
                         img_current = generate_image(row, display_size, display_size)
                         if img_current:
                             break
@@ -249,12 +264,14 @@ if __name__ == "__main__":
                     if img_blend:
                         sys.stdout.buffer.write(b"\x1b[H")
                         show_image(img_blend)
-                        print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
+                        #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
+                        print(f"\n\x1b[1m{artist}\x1b[0m", end="")
                         alpha += .015 
                 elif img_current:
                     sys.stdout.buffer.write(b"\x1b[H")
                     show_image(img_current)
-                    print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
+                    #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
+                    print(f"\n\x1b[1m{artist}\x1b[0m", end="")
                     alpha += 0.25
                 
             else:
