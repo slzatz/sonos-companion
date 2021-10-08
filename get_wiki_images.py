@@ -5,13 +5,13 @@ import os
 import random
 from bs4 import BeautifulSoup
 import requests
-from display_image import generate_image, show_image
+from display_image import generate_image, show_image, save_image
 
 WIKI_REQUEST = "https://commons.wikimedia.org/w/index.php?search={search_term}&title=Special:MediaSearch&go=Go&type=image&uselang=en"
 #WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
 WIKI_FILE = "https://commons.wikimedia.org/wiki/File:" #Bob_Dylan_portrait.jpg
 WIKI_CATEGORY = "https://commons.wikimedia.org/wiki/Category:" #Bob_Dylan
-NUM_IMAGES = 10
+NUM_IMAGES = 2
 
 def get_wiki_images(search_term):
     search_term = search_term.lower()
@@ -90,8 +90,9 @@ if __name__ == '__main__':
      for x in z:
          print(x)
          if os.path.splitext(x)[1].lower() in ['.png', '.jpg']: 
-             img = generate_image(x, 300, 300)
+             img = generate_image(x, 900, 900)
              show_image(img)
+             save_image(img, "testing123.png")
              print()
 
      exit(0)
