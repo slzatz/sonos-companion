@@ -162,6 +162,33 @@ def shuffle(artists):
     click.echo(msg)
 
 @cli.command()
+@click.argument('artist', type=click.STRING, required=True)
+def tracks(artist):
+    '''List the tracks from an artist'''
+    result = sonos_actions.list_(artist)
+    count = len(result)
+    msg = ""
+    if count:
+        msg += f"Track count for {artist.title()} was {count}:\n"
+        track_list = result.docs
+    else:
+        msg += f"I couldn't find any tracks for {artist.title()}\n"
+        return
+    titles = [t.get('title', '')+'-'+t.get('artist', '') for t in track_list]
+    title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+    msg += title_list
+    click.echo(msg)
+    z = input("Which tracks? ")
+    zz = z.split(',')
+    uris = [track_list[int(x)-1]['uri'] for x in zz]
+    titles = [track_list[int(x)-1]['title'] for x in zz]
+    click.echo("\n".join(titles))
+    #track_nums = int(z) - 1
+    #click.echo(track_list[track_nums])
+    #sonos_actions.play(False, [track_list[track_num]['uri']])
+    sonos_actions.play(False, uris)
+
+@cli.command()
 @click.argument('album', type=click.STRING, required=True)
 @click.option('-a', '--artist', help="Artist to help find album to be played")
 def playalbum(album, artist=None):

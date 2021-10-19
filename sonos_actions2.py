@@ -265,11 +265,7 @@ def play(add, uris):
             print(f'The uri:{uri} was not recognized')
             continue
 
-        #print('meta: ',meta)
-        #print('---------------------------------------------------------------')
-        print(f"{encoded_uri=}\n") 
-
-        #my_add_to_queue(uri, meta)
+        #print(f"{encoded_uri=}\n") 
 
     # need this because may have selected multiple tracks and want to start from the top (like shuffle)
     if not add:
@@ -320,7 +316,8 @@ def shuffle(artists):
             random_tracks = random.sample(tracks, k)
             tracklist.extend(random_tracks)
         else:
-            msg += f"I couldn't find any tracks for {artist}\n"
+            msg += f"I couldn't find any tracks for {artist.title()}\n"
+            return msg
 
     random.shuffle(tracklist)
     uris = [t.get('uri') for t in tracklist]
@@ -332,6 +329,25 @@ def shuffle(artists):
 
     return msg
     
+def list_(artist):
+    s = 'artist:' + ' AND artist:'.join(artist.split())
+    result = solr.search(s, fl='artist,title,uri', rows=500) 
+    return result
+    #count = len(result)
+    #msg = ""
+    #if count:
+    #    msg += f"Track count for {artist.title()} was {count}:\n"
+    #    tracks = result.docs
+    #else:
+    #    msg += f"I couldn't find any tracks for {artist.title()}\n"
+    #    return msg
+
+    #title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
+    ##msg += f"The list for {artist}:\n{title_list}"
+    #msg += title_list
+
+    #return msg
+
 def play_pause():
     try:
         state = master.get_current_transport_info()['current_transport_state']
