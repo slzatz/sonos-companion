@@ -1,24 +1,23 @@
 #!bin/python
 
 import sys
+import os
 import random
 from bs4 import BeautifulSoup
 import requests
-from display_image import generate_image, show_image
+from display_image import generate_image, show_image, save_image
 
 WIKI_REQUEST = "https://commons.wikimedia.org/w/index.php?search={search_term}&title=Special:MediaSearch&go=Go&type=image&uselang=en"
-#WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
 WIKI_FILE = "https://commons.wikimedia.org/wiki/File:" #Bob_Dylan_portrait.jpg
-NUM_IMAGES = 10
+WIKI_CATEGORY = "https://commons.wikimedia.org/wiki/Category:" #Bob_Dylan
+NUM_IMAGES = 6
 
+# for a wikipedia special search
 def get_wiki_images(search_term):
     search_term = search_term.lower()
     search_term = search_term.replace(' ', '+')
     try:
-        #response  = requests.get(WIKI_REQUEST+search_term+"%22")
-        #response  = requests.get(f"https://commons.wikimedia.org/w/index.php?search={search_term}&title=Special:MediaSearch&go=Go&type=image&uselang=en")
         response  = requests.get(WIKI_REQUEST.format(search_term=search_term))
-        #print(response)
     except Exception as e:
         print(e)
         return []
@@ -43,11 +42,96 @@ def get_wiki_images(search_term):
 
     return uris
 
+# for retrieval using category name
+def get_wiki_images2(search_term):
+    search_term = search_term.title()
+    search_term = search_term.replace(' ', '_')
+    try:
+        response  = requests.get(WIKI_CATEGORY+search_term)
+        #print(response.url)
+        #print(response.status_code)
+    except Exception as e:
+        print(e)
+        return []
 
+    html = BeautifulSoup(response.text, 'html.parser')
+
+    #div = html.find('div', id_="mw-category-media")
+    div = html.find('div', class_="mw-category-generated")
+
+    zz = div.find_all('a')
+    zz = random.sample(zz, NUM_IMAGES if len(zz) >= NUM_IMAGES else len(zz))
+    uris = []
+    for link in zz:
+        try:
+            response = requests.get("https://commons.wikimedia.org"+link.get('href'))
+            #print(response.url)
+        except Exception as e:
+            print(e)
+            continue
+        html = BeautifulSoup(response.text, 'html.parser')
+        try:
+            div = html.find('div', class_="fullImageLink")
+            img = div.a.get('href')
+            uris.append(img)
+        except Exception as e:
+            print(e)
+            continue
+
+    return uris
+
+def get_wiki_images3(search_term):
+    search_term = search_term.title()
+    search_term = search_term.replace(' ', '_')
+    try:
+        response  = requests.get(WIKI_CATEGORY+search_term)
+        #print(response.url)
+        #print(response.status_code)
+    except Exception as e:
+        print(e)
+        return []
+
+    html = BeautifulSoup(response.text, 'html.parser')
+    print(html)
+
+    #div = html.find('div', id_="mw-category-media")
+    #div = html.find('div', class_="mw-category-generated")
+    div = html.find('ul', class_="gallery mw-gallery-traditional")
+
+    zz = div.find_all('a')
+    zz = random.sample(zz, NUM_IMAGES if len(zz) >= NUM_IMAGES else len(zz))
+    uris = []
+    for link in zz:
+        try:
+            response = requests.get("https://commons.wikimedia.org"+link.get('href'))
+            #print(response.url)
+        except Exception as e:
+            print(e)
+            continue
+        html = BeautifulSoup(response.text, 'html.parser')
+        try:
+            div = html.find('div', class_="fullImageLink")
+            img = div.a.get('href')
+            uris.append(img)
+        except Exception as e:
+            print(e)
+            continue
+
+    return uris
 if __name__ == '__main__':
 
     # Use input as song title and artist name
      artist = sys.argv[1]
+     z = get_wiki_images2(artist)
+     for x in z:
+         print(x)
+         if os.path.splitext(x)[1].lower() in ['.png', '.jpg']: 
+             img = generate_image(x, 900, 900)
+             show_image(img)
+             save_image(img, "testing123.png")
+             print()
+
+     exit(0)
      z = get_wiki_images(artist)
      a = artist.lower().replace(" ", "_")
      b = artist.lower().replace(" ", "")

@@ -390,6 +390,10 @@ def blend_images(f1, f2, alpha):
 def show_image(f):
     write_chunked({'a':'T', 'f':100}, f.read())
 
+def save_image(f, fname):
+    img = Image.open(f)
+    img.save(fname, format='png')
+
 def resize_show_image(f, w, h):
     img = Image.open(f) # PIL Image
     img = img.resize((w, h))
