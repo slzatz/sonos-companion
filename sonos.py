@@ -186,9 +186,6 @@ def tracks(artist):
     uris = [track_list[int(x)-1]['uri'] for x in zz]
     titles = [track_list[int(x)-1]['title'] for x in zz]
     click.echo("\n".join(titles))
-    #track_nums = int(z) - 1
-    #click.echo(track_list[track_nums])
-    #sonos_actions.play(False, [track_list[track_num]['uri']])
     sonos_actions.play(False, uris)
 
 @cli.command()
