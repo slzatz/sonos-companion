@@ -162,9 +162,10 @@ def shuffle(artists):
     click.echo(msg)
 
 @cli.command()
-@click.argument('artist', type=click.STRING, required=True)
+@click.argument('artist', type=click.STRING, required=True, nargs=-1)
 def tracks(artist):
     '''List the tracks from an artist'''
+    artist = " ".join(artist)
     result = sonos_actions.list_(artist)
     count = len(result)
     msg = ""
@@ -179,6 +180,8 @@ def tracks(artist):
     msg += title_list
     click.echo(msg)
     z = input("Which tracks? ")
+    if not z:
+        return
     zz = z.split(',')
     uris = [track_list[int(x)-1]['uri'] for x in zz]
     titles = [track_list[int(x)-1]['title'] for x in zz]
