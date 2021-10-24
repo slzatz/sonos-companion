@@ -56,9 +56,27 @@ def playstation(station):
 @cli.command()
 @click.argument('title', required=True)
 @click.option("-a", "--artist", help="The artist for the track to be played")
-def playtrack(title, artist):
+def playtrack_old(title, artist):
     '''[play] Play a track -> sonos playtrack "harvest" -a "neil young"'''
     msg = sonos_actions.play_track(title, artist)
+    click.echo(msg)
+
+@cli.command()
+@click.argument('track', type=click.STRING, required=True, nargs=-1)
+def playtrack(track):
+    '''[play] Play a track -> sonos playtrack harvest by neil young"'''
+    tracklist = list(track)
+    title = []
+    artist = []
+    for word in track:
+        if word == "by":
+            tracklist.pop(0)
+            break
+        title.append(tracklist.pop(0))
+    for word in tuple(tracklist):
+        artist.append(tracklist.pop(0))
+    #print(f"{title=}; {artist=}")
+    msg = sonos_actions.play_track(" ".join(title), " ".join(artist))
     click.echo(msg)
 
 @cli.command()
