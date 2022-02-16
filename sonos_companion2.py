@@ -267,14 +267,14 @@ if __name__ == "__main__":
                         show_image(img_blend)
                         #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}yyyyy{alpha}", end="")
                         #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
-                        print(f"\n\x1b[1m{artist}\x1b[0m", end="")
+                        print(f"\n\x1b[1m{artist}\x1b[0m - {len(all_rows)} images: {row}", end="")
                         alpha += .015 
                 elif img_current:
                     sys.stdout.buffer.write(b"\x1b[H")
                     show_image(img_current)
                     #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}xxxx{alpha}", end="")
                     #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
-                    print(f"\n\x1b[1m{artist}\x1b[0m", end="")
+                    print(f"\n\x1b[1m{artist}\x1b[0m - {len(all_rows)} images: {row}", end="")
                     alpha += 0.25
                 
             else:
