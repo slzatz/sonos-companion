@@ -7,7 +7,7 @@ import click
 import sonos_actions2 as sonos_actions
 from get_lyrics import get_lyrics #uses genius.com
 from display_image import display_image
-from artist_images_db import *
+#from artist_images_db import *
 import random
 from config import speaker
 
@@ -133,8 +133,6 @@ def what():
         click.echo(f"{track['album']}\n")
     else:
         click.secho("Nothing appears to be playing! ", nl=False, fg='red', bold=True)
-
-    
 
 @cli.command()
 def showqueue():
