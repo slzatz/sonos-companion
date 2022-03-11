@@ -21,8 +21,6 @@ home = str(Path.home())
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 
-#pt = Path('/home/slzatz/gdrive/artists')
-
 # cache for image urls - ? should actually cache the images
 artists = {}
 
@@ -35,14 +33,13 @@ def get_wiki_images(search_term):
     search_term = search_term.lower()
     search_term = search_term.replace(' ', '+')
     try:
-        #response  = requests.get(WIKI_REQUEST+search_term+"%22")
         response  = requests.get(WIKI_REQUEST.format(search_term=search_term))
-        #print(response)
     except Exception as e:
         print(e)
         return []
 
     html = BeautifulSoup(response.text, 'html.parser')
+
     #div = html.find('div', class_="wbmi-media-search-results__list wbmi-media-search-results__list--image")
     # this change noted on 06/21/2021
     div = html.find('div', class_="sdms-search-results__list sdms-search-results__list--image")
@@ -67,14 +64,14 @@ def filter_wiki_images(artist, uris):
     b = artist.lower().replace(" ", "")
     filtered_uris = []
     for uri in uris:
+        # match on artist name
         if a in uri.lower().replace("-", "_"):
             filtered_uris.append(uri) 
-            #print(x, "Good url 1")
+        # match on artist name with no spaces (seems rare)
         elif b in uri.lower():
             filtered_uris.append(uri) 
-            #print(x, "Good url 2") # this situation where there is no space between names is rare and may not be worth it`
         else:
-            #print(x, "Bad url")
+            # match if description has artist name
             zz = uri.split("/")[-1]
             xx = WIKI_FILE+zz
             response = requests.get(xx)
@@ -83,7 +80,6 @@ def filter_wiki_images(artist, uris):
             if td:
                 if artist.lower() in td.get_text().lower().replace("_", " ").replace("-", " ")[:50]:
                     filtered_uris.append(uri) 
-                    # print(xx, "Good description")
     return filtered_uris
 
 if __name__ == "__main__":
@@ -137,7 +133,7 @@ if __name__ == "__main__":
             try:
                 track = master.get_current_track_info()
             except Exception as e:
-                print("Encountered error in track = master.get_current_track_info(): {e}")
+                print(f"Encountered error in track = master.get_current_track_info(): {e}")
                 num_track_errors += 1
                 if num_track_errors < 3:
                     time.sleep(1)
@@ -267,14 +263,14 @@ if __name__ == "__main__":
                         show_image(img_blend)
                         #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}yyyyy{alpha}", end="")
                         #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
-                        print(f"\n\x1b[1m{artist}\x1b[0m", end="")
+                        print(f"\n\x1b[1m{artist}\x1b[0m - {len(all_rows)} images: {row}", end="")
                         alpha += .015 
                 elif img_current:
                     sys.stdout.buffer.write(b"\x1b[H")
                     show_image(img_current)
                     #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}xxxx{alpha}", end="")
                     #print(f"\n\x1b[1m{artist}\x1b[0m\n{row}", end="")
-                    print(f"\n\x1b[1m{artist}\x1b[0m", end="")
+                    print(f"\n\x1b[1m{artist}\x1b[0m - {len(all_rows)} images: {row}", end="")
                     alpha += 0.25
                 
             else:
