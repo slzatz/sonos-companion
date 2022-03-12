@@ -6,7 +6,7 @@ greenlet==1.1.2
 idna==3.3
 ifaddr==0.1.7
 kazoo==2.6.1
-Pillow==9.0.0
+Pillow==9.0.1
 psycopg2==2.9.3
 pysolr==3.9.0
 requests==2.27.1
