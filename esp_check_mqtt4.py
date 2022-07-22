@@ -19,10 +19,12 @@ sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
 from soco import config as soco_config
 import paho.mqtt.client as mqtt
-from config import aws_mqtt_uri, location
+from config import linode_uri
 import sonos_actions
+import sonos_actions2
 
-soco_config.CACHE_ENABLED = False
+#soco_config.CACHE_ENABLED = False
+topic = "trellis"
 
 sp = list(sonos_actions.get_sonos_players())
 #text = [f"{s.player_name}-coord'or: {s.group.coordinator.player_name}" for s in sp]
@@ -36,7 +38,7 @@ while True:
 
     try:
         response = int(response)
-        master = sonos_actions.master = sp[response - 1]
+        master = sonos_actions.master = sonos_actions2.master = sp[response - 1]
         break
     except (ValueError, IndexError):
         print("{!r} isn't a valid choice. Pick a number between 1 and {}:\n".format(response,
@@ -50,7 +52,7 @@ def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     # client.subscribe("$SYS/#")
-    client.subscribe('sonos/'+location)
+    client.subscribe(topic)
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -113,7 +115,9 @@ def on_message(client, userdata, msg):
 
     elif action.startswith("shuffle"):
         artist = action[8:]
-        sonos_actions.shuffle(artist)
+        print(artist)
+        m = sonos_actions2.shuffle([artist])
+        print(m)
 
     elif action == "play_queue":
         queue = master.get_queue()
@@ -127,6 +131,6 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(aws_mqtt_uri, 1883, 60)
+client.connect(linode_uri, 1883, 60)
 client.loop_forever()
 # could also call while 1: client.loop() sleep(1) so could do other things in loop. Not sure what timeout should be set to if we call loop "manually"
