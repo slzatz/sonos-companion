@@ -38,6 +38,24 @@ master = by_name("Office2")
 
 print("Master speaker is: {}".format(master.player_name))
 
+for item in ms.get_metadata():
+    if item.title == "My Music":
+        items = ms.get_metadata(item.id)
+        for my_item in ms.get_metadata(item.id):
+            if my_item.title == "Playlists":
+                print("-> (" + type(my_item).__name__ + ")", my_item.title)
+                playlists = ms.get_metadata(my_item.id)
+                break
+        break
+
+for pl in playlists:
+    print(pl.title)
+
+pl_titles = [pl.title for pl in playlists]
+
+pl_dict = dict(zip(pl_titles, playlists))
+print(pl_dict)
+
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
@@ -118,9 +136,14 @@ def on_message(client, userdata, msg):
         master.clear_queue()
         album = action[6:]
         results = ms.search("albums", album)
-        random.shuffle(results)
-        for track in results:
-            master.add_to_queue(track)
+        master.add_to_queue(results[0])
+        master.play()    
+
+    elif action.startswith("playlist"):
+        master.clear_queue()
+        pl_title = action[9:]
+        pl = pl_dict[pl_title]
+        master.add_to_queue(pl)
         master.play()    
 ##    elif action.startswith("shuffle"):
 ##        artist = action[8:]

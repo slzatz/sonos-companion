@@ -45,15 +45,33 @@ def confirm_work(service):
         print("Got {} items under: {}".format(len(content), item.title))
 
     ##print("\nTest browse until tracks")
-    ##for item in t.get_metadata():
-    ##    # print("J")
-    ##    while True:
-    ##        print("-> (" + type(item).__name__ + ")", item.title)
-    ##        items = t.get_metadata(item.id)
-    ##        if len(items) == 0 or items[0].id == item.id:
-    ##            print("... STOP\n")
-    ##            break
-    ##        item = items[0]
+    for item in t.get_metadata():
+        # print("J")
+        if item.title == "My Music":
+            while True:
+                print("-> (" + type(item).__name__ + ")", item.title)
+                if type(item).__name__ == "MSPlaylist":
+                    z.clear_queue()
+                    try:
+                        ##z.add_to_queue(choice(results))
+                        print("-> (" + type(item).__name__ + ")", item.title)
+                        print(to_didl_string(item))
+                        z.add_to_queue(item)
+                    except soco.exceptions.SoCoUPnPException:
+                        print("Cannot play")
+                        break
+                    else:
+                        print("Can play")
+                        print(str(z.get_queue())[:250])
+                        z.play()
+                        #sleep(10)
+                        #z.stop()
+                        break
+                items = t.get_metadata(item.id)
+                if len(items) == 0 or items[0].id == item.id:
+                    print("... STOP\n")
+                    break
+                item = items[0]
 
     return
 
