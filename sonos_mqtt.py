@@ -10,7 +10,7 @@ import soco
 import paho.mqtt.client as mqtt
 from soco.music_services import MusicService
 from soco.discovery import by_name
-from config import linode_uri, music_service
+from config import mqtt_broker, music_service, speaker
 from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO
 import random
 
@@ -18,7 +18,7 @@ import random
 topic = "trellis"
 ms = MusicService(music_service)
 
-master = by_name("Office2")
+master = by_name(speaker)
 
 #sp = list(sonos_actions.get_sonos_players())
 #text = [f"{s.player_name} <-- {s.group.coordinator.player_name}" for s in sp]
@@ -248,5 +248,5 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(linode_uri, 1883, 60)
+client.connect(mqtt_broker, 1883, 60)
 client.loop_forever()
