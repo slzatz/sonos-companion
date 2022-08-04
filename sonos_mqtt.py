@@ -159,8 +159,8 @@ def on_message(client, userdata, msg):
         case 'random_playlist':
             master.stop()
             master.clear_queue()
-            pl = random.choice(PLAYLISTS)
-            #pl = pl_dict[arg]
+            arg = random.choice(PLAYLISTS)
+            pl = pl_dict[arg]
             master.add_to_queue(pl)
             #master.play()    
             master.play_from_queue(0)
