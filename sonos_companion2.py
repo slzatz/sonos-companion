@@ -12,14 +12,15 @@ import sys
 import wikipedia
 from bs4 import BeautifulSoup
 import requests
-from ipaddress import ip_address
+#from ipaddress import ip_address
 from config import speaker 
 from display_image import generate_image, generate_image_from_file, show_image, blend_images, get_screen_size
 from get_lyrics import get_lyrics #uses genius.com
-from pathlib import Path
-home = str(Path.home())
-sys.path = [os.path.join(home, 'SoCo')] + sys.path
-import soco
+#from pathlib import Path
+#home = str(Path.home())
+#sys.path = [os.path.join(home, 'SoCo')] + sys.path
+#import soco
+from soco.discovery import by_name
 
 # cache for image urls - ? should actually cache the images
 artists = {}
@@ -92,12 +93,16 @@ if __name__ == "__main__":
     num_transport_errors = 0
     num_track_errors = 0
 
+    master = by_name(speaker)
+
     try:
-        ip_address(speaker)
+        #ip_address(speaker)
+        master = by_name(speaker)
     except ValueError:
+        print("Could not set master speaker by name")
         sys.exit(1)
-    else:
-        master = soco.SoCo(speaker)
+    #else:
+    #    master = soco.SoCo(speaker)
 
     prev_title = ""
     prev_artist = ""

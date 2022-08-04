@@ -6,19 +6,20 @@ like shuffling an artist or playing a track or album
 Uses the music services capabilities of SoCo
 '''
 import json
-import soco
+#import soco
 import paho.mqtt.client as mqtt
+from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 from soco.music_services import MusicService
 from soco.discovery import by_name
 from config import mqtt_broker, music_service, speaker
-from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO
+from sonos_config import STATIONS, PLAYLISTS, META_FORMAT_PANDORA, META_FORMAT_RADIO
 import random
 
-#soco_config.CACHE_ENABLED = False
 topic = "trellis"
 ms = MusicService(music_service)
 
 master = by_name(speaker)
+# note error if speaker is not master for something like master.stop() is soco.exceptions.SoCoSlaveException
 
 #sp = list(sonos_actions.get_sonos_players())
 #text = [f"{s.player_name} <-- {s.group.coordinator.player_name}" for s in sp]
@@ -48,9 +49,6 @@ for item in ms.get_metadata():
                 playlists = ms.get_metadata(my_item.id)
                 break
         break
-
-#for pl in playlists:
-#    print(pl.title)
 
 pl_titles = [pl.title for pl in playlists]
 pl_dict = dict(zip(pl_titles, playlists))
@@ -113,7 +111,7 @@ def on_message(client, userdata, msg):
         case 'next':
             try:
                master.next() 
-            except soco.exceptions.SoCoUPnPException as e:
+            except SoCoUPnPException as e:
                 print(f"master.{cmd}:", e)
             
             #sonos_actions2.playback('next')
@@ -154,6 +152,15 @@ def on_message(client, userdata, msg):
             master.stop()
             master.clear_queue()
             pl = pl_dict[arg]
+            master.add_to_queue(pl)
+            #master.play()    
+            master.play_from_queue(0)
+
+        case 'random_playlist':
+            master.stop()
+            master.clear_queue()
+            pl = random.choice(PLAYLISTS)
+            #pl = pl_dict[arg]
             master.add_to_queue(pl)
             #master.play()    
             master.play_from_queue(0)
