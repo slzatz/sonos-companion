@@ -7,25 +7,18 @@ for artist whose music is playing on Sonos.
 import time
 import datetime
 import random
-import os
 import sys
 import wikipedia
 from bs4 import BeautifulSoup
 import requests
-#from ipaddress import ip_address
 from config import speaker 
 from display_image import generate_image, generate_image_from_file, show_image, blend_images, get_screen_size
 from get_lyrics import get_lyrics #uses genius.com
-#from pathlib import Path
-#home = str(Path.home())
-#sys.path = [os.path.join(home, 'SoCo')] + sys.path
-#import soco
 from soco.discovery import by_name
 
 # cache for image urls - ? should actually cache the images
 artists = {}
 
-#WIKI_REQUEST = 'https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=%22'
 WIKI_REQUEST = "https://commons.wikimedia.org/w/index.php?search={search_term}&title=Special:MediaSearch&go=Go&type=image&uselang=en"
 WIKI_FILE = "https://commons.wikimedia.org/wiki/File:" #Bob_Dylan_portrait.jpg
 NUM_IMAGES = 8

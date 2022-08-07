@@ -135,10 +135,19 @@ def on_message(client, userdata, msg):
             master.clear_queue()
             results = ms.search("tracks", arg)
             random.shuffle(results)
-            for track in results:
-                master.add_to_queue(track)
-            #master.play()    
+            # get something playing right away
+            master.add_to_queue(results[0])
             master.play_from_queue(0)
+            for track in list(results)[1:]:
+                # Occasionally the artist is in some field search looks at but its not the artist for the song
+                # may not be worth checking
+                track_metadata = track.metadata.get('track_metadata', None)
+                #print(f"{track_metadata.metadata.get('artist')=}: {arg=}")
+                if not track_metadata:
+                    continue
+                if track_metadata.metadata.get('artist').lower() in arg: 
+                    master.add_to_queue(track)
+            #master.play_from_queue(0)
 
         case 'album':
             master.stop()

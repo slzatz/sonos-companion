@@ -1,3 +1,5 @@
+#!bin/python
+
 from time import sleep
 from random import choice
 import soco
@@ -26,6 +28,9 @@ def confirm_work(service):
                 ##z.add_to_queue(choice(results))
                 item = results[0]
                 print("-> (" + type(item).__name__ + ")", item.title)
+                #print(f"{item.metadata.get('track_metadata', 'Nope').metadata=}")
+                print(f"{item.metadata.get('track_metadata', {'artist': None}).metadata['artist']=}")
+                print(f"{dir(item.metadata.keys)=}")
                 print(to_didl_string(item))
                 z.add_to_queue(item)
             except soco.exceptions.SoCoUPnPException:
