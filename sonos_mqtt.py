@@ -133,6 +133,7 @@ def on_message(client, userdata, msg):
         case 'shuffle':
             master.stop() # not necessary but let's you know a new cmd is underway
             master.clear_queue()
+            tracks = []
             results = ms.search("tracks", arg)
             random.shuffle(results)
             # get something playing right away
@@ -141,12 +142,15 @@ def on_message(client, userdata, msg):
             for track in list(results)[1:]:
                 # Occasionally the artist is in some field search looks at but its not the artist for the song
                 # may not be worth checking
+                if track.title in tracks:
+                    continue
                 track_metadata = track.metadata.get('track_metadata', None)
                 #print(f"{track_metadata.metadata.get('artist')=}: {arg=}")
                 if not track_metadata:
                     continue
                 if track_metadata.metadata.get('artist').lower() in arg: 
                     master.add_to_queue(track)
+                    tracks.append(track.title)
             #master.play_from_queue(0)
 
         case 'album':
