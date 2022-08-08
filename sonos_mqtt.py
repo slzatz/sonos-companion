@@ -139,6 +139,7 @@ def on_message(client, userdata, msg):
             # get something playing right away
             master.add_to_queue(results[0])
             master.play_from_queue(0)
+            tracks.append(results[0].title)
             for track in list(results)[1:]:
                 # Occasionally the artist is in some field search looks at but its not the artist for the song
                 # may not be worth checking
