@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 import requests
 from config import speaker 
 from display_image import generate_image, generate_image_from_file, show_image, blend_images, get_screen_size
-from get_lyrics import get_lyrics #uses genius.com
+from get_lyrics import get_lyrics
 from soco.discovery import by_name
 
 # cache for image urls - ? should actually cache the images
