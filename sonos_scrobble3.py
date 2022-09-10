@@ -1,3 +1,5 @@
+#!bin/python
+
 '''
 Latest script to scrobble songs playing on Sonos to mqtt broker: 
 current broker is mosquitto running on linode instance
@@ -21,6 +23,7 @@ from ipaddress import ip_address
 home = os.path.split(os.getcwd())[0]
 sys.path = [os.path.join(home, 'SoCo')] + sys.path
 import soco
+from soco.discovery import by_name
 import paho.mqtt.publish as mqtt_publish
 from config import mqtt_broker, speaker
 
@@ -30,12 +33,7 @@ print("topic =",topic)
 topic2 = 'sonos/volume'
 print("topic2 =",topic2)
 
-try:
-    ip_address(speaker)
-except ValueError:
-    sys.exit(1)
-else:
-    master = soco.SoCo(speaker)
+master = by_name(speaker)
 
 print("\nprogram running ...")
 
