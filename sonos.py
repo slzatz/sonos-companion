@@ -174,6 +174,7 @@ def lyrics():
 @click.argument('artists', type=click.STRING, required=True, nargs=-1)
 def shuffle(artists):
     '''Shuffle the songs from one or more artists: sonos shuffle "patty griffin" "neil young" "aimee mann"'''
+    artists = " ".join(artists)
     msg = sonos_actions.shuffle(artists)
     click.echo(msg)
 

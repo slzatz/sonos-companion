@@ -53,15 +53,19 @@ import pysolr
 #sys.path = [os.path.join(home, 'SoCo')] + sys.path
 
 import soco
+from soco.discovery import by_name
+from soco.music_services import MusicService
 #from soco import config as soco_config
-from config import solr_uri
+#from config import solr_uri
+from config import music_service
 from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO, \
                          DIDL_LIBRARY_PLAYLIST, DIDL_AMAZON, DIDL_SERVICE
 
 import re
 #soco_config.CACHE_ENABLED = False
 
-solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
+#solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
+ms = MusicService(music_service)
  
 def extract(uri):
     #print(f"{uri=}")
@@ -92,19 +96,21 @@ def get_sonos_players():
     return sp    
 
 def set_master(speaker):
-    try:
-        ip_address(speaker)
-    except ValueError:
-        pass
-    else:
-        return soco.SoCo(speaker)
+#    try:
+#        ip_address(speaker)
+#    except ValueError:
+#        pass
+#    else:
+#        return soco.SoCo(speaker)
+#
+#    sps = get_sonos_players()
+#    if not sps:
+#        return None
+#
+#    sp_names = {s.player_name:s for s in sps}
+#    return sp_names.get(speaker)
 
-    sps = get_sonos_players()
-    if not sps:
-        return None
-
-    sp_names = {s.player_name:s for s in sps}
-    return sp_names.get(speaker)
+     return by_name(speaker)
     
 def my_add_to_queue(uri, metadata):
     # generally don't need the uri (can be passed as '') although passing it in
@@ -300,8 +306,42 @@ def clear_queue():
         master.clear_queue()
     except Exception as e:
         print("Encountered exception when trying to clear the queue:",e)
-
+ 
 def shuffle(artists):
+    master.stop() # not necessary but let's you know a new cmd is underway
+    master.clear_queue()
+    tracks = []
+    results = ms.search("tracks", artists)
+    random.shuffle(results)
+    # get something playing right away
+    master.add_to_queue(results[0])
+    master.play_from_queue(0)
+    tracks.append(results[0].title)
+    for track in list(results)[1:]:
+        # remove dups - not sure how common
+        if track.title in tracks:
+            continue
+        track_metadata = track.metadata.get('track_metadata', None)
+        #print(f"{track_metadata.metadata.get('artist')=}: {arg=}")
+        if not track_metadata:
+            continue
+        # Occasionally the artist is in some field search looks at but it's not the artist for the song
+        # may not be worth checking
+        if track_metadata.metadata.get('artist').lower() in artists.lower(): 
+            try:
+                master.add_to_queue(track)
+            except Exception as e:
+                print("Encountered exception when trying to clear the queue:",e)
+            else:
+                tracks.append(track.title)
+    #master.play_from_queue(0)
+    #return "\n".join(tracks)
+    msg = ""
+    for n, t in enumerate(tracks):
+        msg += f"{n}. {t}\n"
+    return msg
+
+def old_shuffle(artists):
     tracklist = []
     msg = ""
     for artist in artists:

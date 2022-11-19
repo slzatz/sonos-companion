@@ -59,7 +59,9 @@ def filter_wiki_images(artist, uris):
     filtered_uris = []
     for uri in uris:
         # match on artist name
-        if a in uri.lower().replace("-", "_"):
+        if a in uri.lower(): # sometimes name has a hyphen (like Drive-by Truckers)
+            filtered_uris.append(uri) 
+        elif a in uri.lower().replace("-", "_"):
             filtered_uris.append(uri) 
         # match on artist name with no spaces (seems rare)
         elif b in uri.lower():
@@ -200,11 +202,13 @@ if __name__ == "__main__":
                     all_rows = artists[artist]
                 else:
                     all_rows = get_wiki_images(artist)
+                    #print(all_rows)
                     all_rows = filter_wiki_images(artist, all_rows)
+                    print("all_rows", all_rows, "all_rows")
                     artists[artist] = all_rows
 
                 rows = all_rows[::]
-                # print(rows) #debug
+                #print("rows", rows, "rows") #debug
                 alpha = 1.1 
                 if artist != prev_artist:
                     img_current = None
@@ -236,12 +240,15 @@ if __name__ == "__main__":
                         sys.stdout.write("\x1b[0m") 
 
             if rows:
+                #print("got here")
                 if alpha > 1.0:
                     # first time through with new track img_current is None
                     img_previous = img_current
                     while 1:
                         row = rows.pop()
+                        #print(row)
                         img_current = generate_image(row, display_size, display_size)
+                        #print(img_current)
                         if img_current:
                             break
 
