@@ -56,7 +56,7 @@ def playstation(station):
 @cli.command()
 @click.argument('title', required=True)
 @click.option("-a", "--artist", help="The artist for the track to be played")
-def playtrack_old(title, artist):
+def playtrack_very_old(title, artist):
     '''[play] Play a track -> sonos playtrack "harvest" -a "neil young"'''
     msg = sonos_actions.play_track(title, artist)
     click.echo(msg)
@@ -64,6 +64,13 @@ def playtrack_old(title, artist):
 @cli.command()
 @click.argument('track', type=click.STRING, required=True, nargs=-1)
 def playtrack(track):
+    '''[play] Play a track -> sonos playtrack harvest by neil young"'''
+    msg = sonos_actions.play_track(" ".join(track))
+    click.echo(msg)
+
+@cli.command()
+@click.argument('track', type=click.STRING, required=True, nargs=-1)
+def playtrack_old(track):
     '''[play] Play a track -> sonos playtrack harvest by neil young"'''
     tracklist = list(track)
     title = []
@@ -206,11 +213,12 @@ def tracks(artist):
     sonos_actions.play(False, uris)
 
 @cli.command()
-@click.argument('album', type=click.STRING, required=True)
-@click.option('-a', '--artist', help="Artist to help find album to be played")
-def playalbum(album, artist=None):
+@click.argument('album', type=click.STRING, required=True, nargs=-1)
+#@click.option('-a', '--artist', help="Artist to help find album to be played")
+#def playalbum(album, artist=None):
+def playalbum(album):
     '''Play an album -> sonos playalbum "A man needs a maid" -a "neil young"'''
-    msg = sonos_actions.play_album(album, artist)
+    msg = sonos_actions.play_album(" ".join(album))
     click.echo(msg)
 
 @cli.command()

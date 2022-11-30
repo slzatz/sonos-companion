@@ -48,10 +48,6 @@ import random
 from operator import itemgetter 
 import pysolr
 
-#from pathlib import Path
-#home = str(Path.home())
-#sys.path = [os.path.join(home, 'SoCo')] + sys.path
-
 import soco
 from soco.discovery import by_name
 from soco.music_services import MusicService
@@ -401,7 +397,7 @@ def play_pause():
     elif state!='ERROR':
         master.play()
 
-def play_track(title, artist=None):
+def play_track_old(title, artist=None):
     s = 'title:' + ' AND title:'.join(title.split())
     if artist:
         s = s + ' artist:' + ' AND artist:'.join(artist.split())
@@ -419,7 +415,22 @@ def play_track(title, artist=None):
 
     return msg
 
-def play_album(album, artist=None):
+def play_track(track):
+    results = ms.search("tracks", track)
+    master.add_to_queue(results[0])
+    queue = master.get_queue()
+    master.play_from_queue(len(queue) - 1)
+    return results[0].title
+
+def play_album(album):
+    master.stop() # not necessary but let's you know a new cmd is underway
+    master.clear_queue()
+    results = ms.search("albums", album)
+    master.add_to_queue(results[0])
+    master.play_from_queue(0)
+    return list_queue()
+
+def play_album_old(album, artist=None):
     s = 'album:' + ' AND album:'.join(album.split())
     if artist:
         s = s + ' artist:' + ' AND artist:'.join(artist.split())
