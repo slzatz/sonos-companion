@@ -435,6 +435,15 @@ def generate_image(uri, w=None, h=None):
               f"generated exception from {uri} {e}")
         return
 
+    # below is for the Inkplate 12.02.2023
+    copy = img.clone()
+    #copy.transform(resize='925x1600>') # may be smaller than screen
+    copy.transform(resize='825x1200^')
+    #copy.type = 'grayscale'a #can't do this with Jpeg
+    copy.save(filename = "/home/slzatz/inkplate_server/test.jpg")
+    copy.close()
+    ########################
+
     ww = img.width
     hh = img.height
     sq = ww if ww <= hh else hh

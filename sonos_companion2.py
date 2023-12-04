@@ -204,7 +204,7 @@ if __name__ == "__main__":
                     all_rows = get_wiki_images(artist)
                     #print(all_rows)
                     all_rows = filter_wiki_images(artist, all_rows)
-                    print("all_rows", all_rows, "all_rows")
+                    #print("all_rows", all_rows, "all_rows")
                     artists[artist] = all_rows
 
                 rows = all_rows[::]
