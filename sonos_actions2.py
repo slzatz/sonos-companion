@@ -58,6 +58,7 @@ from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO, \
                          DIDL_LIBRARY_PLAYLIST, DIDL_AMAZON, DIDL_SERVICE
 
 import re
+from unidecode import unidecode
 #soco_config.CACHE_ENABLED = False
 
 #solr = pysolr.Solr(solr_uri+'/solr/sonos_companion/', timeout=10) 
@@ -323,7 +324,14 @@ def shuffle(artists):
             continue
         # Occasionally the artist is in some field search looks at but it's not the artist for the song
         # may not be worth checking
-        if track_metadata.metadata.get('artist').lower() in artists.lower(): 
+        #if unidecode(track_metadata.metadata.get('artist').lower()) in artists.lower(): #added 07092023 
+        #if artists.lower() in unidecode(track_metadata.metadata.get('artist').lower()): #added 07092023 
+        track_artist = track_metadata.metadata.get('artist').lower()
+        if not track_artist.isascii():
+            track_artist = unidecode(track_artist)
+
+        if any(word in track_artist for word in artists.lower().split()): #added 07092023 
+        #if unidecode(track_metadata.metadata.get('artist').lower()) == artists.lower(): #added 07092023 
             try:
                 master.add_to_queue(track)
             except Exception as e:
@@ -332,6 +340,23 @@ def shuffle(artists):
                 tracks.append(track.title)
     #master.play_from_queue(0)
     #return "\n".join(tracks)
+    #if len(tracks) < 3:
+    #    for track in list(results)[1:]:
+    #        # remove dups - not sure how common
+    #        if track.title in tracks:
+    #            continue
+    #        track_metadata = track.metadata.get('track_metadata', None)
+    #        #print(f"{track_metadata.metadata.get('artist')=}: {arg=}")
+    #        if not track_metadata:
+    #            continue
+    #        # Occasionally the artist is in some field search looks at but it's not the artist for the song
+    #        # may not be worth checking
+    #        try:
+    #            master.add_to_queue(track)
+    #        except Exception as e:
+    #            print("Encountered exception when trying to clear the queue:",e)
+    #        else:
+    #            tracks.append(track.title)
     msg = ""
     for n, t in enumerate(tracks):
         msg += f"{n}. {t}\n"
@@ -393,9 +418,12 @@ def play_pause():
 
     # check if sonos is playing music
     if state == 'PLAYING':
-        master.pause()
-    elif state!='ERROR':
-        master.play()
+       # master.pause()
+        playback('pause')
+    else:
+        playback('play')
+    #elif state!='ERROR':
+    #    master.play()
 
 def play_track_old(title, artist=None):
     s = 'title:' + ' AND title:'.join(title.split())

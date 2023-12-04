@@ -107,6 +107,11 @@ def resume():
     sonos_actions.playback('play')
 
 @cli.command()
+def play_pause():
+    '''Play Pause'''
+    sonos_actions.play_pause()
+
+@cli.command()
 def next():
     '''Next track'''
     sonos_actions.playback('next')
@@ -182,6 +187,7 @@ def lyrics():
 def shuffle(artists):
     '''Shuffle the songs from one or more artists: sonos shuffle "patty griffin" "neil young" "aimee mann"'''
     artists = " ".join(artists)
+    artists.replace('\\', '') # added 07092023 but also have to add unidecode to sonos_actions2.py shuffle 
     msg = sonos_actions.shuffle(artists)
     click.echo(msg)
 
