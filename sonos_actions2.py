@@ -53,8 +53,8 @@ from soco.discovery import by_name
 from soco.music_services import MusicService
 #from soco import config as soco_config
 #from config import solr_uri
-from config import music_service
-from sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO, \
+from .config import music_service
+from .sonos_config import STATIONS, META_FORMAT_PANDORA, META_FORMAT_RADIO, \
                          DIDL_LIBRARY_PLAYLIST, DIDL_AMAZON, DIDL_SERVICE
 
 import re

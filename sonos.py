@@ -4,12 +4,12 @@
 There are a bunch of aliases in .bashrc'''
 
 import click
-import sonos_actions2 as sonos_actions
-from get_lyrics import get_lyrics #uses genius.com
-from display_image import display_image
+import my_packages.sonos_actions2 as sonos_actions
+from my_packages.get_lyrics import get_lyrics #uses genius.com
+from my_packages.display_image import display_image
 #from artist_images_db import *
 import random
-from config import speaker
+from my_packages.config import speaker
 
 def bold(text):
     return "\033[1m" + text + "\033[0m"
@@ -66,6 +66,27 @@ def playtrack_very_old(title, artist):
 def playtrack(track):
     '''[play] Play a track -> sonos playtrack harvest by neil young"'''
     msg = sonos_actions.play_track(" ".join(track))
+    click.echo(msg)
+
+@cli.command()
+@click.argument('track', type=click.STRING, required=True, nargs=-1)
+def searchtrack(track):
+    '''[search] Play a track -> sonos playtrack harvest by neil young"'''
+    msg = sonos_actions.search_track(" ".join(track))
+    click.echo(msg)
+
+@cli.command()
+@click.argument('position', type=int, required=True, nargs=1)
+def playtrackfromlist(position):
+    '''[search] Play a track -> sonos playtrack harvest by neil young"'''
+    msg = sonos_actions.play_track_from_search_list(position)
+    click.echo(msg)
+
+@cli.command()
+@click.argument('track', type=click.STRING, required=True, nargs=-1)
+def searchtrack2(track):
+    '''[search] Play a track -> sonos playtrack harvest by neil young"'''
+    msg = sonos_actions.search_track2(" ".join(track))
     click.echo(msg)
 
 @cli.command()
