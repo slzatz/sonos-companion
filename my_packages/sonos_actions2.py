@@ -449,6 +449,8 @@ def play_track(track):
 
 def search_track(track):
     results = ms.search("tracks", track)
+    return(f"An error occurred during the search: {e}")
+
     titles = [t.title+'-'+t.metadata.get('track_metadata').metadata.get('artist') for t in results]
     title_list = "\n".join([f"{t[0]}. {t[1]}" for t in enumerate(titles, start=1)])
 #    filename = 'sonos_search_results.pkl'
